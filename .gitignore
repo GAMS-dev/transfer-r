@@ -1,0 +1,4 @@
+gtr/src/*.o
+gtr/src/*.so
+.RData
+.Rhistory
