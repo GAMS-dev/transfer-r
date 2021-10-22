@@ -20,9 +20,8 @@ Container <- R6::R6Class(
     Filename = NULL,
     SysDir = NULL,
     data = NULL,
-    initialize = function(gdxname=NA, sysDirpath=NA){
-
-      if (missing(sysDirpath)){
+    initialize = function(gdxname=NA, sysDirpath=NA) {
+      if (missing(sysDirpath)) {
         self$SysDir = find_gams()
       }
       else {
@@ -36,36 +35,35 @@ Container <- R6::R6Class(
         # get all symbols and metadata from c++
         # process it and populate various fields
         metadata = getSymbols(self$Filename, self$SysDir)
-
         for (m in metadata) {
             m1 = m[-1]
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
-                m$dimension, m$expltext)
+                m$expltext)
             }
             else if (m$type == GMS_DT_SET) {
                 Set$new(
                 self, m$name, m$domain,
-                m$dimension, NA, m$expltext)
+                NA, m$expltext)
             }
             else if (m$type == GMS_DT_VAR) {
                 Variable$new(
                 self, m$name, m$type, m$subtype, m$domain,
-                m$dimension, m$expltext)
+                m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
                 Equation$new(
                 self, m$name, m$type, m$subtype, m$domain,
-                m$dimension, m$expltext)
+                m$expltext)
             }
             else {
                 print("Wrong data type")
             }
         }
-
-        private$gdx_specVals_write =
-        getSpecialValues(self$Filename, self$SysDir)
+        # setSpecialValues(self$Filename, self$SysDir)
+        # private$gdx_specVals_write =
+        # getSpecialValues(self$Filename, self$SysDir)
       }
       else {
         self$Filename <- NA
@@ -78,39 +76,36 @@ Container <- R6::R6Class(
       print(private$gdx_specVals_write)
     },
 
-    read = function(symName=NA) {
-      if (missing(symName)) {
+    read = function(symNames=NA) {
+      if (missing(symNames)) {
         # read all
-      for (d in names(self$data)) {
-        self$data[[d]]$records = as.data.frame(
-          readSymbol(d, self$Filename, self$SysDir))
-          private$remap_special_values(d)
+        symNames = names(self$data)
       }
-      }
-      else {
-        for (s in symName) {
-          if (is.null(self$data[[s]])) {
-            print(paste0("symbol ", s, " not in the container!"))
-          }
-          else {
-            self$data[[s]]$records = as.data.frame(
-            readSymbol(s, self$Filename, self$SysDir))
-          }
-          private$remap_special_values(s)
-        }
-      }
+      # else {
+      #   for (s in symNames) {
+      #     if (is.null(self$data[[s]])) {
+      #       print(paste0("symbol ", s, " not in the container!"))
+      #     }
+      #     else {
+      #       self$data[[s]]$records = as.data.frame(
+      #       readSymbol(s, self$Filename, self$SysDir))
+      #     }
+      #     # private$remap_special_values(s)
+      #   }
+      # }
+    symbolrecords = readSymbols(symNames,
+    self$Filename, self$SysDir)
 
+    for (s in symbolrecords) {
+      self$data[[s$names]]$records = as.data.frame(
+        s$records)
+    }
 
     },
-      write = function(symName=NA){
-        if (missing(symName)) {
-          print("provide symbol name!")
-        }
-        else {
-          gdxWriteTrial(self$data[[symName]]$records, symName,
-          self$SysDir, self$data[[symName]]$dimension, self$data[[symName]]$type)
-        }
-      }
+    write = function(gdxout){
+      print("writefunction")
+      gdxWriteSuper(self$data, self$SysDir, gdxout)
+    }
   ),
   private = list(
     gdx_specVals_write = list(),
@@ -147,9 +142,10 @@ public=list(
   dimension = NULL,
   records = NULL,
   expltext = NULL,
+  domainstr = NULL,
   initialize = function(container=NA, name=NA,
                         type=NA, subtype=NA, 
-                        domain=NA, dimension=NA,
+                        domain=NA,
                         expltext=NA) {
     self$gams_name <- name
     self$type = type
@@ -168,7 +164,16 @@ public=list(
       }
 
     }
-    self$dimension = dimension
+    self$dimension = length(self$domain)
+    self$domainstr = list()
+    for (d in domain){
+      if (is.character(d)){
+        self$domainstr = append(self$domainstr, d)
+      }
+      else {
+        self$domainstr = append(self$domainstr, d$gams_name)
+      }
+    }
     self$expltext = expltext
 
     container$data[[name]] = self
@@ -237,28 +242,35 @@ Set <- R6Class(
 
     records = NA,
     initialize = function(container=NA, gams_name=NA,
-                          domain="*", dimension=NA,
-                          element_text = NA,
-                          description=NA, records = NA){
+                          domain="*",
+                          description=NA, records = NA) {
+
       super$initialize(container, gams_name,
                       "set", NA,
-                      domain, dimension, description)
+                      domain, description)
+
+      print(paste0("check dimension: ", self$dimension))
+
       if (any(!is.na(records))) {
-        if (!is.na(element_text)) {
-          if (length(element_text) == length(records)){
-            records["element_text"] = element_text
+        if (is.data.frame(records)) {
+          c = length(records)
+          print(paste0("number of columns: ", c))
+          if (c == self$dimension) {
+            # no element text
+            records["element_text"] = ""
+          }
+          else if (c == self$dimension + 1) {
+            names(records)[c] <- "element_text"
           }
           else {
-            print("Error! element text and records must be same length")
+            print("inconsistent records size!")
           }
-        }
-        else {
-          records["element_text"] = ""
         }
 
         colnames = self$getColLabelsForRecords()
         self$records = as.data.frame(records, col.names = colnames)
       }
+      invisible(self)
     }
 
   )
@@ -270,11 +282,11 @@ Parameter <- R6Class(
   public = list(
 
     initialize = function(container=NA, gams_name=NA,
-                          domain=NA, dimension=NA,
+                          domain=NA,
                           expltext=NA, records=NA){
       super$initialize(container, gams_name,
                       "parameter", NA, 
-                      domain, dimension, expltext)
+                      domain, expltext)
         if (any(!is.na(records))) {
           colnames = self$getColLabelsForRecords()
           self$records = as.data.frame(records, col.names = colnames)
@@ -291,11 +303,11 @@ Variable <- R6Class(
 
     initialize = function(container=NA, gams_name=NA, 
                           type=NA, subtype=NA,
-                          domain=NA, dimension=NA,
+                          domain=NA,
                           expltext=NA){
       super$initialize(container, gams_name,
                       "variable", subtype, 
-                      domain, dimension, expltext)
+                      domain, expltext)
     }
   )
   )
@@ -307,11 +319,11 @@ Equation <- R6Class(
 
     initialize = function(container=NA, gams_name=NA, 
                           type=NA, subtype=NA,
-                          domain=NA, dimension=NA,
+                          domain=NA,
                           expltext=NA){
       super$initialize(container, gams_name,
                       "equation", subtype, 
-                      domain, dimension, expltext)
+                      domain, expltext)
     }
   )
   )

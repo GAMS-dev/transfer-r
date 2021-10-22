@@ -77,28 +77,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // gdxWriteSuper
-void gdxWriteSuper(List data, CharacterVector sysDir);
-RcppExport SEXP _gtr_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP) {
+void gdxWriteSuper(List data, CharacterVector sysDir, CharacterVector fileName);
+RcppExport SEXP _gtr_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type data(dataSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    gdxWriteSuper(data, sysDir);
+    Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
+    gdxWriteSuper(data, sysDir, fileName);
     return R_NilValue;
 END_RCPP
 }
-// gdxWriteTrial
-void gdxWriteTrial(DataFrame df, CharacterVector sym, CharacterVector sysDir, int Dim, CharacterVector varTypeS);
-RcppExport SEXP _gtr_gdxWriteTrial(SEXP dfSEXP, SEXP symSEXP, SEXP sysDirSEXP, SEXP DimSEXP, SEXP varTypeSSEXP) {
+// readSymbols
+List readSymbols(CharacterVector symNames, CharacterVector gdxName, CharacterVector sysDir);
+RcppExport SEXP _gtr_readSymbols(SEXP symNamesSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type sym(symSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type symNames(symNamesSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    Rcpp::traits::input_parameter< int >::type Dim(DimSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type varTypeS(varTypeSSEXP);
-    gdxWriteTrial(df, sym, sysDir, Dim, varTypeS);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(readSymbols(symNames, gdxName, sysDir));
+    return rcpp_result_gen;
 END_RCPP
 }
 // readSymbol
@@ -122,8 +122,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gtr_getParameters", (DL_FUNC) &_gtr_getParameters, 1},
     {"_gtr_getSpecialValues", (DL_FUNC) &_gtr_getSpecialValues, 2},
     {"_gtr_getSymbols", (DL_FUNC) &_gtr_getSymbols, 2},
-    {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 2},
-    {"_gtr_gdxWriteTrial", (DL_FUNC) &_gtr_gdxWriteTrial, 5},
+    {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 3},
+    {"_gtr_readSymbols", (DL_FUNC) &_gtr_readSymbols, 3},
     {"_gtr_readSymbol", (DL_FUNC) &_gtr_readSymbol, 3},
     {NULL, NULL, 0}
 };

@@ -1,4 +1,6 @@
 gtr/src/*.o
 gtr/src/*.so
+*.gdx
 .RData
 .Rhistory
+gtr/.Rhistory

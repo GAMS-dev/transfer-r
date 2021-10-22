@@ -25,12 +25,12 @@ getSymbols <- function(gdxName, sysDir) {
     .Call(`_gtr_getSymbols`, gdxName, sysDir)
 }
 
-gdxWriteSuper <- function(data, sysDir) {
-    invisible(.Call(`_gtr_gdxWriteSuper`, data, sysDir))
+gdxWriteSuper <- function(data, sysDir, fileName) {
+    invisible(.Call(`_gtr_gdxWriteSuper`, data, sysDir, fileName))
 }
 
-gdxWriteTrial <- function(df, sym, sysDir, Dim, varTypeS) {
-    invisible(.Call(`_gtr_gdxWriteTrial`, df, sym, sysDir, Dim, varTypeS))
+readSymbols <- function(symNames, gdxName, sysDir) {
+    .Call(`_gtr_readSymbols`, symNames, gdxName, sysDir)
 }
 
 readSymbol <- function(symName, gdxName, sysDir) {
