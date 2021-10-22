@@ -249,8 +249,6 @@ Set <- R6Class(
                       "set", NA,
                       domain, description)
 
-      print(paste0("check dimension: ", self$dimension))
-
       if (any(!is.na(records))) {
         if (is.data.frame(records)) {
           c = length(records)
@@ -326,7 +324,7 @@ Equation <- R6Class(
                       domain, expltext)
     }
   )
-  )
+)
 
 find_gams <- function() {
   systemDirectory = "";

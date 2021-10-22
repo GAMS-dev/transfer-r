@@ -10,48 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// gdxReadTrial
-void gdxReadTrial();
-RcppExport SEXP _gtr_gdxReadTrial() {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    gdxReadTrial();
-    return R_NilValue;
-END_RCPP
-}
-// setList
-StringVector setList(CharacterVector gdxName);
-RcppExport SEXP _gtr_setList(SEXP gdxNameSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
-    rcpp_result_gen = Rcpp::wrap(setList(gdxName));
-    return rcpp_result_gen;
-END_RCPP
-}
-// parameterList
-StringVector parameterList(CharacterVector gdxName);
-RcppExport SEXP _gtr_parameterList(SEXP gdxNameSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
-    rcpp_result_gen = Rcpp::wrap(parameterList(gdxName));
-    return rcpp_result_gen;
-END_RCPP
-}
-// getParameters
-List getParameters(CharacterVector gdxName);
-RcppExport SEXP _gtr_getParameters(SEXP gdxNameSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
-    rcpp_result_gen = Rcpp::wrap(getParameters(gdxName));
-    return rcpp_result_gen;
-END_RCPP
-}
 // getSpecialValues
 List getSpecialValues(CharacterVector gdxName, CharacterVector sysDir);
 RcppExport SEXP _gtr_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
@@ -101,30 +59,12 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// readSymbol
-DataFrame readSymbol(CharacterVector symName, CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gtr_readSymbol(SEXP symNameSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type symName(symNameSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    rcpp_result_gen = Rcpp::wrap(readSymbol(symName, gdxName, sysDir));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gtr_gdxReadTrial", (DL_FUNC) &_gtr_gdxReadTrial, 0},
-    {"_gtr_setList", (DL_FUNC) &_gtr_setList, 1},
-    {"_gtr_parameterList", (DL_FUNC) &_gtr_parameterList, 1},
-    {"_gtr_getParameters", (DL_FUNC) &_gtr_getParameters, 1},
     {"_gtr_getSpecialValues", (DL_FUNC) &_gtr_getSpecialValues, 2},
     {"_gtr_getSymbols", (DL_FUNC) &_gtr_getSymbols, 2},
     {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 3},
     {"_gtr_readSymbols", (DL_FUNC) &_gtr_readSymbols, 3},
-    {"_gtr_readSymbol", (DL_FUNC) &_gtr_readSymbol, 3},
     {NULL, NULL, 0}
 };
 
