@@ -68,9 +68,10 @@ return L;
 List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
   std::vector<std::string> domain;
-  int rc, errCode, symCount, UelCount, sym_dimension, sym_type, nrecs,
+  int rc, errCode, symCount, UelCount, sym_dimension, sym_type, nrecs, dummy,
   subtype;
-  char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE], explText[GMS_SSSIZE];
+  char symbolID[GMS_SSSIZE],aliasForID[GMS_SSSIZE],
+   Msg[GMS_SSSIZE], explText[GMS_SSSIZE];
   std::string myname = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
 	gdxStrIndexPtrs_t domains_ptr;
@@ -91,10 +92,19 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
       for (int j=0; j < sym_dimension; j++) {
       domain.push_back(domains_ptr[j]);
 		  }
-      templist = List::create(_["name"] = symbolID, _["type"] = sym_type, 
-      _["dimensions"]=sym_dimension, _["domain"]=domain, _["subtype"] = subtype,
-      _["expltext"]=explText);
-      domain.clear();
+
+      if (sym_type == GMS_DT_ALIAS) {
+        gdxSymbolInfo(PGX, subtype, aliasForID, &sym_dimension, &dummy);
+        templist = List::create(_["name"] = symbolID, _["type"] = sym_type,
+         _["aliasfor"] = aliasForID);
+      }
+      else {
+        templist = List::create(_["name"] = symbolID, _["type"] = sym_type, 
+        _["dimensions"]=sym_dimension, _["domain"]=domain, _["subtype"] = subtype,
+        _["expltext"]=explText);
+      }
+
+    domain.clear();
 
     if (strcmp(symbolID, "*") != 0) {
     L1.push_back(templist);
@@ -109,7 +119,6 @@ void gdxWriteSuper(List data,
 CharacterVector sysDir, CharacterVector fileName) {
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
-
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE];
 	int         ErrNr, rc, varType;
@@ -125,7 +134,6 @@ CharacterVector sysDir, CharacterVector fileName) {
   gdxSVals_t sVals;
   gdxGetSpecialValues(PGX, sVals);
 
-
   sVals[GMS_SVIDX_NA] = NA_REAL;
   sVals[GMS_SVIDX_EPS] = -0.0;
   sVals[GMS_SVIDX_UNDEF] = R_NaN;
@@ -138,7 +146,6 @@ CharacterVector sysDir, CharacterVector fileName) {
 
 	/* Write demand data */
 	rc = gdxOpenWrite(PGX, myFileName.c_str(), "xp_example1", &ErrNr);
-
 	if (ErrNr) Rcout << "Error1" << "\n";
   // std::string mysym, varTypeStr;
   DataFrame df;
@@ -146,19 +153,14 @@ CharacterVector sysDir, CharacterVector fileName) {
   int Dim;
   std::vector<double> values;
   std::string elemText;
-
-  StringVector colString, colElemText, names(Dim);
+  StringVector colString, colElemText;
   NumericVector colDouble;
-
   for (int d=0; d < data.length(); d++){
     List symname = data[d];
     std::string mysym = symname["gams_name"];
-    df = symname["records"];
-    domain = symname["domainstr"];
-    Dim = symname["dimension"];
-
     std::string varTypeStr = symname["type"];
-
+    Dim = symname["dimension"];
+    StringVector names(Dim);
 
     if (strcmp(varTypeStr.c_str(),"parameter") == 0) {
       varType = GMS_DT_PAR;
@@ -172,10 +174,24 @@ CharacterVector sysDir, CharacterVector fileName) {
     else if (strcmp(varTypeStr.c_str(),"equation") == 0) {
       varType = GMS_DT_EQU;
     }
+    else if (strcmp(varTypeStr.c_str(),"alias") == 0) {
+      varType = GMS_DT_ALIAS;
+    }
     else {
       Rcout << "unsupported symbol type \n";
     }
-
+    if (varType == GMS_DT_ALIAS) {
+      Rcout << "herehere\n";
+      List alias_with_env = symname["alias_with"];
+      std::string alias_with = alias_with_env["gams_name"];
+      if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
+      Rcout << "cannot add alias \n";
+      continue;
+    }
+    // only executed if not an alias
+    df = symname["records"];
+    domain = symname["domainstr"];
+    Dim = symname["dimension"];
 
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
     "Demand data", Dim, varType, 0))
@@ -219,7 +235,6 @@ CharacterVector sysDir, CharacterVector fileName) {
     if (!gdxDataWriteDone(PGX)) Rcout << "Error3" << "\n";
   }
   if (gdxClose(PGX)) Rcout << "Error4" << "\n";
-
   return;
 }
 
