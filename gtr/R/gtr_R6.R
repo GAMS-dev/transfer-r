@@ -43,6 +43,7 @@ Container <- R6::R6Class (
     Filename = NULL,
     SysDir = NULL,
     data = NULL,
+    acronyms = NULL,
     initialize = function(gdxname=NA, sysDirpath=NA) {
       if (missing(sysDirpath)) {
         self$SysDir = find_gams()
@@ -75,7 +76,6 @@ Container <- R6::R6Class (
                 Set$new(
                 self, m$name, m$domain, TRUE,
                 NA, m$expltext)
-
                 }
             }
             else if (m$type == GMS_DT_VAR) {
@@ -95,6 +95,11 @@ Container <- R6::R6Class (
             else {
                 print("Wrong data type")
             }
+        }
+        acrInfo = checkAcronyms(self$Filename, self$SysDir)
+        nAcr = acrInfo[["nAcronyms"]]
+        if (nAcr != 0) {
+          self$acronyms = acrInfo[["acronyms"]]
         }
         # setSpecialValues(self$Filename, self$SysDir)
         # private$gdx_specVals_write =
@@ -132,7 +137,27 @@ Container <- R6::R6Class (
     self$Filename, self$SysDir)
 
     for (s in symbolrecords) {
+
       self$data[[s$names]]$setRecords(s$records)
+      
+      if (!is.null(self$acronyms)) {
+        if (inherits(self$data[[s$names]], Parameter)
+        | inherits(self$data[[s$names]], Variable)
+        | inherits(self$data[[s$names]], Equation)) {
+          for (d in 1:self$data[[s$names]]$dimension) {
+            for (a in self$acronyms) {
+              col = self$data[[s$names]]$records[,d]
+              if (any(col == a * 1e301)) {
+                idx = which(col == a * 1e301)
+                for (id in idx) {
+                  self$data[[s$names]]$records[id, d] = SpecialValues[["NA"]]
+                }
+              }
+            }
+          }
+
+        }
+      }
     }
 
     },

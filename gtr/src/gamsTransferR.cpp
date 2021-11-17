@@ -64,6 +64,38 @@ _["NEGINF"]= sVals[GMS_SVIDX_MINF]
 );
 return L;
 }
+
+// [[Rcpp::export]]
+List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
+  gdxHandle_t PGX = NULL;
+  char Msg[GMS_SSSIZE], acrName[GMS_SSSIZE];
+  std::string myname = Rcpp::as<std::string>(gdxName);
+  std::string mysysDir = Rcpp::as<std::string>(sysDir);
+  List L;
+  int rc;
+
+  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+
+  // check acronyms
+  int nAcronym;
+  nAcronym = gdxAcronymCount(PGX);
+  if (nAcronym > 0) {
+    Rcout << "warning! Acronyms are not supported!" << "\n";
+    int acrID;
+    std::vector<int> acronyms;
+    for (int i=0; i < nAcronym; i++){
+      gdxAcronymGetInfo(PGX, i+1, acrName, Msg, &acrID);
+      acronyms.push_back(acrID);
+    }
+    L = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
+  }
+  else {
+    L = List::create(_["nAcronyms"]=nAcronym);
+  }
+  return L;
+
+}
+
 // [[Rcpp::export]]
 List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
@@ -71,7 +103,7 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
   int rc, errCode, symCount, UelCount, sym_dimension, sym_type, nrecs, dummy,
   subtype;
   char symbolID[GMS_SSSIZE],aliasForID[GMS_SSSIZE],
-   Msg[GMS_SSSIZE], explText[GMS_SSSIZE];
+   explText[GMS_SSSIZE], Msg[GMS_SSSIZE];
   std::string myname = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
 	gdxStrIndexPtrs_t domains_ptr;
@@ -83,6 +115,8 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
   gdxOpenRead(PGX, myname.c_str(), &errCode);
 
   rc = gdxSystemInfo(PGX, &symCount, &UelCount);
+
+
   List templist, L1;
 	for (int i=0; i < symCount; i++){
 		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
