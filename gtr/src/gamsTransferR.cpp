@@ -26,11 +26,14 @@ std::string elemText) {
     Values[GMS_VAL_SCALE] = V[GMS_VAL_SCALE];
   }
   else if (VarType == GMS_DT_SET) {
-    Values[GMS_VAL_LEVEL] = 1;
-    Values[GMS_VAL_MARGINAL] = 0;
-    Values[GMS_VAL_UPPER] = 0;
-    Values[GMS_VAL_LOWER] = 0;
-    Values[GMS_VAL_SCALE] = 0;
+    if (elemText.compare("") != 0 ) {
+      Values[GMS_VAL_LEVEL] = 1;
+      Values[GMS_VAL_MARGINAL] = 0;
+      Values[GMS_VAL_UPPER] = 0;
+      Values[GMS_VAL_LOWER] = 0;
+      Values[GMS_VAL_SCALE] = 0;
+
+    }
   }
   else {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
@@ -38,6 +41,7 @@ std::string elemText) {
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   
   int txtnr;
+
   gdxAddSetText(PGX, elemText.c_str(), &txtnr);
 
   return;
@@ -151,6 +155,7 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 // [[Rcpp::export]]
 void gdxWriteSuper(List data,
 CharacterVector sysDir, CharacterVector fileName) {
+  Rcout << "here2\n";
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
   gdxHandle_t PGX = NULL;
@@ -160,7 +165,7 @@ CharacterVector sysDir, CharacterVector fileName) {
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
-
+  Rcout << "here1\n";
 	if (!gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg))) {
 		Rcout << "**** Could not load GDX library" << "\n" << "**** " << Msg << "\n";
 		exit(1);
@@ -189,31 +194,34 @@ CharacterVector sysDir, CharacterVector fileName) {
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
+  
   for (int d=0; d < data.length(); d++){
+    
     List symname = data[d];
     std::string mysym = symname["gams_name"];
-    std::string varTypeStr = symname["type"];
-    Dim = symname["dimension"];
-    StringVector names(Dim);
+    Rcout << "here3 " << mysym << "\n";
+    varType = symname["type"];
+    // std::string varTypeStr = symname["type"];
 
-    if (strcmp(varTypeStr.c_str(),"parameter") == 0) {
-      varType = GMS_DT_PAR;
-    }
-    else if (strcmp(varTypeStr.c_str(),"set") == 0) {
-      varType = GMS_DT_SET;
-    }
-    else if (strcmp(varTypeStr.c_str(),"variable") == 0) {
-      varType = GMS_DT_VAR;
-    }
-    else if (strcmp(varTypeStr.c_str(),"equation") == 0) {
-      varType = GMS_DT_EQU;
-    }
-    else if (strcmp(varTypeStr.c_str(),"alias") == 0) {
-      varType = GMS_DT_ALIAS;
-    }
-    else {
-      Rcout << "unsupported symbol type \n";
-    }
+
+    // if (strcmp(varTypeStr.c_str(),"parameter") == 0) {
+    //   varType = GMS_DT_PAR;
+    // }
+    // else if (strcmp(varTypeStr.c_str(),"set") == 0) {
+    //   varType = GMS_DT_SET;
+    // }
+    // else if (strcmp(varTypeStr.c_str(),"variable") == 0) {
+    //   varType = GMS_DT_VAR;
+    // }
+    // else if (strcmp(varTypeStr.c_str(),"equation") == 0) {
+    //   varType = GMS_DT_EQU;
+    // }
+    // else if (strcmp(varTypeStr.c_str(),"alias") == 0) {
+    //   varType = GMS_DT_ALIAS;
+    // }
+    // else {
+    //   Rcout << "unsupported symbol type \n";
+    // }
     if (varType == GMS_DT_ALIAS) {
       Rcout << "herehere\n";
       List alias_with_env = symname["alias_with"];
@@ -222,11 +230,15 @@ CharacterVector sysDir, CharacterVector fileName) {
       Rcout << "cannot add alias \n";
       continue;
     }
+    Dim = symname["dimension"];
+    StringVector names(Dim);
     // only executed if not an alias
     df = symname["records"];
     domain = symname["domainstr"];
     Dim = symname["dimension"];
-
+    Rcout << "dim " << Dim << "\n";
+    Rcout << "varType " << varType << "\n";
+    Rcout << "mysym " << mysym << "\n";
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
     "Demand data", Dim, varType, 0))
     Rcout << "Error2" << "\n";
@@ -258,6 +270,7 @@ CharacterVector sysDir, CharacterVector fileName) {
 
 
       if (varType != GMS_DT_SET){
+        Rcout << "here6\n";
         WriteData(PGX, names, values, varType, Dim, elemText);
       }
       else {
@@ -265,9 +278,11 @@ CharacterVector sysDir, CharacterVector fileName) {
       }
       values.clear();
     }
+    Rcout << "here5\n";
 
     if (!gdxDataWriteDone(PGX)) Rcout << "Error3" << "\n";
   }
+  Rcout << "here4\n";
   if (gdxClose(PGX)) Rcout << "Error4" << "\n";
   return;
 }

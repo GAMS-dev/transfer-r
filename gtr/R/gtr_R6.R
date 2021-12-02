@@ -109,9 +109,327 @@ Container <- R6::R6Class (
         self$Filename <- NA
       }
     },
-    listSets = function() {
-      print(paste0("sets: ", self$sets))
+    listSymbols = function() {
+      return(names(self$data))
     },
+    listSets = function() {
+      sets = list()
+      for (s in self$listSymbols()) {
+        if(inherits(self$data[[s]], "Set") |
+        inherits(self$data[[s]], "Alias") ) {
+          sets = append(sets, s)
+        }
+      }
+      return(sets)
+    },
+    listParameters = function() {
+      parameters = list()
+      for (s in self$listSymbols()) {
+        if(inherits(self$data[[s]], "Parameter")) {
+          parameters = append(parameters, s)
+        }
+      }
+      return(parameters)
+    },
+    listAliases = function() {
+      aliases = list()
+      for (s in self$listSymbols()) {
+        if (inherits(self$data[[s]], "Alias")) {
+          aliases = append(Aliases, s)
+        }
+      }
+      return(aliases)
+    },
+    listVariables = function() {
+      variables = list()
+      for (s in self$listSymbols()) {
+        if(inherits(self$data[[s]], "Variable")) {
+          variables = append(variables, s)
+        }
+      }
+      return(variables)
+    },
+    listEquations = function() {
+      equations = list()
+      for (s in self$listSymbols()) {
+        if(inherits(self$data[[s]], "Equation")) {
+          equations = append(equations, s)
+        }
+      }
+      return(equations)
+    },
+    addSet = function(name, domain = NA, is_singleton = FALSE,
+    records = NA, description = "") {
+      Set$new(
+      self, name, domain, is_singleton,
+      records, description)
+      return(self$data[[name]])
+    },
+    addParameter = function(name, domain = NA,
+    records = NA, description = "") {
+      Parameter$new(
+        self, name, domain,
+        description)
+        return(self$data[[name]])
+    },
+    addVariable = function(name, type="free", domain = NA,
+    records = NA, description = "") {
+      Variable$new(
+        self, name, type, domain,
+        description)
+        return(self$data[[name]])
+    },
+    addEquation = function(name, domain = NA, type,
+    records = NA, description = "") {
+      Equation$new(
+        self, name, type, domain,
+        description)
+        return(self$data[[name]])
+    },
+    addAlias = function(name, alias_with) {
+      Alias$new(
+      self, name, domain, is_singleton,
+      records, description)
+      return(self$data[[name]])
+    },
+
+    describeSets = function(symbols=NA) {
+      if (is.na(symbols)) {
+        symbols = self$listSets()
+      }
+      colNames = list("name",
+            "is_alias",
+            "is_singleton",
+            "domain",
+            "domain_type",
+            "dim",
+            "num_recs",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame()
+      for (i in symbols) {
+        if (i %in% self$listSets()) {
+          symDescription = list(
+            i,
+            self$data[[i]]$isAlias(),
+            self$data[[i]]$isSingleton,
+            self$data[[i]]$domainNames,
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$number_records(),
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          if (length(df) != 0) {
+            df = rbind(df, setNames(symDescription, colNames))
+          }
+          else {
+            df = data.frame(symDescription)
+            colnames(df) = colNames
+          }
+
+        }
+      }
+      if (length(df) != 0) {
+        return(df[order( df[,1]),])
+      }
+      else {
+         return(NA)
+      }
+    },
+
+    describeParameters = function(symbols=NA) {
+      if (is.na(symbols)) {
+        symbols = self$listParameters()
+      }
+      colNames = list(
+            "name",
+            "is_scalar",
+            "domain",
+            "domain_type",
+            "dim",
+            "num_recs",
+            "min_value",
+            "mean_value",
+            "max_value",
+            "where_min",
+            "where_max",
+            "count_eps",
+            "count_na",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame()
+      for (i in symbols) {
+        if (i %in% self$listParameters()) {
+          symDescription = list(
+            i,
+            self$data[[i]]$isScalar,
+            self$data[[i]]$domainNames,
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$number_records(),
+            self$data[[i]]$getMinValue("value"),
+            self$data[[i]]$getMeanValue("value"),
+            self$data[[i]]$getMaxValue("value"),
+            self$data[[i]]$whereMin("value"),
+            self$data[[i]]$whereMax("value"),
+            self$data[[i]]$countEps("value"),
+            self$data[[i]]$countNA("value"),
+            self$data[[i]]$countUndef("value"),
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          if (length(df) != 0) {
+            df = rbind(df, setNames(symDescription, colNames))
+          }
+          else {
+            df = data.frame(symDescription)
+            colnames(df) = colNames
+          }
+
+        }
+      }
+      if (length(df) != 0) {
+        return(df[order( df[,1]),])
+      }
+      else {
+         return(NA)
+      }
+    },
+
+    describeVariables = function(symbols=NA) {
+      if (is.na(symbols)) {
+        symbols = self$listVariables()
+      }
+      colNames = list(
+            "name",
+            "type",
+            "domain",
+            "domain_type",
+            "dim",
+            "num_recs",
+            "cardinality",
+            "sparsity",
+            "min_level",
+            "mean_level",
+            "max_level",
+            "where_max_abs_level",
+            "count_eps_level",
+            "min_marginal",
+            "mean_marginal",
+            "max_marginal",
+            "where_max_abs_marginal",
+            "count_eps_marginal"
+            )
+      df = data.frame()
+      for (i in symbols) {
+        if (i %in% self$listVariables()) {
+          symDescription = list(
+            i,
+            self$data[[i]]$type,
+            self$data[[i]]$domainNames,
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$number_records(),
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity(),
+            self$data[[i]]$getMinValue("level"),
+            self$data[[i]]$getMeanValue("level"),
+            self$data[[i]]$getMaxValue("level"),
+            self$data[[i]]$whereMaxAbs("level"),
+            self$data[[i]]$countEps("level"),
+            self$data[[i]]$getMinValue("marginal"),
+            self$data[[i]]$getMeanValue("marginal"),
+            self$data[[i]]$getMaxValue("marginal"),
+            self$data[[i]]$whereMaxAbs("marginal"),
+            self$data[[i]]$countEps("marginal")
+          )
+          if (length(df) != 0) {
+            df = rbind(df, setNames(symDescription, colNames))
+          }
+          else {
+            df = data.frame(symDescription)
+            colnames(df) = colNames
+          }
+
+        }
+      }
+      if (length(df) != 0) {
+        return(df[order( df[,1]),])
+      }
+      else {
+         return(NA)
+      }
+    },
+
+    describeEquations = function(symbols=NA) {
+      if (is.na(symbols)) {
+        symbols = self$listEquations()
+      }
+      colNames = list(
+            "name",
+            "type",
+            "domain",
+            "domain_type",
+            "dim",
+            "num_recs",
+            "cardinality",
+            "sparsity",
+            "min_level",
+            "mean_level",
+            "max_level",
+            "where_max_abs_level",
+            "count_eps_level",
+            "min_marginal",
+            "mean_marginal",
+            "max_marginal",
+            "where_max_abs_marginal",
+            "count_eps_marginal"
+            )
+      df = data.frame()
+      for (i in symbols) {
+        if (i %in% self$listEquations()) {
+          symDescription = list(
+            i,
+            self$data[[i]]$type,
+            self$data[[i]]$domainNames,
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$number_records(),
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity(),
+            self$data[[i]]$getMinValue("level"),
+            self$data[[i]]$getMeanValue("level"),
+            self$data[[i]]$getMaxValue("level"),
+            self$data[[i]]$whereMaxAbs("level"),
+            self$data[[i]]$countEps("level"),
+            self$data[[i]]$getMinValue("marginal"),
+            self$data[[i]]$getMeanValue("marginal"),
+            self$data[[i]]$getMaxValue("marginal"),
+            self$data[[i]]$whereMaxAbs("marginal"),
+            self$data[[i]]$countEps("marginal")
+          )
+          if (length(df) != 0) {
+            df = rbind(df, setNames(symDescription, colNames))
+          }
+          else {
+            df = data.frame(symDescription)
+            colnames(df) = colNames
+          }
+
+        }
+      }
+      if (length(df) != 0) {
+        return(df[order( df[,1]),])
+      }
+      else {
+         return(NA)
+      }
+
+    },
+
     printSpecialValues = function() {
       print(private$gdx_specVals_write)
     },
@@ -141,9 +459,9 @@ Container <- R6::R6Class (
       self$data[[s$names]]$setRecords(s$records)
       
       if (!is.null(self$acronyms)) {
-        if (inherits(self$data[[s$names]], Parameter)
-        | inherits(self$data[[s$names]], Variable)
-        | inherits(self$data[[s$names]], Equation)) {
+        if (inherits(self$data[[s$names]], "Parameter")
+        | inherits(self$data[[s$names]], "Variable")
+        | inherits(self$data[[s$names]], "Equation")) {
           for (d in 1:self$data[[s$names]]$dimension) {
             for (a in self$acronyms) {
               col = self$data[[s$names]]$records[,d]
@@ -164,6 +482,8 @@ Container <- R6::R6Class (
     write = function(gdxout){
       private$validSymbolOrder()
       print("writefunction")
+      print(self$SysDir)
+      print(gdxout)
       gdxWriteSuper(self$data, self$SysDir, gdxout)
     }
   ),
@@ -188,19 +508,16 @@ Container <- R6::R6Class (
         }
       }
     },
-    listSymbols = function() {
-      return(names(self$data))
-    },
     validSymbolOrder = function() {
       orderedSymbols = list()
-      symbolsToSort = private$listSymbols()
+      symbolsToSort = self$listSymbols()
 
       idx = 1
       while (length(symbolsToSort) != 0) {
         sym = symbolsToSort[idx]
         # special 1D sets (universe domain & relaxed sets)
-        if (inherits(self$data[[sym]], "Set") &
-        self$data[[sym]]$dimension == 1 &
+        if (inherits(self$data[[sym]], "Set") &&
+        self$data[[sym]]$dimension == 1 &&
         is.character(self$data[[sym]]$domain[1])
         ) {
           orderedSymbols = append(orderedSymbols, sym)
@@ -411,6 +728,8 @@ Symbol <- R6Class(
   records = NULL,
   expltext = NULL,
   domainstr = NULL,
+  domainNames = NULL,
+  domainType = NULL,
   initialize = function(container=NA, name=NA,
                         type=NA, subtype=NA, 
                         domain=NA,
@@ -433,6 +752,8 @@ Symbol <- R6Class(
 
     }
     self$dimension = length(self$domain)
+    self$domainNames = self$domain_names()
+    self$domainType = self$domain_type()
     self$domainstr = list()
     for (d in domain) {
       if (is.character(d)) {
@@ -461,14 +782,357 @@ Symbol <- R6Class(
 
   number_records = function() {
     if (any(!is.na(self$records))) {
-      return(length(self$records))
+      return(nrow(self$records))
     }
     else {
-      return(NA)
+      return(0)
     }
   },
+  domain_type = function() {
+    regularCheck = list()
+    for (d in self$domain) {
+      if (inherits(d, "Set") | inherits(d, "Alias")) {
+        regularCheck = append(regularCheck, TRUE)
+      }
+      else {
+          regularCheck = append(regularCheck, FALSE)
+      }
+    }
+    if (all(regularCheck == TRUE) && self$dimension != 0) {
+        return("regular")
+      }
+      else if (all(self$domain == "*")) {
+         return("none")
+      }
+      else if(self$dimension == 0) {
+        return("none")
+      }
+      else {
+         return("relaxed")
+      }
+  },
+  getCardinality = function() {
+    if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
+      return(NA)
+    }
+    else {
+       card = 1
+       for (i in self$domain){
+         card = card * i$number_records()
+       }
+       return(card)
+    }
+  },
+  getSparsity = function(){
+    if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
+      return(NA)
+    }
+    else {
+      return(1 - self$number_records()/self$getCardinality())
+    }
+  },
+  getMaxValue = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(max(self$records[[columns]]))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
 
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(max(self$records[, columns]))
+      }
+    }
+  },
+  getMinValue = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(min(self$records[[columns]]))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
 
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(min(self$records[, columns]))
+      }
+    }
+  },
+  getMeanValue = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(mean(self$records[[columns]]))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(mean(colMeans(self$records[columns])))
+      }
+    }
+  },
+  getMaxAbsValue = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(max(abs(self$records[[columns]])))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(max(abs(self$records[, columns])))
+      }
+    }
+  },
+  whereMax = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(which.max(self$records[[columns]]))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!is.character(columns)){
+        print("error! Only one column allowed.")
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(which.max(self$records[, columns]))
+      }
+    }
+  },
+  whereMaxAbs = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(which.max(abs(self$records[[columns]])))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!is.character(columns)){
+        print("error! Only one column allowed.")
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(which.max(abs(self$records[, columns])))
+      }
+    }
+  },
+  whereMin = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(which.min(self$records[[columns]]))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!is.character(columns)){
+        print("error! Only one column allowed.")
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(which.min(self$records[, columns]))
+      }
+    }
+  },
+  countNA = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(sum(self$records[[columns]] == SpecialValues[["NA"]]))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(sum(self$records[,columns] == SpecialValues[["NA"]]))
+      }
+    }
+  },
+  countEps = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(sum(self$records[[columns]] == SpecialValues$EPS))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(sum(self$records[,columns] == SpecialValues$EPS))
+      }
+    }
+  },
+  countUndef = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(sum(self$records[[columns]] == SpecialValues$UNDEF))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(sum(self$records[,columns] == SpecialValues$UNDEF))
+      }
+    }
+  },
+  countPosinf = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(sum(self$records[[columns]] == SpecialValues$POSINF))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(sum(self$records[,columns] == SpecialValues$POSINF))
+      }
+    }
+  },
+  countNeginf = function(columns=NA) {
+    if (inherits(self, "Parameter")) {
+      if (is.na(columns)){
+        columns = "value"
+      }
+      return(sum(self$records[[columns]] == SpecialValues$NEGINF))
+    }
+    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+      if (is.na(columns)) {
+        columns = "level"
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      columns)) {
+        print("error! column name not valid")
+        return()
+      }
+      else {
+        return(sum(self$records[,columns] == SpecialValues$NEGINF))
+      }
+    }
+  },
+  domain_names = function() {
+    d = list()
+    for (i in self$domain) {
+      if (inherits(i, "Set") | inherits(i, "Alias")) {
+        d = append(d, i$name)
+      }
+    }
+    if (length(d) == 0) {
+      return(NA)
+    }
+    else {
+      return(d)
+    }
+  },
   getColLabelsForRecords = function() {
     column_names = list()
     for (i in seq_along(self$domain)) {
@@ -545,13 +1209,15 @@ Set <- R6Class(
     initialize = function(container=NA, gams_name=NA,
                           domain="*", is_singleton=FALSE,
                           records = NA, description=NA) {
+      print("sssss1")
+      self$isSingleton <- is_singleton
       if (!is_singleton){
-        type = super$lblTypeSubtype()[["set"]][1]
-        subtype = super$lblTypeSubtype()[["set"]][2]
+        type = super$lblTypeSubtype()[["set"]][[1]]
+        subtype = super$lblTypeSubtype()[["set"]][[2]]
       }
       else {
-        type = super$lblTypeSubtype()[["singleton_set"]][1]
-        subtype = super$lblTypeSubtype()[["singleton_set"]][2]
+        type = super$lblTypeSubtype()[["singleton_set"]][[1]]
+        subtype = super$lblTypeSubtype()[["singleton_set"]][[2]]
       }
 
       super$initialize(container, gams_name,
@@ -561,6 +1227,7 @@ Set <- R6Class(
       if (any(!is.na(records))) {
         self$setRecords(records)
       }
+      private$is_alias = FALSE
       invisible(self)
     },
     setRecords = function(records) {
@@ -579,8 +1246,28 @@ Set <- R6Class(
       }
       colnames = self$getColLabelsForRecords()
       self$records = as.data.frame(records, col.names = colnames)
+    },
+    isAlias = function() {
+      return(private$is_alias)
     }
 
+
+  ),
+  active = list(
+    isSingleton = function(is_singleton){
+      print("sssss2")
+      if (missing(is_singleton)) {
+        return(private$is_singleton)
+      }
+      else {
+        print("sssss3")
+         private$is_singleton = is_singleton
+      }
+    }
+  ),
+  private = list(
+    is_singleton = NA,
+    is_alias = NA
   )
   )
 
@@ -588,17 +1275,24 @@ Parameter <- R6Class(
   "Parameter",
   inherit = Symbol,
   public = list(
+    isScalar = NULL,
 
     initialize = function(container=NA, gams_name=NA,
                           domain=NA,records=NA,
-                          description=NA ){
-      
-      type = super$lblTypeSubtype()[["parameter"]][1]
+                          description=NA ) {
+
+      type = super$lblTypeSubtype()[["parameter"]][[1]]
       super$initialize(container, gams_name,
                       type, NA, 
                       domain, description)
       if (any(!is.na(records))) {
         self$setRecords(records)
+      }
+      if (self$dimension == 0) {
+        self$isScalar = TRUE
+      }
+      else {
+         self$isScalar = FALSE
       }
     },
 
@@ -614,7 +1308,7 @@ Variable <- R6Class(
   "Variable",
   inherit = Symbol,
   public = list(
-
+    type = NULL,
     initialize = function(container=NA, gams_name=NA, 
                           type="free",
                           domain=NA, records=NA,
@@ -623,8 +1317,9 @@ Variable <- R6Class(
         symtype = type
       }
       else {
-         symtype = super$lblTypeSubtype()[[type]][1]
+         symtype = super$lblTypeSubtype()[[type]][[1]]
       }
+      self$type = type
 
       super$initialize(container, gams_name,
                       symtype, NA, 
@@ -689,8 +1384,8 @@ Equation <- R6Class(
         else {
           stop("error. Wrong equation type")
         }
-        symtype = super$lblTypeSubtype()[[type]][1]
-        symsubtype = super$lblTypeSubtype()[[type]][2]
+        symtype = super$lblTypeSubtype()[[type]][[1]]
+        symsubtype = super$lblTypeSubtype()[[type]][[2]]
       }
 
       super$initialize(container, gams_name,
@@ -778,7 +1473,7 @@ Alias <- R6Class(
       container$data[[gams_name]] = self
 
       self$gams_name = gams_name
-      self$type = "alias"
+      self$type = super$lblTypeSubtype()[["alias"]][[1]]
       self$is_alias = TRUE
       self$alias_with = private$setAlias(alias_for)
     }
