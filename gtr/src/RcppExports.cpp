@@ -34,6 +34,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getSymbolNames
+List getSymbolNames(CharacterVector gdxName, CharacterVector sysDir);
+RcppExport SEXP _gtr_getSymbolNames(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
+    rcpp_result_gen = Rcpp::wrap(getSymbolNames(gdxName, sysDir));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getSymbols
 List getSymbols(CharacterVector gdxName, CharacterVector sysDir);
 RcppExport SEXP _gtr_getSymbols(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
@@ -75,6 +87,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_gtr_getSpecialValues", (DL_FUNC) &_gtr_getSpecialValues, 2},
     {"_gtr_checkAcronyms", (DL_FUNC) &_gtr_checkAcronyms, 2},
+    {"_gtr_getSymbolNames", (DL_FUNC) &_gtr_getSymbolNames, 2},
     {"_gtr_getSymbols", (DL_FUNC) &_gtr_getSymbols, 2},
     {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 3},
     {"_gtr_readSymbols", (DL_FUNC) &_gtr_readSymbols, 3},

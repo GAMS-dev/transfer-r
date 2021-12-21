@@ -1,4 +1,5 @@
 library(R6)
+library(assertthat)
 
 GMS_DT_SET = 0
 GMS_DT_PAR = 1
@@ -40,31 +41,105 @@ SpecialValues = list(
 Container <- R6::R6Class (
   "Container",
   public= list(
-    Filename = NULL,
     SysDir = NULL,
     data = NULL,
     acronyms = NULL,
-    initialize = function(gdxname=NA, sysDirpath=NA) {
-      if (missing(sysDirpath)) {
+    initialize = function(load_from=NA, system_directory=NA) {
+      if (missing(system_directory)) {
         self$SysDir = find_gams()
       }
       else {
-        self$SysDir = sysDirpath
+        self$SysDir = system_directory
       }
 
       self$data = list()
-      if (!missing(gdxname)) {
+      if (!missing(load_from)) {
+        self$read(load_from, symbols="all")
+      }
+      private$requiresStateCheck = TRUE
+    },
 
-        self$Filename <- gdxname
-        # get all symbols and metadata from c++
-        # process it and populate various fields
-        metadata = getSymbols(self$Filename, self$SysDir)
-        for (m in metadata) {
+    read = function(load_from, symbols="all", values=TRUE) {
+      # read metadata
+      # get all symbols and metadata from c++
+      # process it and populate various fields
+      
+      # check if values is boolean
+      if (!is.logical(values)) {
+        stop("values must be type logical")
+      }
+
+      if (!(is.character(symbols)) && !(is.list(symbols))) {
+        stop("argument symbols must be of the type list or string")
+      }
+
+      for (s in symbols) {
+        if (!is.character(s)) {
+          stop("argument symbols must contain only type string")
+        }
+      }
+
+      if (!is.character(load_from)) {
+        stop("The argument load_from must be of type string")
+      }
+      else {
+        namesplit = strsplit(load_from, "\\.")
+        ext = tail(unlist(namesplit), 1)
+        if (ext != "gdx") {
+          stop("check filename extension, must be .gdx")
+        }
+        load_from = R.utils::getAbsolutePath(load_from)
+        if (!file.exists(load_from)) {
+          stop(paste0("File ", load_from, " doesn't exist"))
+        }
+      }
+      # check acronyms
+      acrInfo = checkAcronyms(load_from, self$SysDir)
+      nAcr = acrInfo[["nAcronyms"]]
+      if (nAcr != 0) {
+        warning("GDX file contains acronyms. 
+        Acronyms are not supported and are set to GAMS NA.")
+        self$acronyms = acrInfo[["acronyms"]]
+      }
+
+      # get names for all symbols
+      syms = getSymbolNames(load_from, self$SysDir)
+
+      if (is.character(symbols) && symbols == "all") {
+        symbolsToRead = syms
+      }
+      else {
+        symbolsToRead = list()
+        for (s in symbols) {
+          if (s %in% syms) {
+            symbolsToRead = append(symbolsToRead, s)
+          }
+        }
+      }
+      # check if load_from file exists
+      if (!file.exists(load_from)) {
+        stop(paste0("The file ", load_from, " doesn't exist."))
+      }
+
+      # check if container exists any of the symbols already
+      for (s in symbolsToRead) {
+        if (!is.null(self$data[[s]])) {
+          stop(paste0("Attempting to add symbol ", s, ", however,",
+          " one already exists in the Container. Symbol replacement",
+          " is only possible if the symbol is first removed from the", 
+          "Container with the removeSymbol() method."))
+        }
+      }
+      metadata = getSymbols(load_from, self$SysDir)
+      aliasList = list()
+      aliasCount = 0
+      for (m in metadata) {
+         if (m$name %in% symbolsToRead) {
             m1 = m[-1]
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
-                m$expltext)
+                description=m$expltext)
             }
             else if (m$type == GMS_DT_SET) {
                 if (m$subtype == 0) {
@@ -79,39 +154,79 @@ Container <- R6::R6Class (
                 }
             }
             else if (m$type == GMS_DT_VAR) {
+              print(paste0("domain: ", m$domain))
                 Variable$new(
                 self, m$name, m$type, m$domain,
-                m$expltext)
+                 description=m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
                 Equation$new(
                 self, m$name, m$subtype, m$domain,
-                m$expltext)
+                 description=m$expltext)
             }
             else if (m$type == GMS_DT_ALIAS) {
-                Alias$new(
-                self, m$name, self$data[[m$aliasfor]])
+              aliasCount = aliasCount + 1
+              aliasList = append(aliasList, list(m))
             }
             else {
-                print("Wrong data type")
+                stop("incorrect data type.")
             }
+         }
+      }
+
+      # do alias last
+      print("aliasList: ")
+      print(aliasList)
+      for (m in aliasList) {
+      Alias$new(
+        self, m$name, self$data[[m$aliasfor]])
+      }
+
+      if (values == TRUE) {
+
+        symbolrecords = readSymbols(unlist(symbolsToRead),
+        load_from, self$SysDir)
+
+        for (s in symbolrecords) {
+          self$data[[s$names]]$setRecords(s$records)
+
+          if (!is.null(self$acronyms)) {
+            if (inherits(self$data[[s$names]], "Parameter")
+            | inherits(self$data[[s$names]], "Variable")
+            | inherits(self$data[[s$names]], "Equation")) {
+              for (d in 1:self$data[[s$names]]$dimension) {
+                for (a in self$acronyms) {
+                  col = self$data[[s$names]]$records[,d]
+                  if (any(col == a * 1e301)) {
+                    idx = which(col == a * 1e301)
+                    for (id in idx) {
+                      self$data[[s$names]]$records[id, d] = SpecialValues[["NA"]]
+                    }
+                  }
+                }
+              }
+
+            }
+          }
         }
-        acrInfo = checkAcronyms(self$Filename, self$SysDir)
-        nAcr = acrInfo[["nAcronyms"]]
-        if (nAcr != 0) {
-          self$acronyms = acrInfo[["acronyms"]]
+      }
+    },
+
+    listSymbols = function(isValid=NULL) {
+      if (!is.null(isValid)) {
+        l = list()
+        for (d in self$data) {
+          if (d$isValid() == isValid) {
+            l = append(l, d$name)
+          }
         }
-        # setSpecialValues(self$Filename, self$SysDir)
-        # private$gdx_specVals_write =
-        # getSpecialValues(self$Filename, self$SysDir)
+        return(l)
       }
       else {
-        self$Filename <- NA
+        return(names(self$data))
       }
     },
-    listSymbols = function() {
-      return(names(self$data))
-    },
+
     listSets = function() {
       sets = list()
       for (s in self$listSymbols()) {
@@ -168,7 +283,7 @@ Container <- R6::R6Class (
     addParameter = function(name, domain = NA,
     records = NA, description = "") {
       Parameter$new(
-        self, name, domain,
+        self, name, domain, records,
         description)
         return(self$data[[name]])
     },
@@ -179,6 +294,7 @@ Container <- R6::R6Class (
         description)
         return(self$data[[name]])
     },
+
     addEquation = function(name, domain = NA, type,
     records = NA, description = "") {
       Equation$new(
@@ -188,8 +304,7 @@ Container <- R6::R6Class (
     },
     addAlias = function(name, alias_with) {
       Alias$new(
-      self, name, domain, is_singleton,
-      records, description)
+      self, name, alias_with)
       return(self$data[[name]])
     },
 
@@ -434,61 +549,103 @@ Container <- R6::R6Class (
       print(private$gdx_specVals_write)
     },
 
-    read = function(symNames=NA) {
-      if (missing(symNames)) {
-        # read all
-        symNames = names(self$data)
-      }
-      # else {
-      #   for (s in symNames) {
-      #     if (is.null(self$data[[s]])) {
-      #       print(paste0("symbol ", s, " not in the container!"))
-      #     }
-      #     else {
-      #       self$data[[s]]$records = as.data.frame(
-      #       readSymbol(s, self$Filename, self$SysDir))
-      #     }
-      #     # private$remap_special_values(s)
-      #   }
-      # }
-    symbolrecords = readSymbols(symNames,
-    self$Filename, self$SysDir)
+    write = function(gdxout) {
+      private$validSymbolOrder()
+      # remap special values
+      specialValsGDX = getSpecialValues(gdxout, self$SysDir)
+      # for (v in names(SpecialValues)) {
+        for (s in self$data) {
+          # no mapping required for alias
+          if (s$type == GMS_DT_ALIAS || s$type == GMS_DT_SET) next
+          colrange=(s$dimension+1):length(s$records)
+          s$records[,colrange][is.nan(
+            s$records[,colrange])] = 
+            specialValsGDX[["UNDEF"]]
 
-    for (s in symbolrecords) {
+          s$records[,colrange][is.na(
+            s$records[,colrange])] = 
+            specialValsGDX[["NA"]]
 
-      self$data[[s$names]]$setRecords(s$records)
-      
-      if (!is.null(self$acronyms)) {
-        if (inherits(self$data[[s$names]], "Parameter")
-        | inherits(self$data[[s$names]], "Variable")
-        | inherits(self$data[[s$names]], "Equation")) {
-          for (d in 1:self$data[[s$names]]$dimension) {
-            for (a in self$acronyms) {
-              col = self$data[[s$names]]$records[,d]
-              if (any(col == a * 1e301)) {
-                idx = which(col == a * 1e301)
-                for (id in idx) {
-                  self$data[[s$names]]$records[id, d] = SpecialValues[["NA"]]
-                }
-              }
-            }
-          }
+          s$records[,colrange][
+            ((s$records[,colrange]==Inf)
+          & (sign(s$records[,colrange]) 
+          == 1))] = specialValsGDX[["POSINF"]]
+
+          s$records[,colrange][
+            ((s$records[,colrange]==-Inf)
+          &(sign(s$records[,colrange]) 
+          == -1))] = specialValsGDX[["NEGINF"]]
+          
+          s$records[,colrange][
+            ((s$records[,colrange] == 0)
+          &(sign(1/s$records[,colrange]) 
+          == -1))] = specialValsGDX[["EPS"]]
+
+        #   if (length(s$records) != 1) {
+        #     for (c in length(s$records)) {
+        #       if (v == "EPS") {
+        #         idx = which((s$records[c] == SpecialValues[v]) && 
+        #         (sign(1/s$records[c]==-1) ))
+        #         s$records[idx, c] = specialValsGDX[v]
+        #       }
+        #       else if (v == "NA") {
+        #         idx = which(( is.na(s$records[c])) && 
+        #         (sign(1/s$records[c]==-1) ))
+        #         s$records[idx, c] = specialValsGDX[v]
+        #       }
+        #       else if (v == "UNDEF") {
+        #         idx = which(( is.na(s$records[c])) && 
+        #         (sign(1/s$records[c]==-1) ))
+        #         s$records[idx, c] = specialValsGDX[v]
+        #       }
+        #       else {
+        #         idx = which(s$records[c] == SpecialValues[v])
+        #         s$records[idx, c] = specialValsGDX[v]
+        #       }
+        #     }
+        #   }
+        #   else {
+        #     if (v == "EPS"){
+        #       idx = which((s$records == SpecialValues[v]) && 
+        #       (sign(1/s$records==-1) ))
+        #       s$records[idx] = specialValsGDX[v]
+        #     }
+        #     else {
+        #       idx = which(s$records == SpecialValues[v])
+        #       s$records[idx] = SpecialValues[v]
+        #     }
+        #   }
 
         }
+      # }
+      gdxWriteSuper(self$data, self$SysDir, gdxout)
+
+    },
+
+    isValid = function(verbose=FALSE, force=FALSE) {
+      if (force == TRUE) {
+        private$requiresStateCheck = TRUE
+      }
+
+      if (private$requiresStateCheck == TRUE) {
+        private$check()
       }
     }
 
-    },
-    write = function(gdxout){
-      private$validSymbolOrder()
-      print("writefunction")
-      print(self$SysDir)
-      print(gdxout)
-      gdxWriteSuper(self$data, self$SysDir, gdxout)
-    }
   ),
   private = list(
+    requiresStateCheck = NULL,
     gdx_specVals_write = list(),
+    check = function() {
+      if (private$requiresStateCheck == TRUE) {
+         private$validSymbolOrder()
+        if (all(self$listSymbols != self$listSymbols(isValid = TRUE) )) {
+          print("error! Container contains invalid symbols")
+        }
+        private$checkOff()
+      }
+    },
+
     remap_special_values = function(syms) {
       for (s in syms) {
         for (c in names(self$data[[s]]$records)) {
@@ -556,126 +713,6 @@ Container <- R6::R6Class (
       }
       return(orderedSymbols)
     },
-    # getOrderedSymbols = function() {
-    #   print("reorderhere")
-    #   orderedSymbols = list()
-
-    #   symbols = private$listSymbols()
-    #   print(symbols)
-    #   # append all sets with universe domain
-    #   setmap = list()
-    #   nodes = list() # unique elements
-    #   for (s in symbols) {
-    #     if (inherits(self$data[[s]], "Set")) {
-    #       if (self$data[[s]]$domain == "*") {
-    #         domainlist = "*"
-
-    #         orderedSymbols = append(orderedSymbols, s)
-    #         nodes = unique(append(nodes, c(s, domainlist)))
-    #         setmap[[s]] = domainlist
-
-    #         }
-    #       else if (self$data[[s]]$dimension ==1) {
-    #         domainlist = self$data[[s]]$domain$gams_name
-    #         print("domainlist: ")
-    #         print(domainlist)
-    #          nodes = unique(append(nodes, c(s, domainlist)))
-    #         setmap[[s]] = unlist(domainlist)
-    #       }
-    #       else {
-
-    #       }
-    #     }
-    #   }
-    #   print("here")
-    #   print(setmap)
-    #   print("nodes")
-    #   print(nodes)
-    #   # append all 1D sets\
-    #   adj = list()
-    #   print(paste0("length: ", length(setmap)))
-    #   if (length(setmap) != 0) {
-    #     print("here2")
-    #     for (n in nodes) {
-    #       for (s in names(setmap)) {
-    #         print(paste0("s ",s))
-    #         if (n %in% setmap[[s]]) {
-    #           adj[[n]] = append(adj[[n]], s)
-
-    #         }
-    #       }
-    #     }
-    #   }
-      
-    #   print("here1")
-    #   print(adj)
-    #   sortedSets = private$dfs(adj)
-    #   print("sorted sets")
-    #   print(sortedSets)
-
-    #   if (length(setdiff(sortedSets, nodes)) != 0 &
-    #   length(setdiff(nodes, sortedSets)) != 0) {
-    #     print("error cycle detected")
-    #   }
-
-    #   sortedSets = sortedSets[-1]
-    #   print("orderedsymbols 1")
-    #   print(orderedSymbols)
-    #   for (s in sortedSets) {
-    #     if (!(s %in% orderedSymbols)) {
-    #       orderedSymbols = append(orderedSymbols, s)
-    #     }
-    #   }
-    #   print("orderedsymbols 2")
-    #   print(orderedSymbols)
-
-    #   # 1 D alias
-    #   for (s in symbols) {
-    #     if ( inherits(self$data[[s]], "Alias") &
-    #       !(s %in% orderedSymbols) ) {
-    #       orderedSymbols = append(orderedSymbols, s)
-    #       }
-    #   }
-
-    #   # all other sets and aliases
-    #   for (s in symbols) {
-    #     if ( (inherits(self$data[[s]], "Set") | inherits(self$data[[s]], "Alias"))
-    #     & !(s %in% orderedSymbols) ) {
-    #     orderedSymbols = append(orderedSymbols, s)
-    #     }
-    #   }
-
-    #   #everything else
-    #   for (s in symbols) {
-    #     if ( inherits(self$data[[s]], "Parameter") | 
-    #     inherits(self$data[[s]], "Variable") |
-    #     inherits(self$data[[s]], "Equation")
-    #     & !(s %in% orderedSymbols) ) {
-    #     orderedSymbols = append(orderedSymbols, s)
-    #     }
-    #   }
-
-    #   print("ordered symbols")
-    #   print(orderedSymbols)
-    # },
-    # dfs = function(graph1) {
-    #   print("graph")
-    #   print(graph1)
-    #   stack = list("*")
-    #   visited = list()
-    #   while(length(stack) != 0) {
-    #     vertex = stack[[1]]
-    #     print(paste0("vertex: ", vertex))
-    #     stack = stack[-1]
-    #     if (!is.na(vertex %in% visited)){
-    #       print(paste0("visited ", visited))
-    #       visited = append(visited, vertex)
-    #       print(paste0("diff: ", setdiff(graph1[[vertex]], visited)))
-    #       stack = append(stack, unlist(setdiff(graph1[vertex], visited)))
-    #     }
-    #   }
-    #   return(visited)
-    # },
 
     reOrderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
@@ -685,6 +722,7 @@ Container <- R6::R6Class (
         self$data[[s]] = datacopy[[s]]
       }
     },
+
     isValidSymbolOrder = function() {
       validOrder = private$validSymbolOrder()
       currentOrder = names(self$data)
@@ -711,6 +749,18 @@ Container <- R6::R6Class (
       else {
         return(FALSE)
       }
+    },
+
+    checkOn = function() {
+      if (private$requiresStateCheck==FALSE) {
+        private$requiresStateCheck = TRUE
+      }
+    },
+
+    checkOff = function() {
+      if (private$requiresStateCheck==TRUE) {
+        private$requiresStateCheck = FALSE
+      }
     }
   )
   )
@@ -734,23 +784,61 @@ Symbol <- R6Class(
                         type=NA, subtype=NA, 
                         domain=NA,
                         expltext=NA) {
+    print("domain in symbol: ")
+    print(domain)
     self$gams_name <- name
     self$type = type
     self$subtype = subtype
+    private$requiresStateCheck = TRUE
     self$ref_container = container
     self$records = NA
+    for (d in self$domain) {
+      assert_that((inherits(d, "Set") || 
+      inherits(d, "Alias") ||
+      is.character(d)),
+      msg = "All 'domain' elements must be typ Set, Alias, or Character"
+      )
+      if ((inherits(d, "Set") || 
+      inherits(d, "Alias"))) {
+        assert_that( d$dimension == 1,
+        msg = "All linked 'domain' elements must be one dimensional"
+        )
+      }
+    }
+
     self$domain = list()
     for (d in domain) {
-      if (d == "*") {
-      self$domain = append(self$domain, 
-      "*")
+      if (is.character(d)) {
+        if (inherits(self$ref_container$data[[d]], "Set") ||
+         inherits(self$ref_container$data[[d]], "Alias")) {
+          self$domain = append(self$domain, 
+          self$ref_container$data[[d]])
+        }
+        else {
+          # attach as a plain string
+          self$domain = append(self$domain, d)
+        }
       }
       else {
-      self$domain = append(self$domain, 
-      self$ref_container$data[[d]])
+        if ((inherits(d, "Set"))) {
+          if (identical(d$ref_container,self$ref_container)) {
+            self$domain = append(self$domain, d)
+          }
+          else {
+            stop("domain elements cannot belong to a different container")
+          }
+        }
+        else if (inherits(d, "Alias")) {
+          if (identical(d$alias_with$ref_container, self$ref_container)) {
+            self$domain = append(self$domain, d)
+          }
+          else {
+            stop("domain elements cannot belong to a different container")
+          }
+        }
       }
-
     }
+    
     self$dimension = length(self$domain)
     self$domainNames = self$domain_names()
     self$domainType = self$domain_type()
@@ -1166,9 +1254,21 @@ Symbol <- R6Class(
     else {
       print("not supported yet!")
     }
+    return(column_names)
+  },
+
+  isValid = function(verbose=FALSE, force=FALSE) {
+    if (force == TRUE) {
+      private$requiresStateCheck = TRUE
+    }
+
+    if (private$requiresStateCheck == TRUE) {
+      private$check()
+    }
   }
   ),
   private = list(
+    requiresStateCheck = NULL,
     lblTypeSubtype = function() {
       return(list(
       "set" = list(GMS_DT_SET, 0),
@@ -1196,6 +1296,94 @@ Symbol <- R6Class(
     },
     attr = function() {
       return(list("level", "marginal", "lower", "upper", "scale"))
+    },
+    check = function() {
+      if (self$requiresStateCheck == TRUE) {
+        # if regular domain, symbols in domain must be valid
+        if (self$domainType == "regular") {
+          for (i in self$domain) {
+            if (!(i %in% self$ref_container$data) ) {
+              print("error! domain label not in the container")
+            }
+          }
+
+          for (i in self$domain) {
+            if (i$isValid() != TRUE) {
+              print("error! domain label is not valid")
+            }
+          }
+        }
+
+        # if records exist, check consistency
+        if (!is.null(self$records)) {
+          if (inherits(self, "Set")){
+            if (length(self$records) != self$dimension + 1) {
+              print("error! records dimensions not correct")
+            }
+          }
+          if (inherits(self, "Parameter")){
+            if (length(self$records) != self$dimension + 1) {
+              print("error! records dimensions not correct")
+              if (self$dimension == 0 && nrow(self$records != 1)) {
+                print("error! scalar with inconsistent dimension")
+              }
+            }
+          }
+          if (inherits(self, "Variable") | inherits(self, "Equation")){
+            if (length(self$records) != self$dimension + length(private$attr())) {
+              print("error! records dimensions not correct")
+            }
+          }
+          # check if records are dataframe
+          if (!is.data.frame(self$records)){
+            print("Error! records must be dataframe")
+          }
+
+          # check column names and order
+          cols = self$getColLabelsForRecords()
+          if (!all(colnames(self$records) == cols) ){
+            print("Error! columns incorrectly named")
+          }
+
+          # domain columns must be factor/character type
+
+          # check for domain violations
+          if (any(is.null(self$records[,1:self$dimension])) ||
+          any(is.na(self$records[,1:self$dimension]) )) {
+            print("domain violation detected")
+          }
+
+          # drop duplicates
+          if (self$dimension != 0) {
+            if (nrow(self$records) != nrow(unique(self$records))) {
+              print("Error! duplicate rows detected")
+            }
+          }
+
+          # check if all data columns are float
+          if (inherits(self, "Set") | 
+          inherits(self, "Parameter") | 
+          inherits(self, "Equation")) {
+            for (i in (self$dimension + 1):length(self$records)) {
+              if (!all(is.numeric(self$records[, i]))) {
+                print("all values should be numeric")
+              }
+            }
+          }
+        }
+
+      }
+      private$checkOff()
+    },
+    checkOn = function() {
+      if (private$requireStateCheck == FALSE) {
+        private$requireStateCheck == TRUE
+      }
+    },
+    checkOff = function() {
+      if (private$requireStateCheck == TRUE) {
+        private$requireStateCheck == FALSE
+      }
     }
   )
 )
@@ -1209,7 +1397,6 @@ Set <- R6Class(
     initialize = function(container=NA, gams_name=NA,
                           domain="*", is_singleton=FALSE,
                           records = NA, description=NA) {
-      print("sssss1")
       self$isSingleton <- is_singleton
       if (!is_singleton){
         type = super$lblTypeSubtype()[["set"]][[1]]
@@ -1231,21 +1418,29 @@ Set <- R6Class(
       invisible(self)
     },
     setRecords = function(records) {
-      if (is.data.frame(records)) {
-        c = length(records)
-        if (c == self$dimension) {
-          # no element text
-          records["element_text"] = ""
-        }
-        else if (c == self$dimension + 1) {
-          names(records)[c] <- "element_text"
-        }
-        else {
-          print("inconsistent records size!")
-        }
+      # # if records is a list, unlist
+      # if (is.list(records)) {
+      #   print("records not list")
+      #   records = unlist(records)
+      # }
+
+      # check if records is a dataframe and make if not
+      records = data.frame(records)
+      c = length(records)
+
+      if (c == self$dimension) {
+        # no element text
+        records["element_text"] = ""
       }
-      colnames = self$getColLabelsForRecords()
-      self$records = as.data.frame(records, col.names = colnames)
+      else if (c == self$dimension + 1) {
+
+      }
+      else {
+        stop(paste0("The argument 'records' is of length",c, " Expecting ", self$dimension + 1))
+      }
+      self$records = records
+      columnNames = self$getColLabelsForRecords()
+      colnames(self$records) = columnNames
     },
     isAlias = function() {
       return(private$is_alias)
@@ -1255,12 +1450,10 @@ Set <- R6Class(
   ),
   active = list(
     isSingleton = function(is_singleton){
-      print("sssss2")
       if (missing(is_singleton)) {
         return(private$is_singleton)
       }
       else {
-        print("sssss3")
          private$is_singleton = is_singleton
       }
     }
@@ -1297,8 +1490,29 @@ Parameter <- R6Class(
     },
 
     setRecords = function(records) {
-      colnames = self$getColLabelsForRecords()
-      self$records = as.data.frame(records, col.names = colnames)
+      # check if records is a dataframe and make if not
+      print("records in parameter setrecords")
+      print(records)
+      records = data.frame(records)
+
+      # check dimensionality of dataframe
+      r = nrow(records)
+      c = length(records)
+      print(paste0("parameter name: ", self$gams_name))
+      print(paste0("parameter dimension: ", self$dimension))
+      assertthat::assert_that(
+        c == self$dimension + 1,
+        msg = paste0("Dimensionality of records ", c - 1, 
+        " is inconsistent with parameter domain specification ", 
+        self$dimension)
+      )
+
+      self$records = records
+      columnNames = self$getColLabelsForRecords()
+      colnames(self$records) = columnNames
+
+      # convert values column to numeric
+      self$records$value = as.numeric(as.character(self$records$value))
     }
 
   )
@@ -1329,10 +1543,14 @@ Variable <- R6Class(
       }
     },
     setRecords = function(records) {
-      colnames = self$getColLabelsForRecords()
-      # print("in records")
-      # print(colnames)
-      self$records = as.data.frame(records, col.names = colnames)
+      # check if records is a dataframe and make if not
+      records = data.frame(records)
+      print("error source")
+      print(records)
+      print(paste0("name: ", self$gams_name))
+      self$records = records
+      columnNames = self$getColLabelsForRecords()
+      colnames(self$records) = columnNames
     }
   )
   )
@@ -1394,14 +1612,13 @@ Equation <- R6Class(
       if (any(!is.na(records))) {
         self$setRecords(records)
       }
-      # if (any(!is.na(records))) {
-      #   colnames = self$getColLabelsForRecords()
-      #   self$records = as.data.frame(records, col.names = colnames)
-      # }
     },
     setRecords = function(records) {
-      colnames = self$getColLabelsForRecords()
-      self$records = as.data.frame(records, col.names = colnames)
+      # check if records is a dataframe and make if not
+      records = data.frame(records)
+      self$records = records
+      columnNames = self$getColLabelsForRecords()
+      colnames(self$records) = columnNames
     }    
   ),
 
@@ -1482,7 +1699,7 @@ Alias <- R6Class(
   private = list(
     setAlias = function(alias_with) {
       if (!(inherits(alias_with, "Set") | inherits(alias_with, "Alias"))) {
-        print("GAMS 'alias_with' must be type Set or Alias")
+        stop("GAMS 'alias_with' must be type Set or Alias")
       }
 
       if (inherits(alias_with, "Alias")) {
@@ -1514,3 +1731,10 @@ find_gams <- function() {
   return(sysDirPath)
 }
 
+#is.nan function for dataframe
+is.nan.data.frame <- function(x)
+do.call(cbind, lapply(x, is.nan))
+
+#is.infinite function for dataframe
+# is.infinite.data.frame <- function(x)
+# do.call(cbind, lapply(x, is.infinite))

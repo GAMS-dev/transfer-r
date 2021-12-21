@@ -6,7 +6,7 @@ using namespace Rcpp;
 
 void WriteData(gdxHandle_t PGX, StringVector s, 
 std::vector<double> V, int VarType, int Dim,
-std::string elemText) {
+std::string elemText, int UELno) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
 
@@ -17,7 +17,6 @@ std::string elemText) {
     strcpy(Indx[D], s[D]);
   }
 	
-
   if (VarType == GMS_DT_VAR || VarType == GMS_DT_EQU) {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
     Values[GMS_VAL_MARGINAL] = V[GMS_VAL_MARGINAL];
@@ -27,12 +26,16 @@ std::string elemText) {
   }
   else if (VarType == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
-      Values[GMS_VAL_LEVEL] = 1;
+      Values[GMS_VAL_LEVEL] = UELno;
       Values[GMS_VAL_MARGINAL] = 0;
       Values[GMS_VAL_UPPER] = 0;
       Values[GMS_VAL_LOWER] = 0;
       Values[GMS_VAL_SCALE] = 0;
 
+    }
+    else {
+      Rcout << "empty string\n";
+      // Values[GMS_VAL_LEVEL]=0;
     }
   }
   else {
@@ -41,8 +44,10 @@ std::string elemText) {
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   
   int txtnr;
-
-  gdxAddSetText(PGX, elemText.c_str(), &txtnr);
+  if (VarType == GMS_DT_SET) {
+    Rcout << "textinside Writedata " << elemText << "\n";
+    gdxAddSetText(PGX, elemText.c_str(), &txtnr);
+  }
 
   return;
 }
@@ -60,7 +65,7 @@ rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
 
 gdxGetSpecialValues (PGX, sVals);
 List L = List::create(
-_["NA"] = sVals[GMS_SVIDX_UNDEF],
+_["NA"] = sVals[GMS_SVIDX_NA],
 _["EPS"] = sVals[GMS_SVIDX_EPS],
 _["UNDEF"] = sVals[GMS_SVIDX_UNDEF],
 _["POSINF"] = sVals[GMS_SVIDX_PINF],
@@ -99,7 +104,33 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   return L;
 
 }
+// [[Rcpp::export]]
+List getSymbolNames(CharacterVector gdxName, CharacterVector sysDir) {
+  gdxHandle_t PGX = NULL;
+  std::vector<std::string> domain;
+  int rc, errCode, symCount, UelCount, sym_dimension, sym_type;
+  char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE];
+  std::string myname = Rcpp::as<std::string>(gdxName);
+  std::string mysysDir = Rcpp::as<std::string>(sysDir);
 
+  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  gdxOpenRead(PGX, myname.c_str(), &errCode);
+
+  rc = gdxSystemInfo(PGX, &symCount, &UelCount);
+
+
+  List L1;
+	for (int i=0; i <= symCount; i++){
+		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
+
+    if (strcmp(symbolID, "*") != 0) {
+    L1.push_back(symbolID);
+    }
+  }
+
+  return L1;
+
+}
 // [[Rcpp::export]]
 List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
@@ -122,7 +153,7 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 
 
   List templist, L1;
-	for (int i=0; i < symCount; i++){
+	for (int i=0; i <= symCount; i++){
 		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
     gdxSymbolInfoX(PGX, i, &nrecs, &subtype, explText);
 
@@ -194,38 +225,20 @@ CharacterVector sysDir, CharacterVector fileName) {
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
-  
+  int UELno = 0;
+
   for (int d=0; d < data.length(); d++){
     
     List symname = data[d];
     std::string mysym = symname["gams_name"];
     Rcout << "here3 " << mysym << "\n";
     varType = symname["type"];
-    // std::string varTypeStr = symname["type"];
 
-
-    // if (strcmp(varTypeStr.c_str(),"parameter") == 0) {
-    //   varType = GMS_DT_PAR;
-    // }
-    // else if (strcmp(varTypeStr.c_str(),"set") == 0) {
-    //   varType = GMS_DT_SET;
-    // }
-    // else if (strcmp(varTypeStr.c_str(),"variable") == 0) {
-    //   varType = GMS_DT_VAR;
-    // }
-    // else if (strcmp(varTypeStr.c_str(),"equation") == 0) {
-    //   varType = GMS_DT_EQU;
-    // }
-    // else if (strcmp(varTypeStr.c_str(),"alias") == 0) {
-    //   varType = GMS_DT_ALIAS;
-    // }
-    // else {
-    //   Rcout << "unsupported symbol type \n";
-    // }
     if (varType == GMS_DT_ALIAS) {
       Rcout << "herehere\n";
       List alias_with_env = symname["alias_with"];
       std::string alias_with = alias_with_env["gams_name"];
+      Rcout << "alias_with: " << alias_with << "\n";
       if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
       Rcout << "cannot add alias \n";
       continue;
@@ -235,12 +248,12 @@ CharacterVector sysDir, CharacterVector fileName) {
     // only executed if not an alias
     df = symname["records"];
     domain = symname["domainstr"];
-    Dim = symname["dimension"];
+    std::string expltxt = symname["expltext"];
     Rcout << "dim " << Dim << "\n";
     Rcout << "varType " << varType << "\n";
     Rcout << "mysym " << mysym << "\n";
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
-    "Demand data", Dim, varType, 0))
+    expltxt.c_str(), Dim, varType, 0))
     Rcout << "Error2" << "\n";
 
     for (int D=0; D < Dim; D++) {
@@ -248,7 +261,8 @@ CharacterVector sysDir, CharacterVector fileName) {
     }
 
     gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
-
+    Rcout << "rows: " << df.nrows() << "\n";
+    Rcout << "columns: " << df.size() << "\n";
     for (int i =0; i < df.nrows(); i++) {
       for (int j=0; j < df.size(); j++) {
         if (j < Dim) {
@@ -270,12 +284,14 @@ CharacterVector sysDir, CharacterVector fileName) {
 
 
       if (varType != GMS_DT_SET){
-        Rcout << "here6\n";
-        WriteData(PGX, names, values, varType, Dim, elemText);
+        WriteData(PGX, names, values, varType, Dim, elemText, 0);
       }
       else {
-        WriteData(PGX, names, values, varType, Dim, elemText);
+        Rcout << "i " << i << " elementText: " << elemText << "\n";
+        UELno += 1;
+        WriteData(PGX, names, values, varType, Dim, elemText, UELno);
       }
+      elemText.clear();
       values.clear();
     }
     Rcout << "here5\n";
@@ -335,11 +351,11 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
     mysymName = symNames(symcount);
 
 		if (!gdxFindSymbol(PGX, mysymName.c_str(), &VarNr)) {
-			Rcout << "**** Could not find variable X" << "\n";
-			exit(1);
+			Rcout << "**** Could not find variable " << mysymName  << " \n";
 		}
 
     gdxSymbolInfo(PGX, VarNr, symbolID, &Dim, &VarType);
+    if (VarType == GMS_DT_ALIAS) continue;
     rc = gdxSymbolGetDomainX(PGX, VarNr, domains_ptr);
     for (int j=0; j < Dim; j++) {
       domain.push_back(domains_ptr[j]);
@@ -348,8 +364,14 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
 		while (gdxDataReadStr(PGX, Indx, Values, &N)) {
       if (VarType == GMS_DT_SET || VarType == GMS_DT_PAR){
         if (VarType == GMS_DT_SET){
-        gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
-        elemText.push_back(Msg);
+        rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
+          if (rc != 0) {
+            Rcout << "element text: " << Msg << "\n";
+            elemText.push_back(Msg);
+          }
+          else {
+            elemText.push_back("");
+          }
         } else {
           levels.push_back(Values[GMS_VAL_LEVEL]);
         }
@@ -380,7 +402,7 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
         df["uni"] = index_columns;
       }
       else {
-        df[domain[D]] = index_columns;
+        df[domain[D] + "_" + std::to_string(D)] = index_columns;
       }
       index_columns.clear();
     }
