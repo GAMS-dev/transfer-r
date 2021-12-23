@@ -1493,6 +1493,8 @@ Parameter <- R6Class(
       # check if records is a dataframe and make if not
       print("records in parameter setrecords")
       print(records)
+      # print("sign in param")
+      # print(sign(1/records[["values"]]))
       records = data.frame(records)
 
       # check dimensionality of dataframe
@@ -1511,8 +1513,12 @@ Parameter <- R6Class(
       columnNames = self$getColLabelsForRecords()
       colnames(self$records) = columnNames
 
+      #if records "value" is not numeric, stop.
+      if (any(!is.numeric(self$records[,length(self$records)]))) {
+        stop("All entries in the 'values' column of a parameter must be numeric.")
+      }
       # convert values column to numeric
-      self$records$value = as.numeric(as.character(self$records$value))
+      # self$records$value = as.numeric(as.character(self$records$value))
     }
 
   )

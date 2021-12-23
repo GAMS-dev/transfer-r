@@ -6,7 +6,7 @@ using namespace Rcpp;
 
 void WriteData(gdxHandle_t PGX, StringVector s, 
 std::vector<double> V, int VarType, int Dim,
-std::string elemText, int UELno) {
+std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumber) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
 
@@ -26,7 +26,17 @@ std::string elemText, int UELno) {
   }
   else if (VarType == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
-      Values[GMS_VAL_LEVEL] = UELno;
+
+      if (elemTextToNumber.count(elemText) == 0) {
+        serialNo = serialNo + 1;
+        elemTextToNumber.insert(std::pair<std::string, int> (elemText, serialNo));
+        Values[GMS_VAL_LEVEL] = serialNo; //zero indexing in c++
+      }
+      else {
+        Values[GMS_VAL_LEVEL] = elemTextToNumber[elemText];
+      }
+
+      // Values[GMS_VAL_LEVEL] = 1;
       Values[GMS_VAL_MARGINAL] = 0;
       Values[GMS_VAL_UPPER] = 0;
       Values[GMS_VAL_LOWER] = 0;
@@ -35,19 +45,21 @@ std::string elemText, int UELno) {
     }
     else {
       Rcout << "empty string\n";
-      // Values[GMS_VAL_LEVEL]=0;
+      Values[GMS_VAL_LEVEL]=0;
     }
   }
   else {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
   }
-	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
-  
   int txtnr;
   if (VarType == GMS_DT_SET) {
     Rcout << "textinside Writedata " << elemText << "\n";
     gdxAddSetText(PGX, elemText.c_str(), &txtnr);
   }
+
+	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
+
+
 
   return;
 }
@@ -192,7 +204,7 @@ CharacterVector sysDir, CharacterVector fileName) {
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE];
 	int         ErrNr, rc, varType;
-
+  std::map<std::string, int> elemTextToNumber;
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
@@ -225,8 +237,7 @@ CharacterVector sysDir, CharacterVector fileName) {
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
-  int UELno = 0;
-
+  int elemTextCount = 0;
   for (int d=0; d < data.length(); d++){
     
     List symname = data[d];
@@ -284,12 +295,13 @@ CharacterVector sysDir, CharacterVector fileName) {
 
 
       if (varType != GMS_DT_SET){
-        WriteData(PGX, names, values, varType, Dim, elemText, 0);
+        WriteData(PGX, names, values, varType, Dim, elemText, elemTextCount, elemTextToNumber);
       }
       else {
-        Rcout << "i " << i << " elementText: " << elemText << "\n";
-        UELno += 1;
-        WriteData(PGX, names, values, varType, Dim, elemText, UELno);
+
+        Rcout << "elemTextCount " << elemTextCount << " elementText: " << elemText << "\n";
+        WriteData(PGX, names, values, varType, Dim, elemText, elemTextCount, elemTextToNumber);
+        Rcout << "elemTextCountAfter " << elemTextCount << "\n";
       }
       elemText.clear();
       values.clear();
@@ -362,9 +374,9 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
     }
     if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) Rcout << "Error2" << "\n";
 		while (gdxDataReadStr(PGX, Indx, Values, &N)) {
-      if (VarType == GMS_DT_SET || VarType == GMS_DT_PAR){
+      if (VarType == GMS_DT_SET || VarType == GMS_DT_PAR) {
         if (VarType == GMS_DT_SET){
-        rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
+          rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
           if (rc != 0) {
             Rcout << "element text: " << Msg << "\n";
             elemText.push_back(Msg);
@@ -373,6 +385,12 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
             elemText.push_back("");
           }
         } else {
+          Rcout << "reading parameter levels\n";
+          Rcout << Values[GMS_VAL_LEVEL] << "\n";
+          if (Values[GMS_VAL_LEVEL] > 0) Rcout << "positive\n";
+          if (Values[GMS_VAL_LEVEL] < 0) Rcout << "negative\n";
+          if (1/Values[GMS_VAL_LEVEL] > 0) Rcout << "reciprocal positive\n";
+          if (1/Values[GMS_VAL_LEVEL] < 0) Rcout << "reciprocal negative\n";
           levels.push_back(Values[GMS_VAL_LEVEL]);
         }
         for (D = 0; D < Dim; D++) {
@@ -429,6 +447,7 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
     scale.clear();
     domain.clear();
     // copy end
+
     List L1 = List::create(Named("names")=mysymName, _["records"]=df);
     L.push_back(L1);
   }
