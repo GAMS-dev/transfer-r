@@ -27,7 +27,7 @@ GMS_EQUTYPE_C   =     5
 GMS_EQUTYPE_B   =     6
 
 GMS_EQU_USERINFO_BASE = 53
-
+gams_description_max_length = 255
 
 
 SpecialValues = list(
@@ -45,18 +45,25 @@ Container <- R6::R6Class (
     data = NULL,
     acronyms = NULL,
     initialize = function(load_from=NA, system_directory=NA) {
+
       if (missing(system_directory)) {
         self$SysDir = find_gams()
+
       }
       else {
-        self$SysDir = system_directory
+        if (R.utils::isAbsolutePath(system_directory)) {
+          self$SysDir = system_directory
+        }
+        else {
+          stop("must enter valid full (absolute) path to GAMS system_directory")
+        }
       }
 
       self$data = list()
       if (!missing(load_from)) {
         self$read(load_from, symbols="all")
       }
-      private$requiresStateCheck = TRUE
+      private$checkOn()
     },
 
     read = function(load_from, symbols="all", values=TRUE) {
@@ -209,6 +216,11 @@ Container <- R6::R6Class (
             }
           }
         }
+
+        private$linkDomainObjects(symbolsToRead)
+
+        # check validity
+        validSymbols=self$listSymbols(isValid=TRUE)
       }
     },
 
@@ -250,7 +262,7 @@ Container <- R6::R6Class (
       aliases = list()
       for (s in self$listSymbols()) {
         if (inherits(self$data[[s]], "Alias")) {
-          aliases = append(Aliases, s)
+          aliases = append(aliases, s)
         }
       }
       return(aliases)
@@ -623,6 +635,12 @@ Container <- R6::R6Class (
     },
 
     isValid = function(verbose=FALSE, force=FALSE) {
+      assertthat::assert_that(is.logical(verbose), 
+      msg = "Argument 'verbose' must be logical")
+      
+      assertthat::assert_that(is.logical(force), 
+      msg = "Argument 'force' must be logical")
+
       if (force == TRUE) {
         private$requiresStateCheck = TRUE
       }
@@ -636,11 +654,37 @@ Container <- R6::R6Class (
   private = list(
     requiresStateCheck = NULL,
     gdx_specVals_write = list(),
+
+    linkDomainObjects = function(symbols) {
+      for (s in symbols) {
+        if (! inherits(self$data[[s]], "Alias")) {
+          d = list()
+          for (j in self$data[[s]]$domain) {
+            if ((is.character(j) && (j == s)) || 
+            (inherits(j, "Set") && (identical(j,s) ))) {
+              d = append(d, j)
+            }
+            else if (is.character(j) && (j %in% symbols) && (j != s)) {
+               d = append(d, self$data[[j]])
+            }
+            else {
+              d = append(d, j)
+            }
+          }
+        }
+        self$data[[s]]$domain = d
+      }
+    },
+
     check = function() {
       if (private$requiresStateCheck == TRUE) {
          private$validSymbolOrder()
-        if (all(self$listSymbols != self$listSymbols(isValid = TRUE) )) {
-          print("error! Container contains invalid symbols")
+
+        if (all(self$listSymbols() != self$listSymbols(isValid = TRUE) )) {
+          stop( paste0("Container contains invalid symbols; ",
+          "invalid symbols can be found with the .listSymbols() ",
+          "method. Debug invalid symbol(s) by running .",
+          "isValid(verbose=TRUE, force=TRUE) method on the symbol object."))
         }
         private$checkOff()
       }
@@ -665,6 +709,7 @@ Container <- R6::R6Class (
         }
       }
     },
+
     validSymbolOrder = function() {
       orderedSymbols = list()
       symbolsToSort = self$listSymbols()
@@ -688,7 +733,7 @@ Container <- R6::R6Class (
               doi = append(doi, TRUE)
             }
             else if ( (inherits(i, "Set") | inherits(i, "Alias")) &
-            i$gams_name %in% orderedSymbols) {
+            i$name %in% orderedSymbols) {
                doi = append(doi, TRUE)
             }
             else {
@@ -708,7 +753,15 @@ Container <- R6::R6Class (
         }
 
         if (idx == length(symbolsToSort) + 1 & length(symbolsToSort) != 0) {
-          stop("Error: Graph cycle detected")
+          symString = ""
+          for (s in symbolsToSort) {
+            if (inherits(self$data[[s]], "Set")) {
+              symString = paste(symString, s)
+            }
+          }
+
+          stop(paste0("Error: Graph cycle detected among symbols: ",
+          symString, " -- must resolve circular domain referencing"))
         }
       }
       return(orderedSymbols)
@@ -725,6 +778,8 @@ Container <- R6::R6Class (
 
     isValidSymbolOrder = function() {
       validOrder = private$validSymbolOrder()
+      print("valid order")
+      print(validOrder)
       currentOrder = names(self$data)
       h = list()
       for (i in seq_along(self$data)) {
@@ -769,76 +824,40 @@ Container <- R6::R6Class (
 Symbol <- R6Class(
   "Symbol",
   public = list(
-  gams_name = NULL,
   type = NULL,
   subtype = NULL,
-  ref_container = NULL,
-  domain = NULL,
   dimension = NULL,
   records = NULL,
-  expltext = NULL,
   domainstr = NULL,
   domainNames = NULL,
   domainType = NULL,
+
   initialize = function(container=NA, name=NA,
                         type=NA, subtype=NA, 
                         domain=NA,
-                        expltext=NA) {
-    print("domain in symbol: ")
-    print(domain)
-    self$gams_name <- name
+                        description=NA) {
+
+
+    private$checkOn()
+    self$ref_container = container
+
+    if (!is.null(self$ref_container$data[[name]])) {
+      stop(paste0("Attempting to add symbol ", s, ", however,",
+      " one already exists in the Container. Symbol replacement",
+      " is only possible if the symbol is first removed from the", 
+      "Container with the removeSymbol() method."))
+    }
+    else {
+      self$ref_container$data[[name]] = self
+    }
+    self$name <- name
     self$type = type
     self$subtype = subtype
-    private$requiresStateCheck = TRUE
-    self$ref_container = container
-    self$records = NA
-    for (d in self$domain) {
-      assert_that((inherits(d, "Set") || 
-      inherits(d, "Alias") ||
-      is.character(d)),
-      msg = "All 'domain' elements must be typ Set, Alias, or Character"
-      )
-      if ((inherits(d, "Set") || 
-      inherits(d, "Alias"))) {
-        assert_that( d$dimension == 1,
-        msg = "All linked 'domain' elements must be one dimensional"
-        )
-      }
-    }
 
-    self$domain = list()
-    for (d in domain) {
-      if (is.character(d)) {
-        if (inherits(self$ref_container$data[[d]], "Set") ||
-         inherits(self$ref_container$data[[d]], "Alias")) {
-          self$domain = append(self$domain, 
-          self$ref_container$data[[d]])
-        }
-        else {
-          # attach as a plain string
-          self$domain = append(self$domain, d)
-        }
-      }
-      else {
-        if ((inherits(d, "Set"))) {
-          if (identical(d$ref_container,self$ref_container)) {
-            self$domain = append(self$domain, d)
-          }
-          else {
-            stop("domain elements cannot belong to a different container")
-          }
-        }
-        else if (inherits(d, "Alias")) {
-          if (identical(d$alias_with$ref_container, self$ref_container)) {
-            self$domain = append(self$domain, d)
-          }
-          else {
-            stop("domain elements cannot belong to a different container")
-          }
-        }
-      }
-    }
-    
+    self$records = NA
+
+    self$domain = domain
+
     self$dimension = length(self$domain)
     self$domainNames = self$domain_names()
     self$domainType = self$domain_type()
@@ -848,17 +867,16 @@ Symbol <- R6Class(
         self$domainstr = append(self$domainstr, d)
       }
       else {
-        self$domainstr = append(self$domainstr, d$gams_name)
+        self$domainstr = append(self$domainstr, d$name)
       }
     }
-    self$expltext = expltext
+    self$description = description
 
-    container$data[[name]] = self
   },
 
   summary = function() {
     list(
-      "gams_name" = self$gams_name,
+      "name" = self$name,
       "type" = self$type,
       "subtype" = self$subtype,
       "domain" = self$domain,
@@ -1228,7 +1246,7 @@ Symbol <- R6Class(
         d = self$domain[[i]]
       }
       else if (inherits(self$domain[[i]], "Symbol")) {
-        d = self$domain[[i]]$gams_name
+        d = self$domain[[i]]$name
       }
       else {
         print("unknown data type of domain")
@@ -1258,17 +1276,186 @@ Symbol <- R6Class(
   },
 
   isValid = function(verbose=FALSE, force=FALSE) {
+    assertthat::assert_that(is.logical(verbose), 
+    msg = "Argument 'verbose' must be logical")
+
+    assertthat::assert_that(is.logical(force), 
+    msg = "Argument 'force' must be logical")
+
     if (force == TRUE) {
       private$requiresStateCheck = TRUE
     }
 
     if (private$requiresStateCheck == TRUE) {
-      private$check()
+      tryCatch(
+        {
+          private$check()
+          return(TRUE)
+        },
+        error = function(e) {
+          message(e)
+          return(FALSE)
+        }
+      )
     }
+
   }
   ),
+  active = list(
+    description = function(description_input) {
+      if (missing(description_input)){
+        return(.description)
+      }
+      else {
+        if (!is.character(description_input)) {
+          stop("Symbol 'description' must be type character")
+        }
+
+        if (length(description_input) >= gams_description_max_length) {
+          stop(paste0("Symbol 'description' must have length ",
+          gams_description_max_length, " or smaller"))
+        }
+
+        if (!is.null(self$description)) {
+          if (private$.description != description_input){
+            private$checkOn()
+          }
+          else {
+            private$.description = description_input
+          }
+        }
+        else {
+          private$checkOn()
+          private$.description = description
+        }
+      }
+    },
+    dimension = function(dimension_input) {
+      if (missing(dimension_input)) {
+        return(length(self$domain))
+      }
+      else {
+         assertthat::assert_that(
+           (!is.integer(dimension_input))|| (dimension_input < 0) ),
+           msg = "Symbol 'dimension' must be type int (greater than or equal to 0)"
+
+        if (length(self$domain) > dimension_input) {
+          self$domain = self$domain[1:dimension_input]
+        }
+        else if (length(self$domain) < dimension_input) {
+           new = self$domain
+           new = append(new, replicate(dimension_input - length(self$domain), "*"))
+        }
+        else {
+        }
+      }
+    },
+    domain = function(domain_input) {
+
+      if (missing(domain_input)) {
+        return(.domain)
+      }
+      else {
+        for (d in domain_input) {
+          assertthat::assert_that((inherits(d, "Set") || 
+          inherits(d, "Alias") ||
+          is.character(d)),
+          msg = "All 'domain' elements must be type Set, Alias, or Character"
+          )
+          if ((inherits(d, "Set") || 
+          inherits(d, "Alias"))) {
+            assertthat::assert_that( d$dimension == 1,
+            msg = "All linked 'domain' elements must be one dimensional"
+            )
+          }
+        }
+
+      assertthat::assert_that(length(domain) <= 20,
+      msg = "Argument 'domain' length cannot be > 20")
+        domaintemp = list()
+        for (d in domain) {
+          if (is.character(d)) {
+            if (inherits(self$ref_container$data[[d]], "Set") ||
+            inherits(self$ref_container$data[[d]], "Alias")) {
+              domaintemp = append(domaintemp, 
+              self$ref_container$data[[d]])
+            }
+            else {
+              # attach as a plain string
+              domaintemp = append(domaintemp, d)
+            }
+          }
+          else {
+            if ((inherits(d, "Set"))) {
+              if (identical(d$ref_container,self$ref_container)) {
+                domaintemp = append(domaintemp, d)
+              }
+              else {
+                stop("domain elements cannot belong to a different container")
+              }
+            }
+            else if (inherits(d, "Alias")) {
+              if (identical(d$alias_with$ref_container, self$ref_container)) {
+                domaintemp = append(domaintemp, d)
+              }
+              else {
+                stop("domain elements cannot belong to a different container")
+              }
+            }
+          }
+        }
+        private$.domain = domaintemp
+      }
+    },
+
+    ref_container = function(ref_container_input) {
+      if (missing(ref_container_input)) {
+        return(private$.ref_container)
+      }
+      else {
+        if (!inherits(ref_container_input, "Container")) {
+          stop("Symbol 'container' must be type Container")
+        }
+        if (is.null(self$ref_container)){
+          if (!identical(self$ref_container, ref_container_input)) {
+            private$checkOn()
+          }
+          private$.ref_container = ref_container_input
+        }
+        else {
+          private$checkOn()
+          private$.ref_container = ref_container_input
+        }
+      }
+    },
+    name = function(name_input) {
+      if (!is.character(name_input)) {
+        stop("GAMS symbol 'name' must be type chracter")
+      }
+
+      if (nchar(a) > private$symbolMaxLength) {
+        stop(paste0("GAMS symbol 'name' is too long,",
+        " max is ", private$symbolMaxLength, " characters"))
+      }
+      
+      if (missing(name_input)) {
+        return(private$.name)
+      }
+      else {
+        private$.name = name_input
+      }
+    }
+  ),
+
   private = list(
+    .description = NULL,
+    .domain = NULL,
+    .ref_container = NULL,
+    .name = NULL,
     requiresStateCheck = NULL,
+    symbolMaxLength = 63,
+    descriptionMaxLength = 255,
+
     lblTypeSubtype = function() {
       return(list(
       "set" = list(GMS_DT_SET, 0),
@@ -1294,22 +1481,33 @@ Symbol <- R6Class(
       ))
 
     },
+
     attr = function() {
       return(list("level", "marginal", "lower", "upper", "scale"))
     },
+
     check = function() {
-      if (self$requiresStateCheck == TRUE) {
+      if (private$requiresStateCheck == TRUE) {
         # if regular domain, symbols in domain must be valid
         if (self$domainType == "regular") {
           for (i in self$domain) {
-            if (!(i %in% self$ref_container$data) ) {
-              print("error! domain label not in the container")
+            if (!( ( (inherits(i, "Set") || inherits(i, "Alias")) && 
+            (i$name %in% names(self$ref_container$data)) ) ||
+            ( (is.character(i)) && 
+            (i %in% names(self$ref_container$data)) )
+             )) {
+              stop(paste0("symbol defined over domain symbol ",
+              i$name, " however, the object reference is not in the", 
+              " Container anymore -- must reset domain for symbol ", 
+              self$name))
             }
           }
 
           for (i in self$domain) {
             if (i$isValid() != TRUE) {
-              print("error! domain label is not valid")
+              stop(paste0("symbol defined over domain symbol ",
+              i$name, " however, this object is not a valid object ",
+              "in the Container -- all domain objects must be valid."))
             }
           }
         }
@@ -1318,55 +1516,69 @@ Symbol <- R6Class(
         if (!is.null(self$records)) {
           if (inherits(self, "Set")){
             if (length(self$records) != self$dimension + 1) {
-              print("error! records dimensions not correct")
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns (<symbol dimension> + 1)"))
             }
           }
-          if (inherits(self, "Parameter")){
+          if (inherits(self, "Parameter")) {
             if (length(self$records) != self$dimension + 1) {
-              print("error! records dimensions not correct")
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns (<symbol dimension> + 1)"))
+
               if (self$dimension == 0 && nrow(self$records != 1)) {
-                print("error! scalar with inconsistent dimension")
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns (<symbol dimension> + 1)"))
               }
             }
           }
           if (inherits(self, "Variable") | inherits(self, "Equation")){
-            if (length(self$records) != self$dimension + length(private$attr())) {
-              print("error! records dimensions not correct")
+            if (length(self$records) != 
+            self$dimension + length(private$attr())) {
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns ", 
+              self$dimension + length(private$attr())))
             }
           }
           # check if records are dataframe
           if (!is.data.frame(self$records)){
-            print("Error! records must be dataframe")
+            stop("Symbol 'records' must be type dataframe")
           }
 
           # check column names and order
           cols = self$getColLabelsForRecords()
-          if (!all(colnames(self$records) == cols) ){
-            print("Error! columns incorrectly named")
+          if (!all(unlist(lapply(cols, is.character) ))) {
+            stop("Domain columns in symbol 'records' must be of type character")
           }
 
-          # domain columns must be factor/character type
-
           # check for domain violations
-          if (any(is.null(self$records[,1:self$dimension])) ||
-          any(is.na(self$records[,1:self$dimension]) )) {
-            print("domain violation detected")
+
+          if (self$dimension != 0) {
+            nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
+            narecords = self$records[,1:self$dimension][is.na(self$records[,1:self$dimension])]
+
+            if (length(nullrecords) != 0 || 
+            length(narecords) != 0 ) {
+              stop(paste0("Symbol 'records' contain domain violations;",
+              " ensure that all domain elements have",
+              " been mapped properly to a category"))
+            }
           }
 
           # drop duplicates
           if (self$dimension != 0) {
             if (nrow(self$records) != nrow(unique(self$records))) {
-              print("Error! duplicate rows detected")
+              print(paste0("Symbol 'records' contain non-unique",
+               " domain members; ensure that only unique members exist"))
             }
           }
 
           # check if all data columns are float
-          if (inherits(self, "Set") | 
+          if (inherits(self, "Variable") | 
           inherits(self, "Parameter") | 
           inherits(self, "Equation")) {
             for (i in (self$dimension + 1):length(self$records)) {
               if (!all(is.numeric(self$records[, i]))) {
-                print("all values should be numeric")
+                stop("Data in column", i, " must be numeric")
               }
             }
           }
@@ -1376,13 +1588,13 @@ Symbol <- R6Class(
       private$checkOff()
     },
     checkOn = function() {
-      if (private$requireStateCheck == FALSE) {
-        private$requireStateCheck == TRUE
+      if (private$requiresStateCheck == FALSE) {
+        private$requiresStateCheck == TRUE
       }
     },
     checkOff = function() {
-      if (private$requireStateCheck == TRUE) {
-        private$requireStateCheck == FALSE
+      if (private$requiresStateCheck == TRUE) {
+        private$requiresStateCheck == FALSE
       }
     }
   )
@@ -1398,7 +1610,7 @@ Set <- R6Class(
                           domain="*", is_singleton=FALSE,
                           records = NA, description=NA) {
       self$isSingleton <- is_singleton
-      if (!is_singleton){
+      if (!is_singleton) {
         type = super$lblTypeSubtype()[["set"]][[1]]
         subtype = super$lblTypeSubtype()[["set"]][[2]]
       }
@@ -1436,7 +1648,8 @@ Set <- R6Class(
 
       }
       else {
-        stop(paste0("The argument 'records' is of length",c, " Expecting ", self$dimension + 1))
+        stop(paste0("The argument 'records' is of length",
+        c, " Expecting ", self$dimension + 1))
       }
       self$records = records
       columnNames = self$getColLabelsForRecords()
@@ -1449,7 +1662,10 @@ Set <- R6Class(
 
   ),
   active = list(
-    isSingleton = function(is_singleton){
+    isSingleton = function(is_singleton) {
+      if (!is.logical(is_singleton)) {
+        stop("Argument 'is_singleton' must be type bool")
+      }
       if (missing(is_singleton)) {
         return(private$is_singleton)
       }
@@ -1500,7 +1716,7 @@ Parameter <- R6Class(
       # check dimensionality of dataframe
       r = nrow(records)
       c = length(records)
-      print(paste0("parameter name: ", self$gams_name))
+      print(paste0("parameter name: ", self$name))
       print(paste0("parameter dimension: ", self$dimension))
       assertthat::assert_that(
         c == self$dimension + 1,
@@ -1551,9 +1767,6 @@ Variable <- R6Class(
     setRecords = function(records) {
       # check if records is a dataframe and make if not
       records = data.frame(records)
-      print("error source")
-      print(records)
-      print(paste0("name: ", self$gams_name))
       self$records = records
       columnNames = self$getColLabelsForRecords()
       colnames(self$records) = columnNames
@@ -1692,17 +1905,90 @@ Alias <- R6Class(
     alias_with = NULL,
     initialize = function(container=NA, gams_name=NA, 
                           alias_for=NA) {
+      private$requiresStateCheck = TRUE
       self$ref_container = container
       container$data[[gams_name]] = self
 
-      self$gams_name = gams_name
+      self$name = gams_name
       self$type = super$lblTypeSubtype()[["alias"]][[1]]
       self$is_alias = TRUE
       self$alias_with = private$setAlias(alias_for)
+    },
+
+    getCardinality = function() {
+      return(self$ref_container$data[[self$alias_with$name]]$getCardinality())
+    },
+
+    getSparsity = function() {
+      return(self$ref_container$data[[self$alias_with$name]]$getSparsity())
+    },
+
+    isValid = function(verbose=FALSE, force=FALSE) {
+      assertthat::assert_that(is.logical(verbose),
+      msg = "Argument 'verbose' must be logical")
+
+      assertthat::assert_that(is.logical(force),
+      msg = "Argument 'force' must be logical")
+
+      if (force == TRUE) {
+        private$requiresStateCheck = TRUE
+      }
+
+      if (private$requiresStateCheck == TRUE) {
+        tryCatch(
+          {
+            private$check()
+            return(TRUE)
+          },
+          error = function(e) {
+            message(e)
+            return(FALSE)
+          }
+        )
+      } 
+      else {
+        return(TRUE)
+      }
     }
-  )
-  ,
+  ),
+
+  active = list(
+    isSingleton = function(is_singleton) {
+      if (missing(is_singleton)) {
+        return(private$is_singleton)
+      }
+      else {
+        self$ref_container$data[[self$alias_with$name]]$isSingleton = is_singleton
+      }
+    }
+  ),
+
   private = list(
+
+    requiresStateCheck = NA,
+    is_singleton = NA,
+
+    check = function() {
+      if (private$requiresStateCheck == TRUE) {
+        if (self$ref_container$data[[self$alias_with$name]]$isValid() == FALSE) {
+          stop(paste0("Alias symbol is not valid because parent set ", self$alias_with$name,
+          "is not valid"))
+        }
+      }
+    },
+
+    checkOn = function() {
+      if (private$requiresStateCheck==FALSE) {
+        private$requiresStateCheck = TRUE
+      }
+    },
+
+    checkOff = function() {
+      if (private$requiresStateCheck==TRUE) {
+        private$requiresStateCheck = FALSE
+      }
+    },
+
     setAlias = function(alias_with) {
       if (!(inherits(alias_with, "Set") | inherits(alias_with, "Alias"))) {
         stop("GAMS 'alias_with' must be type Set or Alias")
@@ -1729,10 +2015,14 @@ find_gams <- function() {
   }
   paths = Sys.getenv("PATH")
   paths_split = unlist(strsplit(paths, .Platform$path.sep))
+  sysDirPath = NULL
   for (p in paths_split) {
     if (file.exists(paste0(p, .Platform$file.sep, gams_exe))) {
       sysDirPath = p
     }
+  }
+  if (is.null(sysDirPath)) {
+  stop("Could not find a GAMS installation, must manually specify system_directory")
   }
   return(sysDirPath)
 }
