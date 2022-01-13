@@ -83,6 +83,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// start_profiler
+SEXP start_profiler(SEXP str);
+RcppExport SEXP _gtr_start_profiler(SEXP strSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type str(strSEXP);
+    rcpp_result_gen = Rcpp::wrap(start_profiler(str));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stop_profiler
+SEXP stop_profiler();
+RcppExport SEXP _gtr_stop_profiler() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(stop_profiler());
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gtr_getSpecialValues", (DL_FUNC) &_gtr_getSpecialValues, 2},
@@ -91,6 +112,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gtr_getSymbols", (DL_FUNC) &_gtr_getSymbols, 2},
     {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 3},
     {"_gtr_readSymbols", (DL_FUNC) &_gtr_readSymbols, 3},
+    {"_gtr_start_profiler", (DL_FUNC) &_gtr_start_profiler, 1},
+    {"_gtr_stop_profiler", (DL_FUNC) &_gtr_stop_profiler, 0},
     {NULL, NULL, 0}
 };
 

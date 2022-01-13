@@ -59,11 +59,13 @@ Container <- R6::R6Class (
         }
       }
 
-      self$data = list()
       if (!missing(load_from)) {
         self$read(load_from, symbols="all")
       }
-      private$checkOn()
+
+      self$acronyms = list()
+      self$data = list()
+      private$requiresStateCheck = TRUE
     },
 
     read = function(load_from, symbols="all", values=TRUE) {
@@ -101,6 +103,8 @@ Container <- R6::R6Class (
         }
       }
       # check acronyms
+      print("system directory")
+      print(self$systemDirectory)
       acrInfo = checkAcronyms(load_from, self$systemDirectory)
       nAcr = acrInfo[["nAcronyms"]]
       if (nAcr != 0) {
@@ -111,7 +115,8 @@ Container <- R6::R6Class (
 
       # get names for all symbols
       syms = getSymbolNames(load_from, self$systemDirectory)
-
+      print("symnames")
+      print(syms)
       if (is.character(symbols) && symbols == "all") {
         symbolsToRead = syms
       }
@@ -137,7 +142,9 @@ Container <- R6::R6Class (
           "Container with the removeSymbol() method."))
         }
       }
+      print("get metadata")
       metadata = getSymbols(load_from, self$systemDirectory)
+      print("metadata obtained")
       aliasList = list()
       aliasCount = 0
       for (m in metadata) {
@@ -161,7 +168,6 @@ Container <- R6::R6Class (
                 }
             }
             else if (m$type == GMS_DT_VAR) {
-              print(paste0("domain: ", m$domain))
                 Variable$new(
                 self, m$name, m$type, m$domain,
                  description=m$expltext)
@@ -182,17 +188,16 @@ Container <- R6::R6Class (
       }
 
       # do alias last
-      print("aliasList: ")
-      print(aliasList)
       for (m in aliasList) {
       Alias$new(
         self, m$name, self$data[[m$aliasfor]])
       }
 
       if (values == TRUE) {
-
         symbolrecords = readSymbols(unlist(symbolsToRead),
         load_from, self$systemDirectory)
+
+        print("symbol_read_done")
 
         for (s in symbolrecords) {
           self$data[[s$names]]$setRecords(s$records)
@@ -217,7 +222,7 @@ Container <- R6::R6Class (
           }
         }
 
-        private$linkDomainObjects(symbolsToRead)
+        # private$linkDomainObjects(symbolsToRead)
 
         # check validity
         validSymbols=self$listSymbols(isValid=TRUE)
@@ -226,10 +231,17 @@ Container <- R6::R6Class (
 
     listSymbols = function(isValid=NULL) {
       if (!is.null(isValid)) {
-        l = list()
+        assertthat::assert_that(is.logical(isValid),
+        msg = "argument 'isValid' must be type logical")
+        l = NULL
         for (d in self$data) {
           if (d$isValid() == isValid) {
-            l = append(l, d$name)
+            if (is.null(l)) {
+              l = d$name
+            }
+            else {
+              l = append(l, d$name)
+            }
           }
         }
         return(l)
@@ -239,52 +251,82 @@ Container <- R6::R6Class (
       }
     },
 
-    listSets = function() {
-      sets = list()
-      for (s in self$listSymbols()) {
-        if(inherits(self$data[[s]], "Set") |
+    listSets = function(isValid=NULL) {
+      sets = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], "Set") |
         inherits(self$data[[s]], "Alias") ) {
-          sets = append(sets, s)
+          if (is.null(sets)) {
+            sets = s
+          }
+          else {
+            sets = append(sets, s)
+          }
         }
       }
       return(sets)
     },
-    listParameters = function() {
-      parameters = list()
-      for (s in self$listSymbols()) {
-        if(inherits(self$data[[s]], "Parameter")) {
-          parameters = append(parameters, s)
+
+    listParameters = function(isValid=NULL) {
+      parameters = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], "Parameter")) {
+          if (is.null(parameters)) {
+            parameters = s
+          }
+          else {
+            parameters = append(parameters, s)
+          }
         }
       }
       return(parameters)
     },
-    listAliases = function() {
-      aliases = list()
-      for (s in self$listSymbols()) {
+
+    listAliases = function(isValid=NULL) {
+      aliases = NULL
+      for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Alias")) {
-          aliases = append(aliases, s)
+          if (is.null(aliases)) {
+            aliases = s
+          }
+          else {
+            aliases = append(aliases, s)
+          }
         }
       }
       return(aliases)
     },
-    listVariables = function() {
-      variables = list()
-      for (s in self$listSymbols()) {
-        if(inherits(self$data[[s]], "Variable")) {
+
+    listVariables = function(isValid=NULL) {
+      variables = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], "Variable")) {
+          if (is.null(variables)) {
+            variables = s
+          }
+          else {
           variables = append(variables, s)
+          }
         }
       }
       return(variables)
     },
-    listEquations = function() {
-      equations = list()
-      for (s in self$listSymbols()) {
-        if(inherits(self$data[[s]], "Equation")) {
+
+    listEquations = function(isValid=NULL) {
+      equations = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], "Equation")) {
+          if (is.null(equations)) {
+            equations = s
+          }
+          else {
           equations = append(equations, s)
+          }
         }
       }
       return(equations)
     },
+
     addSet = function(name, domain = NA, is_singleton = FALSE,
     records = NA, description = "") {
       Set$new(
@@ -292,6 +334,7 @@ Container <- R6::R6Class (
       records, description)
       return(self$data[[name]])
     },
+
     addParameter = function(name, domain = NA,
     records = NA, description = "") {
       Parameter$new(
@@ -562,7 +605,29 @@ Container <- R6::R6Class (
     },
 
     write = function(gdxout) {
+      if (!is.character(gdxout)) {
+        stop("The argument gdxout must be of type string")
+      }
+      else {
+        namesplit = strsplit(gdxout, "\\.")
+        ext = tail(unlist(namesplit), 1)
+        if (ext != "gdx") {
+          stop("check filename extension, must be .gdx")
+        }
+        gdxout = R.utils::getAbsolutePath(gdxout)
+        if (!file.exists(gdxout)) {
+          stop(paste0("File ", gdxout, " doesn't exist"))
+        }
+      }
+
+      if (!identical(self$listSymbols(), self$listSymbols(isValid=TRUE) )) {
+        stop(paste0("There are symbol(s) in Container that are not valid;",
+         "all symbols must be valid before writing",
+         " (i.e., <symbol object>$isValid() == TRUE)"))
+      }
+
       private$validSymbolOrder()
+
       # remap special values
       specialValsGDX = getSpecialValues(gdxout, self$systemDirectory)
       # for (v in names(SpecialValues)) {
@@ -826,7 +891,6 @@ Symbol <- R6Class(
   public = list(
   type = NULL,
   subtype = NULL,
-  dimension = NULL,
   records = NULL,
 
   initialize = function(container=NA, name=NA,
@@ -835,7 +899,7 @@ Symbol <- R6Class(
                         description=NA) {
 
 
-    private$checkOn()
+    private$requiresStateCheck = TRUE
     self$ref_container = container
 
     if (!is.null(self$ref_container$data[[name]])) {
@@ -896,7 +960,7 @@ Symbol <- R6Class(
       else if (all(self$domain == "*")) {
          return("none")
       }
-      else if(self$dimension == 0) {
+      else if (self$dimension == 0) {
         return("none")
       }
       else {
@@ -1212,20 +1276,28 @@ Symbol <- R6Class(
     }
   },
   domain_names = function() {
-    d = list()
+    d = NULL
     for (i in self$domain) {
       if (inherits(i, "Set") | inherits(i, "Alias")) {
-        d = append(d, i$name)
+        if (is.null(d)) {
+          d = i$name
+        }
+        else {
+          d = append(d, i$name)
+        }
+      }
+      else {
+        if (is.null(d)) {
+          d = i
+        }
+        else {
+          d = append(d, i)
+        }
       }
     }
-    if (length(d) == 0) {
-      return(NA)
-    }
-    else {
-      return(d)
-    }
+    return(d)
   },
-  
+
   domainLabels = function() {
     column_names = list()
     for (i in seq_along(self$domain)) {
@@ -1242,47 +1314,11 @@ Symbol <- R6Class(
         column_names = append(column_names, paste0(d, "_", i))
       }
       else {
-        column_names = paste0(column_names, paste0("uni_", i))
+        column_names = append(column_names, paste0("uni_", i))
       }
     }
     return(column_names)
   },
-  # getColLabelsForRecords = function() {
-  #   column_names = list()
-  #   for (i in seq_along(self$domain)) {
-  #     if (is.character(self$domain[[i]])) {
-  #       d = self$domain[[i]]
-  #     }
-  #     else if (inherits(self$domain[[i]], "Symbol")) {
-  #       d = self$domain[[i]]$name
-  #     }
-  #     else {
-  #       print("unknown data type of domain")
-  #     }
-  #     if (d != "*") {
-  #       column_names = append(column_names, paste0(d, "_", i))
-  #     }
-  #     else {
-  #       column_names = paste0(column_names, paste0("uni_", i))
-  #     }
-  #   }
-
-  #   if (self$type == GMS_DT_SET) {
-  #     if(!is.na(self$expltext)) {
-  #       column_names = append(column_names, "element_text")
-  #     }
-  #   }
-  #   else if (self$type == GMS_DT_PAR) {
-  #       column_names = append(column_names, "value")
-  #   }
-  #   else if (self$type == GMS_DT_VAR | self$type == GMS_DT_EQU) {
-  #       column_names = append(column_names, private$attr())
-  #   }
-  #   else {
-  #     print("not supported yet!")
-  #   }
-  #   return(column_names)
-  # },
 
   isValid = function(verbose=FALSE, force=FALSE) {
     assertthat::assert_that(is.logical(verbose), 
@@ -1313,7 +1349,7 @@ Symbol <- R6Class(
   active = list(
     description = function(description_input) {
       if (missing(description_input)){
-        return(.description)
+        return(private$.description)
       }
       else {
         if (!is.character(description_input)) {
@@ -1325,7 +1361,7 @@ Symbol <- R6Class(
           gams_description_max_length, " or smaller"))
         }
 
-        if (!is.null(self$description)) {
+        if (!is.na(private$.description)) {
           if (private$.description != description_input){
             private$checkOn()
           }
@@ -1335,7 +1371,7 @@ Symbol <- R6Class(
         }
         else {
           private$checkOn()
-          private$.description = description
+          private$.description = description_input
         }
       }
     },
@@ -1345,7 +1381,7 @@ Symbol <- R6Class(
       }
       else {
          assertthat::assert_that(
-           (!is.integer(dimension_input))|| (dimension_input < 0),
+           (is.integer(dimension_input)) && (dimension_input >= 0),
            msg = "Symbol 'dimension' must be type int (greater than or equal to 0)")
 
         if (length(self$domain) > dimension_input) {
@@ -1362,7 +1398,7 @@ Symbol <- R6Class(
     domain = function(domain_input) {
 
       if (missing(domain_input)) {
-        return(.domain)
+        return(private$.domain)
       }
       else {
         for (d in domain_input) {
@@ -1379,10 +1415,10 @@ Symbol <- R6Class(
           }
         }
 
-      assertthat::assert_that(length(domain) <= 20,
+      assertthat::assert_that(length(domain_input) <= 20,
       msg = "Argument 'domain' length cannot be > 20")
         domaintemp = list()
-        for (d in domain) {
+        for (d in domain_input) {
           if (is.character(d)) {
             if (inherits(self$ref_container$data[[d]], "Set") ||
             inherits(self$ref_container$data[[d]], "Alias")) {
@@ -1438,19 +1474,19 @@ Symbol <- R6Class(
       }
     },
     name = function(name_input) {
-      if (!is.character(name_input)) {
-        stop("GAMS symbol 'name' must be type chracter")
-      }
-
-      if (nchar(a) > private$symbolMaxLength) {
-        stop(paste0("GAMS symbol 'name' is too long,",
-        " max is ", private$symbolMaxLength, " characters"))
-      }
-
       if (missing(name_input)) {
         return(private$.name)
       }
       else {
+        if (!is.character(name_input)) {
+          stop("GAMS symbol 'name' must be type chracter")
+        }
+
+        if (nchar(name_input) > private$symbolMaxLength) {
+          stop(paste0("GAMS symbol 'name' is too long,",
+          " max is ", private$symbolMaxLength, " characters"))
+        }
+
         if (is.na(private$.name)) {
           private$checkOn()
           private$.name = name_input
@@ -1466,11 +1502,11 @@ Symbol <- R6Class(
   ),
 
   private = list(
-    .description = NULL,
-    .domain = NULL,
-    .ref_container = NULL,
-    .name = NULL,
-    requiresStateCheck = NULL,
+    .description = NA,
+    .domain = NA,
+    .ref_container = NA,
+    .name = NA,
+    requiresStateCheck = NA,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
@@ -1738,8 +1774,6 @@ Parameter <- R6Class(
 
     setRecords = function(records) {
       # check if records is a dataframe and make if not
-      print("records in parameter setrecords")
-      print(records)
       # print("sign in param")
       # print(sign(1/records[["values"]]))
       records = data.frame(records)
@@ -1747,8 +1781,7 @@ Parameter <- R6Class(
       # check dimensionality of dataframe
       r = nrow(records)
       c = length(records)
-      print(paste0("parameter name: ", self$name))
-      print(paste0("parameter dimension: ", self$dimension))
+
       assertthat::assert_that(
         c == self$dimension + 1,
         msg = paste0("Dimensionality of records ", c - 1, 
@@ -1936,6 +1969,7 @@ Equation <- R6Class(
 Alias <- R6Class(
   "Alias",
   public = list(
+    type = NULL,
     initialize = function(container=NA, gams_name=NA, 
                           alias_for=NA) {
       private$requiresStateCheck = TRUE
@@ -1943,7 +1977,7 @@ Alias <- R6Class(
       self$ref_container$data[[gams_name]] = self
 
       self$name = gams_name
-      self$type = super$lblTypeSubtype()[["alias"]][[1]]
+      self$type = private$lblTypeSubtype()[["alias"]][[1]]
       private$is_alias = TRUE
       self$aliasWith = alias_for
     },
@@ -2056,19 +2090,18 @@ Alias <- R6Class(
     },
 
     name = function(name_input) {
-      if (!is.character(name_input)) {
-        stop("GAMS symbol 'name' must be type chracter")
-      }
-
-      if (nchar(a) > private$symbolMaxLength) {
-        stop(paste0("GAMS symbol 'name' is too long,",
-        " max is ", private$symbolMaxLength, " characters"))
-      }
-      
       if (missing(name_input)) {
         return(private$.name)
       }
       else {
+        if (!is.character(name_input)) {
+          stop("GAMS symbol 'name' must be type chracter")
+        }
+
+        if (nchar(name_input) > private$symbolMaxLength) {
+          stop(paste0("GAMS symbol 'name' is too long,",
+          " max is ", private$symbolMaxLength, " characters"))
+        }
         if (is.na(private$.name)) {
           private$checkOn()
           private$.name = name_input
@@ -2138,11 +2171,19 @@ Alias <- R6Class(
   ),
 
   private = list(
+    symbolMaxLength = 63,
+    .ref_container = NA,
     .name = NA,
     .aliasWith = NA,
     is_alias = NA,
     requiresStateCheck = NA,
     is_singleton = NA,
+
+    lblTypeSubtype = function() {
+      return(list(
+      "alias" = list(GMS_DT_ALIAS, 1)
+      ))
+    },
 
     check = function() {
       if (private$requiresStateCheck == TRUE) {
@@ -2163,7 +2204,7 @@ Alias <- R6Class(
       if (private$requiresStateCheck==TRUE) {
         private$requiresStateCheck = FALSE
       }
-    },
+    }
   )
 )
 

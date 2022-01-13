@@ -159,14 +159,21 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  Rcout << "gdxcreate return code: " << rc << "\n";
+  Rcout << "gdxcreate message: " << Msg << "\n";
   gdxOpenRead(PGX, myname.c_str(), &errCode);
+  Rcout << "Filename: " << myname << "\n";
+  Rcout << "open read return code: " << errCode << "\n";
 
   rc = gdxSystemInfo(PGX, &symCount, &UelCount);
-
+  Rcout << "symbol count: " << symCount << "\n";
 
   List templist, L1;
-	for (int i=0; i <= symCount; i++){
+	for (int i=0; i <= symCount; i++) {
 		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
+    if (strcmp(symbolID, "*") == 0) {
+      continue;
+    }
     gdxSymbolInfoX(PGX, i, &nrecs, &subtype, explText);
 
       rc = gdxSymbolGetDomainX(PGX, i, domains_ptr);
@@ -187,9 +194,11 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 
     domain.clear();
 
-    if (strcmp(symbolID, "*") != 0) {
     L1.push_back(templist);
-    }
+
+    // if (strcmp(symbolID, "*") != 0) {
+    // L1.push_back(templist);
+    // }
   }
 
   return L1;
@@ -239,16 +248,17 @@ CharacterVector sysDir, CharacterVector fileName) {
   NumericVector colDouble;
   int elemTextCount = 0;
   for (int d=0; d < data.length(); d++){
-    
-    List symname = data[d];
-    std::string mysym = symname["gams_name"];
+    Rcout << "inside data loop\n";
+    Environment symname = data[d];
+    Rcout << "got symname\n";
+    std::string mysym = symname["name"];
     Rcout << "here3 " << mysym << "\n";
     varType = symname["type"];
 
     if (varType == GMS_DT_ALIAS) {
       Rcout << "herehere\n";
-      List alias_with_env = symname["alias_with"];
-      std::string alias_with = alias_with_env["gams_name"];
+      Environment alias_with_env = symname["alias_with"];
+      std::string alias_with = alias_with_env["name"];
       Rcout << "alias_with: " << alias_with << "\n";
       if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
       Rcout << "cannot add alias \n";
@@ -258,8 +268,23 @@ CharacterVector sysDir, CharacterVector fileName) {
     StringVector names(Dim);
     // only executed if not an alias
     df = symname["records"];
-    domain = symname["domainstr"];
-    std::string expltxt = symname["expltext"];
+    // domain = symname["domainstr"];
+
+    
+    domain = symname["domain"];
+    Rcout << "symbol: " << mysym << "\n";
+    List domainstr;
+    if (Dim != 0) {
+      Rcpp::Function  domain_names = symname["domain_names"];
+      Rcout << "here3\n";
+      domainstr = domain_names();
+      Rcout << "here4\n";
+      std::string blah = domainstr[0];
+      Rcout << "here5\n";
+      Rcout << "string domain: " << blah << "\n";
+
+    }
+    std::string expltxt = symname["description"];
     Rcout << "dim " << Dim << "\n";
     Rcout << "varType " << varType << "\n";
     Rcout << "mysym " << mysym << "\n";
@@ -268,14 +293,29 @@ CharacterVector sysDir, CharacterVector fileName) {
     Rcout << "Error2" << "\n";
 
     for (int D=0; D < Dim; D++) {
-      strcpy(domains_ptr[D], domain[D]);
+      strcpy(domains_ptr[D], domainstr[D]);
+      // try
+      // {
+      //   Environment env = domain[D];
+      //   if (env.exists("name")) {
+      //     List assumedenv;
+      //     assumedenv = domain[D];
+      //     strcpy(domains_ptr[D], assumedenv["name"]);
+      //   }
+      // }
+      // catch(const std::exception& e)
+      // {
+      //  strcpy(domains_ptr[D], domain[D]);
+      // }
     }
 
     gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
+    int nrows = df.nrows();
+    int ncols = df.size();
     Rcout << "rows: " << df.nrows() << "\n";
     Rcout << "columns: " << df.size() << "\n";
-    for (int i =0; i < df.nrows(); i++) {
-      for (int j=0; j < df.size(); j++) {
+    for (int i =0; i < nrows; i++) {
+      for (int j=0; j < ncols; j++) {
         if (j < Dim) {
           colString = df[j];
           names[j] = colString[i];
@@ -318,6 +358,9 @@ CharacterVector sysDir, CharacterVector fileName) {
 // [[Rcpp::export]]
 List readSymbols(CharacterVector symNames, CharacterVector gdxName,
                 CharacterVector sysDir) {
+  Rcout << "here1 sysdir " << sysDir << "\n";
+  Rcout << "here1 symnames " << symNames << "\n";
+  Rcout << "here1 gdxname " << gdxName << "\n";
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE];
 	int         ErrNr, VarNr, NrRecs, N, Dim, VarType, D, rc, iDummy;
@@ -373,6 +416,7 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
       domain.push_back(domains_ptr[j]);
     }
     if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) Rcout << "Error2" << "\n";
+    Rcout << "number of records: " << NrRecs << "\n";
 		while (gdxDataReadStr(PGX, Indx, Values, &N)) {
       if (VarType == GMS_DT_SET || VarType == GMS_DT_PAR) {
         if (VarType == GMS_DT_SET){
@@ -385,12 +429,6 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
             elemText.push_back("");
           }
         } else {
-          Rcout << "reading parameter levels\n";
-          Rcout << Values[GMS_VAL_LEVEL] << "\n";
-          if (Values[GMS_VAL_LEVEL] > 0) Rcout << "positive\n";
-          if (Values[GMS_VAL_LEVEL] < 0) Rcout << "negative\n";
-          if (1/Values[GMS_VAL_LEVEL] > 0) Rcout << "reciprocal positive\n";
-          if (1/Values[GMS_VAL_LEVEL] < 0) Rcout << "reciprocal negative\n";
           levels.push_back(Values[GMS_VAL_LEVEL]);
         }
         for (D = 0; D < Dim; D++) {
@@ -417,7 +455,7 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
         index_columns.push_back(indices[i][D]);
       }
       if (strcmp(domain[D].c_str(), "*")== 0) {
-        df["uni"] = index_columns;
+        df["uni_"+std::to_string(D)] = index_columns;
       }
       else {
         df[domain[D] + "_" + std::to_string(D)] = index_columns;

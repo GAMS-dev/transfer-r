@@ -25,3 +25,11 @@ readSymbols <- function(symNames, gdxName, sysDir) {
     .Call(`_gtr_readSymbols`, symNames, gdxName, sysDir)
 }
 
+start_profiler <- function(str) {
+    .Call(`_gtr_start_profiler`, str)
+}
+
+stop_profiler <- function() {
+    .Call(`_gtr_stop_profiler`)
+}
+
