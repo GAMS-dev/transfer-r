@@ -31,7 +31,7 @@ gams_description_max_length = 255
 
 
 SpecialValues = list(
-  "NA" = NA,
+  "NA" = NA, # cannot be anything else
   "EPS" = -0.0,
   "UNDEF" = NaN,
   "POSINF" = Inf,
@@ -115,8 +115,7 @@ Container <- R6::R6Class (
 
       # get names for all symbols
       syms = getSymbolNames(load_from, self$systemDirectory)
-      print("symnames")
-      print(syms)
+
       if (is.character(symbols) && symbols == "all") {
         symbolsToRead = syms
       }
@@ -342,6 +341,7 @@ Container <- R6::R6Class (
         description)
         return(self$data[[name]])
     },
+
     addVariable = function(name, type="free", domain = NA,
     records = NA, description = "") {
       Variable$new(
@@ -377,35 +377,32 @@ Container <- R6::R6Class (
             "cardinality",
             "sparsity"
             )
-      df = data.frame()
+      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      rowCount = 0
       for (i in symbols) {
         if (i %in% self$listSets()) {
           symDescription = list(
             i,
             self$data[[i]]$isAlias(),
             self$data[[i]]$isSingleton,
-            self$data[[i]]$domain_names(),
+            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity()
           )
-          if (length(df) != 0) {
-            df = rbind(df, setNames(symDescription, colNames))
-          }
-          else {
-            df = data.frame(symDescription)
-            colnames(df) = colNames
-          }
-
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
         }
       }
-      if (length(df) != 0) {
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
         return(df[order( df[,1]),])
       }
       else {
-         return(NA)
+        return(NA)
       }
     },
 
@@ -427,16 +424,18 @@ Container <- R6::R6Class (
             "where_max",
             "count_eps",
             "count_na",
+            "count_undef",
             "cardinality",
             "sparsity"
             )
-      df = data.frame()
+      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      rowCount = 0
       for (i in symbols) {
         if (i %in% self$listParameters()) {
           symDescription = list(
             i,
             self$data[[i]]$isScalar,
-            self$data[[i]]$domain_names(),
+            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -451,21 +450,18 @@ Container <- R6::R6Class (
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity()
           )
-          if (length(df) != 0) {
-            df = rbind(df, setNames(symDescription, colNames))
-          }
-          else {
-            df = data.frame(symDescription)
-            colnames(df) = colNames
-          }
-
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
         }
       }
-      if (length(df) != 0) {
+
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
         return(df[order( df[,1]),])
       }
       else {
-         return(NA)
+        return(NA)
       }
     },
 
@@ -493,13 +489,15 @@ Container <- R6::R6Class (
             "where_max_abs_marginal",
             "count_eps_marginal"
             )
-      df = data.frame()
+      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      rowCount = 0
+
       for (i in symbols) {
         if (i %in% self$listVariables()) {
           symDescription = list(
             i,
             self$data[[i]]$type,
-            self$data[[i]]$domain_names(),
+            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -516,21 +514,18 @@ Container <- R6::R6Class (
             self$data[[i]]$whereMaxAbs("marginal"),
             self$data[[i]]$countEps("marginal")
           )
-          if (length(df) != 0) {
-            df = rbind(df, setNames(symDescription, colNames))
-          }
-          else {
-            df = data.frame(symDescription)
-            colnames(df) = colNames
-          }
-
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
         }
       }
-      if (length(df) != 0) {
+
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
         return(df[order( df[,1]),])
       }
       else {
-         return(NA)
+        return(NA)
       }
     },
 
@@ -558,13 +553,15 @@ Container <- R6::R6Class (
             "where_max_abs_marginal",
             "count_eps_marginal"
             )
-      df = data.frame()
+      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      rowCount = 0
+
       for (i in symbols) {
         if (i %in% self$listEquations()) {
           symDescription = list(
             i,
             self$data[[i]]$type,
-            self$data[[i]]$domain_names(),
+            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -581,23 +578,18 @@ Container <- R6::R6Class (
             self$data[[i]]$whereMaxAbs("marginal"),
             self$data[[i]]$countEps("marginal")
           )
-          if (length(df) != 0) {
-            df = rbind(df, setNames(symDescription, colNames))
-          }
-          else {
-            df = data.frame(symDescription)
-            colnames(df) = colNames
-          }
-
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
         }
       }
-      if (length(df) != 0) {
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
         return(df[order( df[,1]),])
       }
       else {
-         return(NA)
+        return(NA)
       }
-
     },
 
     printSpecialValues = function() {
@@ -968,318 +960,628 @@ Symbol <- R6Class(
       }
   },
   getCardinality = function() {
-    if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
-      return(NA)
-    }
-    else {
-       card = 1
-       for (i in self$domain){
-         card = card * i$number_records()
-       }
-       return(card)
-    }
+    tryCatch(
+      {
+        if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
+          return(NA)
+        }
+        else {
+          card = 1
+          for (i in self$domain){
+            card = card * i$number_records()
+          }
+          return(card)
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   getSparsity = function(){
-    if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
-      return(NA)
-    }
-    else {
-      return(1 - self$number_records()/self$getCardinality())
-    }
+    tryCatch(
+      {
+        if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
+          return(NA)
+        }
+        else {
+          return(1 - self$number_records()/self$getCardinality())
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   getMaxValue = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(max(self$records[[columns]]))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(max(self$records[, columns]))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(max(self$records[[columns]]))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(max(self$records[, columns]))
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   getMinValue = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(min(self$records[[columns]]))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(min(self$records[, columns]))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)) {
+            columns = "value"
+          }
+          return(min(self$records[[columns]]))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(min(self$records[, columns]))
+
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+
   },
   getMeanValue = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(mean(self$records[[columns]]))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(mean(colMeans(self$records[columns])))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          meanVal = mean(self$records[[columns]])
+          if (is.nan(meanVal)) {
+            return(NA)
+          }
+          else {
+              return(meanVal)
+          }
+
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          meanVal = mean(colMeans(self$records[columns]))
+          if (is.nan(meanVal)) {
+            return(NA)
+          }
+          else {
+              return(meanVal)
+          }
+
+        }
+
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
   getMaxAbsValue = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(max(abs(self$records[[columns]])))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(max(abs(self$records[, columns])))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(max(abs(self$records[[columns]])))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(max(abs(self$records[, columns])))
+
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
   whereMax = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(which.max(self$records[[columns]]))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
-      }
-
+    if (!is.na(columns)) {
       if (!is.character(columns)){
-        print("error! Only one column allowed.")
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(which.max(self$records[, columns]))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          whereMaxVal = which.max(self$records[[columns]])
+          if (is.integer0(whereMaxVal)) {
+            return(NA)
+          }
+          else {
+            return(whereMaxVal)
+          }
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          if (!is.character(columns)){
+            print("error! Only one column allowed.")
+          }
+
+          if (!setequal(intersect(columns, 
+          colnames(self$records[,(self$dimension+1):length(self$records)])), 
+          columns)) {
+            print("error! column name not valid")
+            return()
+          }
+          whereMaxVal = which.max(self$records[, columns])
+          if (is.integer0(whereMaxVal)) {
+            return(NA)
+          }
+          else {
+            return(whereMaxVal)
+          }
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
-  whereMaxAbs = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(which.max(abs(self$records[[columns]])))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
-      }
 
+  whereMaxAbs = function(columns=NA) {
+    if (!is.na(columns)) {
       if (!is.character(columns)){
-        print("error! Only one column allowed.")
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(which.max(abs(self$records[, columns])))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+
+          whereMaxVal = which.max(abs(self$records[[columns]]))
+          if (is.integer0(whereMaxVal)) {
+            return(NA)
+          }
+          else {
+            return(whereMaxVal)
+          }
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+        whereMaxVal = which.max(abs(self$records[, columns]))
+        if (is.integer0(whereMaxVal)) {
+          return(NA)
+        }
+        else {
+          return(whereMaxVal)
+        }
+
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
   whereMin = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(which.min(self$records[[columns]]))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
-      }
-
+    if (!is.na(columns)) {
       if (!is.character(columns)){
-        print("error! Only one column allowed.")
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(which.min(self$records[, columns]))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          whereMinVal = which.min(self$records[[columns]])
+          if (is.integer0(whereMinVal)) {
+            return(NA)
+          }
+          else {
+            return(whereMinVal)
+          }
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+        whereMinVal = which.min(self$records[, columns])
+        if (is.integer0(whereMinVal)) {
+          return(NA)
+        }
+        else {
+          return(whereMinVal)
+        }
+
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+
   },
+
   countNA = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(sum(self$records[[columns]] == SpecialValues[["NA"]]))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(sum(self$records[,columns] == SpecialValues[["NA"]]))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(sum(is.na(self$records[[columns]])))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+
+          return(sum(is.na(self$records[,columns])))
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   countEps = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(sum(self$records[[columns]] == SpecialValues$EPS))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(sum(self$records[,columns] == SpecialValues$EPS))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(sum(self$records[[columns]] == SpecialValues$EPS))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(sum(self$records[,columns] == SpecialValues$EPS))
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+
   },
+
   countUndef = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(sum(self$records[[columns]] == SpecialValues$UNDEF))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(sum(self$records[,columns] == SpecialValues$UNDEF))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(sum(is.nan(self$records[[columns]])))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(sum(is.nan(self$records[,columns])))
+        }
+
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   countPosinf = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(sum(self$records[[columns]] == SpecialValues$POSINF))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(sum(self$records[,columns] == SpecialValues$POSINF))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(sum(self$records[[columns]] == SpecialValues$POSINF))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(sum(self$records[,columns] == SpecialValues$POSINF))
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   countNeginf = function(columns=NA) {
-    if (inherits(self, "Parameter")) {
-      if (is.na(columns)){
-        columns = "value"
-      }
-      return(sum(self$records[[columns]] == SpecialValues$NEGINF))
-    }
-    else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-      if (is.na(columns)) {
-        columns = "level"
+    if (!is.na(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", columns, ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)"))
       }
 
       if (!setequal(intersect(columns, 
       colnames(self$records[,(self$dimension+1):length(self$records)])), 
       columns)) {
-        print("error! column name not valid")
-        return()
-      }
-      else {
-        return(sum(self$records[,columns] == SpecialValues$NEGINF))
+        stop(paste0("User entered column ", columns, " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        ))
       }
     }
+    tryCatch(
+      {
+        if (inherits(self, "Parameter")) {
+          if (is.na(columns)){
+            columns = "value"
+          }
+          return(sum(self$records[[columns]] == SpecialValues$NEGINF))
+        }
+        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
+          if (is.na(columns)) {
+            columns = "level"
+          }
+
+          return(sum(self$records[,columns] == SpecialValues$NEGINF))
+        }
+
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
   },
+
   domain_names = function() {
-    d = NULL
+    d = NA
     for (i in self$domain) {
       if (inherits(i, "Set") | inherits(i, "Alias")) {
-        if (is.null(d)) {
+        if (any(is.na(d))) {
           d = i$name
         }
         else {
@@ -1287,7 +1589,7 @@ Symbol <- R6Class(
         }
       }
       else {
-        if (is.null(d)) {
+        if (any(is.na(d))) {
           d = i
         }
         else {
@@ -1730,16 +2032,22 @@ Set <- R6Class(
   ),
   active = list(
     isSingleton = function(is_singleton) {
-      if (!is.logical(is_singleton)) {
-        stop("Argument 'is_singleton' must be type bool")
-      }
       if (missing(is_singleton)) {
         return(private$is_singleton)
       }
       else {
-         private$is_singleton = is_singleton
+        if (!is.logical(is_singleton)) {
+          stop("Argument 'is_singleton' must be type bool")
+        }
+        if (missing(is_singleton)) {
+          return(private$is_singleton)
+        }
+        else {
+          private$is_singleton = is_singleton
+        }
       }
-    }
+
+      }
   ),
   private = list(
     is_singleton = NA,
@@ -2022,7 +2330,7 @@ Alias <- R6Class(
       }
     },
     domain_names = function() {
-      return(self$ref_container$data[[self$aliasWith]]$domain_names())
+      return(self$ref_container$data[[self$aliasWith$name]]$domain_names())
     },
 
     domain = function(domain_input) {
@@ -2232,6 +2540,11 @@ find_gams <- function() {
 #is.nan function for dataframe
 is.nan.data.frame <- function(x)
 do.call(cbind, lapply(x, is.nan))
+
+is.integer0 <- function(x)
+{
+  is.integer(x) && length(x) == 0L
+}
 
 #is.infinite function for dataframe
 # is.infinite.data.frame <- function(x)

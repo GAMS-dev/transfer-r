@@ -359,7 +359,6 @@ CharacterVector sysDir, CharacterVector fileName) {
 List readSymbols(CharacterVector symNames, CharacterVector gdxName,
                 CharacterVector sysDir) {
   Rcout << "here1 sysdir " << sysDir << "\n";
-  Rcout << "here1 symnames " << symNames << "\n";
   Rcout << "here1 gdxname " << gdxName << "\n";
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE];
@@ -416,13 +415,11 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
       domain.push_back(domains_ptr[j]);
     }
     if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) Rcout << "Error2" << "\n";
-    Rcout << "number of records: " << NrRecs << "\n";
 		while (gdxDataReadStr(PGX, Indx, Values, &N)) {
       if (VarType == GMS_DT_SET || VarType == GMS_DT_PAR) {
         if (VarType == GMS_DT_SET){
           rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
           if (rc != 0) {
-            Rcout << "element text: " << Msg << "\n";
             elemText.push_back(Msg);
           }
           else {
