@@ -257,7 +257,7 @@ CharacterVector sysDir, CharacterVector fileName) {
 
     if (varType == GMS_DT_ALIAS) {
       Rcout << "herehere\n";
-      Environment alias_with_env = symname["alias_with"];
+      Environment alias_with_env = symname["aliasWith"];
       std::string alias_with = alias_with_env["name"];
       Rcout << "alias_with: " << alias_with << "\n";
       if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))

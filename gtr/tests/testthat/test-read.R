@@ -20,29 +20,35 @@ test_that("read all symbols", {
 
 test_that("readwritetest", {
 
-print(system2(command="pwd"))
+message("here1")
+message(system2(command="pwd"))
+message("here1")
+message(system2(command="which", args="gams"))
 tryCatch(
   expr = {
-ret =system2(paste0("gams ", testthat::test_path("data.gms"), " gdx=data.gdx"), 
-stdout = TRUE, stderr = TRUE)
+ret = system2(command="gams", args= 
+paste0(testthat::test_path("data.gms"), " gdx=data.gdx"))#, 
+# stdout = TRUE, stderr = TRUE)
+
+m = Container$new()
+# read all symbols
+m$read(testthat::test_path("data.gdx"))
+
+# write everything
+m$write(testthat::test_path("gt.gdx"))
+
+ret <-system2(command="gdxdiff", args=
+paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")))
+
+expect_equal(ret, 0)
+
   }
 ,
 error = function(e) {
-  print(e)
-  print(paste0("gams ", testthat::test_path("data.gms"), " gdx=data.gdx"))
-  print(system2(command="less data.gms"))
+  message(e)
+  message(paste0("gams ", testthat::test_path("data.gms"), " gdx=data.gdx"))
 }
 )
-a = 0
-expect_equal(a, 0, info=print(ret))
-# m = Container$new()
-# # read all symbols
-# m$read(testthat::test_path("data.gdx"))
-
-# # write everything
-# m$write(testthat::test_path("gt.gdx"))
-
-# ret <-system2(paste0("gdxdiff ", testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")))
 
 
 })

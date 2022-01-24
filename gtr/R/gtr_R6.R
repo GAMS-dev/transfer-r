@@ -152,7 +152,7 @@ Container <- R6::R6Class (
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
-                description=m$expltext)
+                description = m$expltext)
             }
             else if (m$type == GMS_DT_SET) {
                 if (m$subtype == 0) {
@@ -221,7 +221,7 @@ Container <- R6::R6Class (
           }
         }
 
-        # private$linkDomainObjects(symbolsToRead)
+        private$linkDomainObjects(symbolsToRead)
 
         # check validity
         validSymbols=self$listSymbols(isValid=TRUE)
@@ -607,9 +607,9 @@ Container <- R6::R6Class (
           stop("check filename extension, must be .gdx")
         }
         gdxout = R.utils::getAbsolutePath(gdxout)
-        if (!file.exists(gdxout)) {
-          stop(paste0("File ", gdxout, " doesn't exist"))
-        }
+        # if (!file.exists(gdxout)) {
+        #   stop(paste0("File ", gdxout, " doesn't exist"))
+        # }
       }
 
       if (!identical(self$listSymbols(), self$listSymbols(isValid=TRUE) )) {
@@ -728,8 +728,9 @@ Container <- R6::R6Class (
               d = append(d, j)
             }
           }
+
+          self$data[[s]]$domain = d
         }
-        self$data[[s]]$domain = d
       }
     },
 
@@ -1724,8 +1725,9 @@ Symbol <- R6Class(
           if (is.character(d)) {
             if (inherits(self$ref_container$data[[d]], "Set") ||
             inherits(self$ref_container$data[[d]], "Alias")) {
-              domaintemp = append(domaintemp, 
-              self$ref_container$data[[d]])
+              domaintemp = append(domaintemp, d)
+              # domaintemp = append(domaintemp, 
+              # self$ref_container$data[[d]])
             }
             else {
               # attach as a plain string
@@ -2333,15 +2335,6 @@ Alias <- R6Class(
       return(self$ref_container$data[[self$aliasWith$name]]$domain_names())
     },
 
-    domain = function(domain_input) {
-      if (missing(domain_input)) {
-        return(self$ref_container$data[[self$aliasWith$name]]$domain)
-      }
-      else {
-        self$ref_container$data[[self$aliasWith$name]]$domain = domain
-      }
-    },
-
     domain_type = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$domain_type())
     },
@@ -2474,6 +2467,15 @@ Alias <- R6Class(
       }
       else {
         self$ref_container$data[[self$aliasWith$name]]$records = records_input
+      }
+    },
+
+    domain = function(domain_input) {
+      if (missing(domain_input)) {
+        return(self$ref_container$data[[self$aliasWith$name]]$domain)
+      }
+      else {
+        self$ref_container$data[[self$aliasWith$name]]$domain = domain_input
       }
     }
   ),
