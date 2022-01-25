@@ -1011,11 +1011,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column '", columns, "' must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension+1):length(self$records)]
         ))
       }
     }
@@ -1048,15 +1048,15 @@ Symbol <- R6Class(
   getMinValue = function(columns=NA) {
     if (!is.na(columns)) {
       if (!is.character(columns)){
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input '", columns, "', however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column '", columns, "' must be a subset",
         " of valid numeric columns", 
         colnames(self$records[,(self$dimension+1):length(self$records)])
         ))
@@ -1097,11 +1097,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension+1):length(self$records)]
         ))
       }
     }
@@ -1154,7 +1154,7 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
@@ -1196,11 +1196,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension+1):length(self$records)]
         ))
       }
     }
@@ -1223,16 +1223,6 @@ Symbol <- R6Class(
             columns = "level"
           }
 
-          if (!is.character(columns)){
-            print("error! Only one column allowed.")
-          }
-
-          if (!setequal(intersect(columns, 
-          colnames(self$records[,(self$dimension+1):length(self$records)])), 
-          columns)) {
-            print("error! column name not valid")
-            return()
-          }
           whereMaxVal = which.max(self$records[, columns])
           if (is.integer0(whereMaxVal)) {
             return(NA)
@@ -1260,11 +1250,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension + 1):length(self$records)]
         ))
       }
     }
@@ -1316,11 +1306,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension + 1):length(self$records)]
         ))
       }
     }
@@ -1372,11 +1362,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension+1):length(self$records)]
         ))
       }
     }
@@ -1416,12 +1406,12 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        ))
+        colnames(self$records[(self$dimension + 1):length(self$records)]
+        )))
       }
     }
     tryCatch(
@@ -1459,11 +1449,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension + 1):length(self$records)]
         ))
       }
     }
@@ -1502,11 +1492,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
-      columns)) {
+      colnames(self$records)[(self$dimension + 1):length(self$records)], 
+      columns))) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension+1):length(self$records)]
         ))
       }
     }
@@ -1544,11 +1534,11 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records[,(self$dimension+1):length(self$records)])), 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
+        colnames(self$records)[(self$dimension+1):length(self$records)]
         ))
       }
     }
