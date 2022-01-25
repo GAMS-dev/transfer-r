@@ -266,7 +266,7 @@ Container <- R6::R6Class (
       return(sets)
     },
 
-    listParameters = function(isValid=NULL) {
+    listParameters = function(isValid = NULL) {
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Parameter")) {
@@ -281,7 +281,7 @@ Container <- R6::R6Class (
       return(parameters)
     },
 
-    listAliases = function(isValid=NULL) {
+    listAliases = function(isValid = NULL) {
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Alias")) {
@@ -296,7 +296,7 @@ Container <- R6::R6Class (
       return(aliases)
     },
 
-    listVariables = function(isValid=NULL) {
+    listVariables = function(isValid = NULL) {
       variables = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Variable")) {
@@ -377,7 +377,7 @@ Container <- R6::R6Class (
             "cardinality",
             "sparsity"
             )
-      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
         if (i %in% self$listSets()) {
@@ -385,7 +385,7 @@ Container <- R6::R6Class (
             i,
             self$data[[i]]$isAlias(),
             self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
+            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -399,14 +399,14 @@ Container <- R6::R6Class (
       colnames(df) = colNames
       if (rowCount > 0) {
         df = df[1:rowCount, ]
-        return(df[order( df[,1]),])
+        return(df[order(df[, 1]), ])
       }
       else {
         return(NA)
       }
     },
 
-    describeParameters = function(symbols=NA) {
+    describeParameters = function(symbols = NA) {
       if (is.na(symbols)) {
         symbols = self$listParameters()
       }
@@ -428,14 +428,14 @@ Container <- R6::R6Class (
             "cardinality",
             "sparsity"
             )
-      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
         if (i %in% self$listParameters()) {
           symDescription = list(
             i,
             self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
+            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -458,7 +458,7 @@ Container <- R6::R6Class (
       colnames(df) = colNames
       if (rowCount > 0) {
         df = df[1:rowCount, ]
-        return(df[order( df[,1]),])
+        return(df[order(df[, 1]),])
       }
       else {
         return(NA)
@@ -489,7 +489,7 @@ Container <- R6::R6Class (
             "where_max_abs_marginal",
             "count_eps_marginal"
             )
-      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
       rowCount = 0
 
       for (i in symbols) {
@@ -497,7 +497,7 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$type,
-            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
+            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -553,7 +553,7 @@ Container <- R6::R6Class (
             "where_max_abs_marginal",
             "count_eps_marginal"
             )
-      df = data.frame(matrix(NA, nrow=length(symbols), ncol=length(colNames)))
+      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
       rowCount = 0
 
       for (i in symbols) {
@@ -561,7 +561,7 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$type,
-            paste(self$data[[i]]$domain_names(), sep="", collapse = " "),
+            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
             self$data[[i]]$number_records(),
@@ -585,7 +585,7 @@ Container <- R6::R6Class (
       colnames(df) = colNames
       if (rowCount > 0) {
         df = df[1:rowCount, ]
-        return(df[order( df[,1]),])
+        return(df[order(df[, 1]),])
       }
       else {
         return(NA)
@@ -626,7 +626,7 @@ Container <- R6::R6Class (
         for (s in self$data) {
           # no mapping required for alias
           if (s$type == GMS_DT_ALIAS || s$type == GMS_DT_SET) next
-          colrange=(s$dimension+1):length(s$records)
+          colrange = (s$dimension + 1):length(s$records)
           s$records[,colrange][is.nan(
             s$records[,colrange])] = 
             specialValsGDX[["UNDEF"]]
@@ -636,18 +636,18 @@ Container <- R6::R6Class (
             specialValsGDX[["NA"]]
 
           s$records[,colrange][
-            ((s$records[,colrange]==Inf)
-          & (sign(s$records[,colrange]) 
+            ((s$records[, colrange] == Inf)
+          & (sign(s$records[, colrange]) 
           == 1))] = specialValsGDX[["POSINF"]]
 
-          s$records[,colrange][
-            ((s$records[,colrange]==-Inf)
-          &(sign(s$records[,colrange]) 
+          s$records[, colrange][
+            ((s$records[, colrange] == -Inf)
+          &(sign(s$records[, colrange]) 
           == -1))] = specialValsGDX[["NEGINF"]]
           
           s$records[,colrange][
             ((s$records[,colrange] == 0)
-          &(sign(1/s$records[,colrange]) 
+          & (sign(1/s$records[,colrange]) 
           == -1))] = specialValsGDX[["EPS"]]
 
         #   if (length(s$records) != 1) {
@@ -718,7 +718,7 @@ Container <- R6::R6Class (
           d = list()
           for (j in self$data[[s]]$domain) {
             if ((is.character(j) && (j == s)) || 
-            (inherits(j, "Set") && (identical(j,s) ))) {
+            (inherits(j, "Set") && (identical(j,s)))) {
               d = append(d, j)
             }
             else if (is.character(j) && (j %in% symbols) && (j != s)) {
@@ -738,8 +738,8 @@ Container <- R6::R6Class (
       if (private$requiresStateCheck == TRUE) {
          private$validSymbolOrder()
 
-        if (all(self$listSymbols() != self$listSymbols(isValid = TRUE) )) {
-          stop( paste0("Container contains invalid symbols; ",
+        if (all(self$listSymbols() != self$listSymbols(isValid = TRUE))) {
+          stop(paste0("Container contains invalid symbols; ",
           "invalid symbols can be found with the .listSymbols() ",
           "method. Debug invalid symbol(s) by running .",
           "isValid(verbose=TRUE, force=TRUE) method on the symbol object."))
@@ -787,7 +787,7 @@ Container <- R6::R6Class (
         else {
           doi = list()
           for (i in self$data[[sym]]$domain) {
-            if (is.character(i)){
+            if (is.character(i)) {
               doi = append(doi, TRUE)
             }
             else if ( (inherits(i, "Set") | inherits(i, "Alias")) &
@@ -937,6 +937,7 @@ Symbol <- R6Class(
       return(0)
     }
   },
+
   domain_type = function() {
     regularCheck = list()
     for (d in self$domain) {
@@ -960,6 +961,7 @@ Symbol <- R6Class(
          return("relaxed")
       }
   },
+
   getCardinality = function() {
     tryCatch(
       {
@@ -968,7 +970,7 @@ Symbol <- R6Class(
         }
         else {
           card = 1
-          for (i in self$domain){
+          for (i in self$domain) {
             card = card * i$number_records()
           }
           return(card)
@@ -983,7 +985,7 @@ Symbol <- R6Class(
     )
   },
 
-  getSparsity = function(){
+  getSparsity = function() {
     tryCatch(
       {
         if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
@@ -1004,7 +1006,7 @@ Symbol <- R6Class(
 
   getMaxValue = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1023,7 +1025,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           return(max(self$records[[columns]]))
@@ -1047,8 +1049,9 @@ Symbol <- R6Class(
 
   getMinValue = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
-        stop(paste0("User input '", columns, "', however it is only possible to",
+      if (!is.character(columns)) {
+        stop(paste0("User input '", columns, 
+        "', however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
       }
@@ -1090,7 +1093,7 @@ Symbol <- R6Class(
   },
   getMeanValue = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1109,7 +1112,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           meanVal = mean(self$records[[columns]])
@@ -1147,7 +1150,7 @@ Symbol <- R6Class(
   },
   getMaxAbsValue = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1165,7 +1168,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           return(max(abs(self$records[[columns]])))
@@ -1189,7 +1192,7 @@ Symbol <- R6Class(
   },
   whereMax = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1207,7 +1210,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           whereMaxVal = which.max(self$records[[columns]])
@@ -1243,7 +1246,7 @@ Symbol <- R6Class(
 
   whereMaxAbs = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1262,7 +1265,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
 
@@ -1299,7 +1302,7 @@ Symbol <- R6Class(
   },
   whereMin = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1317,7 +1320,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           whereMinVal = which.min(self$records[[columns]])
@@ -1355,7 +1358,7 @@ Symbol <- R6Class(
 
   countNA = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1374,7 +1377,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           return(sum(is.na(self$records[[columns]])))
@@ -1399,7 +1402,7 @@ Symbol <- R6Class(
 
   countEps = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1417,7 +1420,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           return(sum(self$records[[columns]] == SpecialValues$EPS))
@@ -1442,7 +1445,7 @@ Symbol <- R6Class(
 
   countUndef = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1460,7 +1463,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           return(sum(is.nan(self$records[[columns]])))
@@ -1485,7 +1488,7 @@ Symbol <- R6Class(
 
   countPosinf = function(columns=NA) {
     if (!is.na(columns)) {
-      if (!is.character(columns)){
+      if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)"))
@@ -1503,7 +1506,7 @@ Symbol <- R6Class(
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.na(columns)) {
             columns = "value"
           }
           return(sum(self$records[[columns]] == SpecialValues$POSINF))
