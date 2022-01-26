@@ -1658,16 +1658,16 @@ void gdxSetAPIErrorCount(int ecnt)
   APIErrorCount = ecnt;
 }
 
-#if 0
-void gdxErrorHandling(const char *msg)
-{
-  APIErrorCount++;
-  if (ScreenIndicator) { printf("%s\n", msg); fflush(stdout); }
-  lock(exceptMutex);
-  if (ErrorCallBack)
-    if (ErrorCallBack(APIErrorCount, msg)) { unlock(exceptMutex); exit(123); }
-  unlock(exceptMutex);
-  assert(!ExceptionIndicator);
-  if (ExitIndicator) exit(123);
-}
-#endif
+// #if 0
+// void gdxErrorHandling(const char *msg)
+// {
+//   APIErrorCount++;
+//   if (ScreenIndicator) { printf("%s\n", msg); fflush(stdout); }
+//   lock(exceptMutex);
+//   if (ErrorCallBack)
+//     if (ErrorCallBack(APIErrorCount, msg)) { unlock(exceptMutex); exit(123); }
+//   unlock(exceptMutex);
+//   assert(!ExceptionIndicator);
+//   if (ExitIndicator) exit(123);
+// }
+// #endif
