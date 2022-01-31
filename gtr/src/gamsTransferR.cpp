@@ -220,7 +220,6 @@ CharacterVector sysDir, CharacterVector fileName) {
   Rcout << "here1\n";
 	if (!gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg))) {
 		Rcout << "**** Could not load GDX library" << "\n" << "**** " << Msg << "\n";
-		exit(1);
 	}
   gdxSVals_t sVals;
   gdxGetSpecialValues(PGX, sVals);
