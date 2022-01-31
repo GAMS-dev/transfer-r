@@ -1,5 +1,5 @@
-library(R6)
-library(assertthat)
+# library(R6)
+# library(assertthat)
 
 GMS_DT_SET = 0
 GMS_DT_PAR = 1
@@ -174,7 +174,7 @@ Container <- R6::R6Class (
             else if (m$type == GMS_DT_EQU) {
                 Equation$new(
                 self, m$name, m$subtype, m$domain,
-                 description=m$expltext)
+                 description = m$expltext)
             }
             else if (m$type == GMS_DT_ALIAS) {
               aliasCount = aliasCount + 1
@@ -211,7 +211,8 @@ Container <- R6::R6Class (
                   if (any(col == a * 1e301)) {
                     idx = which(col == a * 1e301)
                     for (id in idx) {
-                      self$data[[s$names]]$records[id, d] = SpecialValues[["NA"]]
+                      self$data[[s$names]]$records[id, d] = 
+                      SpecialValues[["NA"]]
                     }
                   }
                 }
@@ -224,11 +225,46 @@ Container <- R6::R6Class (
         private$linkDomainObjects(symbolsToRead)
 
         # check validity
-        validSymbols=self$listSymbols(isValid=TRUE)
+        validSymbols = self$listSymbols(isValid = TRUE)
       }
     },
 
-    listSymbols = function(isValid=NULL) {
+    removeSymbols = function(name = NA) {
+      if (!(is.character(name) || is.vector(name) || is.list(name))) {
+        stop("Argument 'name' must be of type string, list, or vector")
+      }
+
+      if (!all(unlist(lapply(name, is.character)))) {
+        stop("Argument 'name' must contain only type character")
+      }
+
+      for (n in names) {
+        self$data[[n]] <- NULL
+      }
+
+      private$checkOn()
+    },
+
+    renameSymbols = function(old_name = NA, new_name = NA) {
+      if (is.character(old_name)) {
+        stop("Argument 'old_name' must be type character")
+      }
+
+      if (is.character(new_name)) {
+        stop("Argument 'new_name' must be type character")
+      }
+
+      if (is.null(self$data[[old_name]])) {
+        stop(paste0("Symbol ", old_name, " does not exist"))
+      }
+
+      if (old_name != new_name) {
+        self$data[[old_name]]$name = new_name
+        self$checkOn()
+      }
+    },
+
+    listSymbols = function(isValid = NULL) {
       if (!is.null(isValid)) {
         assertthat::assert_that(is.logical(isValid),
         msg = "argument 'isValid' must be type logical")
@@ -250,7 +286,7 @@ Container <- R6::R6Class (
       }
     },
 
-    listSets = function(isValid=NULL) {
+    listSets = function(isValid = NULL) {
       sets = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Set") |
@@ -357,6 +393,7 @@ Container <- R6::R6Class (
         description)
         return(self$data[[name]])
     },
+
     addAlias = function(name, alias_with) {
       Alias$new(
       self, name, alias_with)
@@ -377,7 +414,8 @@ Container <- R6::R6Class (
             "cardinality",
             "sparsity"
             )
-      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
         if (i %in% self$listSets()) {
@@ -428,7 +466,8 @@ Container <- R6::R6Class (
             "cardinality",
             "sparsity"
             )
-      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
         if (i %in% self$listParameters()) {
@@ -489,7 +528,8 @@ Container <- R6::R6Class (
             "where_max_abs_marginal",
             "count_eps_marginal"
             )
-      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
       rowCount = 0
 
       for (i in symbols) {
@@ -553,7 +593,8 @@ Container <- R6::R6Class (
             "where_max_abs_marginal",
             "count_eps_marginal"
             )
-      df = data.frame(matrix(NA, nrow = length(symbols), ncol = length(colNames)))
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
       rowCount = 0
 
       for (i in symbols) {
@@ -895,16 +936,17 @@ Symbol <- R6Class(
     private$requiresStateCheck = TRUE
     self$ref_container = container
 
-    if (!is.null(self$ref_container$data[[name]])) {
-      stop(paste0("Attempting to add symbol ", s, ", however,",
-      " one already exists in the Container. Symbol replacement",
-      " is only possible if the symbol is first removed from the", 
-      "Container with the removeSymbol() method."))
-    }
-    else {
-      self$ref_container$data[[name]] = self
-    }
+    # if (!is.null(self$ref_container$data[[name]])) {
+    #   stop(paste0("Attempting to add symbol ", s, ", however,",
+    #   " one already exists in the Container. Symbol replacement",
+    #   " is only possible if the symbol is first removed from the", 
+    #   "Container with the removeSymbol() method."))
+    # }
+    # else {
+    #   self$ref_container$data[[name]] = self
+    # }
     self$name <- name
+    self$ref_container$data[[name]] = self
     self$type = type
     self$subtype = subtype
 
@@ -1013,7 +1055,7 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column '", columns, "' must be a subset",
         " of valid numeric columns", 
@@ -1091,6 +1133,7 @@ Symbol <- R6Class(
     )
 
   },
+
   getMeanValue = function(columns=NA) {
     if (!is.na(columns)) {
       if (!is.character(columns)) {
@@ -1495,8 +1538,8 @@ Symbol <- R6Class(
       }
 
       if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)], 
-      columns))) {
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
@@ -1640,6 +1683,44 @@ Symbol <- R6Class(
       )
     }
 
+  },
+
+  domainForwarding = function() {
+    # find symbols to grow
+    for (diter in seq_len(self$dimension)) {
+      d = self$domain[diter]
+      dl = self$domainLabels()[diter]
+      to_grow = NULL
+      while (inherits(d, "Set")) {
+        if (is.null(to_grow)) {
+          to_grow = d
+        }
+        else {
+          to_grow = append(to_grow, d)
+        }
+        d = d$domain
+      }
+
+      for (i in to_grow) {
+        dim = (i$domainLabels)[1]
+        if (is.null(self$ref_container$data[[i]]$records)) {
+          recs = self$ref_container$data[[i]]$records
+          assert_that((self$ref_container$data[[i]]$dimension == 1),
+          msg = "attempting to forward a domain set that has dimension > 1")
+
+          df = self$records["dl"]
+          colnames(df) = dim
+          df[["element_text"]] = ""
+          # recs = 
+        }
+        else {
+          recs = unique(self$records[[dl]])
+          colnames(recs) = dim
+          recs[["element_text"]] = ""
+        }
+        self$ref_container$data[[i]]$records = recs
+      }
+    }
   }
   ),
   active = list(
@@ -1782,6 +1863,11 @@ Symbol <- R6Class(
         if (nchar(name_input) > private$symbolMaxLength) {
           stop(paste0("GAMS symbol 'name' is too long,",
           " max is ", private$symbolMaxLength, " characters"))
+        }
+
+        if (!is.null(self$ref_container$data[[name_input]])) {
+          stop(paste0("A symbol with the name ", name_input, 
+          " already exists in the container"))
         }
 
         if (is.na(private$.name)) {
@@ -2277,9 +2363,8 @@ Alias <- R6Class(
                           alias_for=NA) {
       private$requiresStateCheck = TRUE
       self$ref_container = container
-      self$ref_container$data[[gams_name]] = self
-
       self$name = gams_name
+      self$ref_container$data[[gams_name]] = self
       self$type = private$lblTypeSubtype()[["alias"]][[1]]
       private$is_alias = TRUE
       self$aliasWith = alias_for
@@ -2396,6 +2481,12 @@ Alias <- R6Class(
           stop(paste0("GAMS symbol 'name' is too long,",
           " max is ", private$symbolMaxLength, " characters"))
         }
+
+        if (!is.null(self$ref_container$data[[name_input]])) {
+          stop(paste0("A symbol with the name ", name_input, 
+          " already exists in the container"))
+        }
+
         if (is.na(private$.name)) {
           private$checkOn()
           private$.name = name_input
