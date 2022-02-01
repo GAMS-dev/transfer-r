@@ -1643,12 +1643,10 @@ Symbol <- R6Class(
       if (is.character(self$domain[[i]])) {
         d = self$domain[[i]]
       }
-      else if (inherits(self$domain[[i]], "Symbol")) {
+      else {
         d = self$domain[[i]]$name
       }
-      else {
-        print("unknown data type of domain")
-      }
+
       if (d != "*") {
         column_names = append(column_names, paste0(d, "_", i))
       }
