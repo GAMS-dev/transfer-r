@@ -235,7 +235,7 @@ CharacterVector sysDir, CharacterVector fileName) {
 	gdxGetDLLVersion(PGX, Msg);
 
 	/* Write demand data */
-	rc = gdxOpenWrite(PGX, myFileName.c_str(), "xp_example1", &ErrNr);
+	rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
 	if (ErrNr) Rcout << "Error1" << "\n";
   // std::string mysym, varTypeStr;
   DataFrame df;
