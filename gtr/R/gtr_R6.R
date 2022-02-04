@@ -123,7 +123,7 @@ Container <- R6::R6Class (
       else {
         symbolsToRead = list()
         for (s in symbols) {
-          if (s %in% syms) {
+          if (any(syms == s)) {
             symbolsToRead = append(symbolsToRead, s)
           }
         }
@@ -148,7 +148,7 @@ Container <- R6::R6Class (
       aliasList = list()
       aliasCount = 0
       for (m in metadata) {
-         if (m$name %in% symbolsToRead) {
+         if (any(symbolsToRead == m$name)) {
             m1 = m[-1]
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
@@ -425,7 +425,7 @@ Container <- R6::R6Class (
       length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
-        if (i %in% self$listSets()) {
+        if (any(self$listSets() == i)) {
           symDescription = list(
             i,
             self$data[[i]]$isAlias(),
@@ -477,7 +477,7 @@ Container <- R6::R6Class (
       length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
-        if (i %in% self$listParameters()) {
+        if (any(self$listParameters() == i)) {
           symDescription = list(
             i,
             self$data[[i]]$isScalar,
@@ -540,7 +540,7 @@ Container <- R6::R6Class (
       rowCount = 0
 
       for (i in symbols) {
-        if (i %in% self$listVariables()) {
+        if (any(self$listVariables() == i)) {
           symDescription = list(
             i,
             self$data[[i]]$type,
@@ -605,7 +605,7 @@ Container <- R6::R6Class (
       rowCount = 0
 
       for (i in symbols) {
-        if (i %in% self$listEquations()) {
+        if (any(self$listEquations() == i)) {
           symDescription = list(
             i,
             self$data[[i]]$type,
@@ -768,7 +768,7 @@ Container <- R6::R6Class (
             (inherits(j, "Set") && (identical(j,s)))) {
               d = append(d, j)
             }
-            else if (is.character(j) && (j %in% symbols) && (j != s)) {
+            else if (is.character(j) && (any(symbols == j)) && (j != s)) {
                d = append(d, self$data[[j]])
             }
             else {
@@ -837,8 +837,8 @@ Container <- R6::R6Class (
             if (is.character(i)) {
               doi = append(doi, TRUE)
             }
-            else if ( (inherits(i, "Set") | inherits(i, "Alias")) &
-            i$name %in% orderedSymbols) {
+            else if ((inherits(i, "Set") | inherits(i, "Alias")) &
+            any(orderedSymbols == i$name)) {
                doi = append(doi, TRUE)
             }
             else {
@@ -1968,9 +1968,9 @@ Symbol <- R6Class(
         if (self$domain_type() == "regular") {
           for (i in self$domain) {
             if (!( ( (inherits(i, "Set") || inherits(i, "Alias")) && 
-            (i$name %in% names(self$ref_container$data)) ) ||
+            (any(names(self$ref_container$data) == i$name))) ) ||
             ( (is.character(i)) && 
-            (i %in% names(self$ref_container$data)) )
+            ( any(names(self$ref_container$data) == i))
              )) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the object reference is not in the", 
