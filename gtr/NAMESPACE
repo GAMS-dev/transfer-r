@@ -1,3 +1,5 @@
 useDynLib(gtr, .registration=TRUE)
 exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
+importFrom(R6,R6Class)
+import(assertthat)

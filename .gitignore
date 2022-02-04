@@ -1,4 +1,11 @@
 gtr/src/*.o
 gtr/src/*.so
+*.gdx
 .RData
 .Rhistory
+gtr/.Rhistory
+gtr/src/profilercode.cpp
+gtr/tests/testthat/data.gms
+old_write_script.R
+gtr/src/Makevars
+gtr/.RData
