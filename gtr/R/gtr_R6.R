@@ -2034,7 +2034,11 @@ Symbol <- R6Class(
           inherits(self, "Equation")) {
             cols = append(cols, private$attr())
           }
-          # cols = self$getColLabelsForRecords()
+
+          if (!identical(cols, colnames(self$records))) {
+            stop(paste0("Records columns must be named and ordered as: ", toString(cols)))
+          }
+
           if (!all(unlist(lapply(cols, is.character) ))) {
             stop("Domain columns in symbol 'records' must be of type character")
           }
