@@ -44,6 +44,7 @@ Container <- R6::R6Class (
     systemDirectory = NULL,
     data = NULL,
     acronyms = NULL,
+    .requiresStateCheck = NULL,
     initialize = function(load_from=NA, system_directory=NA) {
 
       if (missing(system_directory)) {
@@ -65,7 +66,7 @@ Container <- R6::R6Class (
 
       self$acronyms = list()
       self$data = list()
-      private$requiresStateCheck = TRUE
+      self$.requiresStateCheck = TRUE
     },
 
     read = function(load_from, symbols="all", values=TRUE) {
@@ -152,29 +153,36 @@ Container <- R6::R6Class (
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
+                domain_forwarding=FALSE,
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_SET) {
                 if (m$subtype == 0) {
                 Set$new(
                 self, m$name, m$domain, FALSE,
-                NA, m$expltext)
+                NA,
+                domain_forwarding=FALSE,
+                m$expltext)
                 }
                 else {
                 Set$new(
                 self, m$name, m$domain, TRUE,
-                NA, m$expltext)
+                NA,
+                domain_forwarding=FALSE, 
+                m$expltext)
                 }
             }
             else if (m$type == GMS_DT_VAR) {
                 Variable$new(
                 self, m$name, m$type, m$domain,
-                 description=m$expltext)
+                domain_forwarding=FALSE,
+                description=m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
                 Equation$new(
                 self, m$name, m$subtype, m$domain,
-                 description = m$expltext)
+                domain_forwarding=FALSE,
+                description = m$expltext)
             }
             else if (m$type == GMS_DT_ALIAS) {
               aliasCount = aliasCount + 1
@@ -221,7 +229,6 @@ Container <- R6::R6Class (
             }
           }
         }
-
         private$linkDomainObjects(symbolsToRead)
 
         # check validity
@@ -363,34 +370,34 @@ Container <- R6::R6Class (
     },
 
     addSet = function(name, domain = NA, is_singleton = FALSE,
-    records = NA, description = "") {
+    records = NA, domain_forwarding=FALSE, description = "") {
       Set$new(
       self, name, domain, is_singleton,
-      records, description)
+      records, domain_forwarding, description)
       return(self$data[[name]])
     },
 
     addParameter = function(name, domain = NA,
-    records = NA, description = "") {
+    records = NA, domain_forwarding=FALSE, description = "") {
       Parameter$new(
         self, name, domain, records,
-        description)
+        domain_forwarding, description)
         return(self$data[[name]])
     },
 
     addVariable = function(name, type="free", domain = NA,
-    records = NA, description = "") {
+    records = NA, domain_forwarding=FALSE, description = "") {
       Variable$new(
         self, name, type, domain,
-        description)
+        domain_forwarding, description)
         return(self$data[[name]])
     },
 
     addEquation = function(name, domain = NA, type,
-    records = NA, description = "") {
+    records = NA, domain_forwarding=FALSE, description = "") {
       Equation$new(
         self, name, type, domain,
-        description)
+        domain_forwarding, description)
         return(self$data[[name]])
     },
 
@@ -740,17 +747,16 @@ Container <- R6::R6Class (
       msg = "Argument 'force' must be logical")
 
       if (force == TRUE) {
-        private$requiresStateCheck = TRUE
+        self$.requiresStateCheck = TRUE
       }
 
-      if (private$requiresStateCheck == TRUE) {
+      if (self$.requiresStateCheck == TRUE) {
         private$check()
       }
     }
 
   ),
   private = list(
-    requiresStateCheck = NULL,
     gdx_specVals_write = list(),
 
     linkDomainObjects = function(symbols) {
@@ -776,7 +782,7 @@ Container <- R6::R6Class (
     },
 
     check = function() {
-      if (private$requiresStateCheck == TRUE) {
+      if (self$.requiresStateCheck == TRUE) {
          private$validSymbolOrder()
 
         if (all(self$listSymbols() != self$listSymbols(isValid = TRUE))) {
@@ -785,7 +791,7 @@ Container <- R6::R6Class (
           "method. Debug invalid symbol(s) by running .",
           "isValid(verbose=TRUE, force=TRUE) method on the symbol object."))
         }
-        private$checkOff()
+        self$.requiresStateCheck = FALSE
       }
     },
 
@@ -903,19 +909,8 @@ Container <- R6::R6Class (
       else {
         return(FALSE)
       }
-    },
-
-    checkOn = function() {
-      if (private$requiresStateCheck==FALSE) {
-        private$requiresStateCheck = TRUE
-      }
-    },
-
-    checkOff = function() {
-      if (private$requiresStateCheck==TRUE) {
-        private$requiresStateCheck = FALSE
-      }
     }
+
   )
   )
 
@@ -925,15 +920,17 @@ Symbol <- R6Class(
   public = list(
   type = NULL,
   subtype = NULL,
-  records = NULL,
+
+  .requiresStateCheck = NA,
 
   initialize = function(container=NA, name=NA,
                         type=NA, subtype=NA, 
                         domain=NA,
-                        description=NA) {
+                        description=NA,
+                        domain_forwarding=NA) {
 
 
-    private$requiresStateCheck = TRUE
+    self$.requiresStateCheck = TRUE
     self$ref_container = container
 
     # if (!is.null(self$ref_container$data[[name]])) {
@@ -956,6 +953,7 @@ Symbol <- R6Class(
 
     self$dimension = length(self$domain)
     self$description = description
+    self$domain_forwarding = domain_forwarding
 
   },
 
@@ -1665,10 +1663,10 @@ Symbol <- R6Class(
     msg = "Argument 'force' must be logical")
 
     if (force == TRUE) {
-      private$requiresStateCheck = TRUE
+      self$.requiresStateCheck = TRUE
     }
 
-    if (private$requiresStateCheck == TRUE) {
+    if (self$.requiresStateCheck == TRUE) {
       tryCatch(
         {
           private$check()
@@ -1680,50 +1678,85 @@ Symbol <- R6Class(
         }
       )
     }
-
-  },
-
-  domainForwarding = function() {
-    # find symbols to grow
-    for (diter in seq_len(self$dimension)) {
-      d = self$domain[diter]
-      dl = self$domainLabels()[diter]
-      to_grow = NULL
-      while (inherits(d, "Set")) {
-        if (is.null(to_grow)) {
-          to_grow = d
-        }
-        else {
-          to_grow = append(to_grow, d)
-        }
-        d = d$domain
-      }
-
-      for (i in to_grow) {
-        dim = (i$domainLabels)[1]
-        if (is.null(self$ref_container$data[[i]]$records)) {
-          recs = self$ref_container$data[[i]]$records
-          assert_that((self$ref_container$data[[i]]$dimension == 1),
-          msg = "attempting to forward a domain set that has dimension > 1")
-
-          df = self$records["dl"]
-          colnames(df) = dim
-          df[["element_text"]] = ""
-          # recs = 
-        }
-        else {
-          recs = unique(self$records[[dl]])
-          colnames(recs) = dim
-          recs[["element_text"]] = ""
-        }
-        self$ref_container$data[[i]]$records = recs
-      }
+    else {
+      return(TRUE)
     }
+
   }
   ),
   active = list(
+
+    records = function(records_input) {
+      if (missing(records_input)) {
+        return(private$.records)
+      }
+      else {
+        # if (!is.data.frame(records_input)) {
+        #   stop("Symbol 'records' must be type DataFrame")
+        # }
+        private$.records = records_input
+
+        if (any(!is.na(self$records))) {
+          if (self$domain_forwarding == TRUE) {
+            private$domainForwarding()
+            # link domain (set incorrect elements to NA)
+            for (i in seq_along(self$domain)) {
+              d <- self$domain[[i]]
+
+              if (inherits(d, "Set") || inherits(d, "Alias")) {
+                if (d$isValid() && self$isValid()) {
+                  violations = is.element(self$records[, i], 
+                  d$records[, 1])
+                  if (any(violations) == FALSE) {
+                    self$records[!(violations), ][, i] <- NA
+                  }
+                }
+              }
+            }
+
+            for (i in self$ref_container$listSymbols()) {
+              self$ref_container$data[[i]]$.requiresStateCheck = TRUE
+            }
+
+            self$ref_container$.requiresStateCheck = TRUE
+          }
+          else {
+              #link domain
+              for (i in seq_along(self$domain)) {
+                d <- self$domain[[i]]
+                if (inherits(d, "Set") || inherits(d, "Alias")) {
+                  if (d$isValid() && self$isValid()) {
+                    violations = is.element(self$records[, i], 
+                    d$records[, 1])
+                    if (any(violations) == FALSE) {
+                      self$records[!(violations), ][, i] <- NA
+                    }
+                  }
+                }
+              }
+              self$.requiresStateCheck = TRUE
+              self$ref_container$.requiresStateCheck = TRUE
+          }
+        }
+      }
+    },
+
+    domain_forwarding = function(domain_forwarding_input) {
+      if (missing(domain_forwarding_input)) {
+        return(private$.domain_forwarding)
+      }
+      else {
+        if (!is.logical(domain_forwarding_input)) {
+          stop("Argument 'domain_forwarding' must be type bool")
+        }
+        else {
+          private$.domain_forwarding = domain_forwarding_input
+        }
+      }
+    },
+
     description = function(description_input) {
-      if (missing(description_input)){
+      if (missing(description_input)) {
         return(private$.description)
       }
       else {
@@ -1737,19 +1770,20 @@ Symbol <- R6Class(
         }
 
         if (!is.na(private$.description)) {
-          if (private$.description != description_input){
-            private$checkOn()
+          if (private$.description != description_input) {
+            self$.requiresStateCheck = TRUE
           }
           else {
             private$.description = description_input
           }
         }
         else {
-          private$checkOn()
+          self$.requiresStateCheck = TRUE
           private$.description = description_input
         }
       }
     },
+
     dimension = function(dimension_input) {
       if (missing(dimension_input)) {
         return(length(self$domain))
@@ -1757,25 +1791,31 @@ Symbol <- R6Class(
       else {
          assertthat::assert_that(
            (is.integer(dimension_input)) && (dimension_input >= 0),
-           msg = "Symbol 'dimension' must be type int (greater than or equal to 0)")
+           msg = "Symbol 'dimension' must be type 
+           int (greater than or equal to 0)")
 
         if (length(self$domain) > dimension_input) {
           self$domain = self$domain[1:dimension_input]
         }
         else if (length(self$domain) < dimension_input) {
            new = self$domain
-           new = append(new, replicate(dimension_input - length(self$domain), "*"))
+           new = append(new, replicate(dimension_input - 
+           length(self$domain), "*"))
         }
         else {
         }
       }
     },
+
     domain = function(domain_input) {
 
       if (missing(domain_input)) {
         return(private$.domain)
       }
       else {
+        if (!(is.list(domain_input) || is.vector(domain_input))) {
+          domain_input = list(domain_input)
+        }
         for (d in domain_input) {
           assertthat::assert_that((inherits(d, "Set") || 
           inherits(d, "Alias") ||
@@ -1839,12 +1879,12 @@ Symbol <- R6Class(
         }
         if (is.null(self$ref_container)){
           if (!identical(self$ref_container, ref_container_input)) {
-            private$checkOn()
+            self$.requiresStateCheck = TRUE
           }
           private$.ref_container = ref_container_input
         }
         else {
-          private$checkOn()
+          self$.requiresStateCheck = TRUE
           private$.ref_container = ref_container_input
         }
       }
@@ -1869,12 +1909,12 @@ Symbol <- R6Class(
         }
 
         if (is.na(private$.name)) {
-          private$checkOn()
+          self$.requiresStateCheck = TRUE
           private$.name = name_input
         }
         else {
-          if(private$.name != name_input) {
-            private$checkOn()
+          if (private$.name != name_input) {
+            self$.requiresStateCheck = TRUE
           }
           private$.name = name_input
         }
@@ -1883,11 +1923,12 @@ Symbol <- R6Class(
   ),
 
   private = list(
+    .domain_forwarding = NA,
     .description = NA,
     .domain = NA,
     .ref_container = NA,
     .name = NA,
-    requiresStateCheck = NA,
+    .records = NA,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
@@ -1922,7 +1963,7 @@ Symbol <- R6Class(
     },
 
     check = function() {
-      if (private$requiresStateCheck == TRUE) {
+      if (self$.requiresStateCheck == TRUE) {
         # if regular domain, symbols in domain must be valid
         if (self$domain_type() == "regular") {
           for (i in self$domain) {
@@ -1948,7 +1989,7 @@ Symbol <- R6Class(
         }
 
         # if records exist, check consistency
-        if (!is.null(self$records)) {
+        if (!any(is.na(self$records))) {
           if (inherits(self, "Set")){
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
@@ -1966,6 +2007,7 @@ Symbol <- R6Class(
               }
             }
           }
+
           if (inherits(self, "Variable") | inherits(self, "Equation")){
             if (length(self$records) != 
             self$dimension + length(private$attr())) {
@@ -1974,6 +2016,7 @@ Symbol <- R6Class(
               self$dimension + length(private$attr())))
             }
           }
+
           # check if records are dataframe
           if (!is.data.frame(self$records)){
             stop("Symbol 'records' must be type dataframe")
@@ -1987,7 +2030,7 @@ Symbol <- R6Class(
           else if(inherits(self, "Parameter")) {
             cols = append(cols, "value")
           }
-          else if (inherits(self, "Vairable") ||
+          else if (inherits(self, "Variable") ||
           inherits(self, "Equation")) {
             cols = append(cols, private$attr())
           }
@@ -2013,7 +2056,7 @@ Symbol <- R6Class(
           # drop duplicates
           if (self$dimension != 0) {
             if (nrow(self$records) != nrow(unique(self$records))) {
-              print(paste0("Symbol 'records' contain non-unique",
+              stop(paste0("Symbol 'records' contain non-unique",
                " domain members; ensure that only unique members exist"))
             }
           }
@@ -2031,18 +2074,42 @@ Symbol <- R6Class(
         }
 
       }
-      private$checkOff()
+      self$.requiresStateCheck = FALSE
     },
-    checkOn = function() {
-      if (private$requiresStateCheck == FALSE) {
-        private$requiresStateCheck == TRUE
+
+    domainForwarding = function() {
+    # find symbols to grow
+    for (diter in seq_len(self$dimension)) {
+      d = self$domain[[diter]]
+      dl = self$domainLabels()[[diter]]
+      to_grow = list()
+      while (inherits(d, "Set")) {
+        to_grow = append(to_grow, d$name)
+        d = d$domain
       }
-    },
-    checkOff = function() {
-      if (private$requiresStateCheck == TRUE) {
-        private$requiresStateCheck == FALSE
+
+      for (i in to_grow) {
+        dim = (self$ref_container$data[[i]]$domainLabels())[[1]]
+        if (any(!is.na(self$ref_container$data[[i]]$records))) {
+          recs = self$ref_container$data[[i]]$records
+          assert_that((self$ref_container$data[[i]]$dimension == 1),
+          msg = "attempting to forward a domain set that has dimension > 1")
+
+          df = self$records[dl]
+          colnames(df) = dim
+          df[["element_text"]] = ""
+          recs = rbind(df, recs)
+          recs = recs[!duplicated(recs[[dim]]),]
+        }
+        else {
+          recs = unique(self$records[dl])
+          colnames(recs) = dim
+          recs[["element_text"]] = ""
+        }
+        self$ref_container$data[[i]]$records = recs
       }
     }
+  }
   )
 )
 
@@ -2050,11 +2117,11 @@ Set <- R6Class(
   "Set",
   inherit = Symbol,
   public = list(
-
-    records = NA,
     initialize = function(container=NA, gams_name=NA,
                           domain="*", is_singleton=FALSE,
-                          records = NA, description=NA) {
+                          records = NA, 
+                          domain_forwarding = FALSE,
+                          description=NA) {
       self$isSingleton <- is_singleton
       if (!is_singleton) {
         type = super$lblTypeSubtype()[["set"]][[1]]
@@ -2067,7 +2134,7 @@ Set <- R6Class(
 
       super$initialize(container, gams_name,
                       type, subtype,
-                      domain, description)
+                      domain, description, domain_forwarding)
 
       if (any(!is.na(records))) {
         self$setRecords(records)
@@ -2075,10 +2142,10 @@ Set <- R6Class(
       private$is_alias = FALSE
       invisible(self)
     },
+
     setRecords = function(records) {
       # # if records is a list, unlist
       # if (is.list(records)) {
-      #   print("records not list")
       #   records = unlist(records)
       # }
 
@@ -2097,12 +2164,14 @@ Set <- R6Class(
         stop(paste0("The argument 'records' is of length",
         c, " Expecting ", self$dimension + 1))
       }
-      self$records = records
       columnNames = self$domainLabels()
       columnNames = append(columnNames, "element_text")
       # columnNames = self$getColLabelsForRecords()
-      colnames(self$records) = columnNames
+      colnames(records) = columnNames
+
+      self$records = records
     },
+
     isAlias = function() {
       return(private$is_alias)
     }
@@ -2142,15 +2211,17 @@ Parameter <- R6Class(
 
     initialize = function(container=NA, gams_name=NA,
                           domain=NA,records=NA,
+                          domain_forwarding = FALSE,
                           description=NA ) {
 
       type = super$lblTypeSubtype()[["parameter"]][[1]]
       super$initialize(container, gams_name,
                       type, NA, 
-                      domain, description)
+                      domain, description, domain_forwarding)
       if (any(!is.na(records))) {
         self$setRecords(records)
       }
+
       if (self$dimension == 0) {
         self$isScalar = TRUE
       }
@@ -2161,8 +2232,6 @@ Parameter <- R6Class(
 
     setRecords = function(records) {
       # check if records is a dataframe and make if not
-      # print("sign in param")
-      # print(sign(1/records[["values"]]))
       records = data.frame(records)
 
       # check dimensionality of dataframe
@@ -2176,18 +2245,16 @@ Parameter <- R6Class(
         self$dimension)
       )
 
-      self$records = records
       columnNames = self$domainLabels()
       columnNames = append(columnNames, "value")
       # columnNames = self$getColLabelsForRecords()
-      colnames(self$records) = columnNames
+      colnames(records) = columnNames
 
       #if records "value" is not numeric, stop.
-      if (any(!is.numeric(self$records[,length(self$records)]))) {
+      if (any(!is.numeric(records[,length(records)]))) {
         stop("All entries in the 'values' column of a parameter must be numeric.")
       }
-      # convert values column to numeric
-      # self$records$value = as.numeric(as.character(self$records$value))
+      self$records = records
     }
 
   )
@@ -2201,6 +2268,7 @@ Variable <- R6Class(
     initialize = function(container=NA, gams_name=NA, 
                           type="free",
                           domain=NA, records=NA,
+                          domain_forwarding = FALSE,
                             description=NA) {
       if (is.integer(type)){
         symtype = type
@@ -2212,7 +2280,7 @@ Variable <- R6Class(
 
       super$initialize(container, gams_name,
                       symtype, NA, 
-                      domain, description)
+                      domain, description, domain_forwarding)
       if (any(!is.na(records))) {
         self$setRecords(records)
       }
@@ -2220,11 +2288,11 @@ Variable <- R6Class(
     setRecords = function(records) {
       # check if records is a dataframe and make if not
       records = data.frame(records)
-      self$records = records
       columnNames = self$domainLabels()
       columnNames = append(columnNames, private$attr())
-      # columnNames = self$getColLabelsForRecords()
-      colnames(self$records) = columnNames
+      colnames(records) = columnNames
+
+      self$records = records
     }
   )
   )
@@ -2262,6 +2330,7 @@ Equation <- R6Class(
                           type=NA,
                           domain=NA,
                           records = NA,
+                          domain_forwarding=FALSE,
                           description=NA) {
       if (is.integer(type)) {
         # call from container
@@ -2282,20 +2351,20 @@ Equation <- R6Class(
 
       super$initialize(container, gams_name,
                       symtype, symsubtype, 
-                      domain, description)
+                      domain, description, domain_forwarding)
       if (any(!is.na(records))) {
         self$setRecords(records)
       }
     },
+
     setRecords = function(records) {
       # check if records is a dataframe and make if not
       records = data.frame(records)
-      self$records = records
       columnNames = self$domainLabels()
       columnNames = append(columnNames, private$attr())
-      # columnNames = self$getColLabelsForRecords()
-      colnames(self$records) = columnNames
-    }    
+      colnames(records) = columnNames
+      self$records = records
+    }
   ),
 
   private = list(
@@ -2357,9 +2426,11 @@ Alias <- R6Class(
   "Alias",
   public = list(
     type = NULL,
+
+    .requiresStateCheck = NULL,
     initialize = function(container=NA, gams_name=NA, 
                           alias_for=NA) {
-      private$requiresStateCheck = TRUE
+      self$.requiresStateCheck = TRUE
       self$ref_container = container
       self$name = gams_name
       self$ref_container$data[[gams_name]] = self
@@ -2388,10 +2459,10 @@ Alias <- R6Class(
       msg = "Argument 'force' must be logical")
 
       if (force == TRUE) {
-        private$requiresStateCheck = TRUE
+        self$.requiresStateCheck = TRUE
       }
 
-      if (private$requiresStateCheck == TRUE) {
+      if (self$.requiresStateCheck == TRUE) {
         tryCatch(
           {
             private$check()
@@ -2455,12 +2526,12 @@ Alias <- R6Class(
         }
         if (is.null(self$ref_container)){
           if (!identical(self$ref_container, ref_container_input)) {
-            private$checkOn()
+            self$.requiresStateCheck = TRUE
           }
           private$.ref_container = ref_container_input
         }
         else {
-          private$checkOn()
+          self$.requiresStateCheck = TRUE
           private$.ref_container = ref_container_input
         }
       }
@@ -2486,12 +2557,12 @@ Alias <- R6Class(
         }
 
         if (is.na(private$.name)) {
-          private$checkOn()
+          self$.requiresStateCheck = TRUE
           private$.name = name_input
         }
         else {
           if(private$.name != name_input) {
-            private$checkOn()
+            self$.requiresStateCheck = TRUE
           }
           private$.name = name_input
         }
@@ -2543,13 +2614,9 @@ Alias <- R6Class(
         self$ref_container$data[[self$aliasWith$name]]$dimension = dimension_input
       }
     },
+
     records = function(records_input) {
-      if (missing(records_input)) {
-        return(self$ref_container$data[[self$aliasWith$name]]$records)
-      }
-      else {
-        self$ref_container$data[[self$aliasWith$name]]$records = records_input
-      }
+      return(self$ref_container$data[[self$aliasWith$name]]$records)
     },
 
     domain = function(domain_input) {
@@ -2568,7 +2635,6 @@ Alias <- R6Class(
     .name = NA,
     .aliasWith = NA,
     is_alias = NA,
-    requiresStateCheck = NA,
     is_singleton = NA,
 
     lblTypeSubtype = function() {
@@ -2578,23 +2644,11 @@ Alias <- R6Class(
     },
 
     check = function() {
-      if (private$requiresStateCheck == TRUE) {
+      if (self$.requiresStateCheck == TRUE) {
         if (self$ref_container$data[[self$aliasWith$name]]$isValid() == FALSE) {
           stop(paste0("Alias symbol is not valid because parent set ", self$aliasWith$name,
           "is not valid"))
         }
-      }
-    },
-
-    checkOn = function() {
-      if (private$requiresStateCheck==FALSE) {
-        private$requiresStateCheck = TRUE
-      }
-    },
-
-    checkOff = function() {
-      if (private$requiresStateCheck==TRUE) {
-        private$requiresStateCheck = FALSE
       }
     }
   )
