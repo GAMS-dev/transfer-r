@@ -37,7 +37,13 @@ SpecialValues = list(
   "POSINF" = Inf,
   "NEGINF" = -Inf
   )
-
+#' This is GDX Container class
+#' @description Container is the unified object that contains data
+#' @field data is a list containgin all symbols
+#' @examples
+#' Container$new()
+#' \href{../../gtr/html/Container.html#method-read}{\code{Container$read()}}
+#' @export
 Container <- R6::R6Class (
   "Container",
   public = list(
@@ -45,6 +51,12 @@ Container <- R6::R6Class (
     data = NULL,
     acronyms = NULL,
     .requiresStateCheck = NULL,
+    #' @description
+    #' Create a new container
+    #' @details read a file using 
+    #' \href{../../gtr/html/Container.html#method-read}{\code{$read()}}
+    #' @param load_from name of the GDX file to load data from
+    #' @param system_directory optional argument for the path to GAMS System directory
     initialize = function(load_from=NA, system_directory=NA) {
 
       if (missing(system_directory)) {
@@ -69,6 +81,12 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
     },
 
+    #' @description read data from a GDX file
+    #' @details 
+    #' `$read()` reads a file
+    #' @param load_from name of the file to load data from
+    #' @symbols optional argument to specify the names of the symbols to be read
+    #' @values optional boolean argument to specify whether to read symbol records
     read = function(load_from, symbols="all", values=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
@@ -2035,7 +2053,7 @@ Symbol <- R6Class(
             cols = append(cols, private$attr())
           }
 
-          if (!identical(cols, colnames(self$records))) {
+          if (!identical(unlist(cols), colnames(self$records))) {
             stop(paste0("Records columns must be named and ordered as: ", toString(cols)))
           }
 
