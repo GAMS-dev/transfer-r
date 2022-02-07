@@ -2143,7 +2143,7 @@ Set <- R6Class(
                           domain="*", is_singleton=FALSE,
                           records = NA, 
                           domain_forwarding = FALSE,
-                          description=NA) {
+                          description="") {
       self$isSingleton <- is_singleton
       if (!is_singleton) {
         type = super$lblTypeSubtype()[["set"]][[1]]
@@ -2234,7 +2234,7 @@ Parameter <- R6Class(
     initialize = function(container=NA, gams_name=NA,
                           domain=NA,records=NA,
                           domain_forwarding = FALSE,
-                          description=NA ) {
+                          description="") {
 
       type = super$lblTypeSubtype()[["parameter"]][[1]]
       super$initialize(container, gams_name,
@@ -2291,7 +2291,7 @@ Variable <- R6Class(
                           type="free",
                           domain=NA, records=NA,
                           domain_forwarding = FALSE,
-                            description=NA) {
+                            description="") {
       if (is.integer(type)){
         symtype = type
       }
@@ -2353,7 +2353,7 @@ Equation <- R6Class(
                           domain=NA,
                           records = NA,
                           domain_forwarding=FALSE,
-                          description=NA) {
+                          description="") {
       if (is.integer(type)) {
         # call from container
         symtype = GMS_DT_EQU
