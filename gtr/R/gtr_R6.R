@@ -2107,8 +2107,13 @@ Symbol <- R6Class(
       to_grow = list()
       while (inherits(d, "Set")) {
         to_grow = append(to_grow, d$name)
-        d = d$domain
+        d = d$domain[[1]]
       }
+
+      # reverse the to_grow list because when the records are set, we check domain
+      # domain_forwarding for domain sets is FALSE until specified explicitly 
+      # so we should grow parent sets first and then children
+      to_grow = rev(to_grow)
 
       for (i in to_grow) {
         dim = (self$ref_container$data[[i]]$domainLabels())[[1]]
