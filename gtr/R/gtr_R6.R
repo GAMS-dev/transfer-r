@@ -254,6 +254,23 @@ Container <- R6::R6Class (
       }
     },
 
+    getUniverseSet = function() {
+      uni = list()
+      for (i in self$listSymbols(isValid = TRUE)) {
+        if (!any(is.na(self$data[[i]]$records))) {
+          uni = append(uni, data.frame(unlist(x = 
+          self$data[[i]]$records[,(1:self$data[[i]]$dimension)]))[, 1])
+        }
+      }
+
+      if (length(uni) != 0) {
+        return(unique(uni))
+      }
+      else {
+        return(NA)
+      }
+    },
+
     removeSymbols = function(name = NA) {
       if (!(is.character(name) || is.vector(name) || is.list(name))) {
         stop("Argument 'name' must be of type string, list, or vector")
