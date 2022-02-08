@@ -2125,7 +2125,7 @@ Symbol <- R6Class(
           df = self$records[dl]
           colnames(df) = dim
           df[["element_text"]] = ""
-          recs = rbind(df, recs)
+          recs = rbind(recs, df)
           recs = recs[!duplicated(recs[[dim]]),]
         }
         else {
