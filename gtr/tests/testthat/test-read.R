@@ -1,69 +1,2766 @@
 library(gtr)
 
-# read all symbols
-## relaxed gdx
-## regular gdx
-test_that("read all symbols", {
-  c = Container$new()
-  c$read("trialgdx.gdx")
-
-  # check if all symbols are read
-  
-})
-# read one symbol
-
-# read 5 symbols
-
-# read alias
-
-# read element text
-
 test_that("readwritetest", {
 
-message("here1")
-message(system2(command="pwd"))
-message("here1")
-message(system2(command="which", args="gams"))
-tryCatch(
-  expr = {
-ret = system2(command="gams", args= 
-paste0(testthat::test_path("data.gms"), " gdx=data.gdx"))#, 
-# stdout = TRUE, stderr = TRUE)
+  # tryCatch(
+    # expr = {
+  gams_text = '
+  * test sets
+  Set i_1 "set i_1" / i1, i2 "i2 element text" /;
+  Set i_2 "set i_2" / 1 "1 element text", 2 /;
 
-m = Container$new()
-# read all symbols
-m$read(testthat::test_path("data.gdx"))
+  Set j_1(i_1,i_2)  "set j_1" / #i_1.#i_2 /;
+  Set j_2(i_1,*)  "set j_2" / #i_1.#i_2 /;
+  Set j_3(*,i_2)  "set j_3" / #i_1.#i_2 /;
 
-# write everything
-m$write(testthat::test_path("gt.gdx"))
+  Singleton Set k_1 "singleton_set k_1" / k1 /;
+  Singleton Set k_2(i_1,i_2) "singleton_set k_2";
+  k_2("i1","1") = yes;
 
-ret <-system2(command="gdxdiff", args=
-paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")))
+  Singleton Set k_3(i_1,*) "singleton_set k_3";
+  k_3("i1","uni") = yes;
 
-expect_equal(ret, 0)
+  Singleton Set k_4(*,i_2) "singleton_set k_4";
+  k_4("uni","2") = yes;
 
-  }
-,
-error = function(e) {
-  message(e)
-  message(paste0("gams ", testthat::test_path("data.gms"), " gdx=data.gdx"))
+  * test aliases
+  Alias(i_1, i_1_p);
+  Alias(i_2, i_2_p);
+  Alias(j_1, j_1_p);
+  Alias(j_2, j_2_p);
+  Alias(j_3, j_3_p);
+  Alias(k_1, k_1_p);
+  Alias(k_2, k_2_p);
+  Alias(k_3, k_3_p);
+
+  * test scalar
+  Scalar s_1 "scalar s_1";
+  Scalar s_2 "scalar s_2";
+  Scalar s_3 "scalar s_3";
+  Scalar s_4 "scalar s_4";
+  Scalar s_5 "scalar s_5";
+  Scalar s_6 "scalar s_6";
+  s_1 = 1;
+  s_2 = 1/0;
+  s_3 = NA;
+  s_4 = Inf;
+  s_5 = -Inf;
+  s_6 = eps;
+
+  * test parameters
+  Set sv / sv1, sv2, sv3, sv4, sv5, sv6 /;
+
+  Parameter p_1(sv) "parameter p_1";
+  p_1("sv1") = 1;
+  p_1("sv2") = 1/0;
+  p_1("sv3") = NA;
+  p_1("sv4") = Inf;
+  p_1("sv5") = -Inf;
+  p_1("sv6") = eps;
+
+  Parameter p_2(sv,sv) "parameter p_2";
+  p_2("sv1","sv1") = 1;
+  p_2("sv2","sv2") = 1/0;
+  p_2("sv3","sv3") = NA;
+  p_2("sv4","sv4") = Inf;
+  p_2("sv5","sv5") = -Inf;
+  p_2("sv6","sv6") = eps;
+
+  Parameter p_3(*,sv) "parameter p_3";
+  p_3("sv1","sv1") = 1;
+  p_3("sv2","sv2") = 1/0;
+  p_3("sv3","sv3") = NA;
+  p_3("sv4","sv4") = Inf;
+  p_3("sv5","sv5") = -Inf;
+  p_3("sv6","sv6") = eps;
+
+
+  * test free variables
+  variable free_1 "scalar variable free_1";
+  variable free_2 "scalar variable free_2";
+  variable free_3 "scalar variable free_3";
+  variable free_4 "scalar variable free_4";
+  variable free_5 "scalar variable free_5";
+  variable free_6 "scalar variable free_6";
+
+  free_1.L = 1;
+  free_1.M = 1;
+  free_1.LO = 1;
+  free_1.UP = 1;
+  free_1.SCALE = 1;
+
+  free_2.L = 1/0;
+  free_2.M = 1/0;
+  free_2.LO = 1/0;
+  free_2.UP = 1/0;
+  free_2.SCALE = 1/0;
+
+  free_3.L = NA;
+  free_3.M = NA;
+  free_3.LO = NA;
+  free_3.UP = NA;
+  free_3.SCALE = NA;
+
+  free_4.L = Inf;
+  free_4.M = Inf;
+  free_4.LO = Inf;
+  free_4.UP = Inf;
+  free_4.SCALE = Inf;
+
+  free_5.L = -Inf;
+  free_5.M = -Inf;
+  free_5.LO = -Inf;
+  free_5.UP = -Inf;
+  free_5.SCALE = -Inf;
+
+  free_6.L = eps;
+  free_6.M = eps;
+  free_6.LO = eps;
+  free_6.UP = eps;
+  free_6.SCALE = eps;
+
+  variable free_7(sv) "variable free_7";
+  free_7.L("sv1") = 1;
+  free_7.L("sv2") = 1/0;
+  free_7.L("sv3") = NA;
+  free_7.L("sv4") = +Inf;
+  free_7.L("sv5") = -Inf;
+  free_7.L("sv6") = eps;
+
+  free_7.M("sv1") = 1;
+  free_7.M("sv2") = 1/0;
+  free_7.M("sv3") = NA;
+  free_7.M("sv4") = +Inf;
+  free_7.M("sv5") = -Inf;
+  free_7.M("sv6") = eps;
+
+  free_7.LO("sv1") = 1;
+  free_7.LO("sv2") = 1/0;
+  free_7.LO("sv3") = NA;
+  free_7.LO("sv4") = +Inf;
+  free_7.LO("sv5") = -Inf;
+  free_7.LO("sv6") = eps;
+
+  free_7.UP("sv1") = 1;
+  free_7.UP("sv2") = 1/0;
+  free_7.UP("sv3") = NA;
+  free_7.UP("sv4") = +Inf;
+  free_7.UP("sv5") = -Inf;
+  free_7.UP("sv6") = eps;
+
+  free_7.SCALE("sv1") = 1;
+  free_7.SCALE("sv2") = 1/0;
+  free_7.SCALE("sv3") = NA;
+  free_7.SCALE("sv4") = +Inf;
+  free_7.SCALE("sv5") = -Inf;
+  free_7.SCALE("sv6") = eps;
+
+  variable free_8(sv,sv) "variable free_8";
+  free_8.L("sv1","sv1") = 1;
+  free_8.L("sv2","sv2") = 1/0;
+  free_8.L("sv3","sv3") = NA;
+  free_8.L("sv4","sv4") = +Inf;
+  free_8.L("sv5","sv5") = -Inf;
+  free_8.L("sv6","sv6") = eps;
+
+  free_8.M("sv1","sv1") = 1;
+  free_8.M("sv2","sv2") = 1/0;
+  free_8.M("sv3","sv3") = NA;
+  free_8.M("sv4","sv4") = +Inf;
+  free_8.M("sv5","sv5") = -Inf;
+  free_8.M("sv6","sv6") = eps;
+
+  free_8.LO("sv1","sv1") = 1;
+  free_8.LO("sv2","sv2") = 1/0;
+  free_8.LO("sv3","sv3") = NA;
+  free_8.LO("sv4","sv4") = +Inf;
+  free_8.LO("sv5","sv5") = -Inf;
+  free_8.LO("sv6","sv6") = eps;
+
+  free_8.UP("sv1","sv1") = 1;
+  free_8.UP("sv2","sv2") = 1/0;
+  free_8.UP("sv3","sv3") = NA;
+  free_8.UP("sv4","sv4") = +Inf;
+  free_8.UP("sv5","sv5") = -Inf;
+  free_8.UP("sv6","sv6") = eps;
+
+  free_8.SCALE("sv1","sv1") = 1;
+  free_8.SCALE("sv2","sv2") = 1/0;
+  free_8.SCALE("sv3","sv3") = NA;
+  free_8.SCALE("sv4","sv4") = +Inf;
+  free_8.SCALE("sv5","sv5") = -Inf;
+  free_8.SCALE("sv6","sv6") = eps;
+
+  variable free_9(*,sv) "variable free_9";
+  free_9.L("sv1","sv1") = 1;
+  free_9.L("sv2","sv2") = 1/0;
+  free_9.L("sv3","sv3") = NA;
+  free_9.L("sv4","sv4") = +Inf;
+  free_9.L("sv5","sv5") = -Inf;
+  free_9.L("sv6","sv6") = eps;
+
+  free_9.M("sv1","sv1") = 1;
+  free_9.M("sv2","sv2") = 1/0;
+  free_9.M("sv3","sv3") = NA;
+  free_9.M("sv4","sv4") = +Inf;
+  free_9.M("sv5","sv5") = -Inf;
+  free_9.M("sv6","sv6") = eps;
+
+  free_9.LO("sv1","sv1") = 1;
+  free_9.LO("sv2","sv2") = 1/0;
+  free_9.LO("sv3","sv3") = NA;
+  free_9.LO("sv4","sv4") = +Inf;
+  free_9.LO("sv5","sv5") = -Inf;
+  free_9.LO("sv6","sv6") = eps;
+
+  free_9.UP("sv1","sv1") = 1;
+  free_9.UP("sv2","sv2") = 1/0;
+  free_9.UP("sv3","sv3") = NA;
+  free_9.UP("sv4","sv4") = +Inf;
+  free_9.UP("sv5","sv5") = -Inf;
+  free_9.UP("sv6","sv6") = eps;
+
+  free_9.SCALE("sv1","sv1") = 1;
+  free_9.SCALE("sv2","sv2") = 1/0;
+  free_9.SCALE("sv3","sv3") = NA;
+  free_9.SCALE("sv4","sv4") = +Inf;
+  free_9.SCALE("sv5","sv5") = -Inf;
+  free_9.SCALE("sv6","sv6") = eps;
+
+
+
+
+  * test binary variables
+  binary variable binary_1 "scalar variable binary_1";
+  binary variable binary_2 "scalar variable binary_2";
+  binary variable binary_3 "scalar variable binary_3";
+  binary variable binary_4 "scalar variable binary_4";
+  binary variable binary_5 "scalar variable binary_5";
+  binary variable binary_6 "scalar variable binary_6";
+
+  binary_1.L = 1;
+  binary_1.M = 1;
+  binary_1.LO = 1;
+  binary_1.UP = 1;
+
+  binary_2.L = 1/0;
+  binary_2.M = 1/0;
+  binary_2.LO = 1/0;
+  binary_2.UP = 1/0;
+
+  binary_3.L = NA;
+  binary_3.M = NA;
+  binary_3.LO = NA;
+  binary_3.UP = NA;
+
+  binary_4.L = Inf;
+  binary_4.M = Inf;
+  binary_4.LO = Inf;
+  binary_4.UP = Inf;
+
+  binary_5.L = -Inf;
+  binary_5.M = -Inf;
+  binary_5.LO = -Inf;
+  binary_5.UP = -Inf;
+
+  binary_6.L = eps;
+  binary_6.M = eps;
+  binary_6.LO = eps;
+  binary_6.UP = eps;
+
+
+  binary variable binary_7(sv) "variable binary_7";
+  binary_7.L("sv1") = 1;
+  binary_7.L("sv2") = 1/0;
+  binary_7.L("sv3") = NA;
+  binary_7.L("sv4") = +Inf;
+  binary_7.L("sv5") = -Inf;
+  binary_7.L("sv6") = eps;
+
+  binary_7.M("sv1") = 1;
+  binary_7.M("sv2") = 1/0;
+  binary_7.M("sv3") = NA;
+  binary_7.M("sv4") = +Inf;
+  binary_7.M("sv5") = -Inf;
+  binary_7.M("sv6") = eps;
+
+  binary_7.LO("sv1") = 1;
+  binary_7.LO("sv2") = 1/0;
+  binary_7.LO("sv3") = NA;
+  binary_7.LO("sv4") = +Inf;
+  binary_7.LO("sv5") = -Inf;
+  binary_7.LO("sv6") = eps;
+
+  binary_7.UP("sv1") = 1;
+  binary_7.UP("sv2") = 1/0;
+  binary_7.UP("sv3") = NA;
+  binary_7.UP("sv4") = +Inf;
+  binary_7.UP("sv5") = -Inf;
+  binary_7.UP("sv6") = eps;
+
+  binary variable binary_8(sv,sv) "variable binary_8";
+  binary_8.L("sv1","sv1") = 1;
+  binary_8.L("sv2","sv2") = 1/0;
+  binary_8.L("sv3","sv3") = NA;
+  binary_8.L("sv4","sv4") = +Inf;
+  binary_8.L("sv5","sv5") = -Inf;
+  binary_8.L("sv6","sv6") = eps;
+
+  binary_8.M("sv1","sv1") = 1;
+  binary_8.M("sv2","sv2") = 1/0;
+  binary_8.M("sv3","sv3") = NA;
+  binary_8.M("sv4","sv4") = +Inf;
+  binary_8.M("sv5","sv5") = -Inf;
+  binary_8.M("sv6","sv6") = eps;
+
+  binary_8.LO("sv1","sv1") = 1;
+  binary_8.LO("sv2","sv2") = 1/0;
+  binary_8.LO("sv3","sv3") = NA;
+  binary_8.LO("sv4","sv4") = +Inf;
+  binary_8.LO("sv5","sv5") = -Inf;
+  binary_8.LO("sv6","sv6") = eps;
+
+  binary_8.UP("sv1","sv1") = 1;
+  binary_8.UP("sv2","sv2") = 1/0;
+  binary_8.UP("sv3","sv3") = NA;
+  binary_8.UP("sv4","sv4") = +Inf;
+  binary_8.UP("sv5","sv5") = -Inf;
+  binary_8.UP("sv6","sv6") = eps;
+
+  binary variable binary_9(*,sv) "variable binary_9";
+  binary_9.L("sv1","sv1") = 1;
+  binary_9.L("sv2","sv2") = 1/0;
+  binary_9.L("sv3","sv3") = NA;
+  binary_9.L("sv4","sv4") = +Inf;
+  binary_9.L("sv5","sv5") = -Inf;
+  binary_9.L("sv6","sv6") = eps;
+
+  binary_9.M("sv1","sv1") = 1;
+  binary_9.M("sv2","sv2") = 1/0;
+  binary_9.M("sv3","sv3") = NA;
+  binary_9.M("sv4","sv4") = +Inf;
+  binary_9.M("sv5","sv5") = -Inf;
+  binary_9.M("sv6","sv6") = eps;
+
+  binary_9.LO("sv1","sv1") = 1;
+  binary_9.LO("sv2","sv2") = 1/0;
+  binary_9.LO("sv3","sv3") = NA;
+  binary_9.LO("sv4","sv4") = +Inf;
+  binary_9.LO("sv5","sv5") = -Inf;
+  binary_9.LO("sv6","sv6") = eps;
+
+  binary_9.UP("sv1","sv1") = 1;
+  binary_9.UP("sv2","sv2") = 1/0;
+  binary_9.UP("sv3","sv3") = NA;
+  binary_9.UP("sv4","sv4") = +Inf;
+  binary_9.UP("sv5","sv5") = -Inf;
+  binary_9.UP("sv6","sv6") = eps;
+
+
+  * test integer variables
+  integer variable integer_1 "scalar variable integer_1";
+  integer variable integer_2 "scalar variable integer_2";
+  integer variable integer_3 "scalar variable integer_3";
+  integer variable integer_4 "scalar variable integer_4";
+  integer variable integer_5 "scalar variable integer_5";
+  integer variable integer_6 "scalar variable integer_6";
+
+  integer_1.L = 1;
+  integer_1.M = 1;
+  integer_1.LO = 1;
+  integer_1.UP = 1;
+
+  integer_2.L = 1/0;
+  integer_2.M = 1/0;
+  integer_2.LO = 1/0;
+  integer_2.UP = 1/0;
+
+  integer_3.L = NA;
+  integer_3.M = NA;
+  integer_3.LO = NA;
+  integer_3.UP = NA;
+
+  integer_4.L = Inf;
+  integer_4.M = Inf;
+  integer_4.LO = Inf;
+  integer_4.UP = Inf;
+
+  integer_5.L = -Inf;
+  integer_5.M = -Inf;
+  integer_5.LO = -Inf;
+  integer_5.UP = -Inf;
+
+  integer_6.L = eps;
+  integer_6.M = eps;
+  integer_6.LO = eps;
+  integer_6.UP = eps;
+
+
+  integer variable integer_7(sv) "variable integer_7";
+  integer_7.L("sv1") = 1;
+  integer_7.L("sv2") = 1/0;
+  integer_7.L("sv3") = NA;
+  integer_7.L("sv4") = +Inf;
+  integer_7.L("sv5") = -Inf;
+  integer_7.L("sv6") = eps;
+
+  integer_7.M("sv1") = 1;
+  integer_7.M("sv2") = 1/0;
+  integer_7.M("sv3") = NA;
+  integer_7.M("sv4") = +Inf;
+  integer_7.M("sv5") = -Inf;
+  integer_7.M("sv6") = eps;
+
+  integer_7.LO("sv1") = 1;
+  integer_7.LO("sv2") = 1/0;
+  integer_7.LO("sv3") = NA;
+  integer_7.LO("sv4") = +Inf;
+  integer_7.LO("sv5") = -Inf;
+  integer_7.LO("sv6") = eps;
+
+  integer_7.UP("sv1") = 1;
+  integer_7.UP("sv2") = 1/0;
+  integer_7.UP("sv3") = NA;
+  integer_7.UP("sv4") = +Inf;
+  integer_7.UP("sv5") = -Inf;
+  integer_7.UP("sv6") = eps;
+
+  integer variable integer_8(sv,sv) "variable integer_8";
+  integer_8.L("sv1","sv1") = 1;
+  integer_8.L("sv2","sv2") = 1/0;
+  integer_8.L("sv3","sv3") = NA;
+  integer_8.L("sv4","sv4") = +Inf;
+  integer_8.L("sv5","sv5") = -Inf;
+  integer_8.L("sv6","sv6") = eps;
+
+  integer_8.M("sv1","sv1") = 1;
+  integer_8.M("sv2","sv2") = 1/0;
+  integer_8.M("sv3","sv3") = NA;
+  integer_8.M("sv4","sv4") = +Inf;
+  integer_8.M("sv5","sv5") = -Inf;
+  integer_8.M("sv6","sv6") = eps;
+
+  integer_8.LO("sv1","sv1") = 1;
+  integer_8.LO("sv2","sv2") = 1/0;
+  integer_8.LO("sv3","sv3") = NA;
+  integer_8.LO("sv4","sv4") = +Inf;
+  integer_8.LO("sv5","sv5") = -Inf;
+  integer_8.LO("sv6","sv6") = eps;
+
+  integer_8.UP("sv1","sv1") = 1;
+  integer_8.UP("sv2","sv2") = 1/0;
+  integer_8.UP("sv3","sv3") = NA;
+  integer_8.UP("sv4","sv4") = +Inf;
+  integer_8.UP("sv5","sv5") = -Inf;
+  integer_8.UP("sv6","sv6") = eps;
+
+  integer variable integer_9(*,sv) "variable integer_9";
+  integer_9.L("sv1","sv1") = 1;
+  integer_9.L("sv2","sv2") = 1/0;
+  integer_9.L("sv3","sv3") = NA;
+  integer_9.L("sv4","sv4") = +Inf;
+  integer_9.L("sv5","sv5") = -Inf;
+  integer_9.L("sv6","sv6") = eps;
+
+  integer_9.M("sv1","sv1") = 1;
+  integer_9.M("sv2","sv2") = 1/0;
+  integer_9.M("sv3","sv3") = NA;
+  integer_9.M("sv4","sv4") = +Inf;
+  integer_9.M("sv5","sv5") = -Inf;
+  integer_9.M("sv6","sv6") = eps;
+
+  integer_9.LO("sv1","sv1") = 1;
+  integer_9.LO("sv2","sv2") = 1/0;
+  integer_9.LO("sv3","sv3") = NA;
+  integer_9.LO("sv4","sv4") = +Inf;
+  integer_9.LO("sv5","sv5") = -Inf;
+  integer_9.LO("sv6","sv6") = eps;
+
+  integer_9.UP("sv1","sv1") = 1;
+  integer_9.UP("sv2","sv2") = 1/0;
+  integer_9.UP("sv3","sv3") = NA;
+  integer_9.UP("sv4","sv4") = +Inf;
+  integer_9.UP("sv5","sv5") = -Inf;
+  integer_9.UP("sv6","sv6") = eps;
+
+
+  * test positive variables
+  positive variable positive_1 "scalar variable positive_1";
+  positive variable positive_2 "scalar variable positive_2";
+  positive variable positive_3 "scalar variable positive_3";
+  positive variable positive_4 "scalar variable positive_4";
+  positive variable positive_5 "scalar variable positive_5";
+  positive variable positive_6 "scalar variable positive_6";
+
+  positive_1.L = 1;
+  positive_1.M = 1;
+  positive_1.LO = 1;
+  positive_1.UP = 1;
+  positive_1.SCALE = 1;
+
+  positive_2.L = 1/0;
+  positive_2.M = 1/0;
+  positive_2.LO = 1/0;
+  positive_2.UP = 1/0;
+  positive_2.SCALE = 1/0;
+
+  positive_3.L = NA;
+  positive_3.M = NA;
+  positive_3.LO = NA;
+  positive_3.UP = NA;
+  positive_3.SCALE = NA;
+
+  positive_4.L = Inf;
+  positive_4.M = Inf;
+  positive_4.LO = Inf;
+  positive_4.UP = Inf;
+  positive_4.SCALE = Inf;
+
+  positive_5.L = -Inf;
+  positive_5.M = -Inf;
+  positive_5.LO = -Inf;
+  positive_5.UP = -Inf;
+  positive_5.SCALE = -Inf;
+
+  positive_6.L = eps;
+  positive_6.M = eps;
+  positive_6.LO = eps;
+  positive_6.UP = eps;
+  positive_6.SCALE = eps;
+
+  positive variable positive_7(sv) "variable positive_7";
+  positive_7.L("sv1") = 1;
+  positive_7.L("sv2") = 1/0;
+  positive_7.L("sv3") = NA;
+  positive_7.L("sv4") = +Inf;
+  positive_7.L("sv5") = -Inf;
+  positive_7.L("sv6") = eps;
+
+  positive_7.M("sv1") = 1;
+  positive_7.M("sv2") = 1/0;
+  positive_7.M("sv3") = NA;
+  positive_7.M("sv4") = +Inf;
+  positive_7.M("sv5") = -Inf;
+  positive_7.M("sv6") = eps;
+
+  positive_7.LO("sv1") = 1;
+  positive_7.LO("sv2") = 1/0;
+  positive_7.LO("sv3") = NA;
+  positive_7.LO("sv4") = +Inf;
+  positive_7.LO("sv5") = -Inf;
+  positive_7.LO("sv6") = eps;
+
+  positive_7.UP("sv1") = 1;
+  positive_7.UP("sv2") = 1/0;
+  positive_7.UP("sv3") = NA;
+  positive_7.UP("sv4") = +Inf;
+  positive_7.UP("sv5") = -Inf;
+  positive_7.UP("sv6") = eps;
+
+  positive_7.SCALE("sv1") = 1;
+  positive_7.SCALE("sv2") = 1/0;
+  positive_7.SCALE("sv3") = NA;
+  positive_7.SCALE("sv4") = +Inf;
+  positive_7.SCALE("sv5") = -Inf;
+  positive_7.SCALE("sv6") = eps;
+
+  positive variable positive_8(sv,sv) "variable positive_8";
+  positive_8.L("sv1","sv1") = 1;
+  positive_8.L("sv2","sv2") = 1/0;
+  positive_8.L("sv3","sv3") = NA;
+  positive_8.L("sv4","sv4") = +Inf;
+  positive_8.L("sv5","sv5") = -Inf;
+  positive_8.L("sv6","sv6") = eps;
+
+  positive_8.M("sv1","sv1") = 1;
+  positive_8.M("sv2","sv2") = 1/0;
+  positive_8.M("sv3","sv3") = NA;
+  positive_8.M("sv4","sv4") = +Inf;
+  positive_8.M("sv5","sv5") = -Inf;
+  positive_8.M("sv6","sv6") = eps;
+
+  positive_8.LO("sv1","sv1") = 1;
+  positive_8.LO("sv2","sv2") = 1/0;
+  positive_8.LO("sv3","sv3") = NA;
+  positive_8.LO("sv4","sv4") = +Inf;
+  positive_8.LO("sv5","sv5") = -Inf;
+  positive_8.LO("sv6","sv6") = eps;
+
+  positive_8.UP("sv1","sv1") = 1;
+  positive_8.UP("sv2","sv2") = 1/0;
+  positive_8.UP("sv3","sv3") = NA;
+  positive_8.UP("sv4","sv4") = +Inf;
+  positive_8.UP("sv5","sv5") = -Inf;
+  positive_8.UP("sv6","sv6") = eps;
+
+  positive_8.SCALE("sv1","sv1") = 1;
+  positive_8.SCALE("sv2","sv2") = 1/0;
+  positive_8.SCALE("sv3","sv3") = NA;
+  positive_8.SCALE("sv4","sv4") = +Inf;
+  positive_8.SCALE("sv5","sv5") = -Inf;
+  positive_8.SCALE("sv6","sv6") = eps;
+
+  positive variable positive_9(*,sv) "variable positive_9";
+  positive_9.L("sv1","sv1") = 1;
+  positive_9.L("sv2","sv2") = 1/0;
+  positive_9.L("sv3","sv3") = NA;
+  positive_9.L("sv4","sv4") = +Inf;
+  positive_9.L("sv5","sv5") = -Inf;
+  positive_9.L("sv6","sv6") = eps;
+
+  positive_9.M("sv1","sv1") = 1;
+  positive_9.M("sv2","sv2") = 1/0;
+  positive_9.M("sv3","sv3") = NA;
+  positive_9.M("sv4","sv4") = +Inf;
+  positive_9.M("sv5","sv5") = -Inf;
+  positive_9.M("sv6","sv6") = eps;
+
+  positive_9.LO("sv1","sv1") = 1;
+  positive_9.LO("sv2","sv2") = 1/0;
+  positive_9.LO("sv3","sv3") = NA;
+  positive_9.LO("sv4","sv4") = +Inf;
+  positive_9.LO("sv5","sv5") = -Inf;
+  positive_9.LO("sv6","sv6") = eps;
+
+  positive_9.UP("sv1","sv1") = 1;
+  positive_9.UP("sv2","sv2") = 1/0;
+  positive_9.UP("sv3","sv3") = NA;
+  positive_9.UP("sv4","sv4") = +Inf;
+  positive_9.UP("sv5","sv5") = -Inf;
+  positive_9.UP("sv6","sv6") = eps;
+
+  positive_9.SCALE("sv1","sv1") = 1;
+  positive_9.SCALE("sv2","sv2") = 1/0;
+  positive_9.SCALE("sv3","sv3") = NA;
+  positive_9.SCALE("sv4","sv4") = +Inf;
+  positive_9.SCALE("sv5","sv5") = -Inf;
+  positive_9.SCALE("sv6","sv6") = eps;
+
+
+
+  * test negative variables
+  negative variable negative_1 "scalar variable negative_1";
+  negative variable negative_2 "scalar variable negative_2";
+  negative variable negative_3 "scalar variable negative_3";
+  negative variable negative_4 "scalar variable negative_4";
+  negative variable negative_5 "scalar variable negative_5";
+  negative variable negative_6 "scalar variable negative_6";
+
+  negative_1.L = 1;
+  negative_1.M = 1;
+  negative_1.LO = 1;
+  negative_1.UP = 1;
+  negative_1.SCALE = 1;
+
+  negative_2.L = 1/0;
+  negative_2.M = 1/0;
+  negative_2.LO = 1/0;
+  negative_2.UP = 1/0;
+  negative_2.SCALE = 1/0;
+
+  negative_3.L = NA;
+  negative_3.M = NA;
+  negative_3.LO = NA;
+  negative_3.UP = NA;
+  negative_3.SCALE = NA;
+
+  negative_4.L = Inf;
+  negative_4.M = Inf;
+  negative_4.LO = Inf;
+  negative_4.UP = Inf;
+  negative_4.SCALE = Inf;
+
+  negative_5.L = -Inf;
+  negative_5.M = -Inf;
+  negative_5.LO = -Inf;
+  negative_5.UP = -Inf;
+  negative_5.SCALE = -Inf;
+
+  negative_6.L = eps;
+  negative_6.M = eps;
+  negative_6.LO = eps;
+  negative_6.UP = eps;
+  negative_6.SCALE = eps;
+
+  negative variable negative_7(sv) "variable negative_7";
+  negative_7.L("sv1") = 1;
+  negative_7.L("sv2") = 1/0;
+  negative_7.L("sv3") = NA;
+  negative_7.L("sv4") = +Inf;
+  negative_7.L("sv5") = -Inf;
+  negative_7.L("sv6") = eps;
+
+  negative_7.M("sv1") = 1;
+  negative_7.M("sv2") = 1/0;
+  negative_7.M("sv3") = NA;
+  negative_7.M("sv4") = +Inf;
+  negative_7.M("sv5") = -Inf;
+  negative_7.M("sv6") = eps;
+
+  negative_7.LO("sv1") = 1;
+  negative_7.LO("sv2") = 1/0;
+  negative_7.LO("sv3") = NA;
+  negative_7.LO("sv4") = +Inf;
+  negative_7.LO("sv5") = -Inf;
+  negative_7.LO("sv6") = eps;
+
+  negative_7.UP("sv1") = 1;
+  negative_7.UP("sv2") = 1/0;
+  negative_7.UP("sv3") = NA;
+  negative_7.UP("sv4") = +Inf;
+  negative_7.UP("sv5") = -Inf;
+  negative_7.UP("sv6") = eps;
+
+  negative_7.SCALE("sv1") = 1;
+  negative_7.SCALE("sv2") = 1/0;
+  negative_7.SCALE("sv3") = NA;
+  negative_7.SCALE("sv4") = +Inf;
+  negative_7.SCALE("sv5") = -Inf;
+  negative_7.SCALE("sv6") = eps;
+
+  negative variable negative_8(sv,sv) "variable negative_8";
+  negative_8.L("sv1","sv1") = 1;
+  negative_8.L("sv2","sv2") = 1/0;
+  negative_8.L("sv3","sv3") = NA;
+  negative_8.L("sv4","sv4") = +Inf;
+  negative_8.L("sv5","sv5") = -Inf;
+  negative_8.L("sv6","sv6") = eps;
+
+  negative_8.M("sv1","sv1") = 1;
+  negative_8.M("sv2","sv2") = 1/0;
+  negative_8.M("sv3","sv3") = NA;
+  negative_8.M("sv4","sv4") = +Inf;
+  negative_8.M("sv5","sv5") = -Inf;
+  negative_8.M("sv6","sv6") = eps;
+
+  negative_8.LO("sv1","sv1") = 1;
+  negative_8.LO("sv2","sv2") = 1/0;
+  negative_8.LO("sv3","sv3") = NA;
+  negative_8.LO("sv4","sv4") = +Inf;
+  negative_8.LO("sv5","sv5") = -Inf;
+  negative_8.LO("sv6","sv6") = eps;
+
+  negative_8.UP("sv1","sv1") = 1;
+  negative_8.UP("sv2","sv2") = 1/0;
+  negative_8.UP("sv3","sv3") = NA;
+  negative_8.UP("sv4","sv4") = +Inf;
+  negative_8.UP("sv5","sv5") = -Inf;
+  negative_8.UP("sv6","sv6") = eps;
+
+  negative_8.SCALE("sv1","sv1") = 1;
+  negative_8.SCALE("sv2","sv2") = 1/0;
+  negative_8.SCALE("sv3","sv3") = NA;
+  negative_8.SCALE("sv4","sv4") = +Inf;
+  negative_8.SCALE("sv5","sv5") = -Inf;
+  negative_8.SCALE("sv6","sv6") = eps;
+
+  negative variable negative_9(*,sv) "variable negative_9";
+  negative_9.L("sv1","sv1") = 1;
+  negative_9.L("sv2","sv2") = 1/0;
+  negative_9.L("sv3","sv3") = NA;
+  negative_9.L("sv4","sv4") = +Inf;
+  negative_9.L("sv5","sv5") = -Inf;
+  negative_9.L("sv6","sv6") = eps;
+
+  negative_9.M("sv1","sv1") = 1;
+  negative_9.M("sv2","sv2") = 1/0;
+  negative_9.M("sv3","sv3") = NA;
+  negative_9.M("sv4","sv4") = +Inf;
+  negative_9.M("sv5","sv5") = -Inf;
+  negative_9.M("sv6","sv6") = eps;
+
+  negative_9.LO("sv1","sv1") = 1;
+  negative_9.LO("sv2","sv2") = 1/0;
+  negative_9.LO("sv3","sv3") = NA;
+  negative_9.LO("sv4","sv4") = +Inf;
+  negative_9.LO("sv5","sv5") = -Inf;
+  negative_9.LO("sv6","sv6") = eps;
+
+  negative_9.UP("sv1","sv1") = 1;
+  negative_9.UP("sv2","sv2") = 1/0;
+  negative_9.UP("sv3","sv3") = NA;
+  negative_9.UP("sv4","sv4") = +Inf;
+  negative_9.UP("sv5","sv5") = -Inf;
+  negative_9.UP("sv6","sv6") = eps;
+
+  negative_9.SCALE("sv1","sv1") = 1;
+  negative_9.SCALE("sv2","sv2") = 1/0;
+  negative_9.SCALE("sv3","sv3") = NA;
+  negative_9.SCALE("sv4","sv4") = +Inf;
+  negative_9.SCALE("sv5","sv5") = -Inf;
+  negative_9.SCALE("sv6","sv6") = eps;
+
+
+  * test SOS1 variables
+  sos1 variable sos1_1 "scalar variable sos1_1";
+  sos1 variable sos1_2 "scalar variable sos1_2";
+  sos1 variable sos1_3 "scalar variable sos1_3";
+  sos1 variable sos1_4 "scalar variable sos1_4";
+  sos1 variable sos1_5 "scalar variable sos1_5";
+  sos1 variable sos1_6 "scalar variable sos1_6";
+
+  sos1_1.L = 1;
+  sos1_1.M = 1;
+  sos1_1.LO = 1;
+  sos1_1.UP = 1;
+
+  sos1_2.L = 1/0;
+  sos1_2.M = 1/0;
+  sos1_2.LO = 1/0;
+  sos1_2.UP = 1/0;
+
+  sos1_3.L = NA;
+  sos1_3.M = NA;
+  sos1_3.LO = NA;
+  sos1_3.UP = NA;
+
+  sos1_4.L = Inf;
+  sos1_4.M = Inf;
+  sos1_4.LO = Inf;
+  sos1_4.UP = Inf;
+
+  sos1_5.L = -Inf;
+  sos1_5.M = -Inf;
+  sos1_5.LO = -Inf;
+  sos1_5.UP = -Inf;
+
+  sos1_6.L = eps;
+  sos1_6.M = eps;
+  sos1_6.LO = eps;
+  sos1_6.UP = eps;
+
+  sos1 variable sos1_7(sv) "variable sos1_7";
+  sos1_7.L("sv1") = 1;
+  sos1_7.L("sv2") = 1/0;
+  sos1_7.L("sv3") = NA;
+  sos1_7.L("sv4") = +Inf;
+  sos1_7.L("sv5") = -Inf;
+  sos1_7.L("sv6") = eps;
+
+  sos1_7.M("sv1") = 1;
+  sos1_7.M("sv2") = 1/0;
+  sos1_7.M("sv3") = NA;
+  sos1_7.M("sv4") = +Inf;
+  sos1_7.M("sv5") = -Inf;
+  sos1_7.M("sv6") = eps;
+
+  sos1_7.LO("sv1") = 1;
+  sos1_7.LO("sv2") = 1/0;
+  sos1_7.LO("sv3") = NA;
+  sos1_7.LO("sv4") = +Inf;
+  sos1_7.LO("sv5") = -Inf;
+  sos1_7.LO("sv6") = eps;
+
+  sos1_7.UP("sv1") = 1;
+  sos1_7.UP("sv2") = 1/0;
+  sos1_7.UP("sv3") = NA;
+  sos1_7.UP("sv4") = +Inf;
+  sos1_7.UP("sv5") = -Inf;
+  sos1_7.UP("sv6") = eps;
+
+  sos1 variable sos1_8(sv,sv) "variable sos1_8";
+  sos1_8.L("sv1","sv1") = 1;
+  sos1_8.L("sv2","sv2") = 1/0;
+  sos1_8.L("sv3","sv3") = NA;
+  sos1_8.L("sv4","sv4") = +Inf;
+  sos1_8.L("sv5","sv5") = -Inf;
+  sos1_8.L("sv6","sv6") = eps;
+
+  sos1_8.M("sv1","sv1") = 1;
+  sos1_8.M("sv2","sv2") = 1/0;
+  sos1_8.M("sv3","sv3") = NA;
+  sos1_8.M("sv4","sv4") = +Inf;
+  sos1_8.M("sv5","sv5") = -Inf;
+  sos1_8.M("sv6","sv6") = eps;
+
+  sos1_8.LO("sv1","sv1") = 1;
+  sos1_8.LO("sv2","sv2") = 1/0;
+  sos1_8.LO("sv3","sv3") = NA;
+  sos1_8.LO("sv4","sv4") = +Inf;
+  sos1_8.LO("sv5","sv5") = -Inf;
+  sos1_8.LO("sv6","sv6") = eps;
+
+  sos1_8.UP("sv1","sv1") = 1;
+  sos1_8.UP("sv2","sv2") = 1/0;
+  sos1_8.UP("sv3","sv3") = NA;
+  sos1_8.UP("sv4","sv4") = +Inf;
+  sos1_8.UP("sv5","sv5") = -Inf;
+  sos1_8.UP("sv6","sv6") = eps;
+
+  sos1 variable sos1_9(*,sv) "variable sos1_9";
+  sos1_9.L("sv1","sv1") = 1;
+  sos1_9.L("sv2","sv2") = 1/0;
+  sos1_9.L("sv3","sv3") = NA;
+  sos1_9.L("sv4","sv4") = +Inf;
+  sos1_9.L("sv5","sv5") = -Inf;
+  sos1_9.L("sv6","sv6") = eps;
+
+  sos1_9.M("sv1","sv1") = 1;
+  sos1_9.M("sv2","sv2") = 1/0;
+  sos1_9.M("sv3","sv3") = NA;
+  sos1_9.M("sv4","sv4") = +Inf;
+  sos1_9.M("sv5","sv5") = -Inf;
+  sos1_9.M("sv6","sv6") = eps;
+
+  sos1_9.LO("sv1","sv1") = 1;
+  sos1_9.LO("sv2","sv2") = 1/0;
+  sos1_9.LO("sv3","sv3") = NA;
+  sos1_9.LO("sv4","sv4") = +Inf;
+  sos1_9.LO("sv5","sv5") = -Inf;
+  sos1_9.LO("sv6","sv6") = eps;
+
+  sos1_9.UP("sv1","sv1") = 1;
+  sos1_9.UP("sv2","sv2") = 1/0;
+  sos1_9.UP("sv3","sv3") = NA;
+  sos1_9.UP("sv4","sv4") = +Inf;
+  sos1_9.UP("sv5","sv5") = -Inf;
+  sos1_9.UP("sv6","sv6") = eps;
+
+
+
+  * test SOS2 variables
+  sos2 variable sos2_1 "scalar variable sos2_1";
+  sos2 variable sos2_2 "scalar variable sos2_2";
+  sos2 variable sos2_3 "scalar variable sos2_3";
+  sos2 variable sos2_4 "scalar variable sos2_4";
+  sos2 variable sos2_5 "scalar variable sos2_5";
+  sos2 variable sos2_6 "scalar variable sos2_6";
+
+  sos2_1.L = 1;
+  sos2_1.M = 1;
+  sos2_1.LO = 1;
+  sos2_1.UP = 1;
+
+  sos2_2.L = 1/0;
+  sos2_2.M = 1/0;
+  sos2_2.LO = 1/0;
+  sos2_2.UP = 1/0;
+
+  sos2_3.L = NA;
+  sos2_3.M = NA;
+  sos2_3.LO = NA;
+  sos2_3.UP = NA;
+
+  sos2_4.L = Inf;
+  sos2_4.M = Inf;
+  sos2_4.LO = Inf;
+  sos2_4.UP = Inf;
+
+  sos2_5.L = -Inf;
+  sos2_5.M = -Inf;
+  sos2_5.LO = -Inf;
+  sos2_5.UP = -Inf;
+
+  sos2_6.L = eps;
+  sos2_6.M = eps;
+  sos2_6.LO = eps;
+  sos2_6.UP = eps;
+
+  sos2 variable sos2_7(sv) "variable sos2_7";
+  sos2_7.L("sv1") = 1;
+  sos2_7.L("sv2") = 1/0;
+  sos2_7.L("sv3") = NA;
+  sos2_7.L("sv4") = +Inf;
+  sos2_7.L("sv5") = -Inf;
+  sos2_7.L("sv6") = eps;
+
+  sos2_7.M("sv1") = 1;
+  sos2_7.M("sv2") = 1/0;
+  sos2_7.M("sv3") = NA;
+  sos2_7.M("sv4") = +Inf;
+  sos2_7.M("sv5") = -Inf;
+  sos2_7.M("sv6") = eps;
+
+  sos2_7.LO("sv1") = 1;
+  sos2_7.LO("sv2") = 1/0;
+  sos2_7.LO("sv3") = NA;
+  sos2_7.LO("sv4") = +Inf;
+  sos2_7.LO("sv5") = -Inf;
+  sos2_7.LO("sv6") = eps;
+
+  sos2_7.UP("sv1") = 1;
+  sos2_7.UP("sv2") = 1/0;
+  sos2_7.UP("sv3") = NA;
+  sos2_7.UP("sv4") = +Inf;
+  sos2_7.UP("sv5") = -Inf;
+  sos2_7.UP("sv6") = eps;
+
+  sos2 variable sos2_8(sv,sv) "variable sos2_8";
+  sos2_8.L("sv1","sv1") = 1;
+  sos2_8.L("sv2","sv2") = 1/0;
+  sos2_8.L("sv3","sv3") = NA;
+  sos2_8.L("sv4","sv4") = +Inf;
+  sos2_8.L("sv5","sv5") = -Inf;
+  sos2_8.L("sv6","sv6") = eps;
+
+  sos2_8.M("sv1","sv1") = 1;
+  sos2_8.M("sv2","sv2") = 1/0;
+  sos2_8.M("sv3","sv3") = NA;
+  sos2_8.M("sv4","sv4") = +Inf;
+  sos2_8.M("sv5","sv5") = -Inf;
+  sos2_8.M("sv6","sv6") = eps;
+
+  sos2_8.LO("sv1","sv1") = 1;
+  sos2_8.LO("sv2","sv2") = 1/0;
+  sos2_8.LO("sv3","sv3") = NA;
+  sos2_8.LO("sv4","sv4") = +Inf;
+  sos2_8.LO("sv5","sv5") = -Inf;
+  sos2_8.LO("sv6","sv6") = eps;
+
+  sos2_8.UP("sv1","sv1") = 1;
+  sos2_8.UP("sv2","sv2") = 1/0;
+  sos2_8.UP("sv3","sv3") = NA;
+  sos2_8.UP("sv4","sv4") = +Inf;
+  sos2_8.UP("sv5","sv5") = -Inf;
+  sos2_8.UP("sv6","sv6") = eps;
+
+  sos2 variable sos2_9(*,sv) "variable sos2_9";
+  sos2_9.L("sv1","sv1") = 1;
+  sos2_9.L("sv2","sv2") = 1/0;
+  sos2_9.L("sv3","sv3") = NA;
+  sos2_9.L("sv4","sv4") = +Inf;
+  sos2_9.L("sv5","sv5") = -Inf;
+  sos2_9.L("sv6","sv6") = eps;
+
+  sos2_9.M("sv1","sv1") = 1;
+  sos2_9.M("sv2","sv2") = 1/0;
+  sos2_9.M("sv3","sv3") = NA;
+  sos2_9.M("sv4","sv4") = +Inf;
+  sos2_9.M("sv5","sv5") = -Inf;
+  sos2_9.M("sv6","sv6") = eps;
+
+  sos2_9.LO("sv1","sv1") = 1;
+  sos2_9.LO("sv2","sv2") = 1/0;
+  sos2_9.LO("sv3","sv3") = NA;
+  sos2_9.LO("sv4","sv4") = +Inf;
+  sos2_9.LO("sv5","sv5") = -Inf;
+  sos2_9.LO("sv6","sv6") = eps;
+
+  sos2_9.UP("sv1","sv1") = 1;
+  sos2_9.UP("sv2","sv2") = 1/0;
+  sos2_9.UP("sv3","sv3") = NA;
+  sos2_9.UP("sv4","sv4") = +Inf;
+  sos2_9.UP("sv5","sv5") = -Inf;
+  sos2_9.UP("sv6","sv6") = eps;
+
+
+  * test semiint variables
+  semiint variable semiint_1 "scalar variable semiint_1";
+  semiint variable semiint_2 "scalar variable semiint_2";
+  semiint variable semiint_3 "scalar variable semiint_3";
+  semiint variable semiint_4 "scalar variable semiint_4";
+  semiint variable semiint_5 "scalar variable semiint_5";
+  semiint variable semiint_6 "scalar variable semiint_6";
+
+  semiint_1.L = 1;
+  semiint_1.M = 1;
+  semiint_1.LO = 1;
+  semiint_1.UP = 1;
+
+  semiint_2.L = 1/0;
+  semiint_2.M = 1/0;
+  semiint_2.LO = 1/0;
+  semiint_2.UP = 1/0;
+
+  semiint_3.L = NA;
+  semiint_3.M = NA;
+  semiint_3.LO = NA;
+  semiint_3.UP = NA;
+
+  semiint_4.L = Inf;
+  semiint_4.M = Inf;
+  semiint_4.LO = Inf;
+  semiint_4.UP = Inf;
+
+  semiint_5.L = -Inf;
+  semiint_5.M = -Inf;
+  semiint_5.LO = -Inf;
+  semiint_5.UP = -Inf;
+
+  semiint_6.L = eps;
+  semiint_6.M = eps;
+  semiint_6.LO = eps;
+  semiint_6.UP = eps;
+
+  semiint variable semiint_7(sv) "variable semiint_7";
+  semiint_7.L("sv1") = 1;
+  semiint_7.L("sv2") = 1/0;
+  semiint_7.L("sv3") = NA;
+  semiint_7.L("sv4") = +Inf;
+  semiint_7.L("sv5") = -Inf;
+  semiint_7.L("sv6") = eps;
+
+  semiint_7.M("sv1") = 1;
+  semiint_7.M("sv2") = 1/0;
+  semiint_7.M("sv3") = NA;
+  semiint_7.M("sv4") = +Inf;
+  semiint_7.M("sv5") = -Inf;
+  semiint_7.M("sv6") = eps;
+
+  semiint_7.LO("sv1") = 1;
+  semiint_7.LO("sv2") = 1/0;
+  semiint_7.LO("sv3") = NA;
+  semiint_7.LO("sv4") = +Inf;
+  semiint_7.LO("sv5") = -Inf;
+  semiint_7.LO("sv6") = eps;
+
+  semiint_7.UP("sv1") = 1;
+  semiint_7.UP("sv2") = 1/0;
+  semiint_7.UP("sv3") = NA;
+  semiint_7.UP("sv4") = +Inf;
+  semiint_7.UP("sv5") = -Inf;
+  semiint_7.UP("sv6") = eps;
+
+  semiint variable semiint_8(sv,sv) "variable semiint_8";
+  semiint_8.L("sv1","sv1") = 1;
+  semiint_8.L("sv2","sv2") = 1/0;
+  semiint_8.L("sv3","sv3") = NA;
+  semiint_8.L("sv4","sv4") = +Inf;
+  semiint_8.L("sv5","sv5") = -Inf;
+  semiint_8.L("sv6","sv6") = eps;
+
+  semiint_8.M("sv1","sv1") = 1;
+  semiint_8.M("sv2","sv2") = 1/0;
+  semiint_8.M("sv3","sv3") = NA;
+  semiint_8.M("sv4","sv4") = +Inf;
+  semiint_8.M("sv5","sv5") = -Inf;
+  semiint_8.M("sv6","sv6") = eps;
+
+  semiint_8.LO("sv1","sv1") = 1;
+  semiint_8.LO("sv2","sv2") = 1/0;
+  semiint_8.LO("sv3","sv3") = NA;
+  semiint_8.LO("sv4","sv4") = +Inf;
+  semiint_8.LO("sv5","sv5") = -Inf;
+  semiint_8.LO("sv6","sv6") = eps;
+
+  semiint_8.UP("sv1","sv1") = 1;
+  semiint_8.UP("sv2","sv2") = 1/0;
+  semiint_8.UP("sv3","sv3") = NA;
+  semiint_8.UP("sv4","sv4") = +Inf;
+  semiint_8.UP("sv5","sv5") = -Inf;
+  semiint_8.UP("sv6","sv6") = eps;
+
+  semiint variable semiint_9(*,sv) "variable semiint_9";
+  semiint_9.L("sv1","sv1") = 1;
+  semiint_9.L("sv2","sv2") = 1/0;
+  semiint_9.L("sv3","sv3") = NA;
+  semiint_9.L("sv4","sv4") = +Inf;
+  semiint_9.L("sv5","sv5") = -Inf;
+  semiint_9.L("sv6","sv6") = eps;
+
+  semiint_9.M("sv1","sv1") = 1;
+  semiint_9.M("sv2","sv2") = 1/0;
+  semiint_9.M("sv3","sv3") = NA;
+  semiint_9.M("sv4","sv4") = +Inf;
+  semiint_9.M("sv5","sv5") = -Inf;
+  semiint_9.M("sv6","sv6") = eps;
+
+  semiint_9.LO("sv1","sv1") = 1;
+  semiint_9.LO("sv2","sv2") = 1/0;
+  semiint_9.LO("sv3","sv3") = NA;
+  semiint_9.LO("sv4","sv4") = +Inf;
+  semiint_9.LO("sv5","sv5") = -Inf;
+  semiint_9.LO("sv6","sv6") = eps;
+
+  semiint_9.UP("sv1","sv1") = 1;
+  semiint_9.UP("sv2","sv2") = 1/0;
+  semiint_9.UP("sv3","sv3") = NA;
+  semiint_9.UP("sv4","sv4") = +Inf;
+  semiint_9.UP("sv5","sv5") = -Inf;
+  semiint_9.UP("sv6","sv6") = eps;
+
+
+
+  * test semicont variables
+  semicont variable semicont_1 "scalar variable semicont_1";
+  semicont variable semicont_2 "scalar variable semicont_2";
+  semicont variable semicont_3 "scalar variable semicont_3";
+  semicont variable semicont_4 "scalar variable semicont_4";
+  semicont variable semicont_5 "scalar variable semicont_5";
+  semicont variable semicont_6 "scalar variable semicont_6";
+
+  semicont_1.L = 1;
+  semicont_1.M = 1;
+  semicont_1.LO = 1;
+  semicont_1.UP = 1;
+
+  semicont_2.L = 1/0;
+  semicont_2.M = 1/0;
+  semicont_2.LO = 1/0;
+  semicont_2.UP = 1/0;
+
+  semicont_3.L = NA;
+  semicont_3.M = NA;
+  semicont_3.LO = NA;
+  semicont_3.UP = NA;
+
+  semicont_4.L = Inf;
+  semicont_4.M = Inf;
+  semicont_4.LO = Inf;
+  semicont_4.UP = Inf;
+
+  semicont_5.L = -Inf;
+  semicont_5.M = -Inf;
+  semicont_5.LO = -Inf;
+  semicont_5.UP = -Inf;
+
+  semicont_6.L = eps;
+  semicont_6.M = eps;
+  semicont_6.LO = eps;
+  semicont_6.UP = eps;
+
+  semicont variable semicont_7(sv) "variable semicont_7";
+  semicont_7.L("sv1") = 1;
+  semicont_7.L("sv2") = 1/0;
+  semicont_7.L("sv3") = NA;
+  semicont_7.L("sv4") = +Inf;
+  semicont_7.L("sv5") = -Inf;
+  semicont_7.L("sv6") = eps;
+
+  semicont_7.M("sv1") = 1;
+  semicont_7.M("sv2") = 1/0;
+  semicont_7.M("sv3") = NA;
+  semicont_7.M("sv4") = +Inf;
+  semicont_7.M("sv5") = -Inf;
+  semicont_7.M("sv6") = eps;
+
+  semicont_7.LO("sv1") = 1;
+  semicont_7.LO("sv2") = 1/0;
+  semicont_7.LO("sv3") = NA;
+  semicont_7.LO("sv4") = +Inf;
+  semicont_7.LO("sv5") = -Inf;
+  semicont_7.LO("sv6") = eps;
+
+  semicont_7.UP("sv1") = 1;
+  semicont_7.UP("sv2") = 1/0;
+  semicont_7.UP("sv3") = NA;
+  semicont_7.UP("sv4") = +Inf;
+  semicont_7.UP("sv5") = -Inf;
+  semicont_7.UP("sv6") = eps;
+
+  semicont variable semicont_8(sv,sv) "variable semicont_8";
+  semicont_8.L("sv1","sv1") = 1;
+  semicont_8.L("sv2","sv2") = 1/0;
+  semicont_8.L("sv3","sv3") = NA;
+  semicont_8.L("sv4","sv4") = +Inf;
+  semicont_8.L("sv5","sv5") = -Inf;
+  semicont_8.L("sv6","sv6") = eps;
+
+  semicont_8.M("sv1","sv1") = 1;
+  semicont_8.M("sv2","sv2") = 1/0;
+  semicont_8.M("sv3","sv3") = NA;
+  semicont_8.M("sv4","sv4") = +Inf;
+  semicont_8.M("sv5","sv5") = -Inf;
+  semicont_8.M("sv6","sv6") = eps;
+
+  semicont_8.LO("sv1","sv1") = 1;
+  semicont_8.LO("sv2","sv2") = 1/0;
+  semicont_8.LO("sv3","sv3") = NA;
+  semicont_8.LO("sv4","sv4") = +Inf;
+  semicont_8.LO("sv5","sv5") = -Inf;
+  semicont_8.LO("sv6","sv6") = eps;
+
+  semicont_8.UP("sv1","sv1") = 1;
+  semicont_8.UP("sv2","sv2") = 1/0;
+  semicont_8.UP("sv3","sv3") = NA;
+  semicont_8.UP("sv4","sv4") = +Inf;
+  semicont_8.UP("sv5","sv5") = -Inf;
+  semicont_8.UP("sv6","sv6") = eps;
+
+  semicont variable semicont_9(*,sv) "variable semicont_9";
+  semicont_9.L("sv1","sv1") = 1;
+  semicont_9.L("sv2","sv2") = 1/0;
+  semicont_9.L("sv3","sv3") = NA;
+  semicont_9.L("sv4","sv4") = +Inf;
+  semicont_9.L("sv5","sv5") = -Inf;
+  semicont_9.L("sv6","sv6") = eps;
+
+  semicont_9.M("sv1","sv1") = 1;
+  semicont_9.M("sv2","sv2") = 1/0;
+  semicont_9.M("sv3","sv3") = NA;
+  semicont_9.M("sv4","sv4") = +Inf;
+  semicont_9.M("sv5","sv5") = -Inf;
+  semicont_9.M("sv6","sv6") = eps;
+
+  semicont_9.LO("sv1","sv1") = 1;
+  semicont_9.LO("sv2","sv2") = 1/0;
+  semicont_9.LO("sv3","sv3") = NA;
+  semicont_9.LO("sv4","sv4") = +Inf;
+  semicont_9.LO("sv5","sv5") = -Inf;
+  semicont_9.LO("sv6","sv6") = eps;
+
+  semicont_9.UP("sv1","sv1") = 1;
+  semicont_9.UP("sv2","sv2") = 1/0;
+  semicont_9.UP("sv3","sv3") = NA;
+  semicont_9.UP("sv4","sv4") = +Inf;
+  semicont_9.UP("sv5","sv5") = -Inf;
+  semicont_9.UP("sv6","sv6") = eps;
+
+
+
+  * test equality equations
+  Equation eq_1 "scalar equation eq_1";
+  Equation eq_2 "scalar equation eq_2";
+  Equation eq_3 "scalar equation eq_3";
+  Equation eq_4 "scalar equation eq_4";
+  Equation eq_5 "scalar equation eq_5";
+  Equation eq_6 "scalar equation eq_6";
+
+  eq_1.. 1 =E= 1;
+  eq_1.L = 1;
+  eq_1.M = 1;
+  eq_1.LO = 1;
+  eq_1.UP = 1;
+  eq_1.SCALE = 1;
+
+  eq_2.. 1 =E= 1;
+  eq_2.L = 1/0;
+  eq_2.M = 1/0;
+  eq_2.LO = 1/0;
+  eq_2.UP = 1/0;
+  eq_2.SCALE = 1/0;
+
+  eq_3.. 1 =E= 1;
+  eq_3.L = NA;
+  eq_3.M = NA;
+  eq_3.LO = NA;
+  eq_3.UP = NA;
+  eq_3.SCALE = NA;
+
+  eq_4.. 1 =E= 1;
+  eq_4.L = Inf;
+  eq_4.M = Inf;
+  eq_4.LO = Inf;
+  eq_4.UP = Inf;
+  eq_4.SCALE = Inf;
+
+  eq_5.. 1 =E= 1;
+  eq_5.L = -Inf;
+  eq_5.M = -Inf;
+  eq_5.LO = -Inf;
+  eq_5.UP = -Inf;
+  eq_5.SCALE = -Inf;
+
+  eq_6.. 1 =E= 1;
+  eq_6.L = eps;
+  eq_6.M = eps;
+  eq_6.LO = eps;
+  eq_6.UP = eps;
+  eq_6.SCALE = eps;
+
+  Equation eq_7(sv) "equation eq_7";
+
+  eq_7(sv).. 1 =E= 1;
+
+  eq_7.L("sv1") = 1;
+  eq_7.L("sv2") = 1/0;
+  eq_7.L("sv3") = NA;
+  eq_7.L("sv4") = +Inf;
+  eq_7.L("sv5") = -Inf;
+  eq_7.L("sv6") = eps;
+
+  eq_7.M("sv1") = 1;
+  eq_7.M("sv2") = 1/0;
+  eq_7.M("sv3") = NA;
+  eq_7.M("sv4") = +Inf;
+  eq_7.M("sv5") = -Inf;
+  eq_7.M("sv6") = eps;
+
+  eq_7.LO("sv1") = 1;
+  eq_7.LO("sv2") = 1/0;
+  eq_7.LO("sv3") = NA;
+  eq_7.LO("sv4") = +Inf;
+  eq_7.LO("sv5") = -Inf;
+  eq_7.LO("sv6") = eps;
+
+  eq_7.UP("sv1") = 1;
+  eq_7.UP("sv2") = 1/0;
+  eq_7.UP("sv3") = NA;
+  eq_7.UP("sv4") = +Inf;
+  eq_7.UP("sv5") = -Inf;
+  eq_7.UP("sv6") = eps;
+
+  eq_7.SCALE("sv1") = 1;
+  eq_7.SCALE("sv2") = 1/0;
+  eq_7.SCALE("sv3") = NA;
+  eq_7.SCALE("sv4") = +Inf;
+  eq_7.SCALE("sv5") = -Inf;
+  eq_7.SCALE("sv6") = eps;
+
+  Equation eq_8(sv,sv) "equation eq_8";
+  eq_8(sv,sv).. 1 =E= 1;
+
+  eq_8.L("sv1","sv1") = 1;
+  eq_8.L("sv2","sv2") = 1/0;
+  eq_8.L("sv3","sv3") = NA;
+  eq_8.L("sv4","sv4") = +Inf;
+  eq_8.L("sv5","sv5") = -Inf;
+  eq_8.L("sv6","sv6") = eps;
+
+  eq_8.M("sv1","sv1") = 1;
+  eq_8.M("sv2","sv2") = 1/0;
+  eq_8.M("sv3","sv3") = NA;
+  eq_8.M("sv4","sv4") = +Inf;
+  eq_8.M("sv5","sv5") = -Inf;
+  eq_8.M("sv6","sv6") = eps;
+
+  eq_8.LO("sv1","sv1") = 1;
+  eq_8.LO("sv2","sv2") = 1/0;
+  eq_8.LO("sv3","sv3") = NA;
+  eq_8.LO("sv4","sv4") = +Inf;
+  eq_8.LO("sv5","sv5") = -Inf;
+  eq_8.LO("sv6","sv6") = eps;
+
+  eq_8.UP("sv1","sv1") = 1;
+  eq_8.UP("sv2","sv2") = 1/0;
+  eq_8.UP("sv3","sv3") = NA;
+  eq_8.UP("sv4","sv4") = +Inf;
+  eq_8.UP("sv5","sv5") = -Inf;
+  eq_8.UP("sv6","sv6") = eps;
+
+  eq_8.SCALE("sv1","sv1") = 1;
+  eq_8.SCALE("sv2","sv2") = 1/0;
+  eq_8.SCALE("sv3","sv3") = NA;
+  eq_8.SCALE("sv4","sv4") = +Inf;
+  eq_8.SCALE("sv5","sv5") = -Inf;
+  eq_8.SCALE("sv6","sv6") = eps;
+
+  Equation eq_9(*,sv) "equation eq_9";
+  eq_9(sv,sv).. 1 =E= 1;
+
+  eq_9.L("sv1","sv1") = 1;
+  eq_9.L("sv2","sv2") = 1/0;
+  eq_9.L("sv3","sv3") = NA;
+  eq_9.L("sv4","sv4") = +Inf;
+  eq_9.L("sv5","sv5") = -Inf;
+  eq_9.L("sv6","sv6") = eps;
+
+  eq_9.M("sv1","sv1") = 1;
+  eq_9.M("sv2","sv2") = 1/0;
+  eq_9.M("sv3","sv3") = NA;
+  eq_9.M("sv4","sv4") = +Inf;
+  eq_9.M("sv5","sv5") = -Inf;
+  eq_9.M("sv6","sv6") = eps;
+
+  eq_9.LO("sv1","sv1") = 1;
+  eq_9.LO("sv2","sv2") = 1/0;
+  eq_9.LO("sv3","sv3") = NA;
+  eq_9.LO("sv4","sv4") = +Inf;
+  eq_9.LO("sv5","sv5") = -Inf;
+  eq_9.LO("sv6","sv6") = eps;
+
+  eq_9.UP("sv1","sv1") = 1;
+  eq_9.UP("sv2","sv2") = 1/0;
+  eq_9.UP("sv3","sv3") = NA;
+  eq_9.UP("sv4","sv4") = +Inf;
+  eq_9.UP("sv5","sv5") = -Inf;
+  eq_9.UP("sv6","sv6") = eps;
+
+  eq_9.SCALE("sv1","sv1") = 1;
+  eq_9.SCALE("sv2","sv2") = 1/0;
+  eq_9.SCALE("sv3","sv3") = NA;
+  eq_9.SCALE("sv4","sv4") = +Inf;
+  eq_9.SCALE("sv5","sv5") = -Inf;
+  eq_9.SCALE("sv6","sv6") = eps;
+
+
+
+  * test less than equations
+  Equation leq_1 "scalar equation leq_1";
+  Equation leq_2 "scalar equation leq_2";
+  Equation leq_3 "scalar equation leq_3";
+  Equation leq_4 "scalar equation leq_4";
+  Equation leq_5 "scalar equation leq_5";
+  Equation leq_6 "scalar equation leq_6";
+
+  leq_1.. 1 =L= 1;
+  leq_1.L = 1;
+  leq_1.M = 1;
+  leq_1.LO = 1;
+  leq_1.UP = 1;
+  leq_1.SCALE = 1;
+
+  leq_2.. 1 =L= 1;
+  leq_2.L = 1/0;
+  leq_2.M = 1/0;
+  leq_2.LO = 1/0;
+  leq_2.UP = 1/0;
+  leq_2.SCALE = 1/0;
+
+  leq_3.. 1 =L= 1;
+  leq_3.L = NA;
+  leq_3.M = NA;
+  leq_3.LO = NA;
+  leq_3.UP = NA;
+  leq_3.SCALE = NA;
+
+  leq_4.. 1 =L= 1;
+  leq_4.L = Inf;
+  leq_4.M = Inf;
+  leq_4.LO = Inf;
+  leq_4.UP = Inf;
+  leq_4.SCALE = Inf;
+
+  leq_5.. 1 =L= 1;
+  leq_5.L = -Inf;
+  leq_5.M = -Inf;
+  leq_5.LO = -Inf;
+  leq_5.UP = -Inf;
+  leq_5.SCALE = -Inf;
+
+  leq_6.. 1 =L= 1;
+  leq_6.L = eps;
+  leq_6.M = eps;
+  leq_6.LO = eps;
+  leq_6.UP = eps;
+  leq_6.SCALE = eps;
+
+  Equation leq_7(sv) "equation leq_7";
+
+  leq_7(sv).. 1 =L= 1;
+
+  leq_7.L("sv1") = 1;
+  leq_7.L("sv2") = 1/0;
+  leq_7.L("sv3") = NA;
+  leq_7.L("sv4") = +Inf;
+  leq_7.L("sv5") = -Inf;
+  leq_7.L("sv6") = eps;
+
+  leq_7.M("sv1") = 1;
+  leq_7.M("sv2") = 1/0;
+  leq_7.M("sv3") = NA;
+  leq_7.M("sv4") = +Inf;
+  leq_7.M("sv5") = -Inf;
+  leq_7.M("sv6") = eps;
+
+  leq_7.LO("sv1") = 1;
+  leq_7.LO("sv2") = 1/0;
+  leq_7.LO("sv3") = NA;
+  leq_7.LO("sv4") = +Inf;
+  leq_7.LO("sv5") = -Inf;
+  leq_7.LO("sv6") = eps;
+
+  leq_7.UP("sv1") = 1;
+  leq_7.UP("sv2") = 1/0;
+  leq_7.UP("sv3") = NA;
+  leq_7.UP("sv4") = +Inf;
+  leq_7.UP("sv5") = -Inf;
+  leq_7.UP("sv6") = eps;
+
+  leq_7.SCALE("sv1") = 1;
+  leq_7.SCALE("sv2") = 1/0;
+  leq_7.SCALE("sv3") = NA;
+  leq_7.SCALE("sv4") = +Inf;
+  leq_7.SCALE("sv5") = -Inf;
+  leq_7.SCALE("sv6") = eps;
+
+  Equation leq_8(sv,sv) "equation leq_8";
+  leq_8(sv,sv).. 1 =L= 1;
+
+  leq_8.L("sv1","sv1") = 1;
+  leq_8.L("sv2","sv2") = 1/0;
+  leq_8.L("sv3","sv3") = NA;
+  leq_8.L("sv4","sv4") = +Inf;
+  leq_8.L("sv5","sv5") = -Inf;
+  leq_8.L("sv6","sv6") = eps;
+
+  leq_8.M("sv1","sv1") = 1;
+  leq_8.M("sv2","sv2") = 1/0;
+  leq_8.M("sv3","sv3") = NA;
+  leq_8.M("sv4","sv4") = +Inf;
+  leq_8.M("sv5","sv5") = -Inf;
+  leq_8.M("sv6","sv6") = eps;
+
+  leq_8.LO("sv1","sv1") = 1;
+  leq_8.LO("sv2","sv2") = 1/0;
+  leq_8.LO("sv3","sv3") = NA;
+  leq_8.LO("sv4","sv4") = +Inf;
+  leq_8.LO("sv5","sv5") = -Inf;
+  leq_8.LO("sv6","sv6") = eps;
+
+  leq_8.UP("sv1","sv1") = 1;
+  leq_8.UP("sv2","sv2") = 1/0;
+  leq_8.UP("sv3","sv3") = NA;
+  leq_8.UP("sv4","sv4") = +Inf;
+  leq_8.UP("sv5","sv5") = -Inf;
+  leq_8.UP("sv6","sv6") = eps;
+
+  leq_8.SCALE("sv1","sv1") = 1;
+  leq_8.SCALE("sv2","sv2") = 1/0;
+  leq_8.SCALE("sv3","sv3") = NA;
+  leq_8.SCALE("sv4","sv4") = +Inf;
+  leq_8.SCALE("sv5","sv5") = -Inf;
+  leq_8.SCALE("sv6","sv6") = eps;
+
+  Equation leq_9(*,sv) "equation leq_9";
+  leq_9(sv,sv).. 1 =L= 1;
+
+  leq_9.L("sv1","sv1") = 1;
+  leq_9.L("sv2","sv2") = 1/0;
+  leq_9.L("sv3","sv3") = NA;
+  leq_9.L("sv4","sv4") = +Inf;
+  leq_9.L("sv5","sv5") = -Inf;
+  leq_9.L("sv6","sv6") = eps;
+
+  leq_9.M("sv1","sv1") = 1;
+  leq_9.M("sv2","sv2") = 1/0;
+  leq_9.M("sv3","sv3") = NA;
+  leq_9.M("sv4","sv4") = +Inf;
+  leq_9.M("sv5","sv5") = -Inf;
+  leq_9.M("sv6","sv6") = eps;
+
+  leq_9.LO("sv1","sv1") = 1;
+  leq_9.LO("sv2","sv2") = 1/0;
+  leq_9.LO("sv3","sv3") = NA;
+  leq_9.LO("sv4","sv4") = +Inf;
+  leq_9.LO("sv5","sv5") = -Inf;
+  leq_9.LO("sv6","sv6") = eps;
+
+  leq_9.UP("sv1","sv1") = 1;
+  leq_9.UP("sv2","sv2") = 1/0;
+  leq_9.UP("sv3","sv3") = NA;
+  leq_9.UP("sv4","sv4") = +Inf;
+  leq_9.UP("sv5","sv5") = -Inf;
+  leq_9.UP("sv6","sv6") = eps;
+
+  leq_9.SCALE("sv1","sv1") = 1;
+  leq_9.SCALE("sv2","sv2") = 1/0;
+  leq_9.SCALE("sv3","sv3") = NA;
+  leq_9.SCALE("sv4","sv4") = +Inf;
+  leq_9.SCALE("sv5","sv5") = -Inf;
+  leq_9.SCALE("sv6","sv6") = eps;
+
+  * test greater than equations
+  Equation geq_1 "scalar equation geq_1";
+  Equation geq_2 "scalar equation geq_2";
+  Equation geq_3 "scalar equation geq_3";
+  Equation geq_4 "scalar equation geq_4";
+  Equation geq_5 "scalar equation geq_5";
+  Equation geq_6 "scalar equation geq_6";
+
+  geq_1.. 1 =G= 1;
+  geq_1.L = 1;
+  geq_1.M = 1;
+  geq_1.LO = 1;
+  geq_1.UP = 1;
+  geq_1.SCALE = 1;
+
+  geq_2.. 1 =G= 1;
+  geq_2.L = 1/0;
+  geq_2.M = 1/0;
+  geq_2.LO = 1/0;
+  geq_2.UP = 1/0;
+  geq_2.SCALE = 1/0;
+
+  geq_3.. 1 =G= 1;
+  geq_3.L = NA;
+  geq_3.M = NA;
+  geq_3.LO = NA;
+  geq_3.UP = NA;
+  geq_3.SCALE = NA;
+
+  geq_4.. 1 =G= 1;
+  geq_4.L = Inf;
+  geq_4.M = Inf;
+  geq_4.LO = Inf;
+  geq_4.UP = Inf;
+  geq_4.SCALE = Inf;
+
+  geq_5.. 1 =G= 1;
+  geq_5.L = -Inf;
+  geq_5.M = -Inf;
+  geq_5.LO = -Inf;
+  geq_5.UP = -Inf;
+  geq_5.SCALE = -Inf;
+
+  geq_6.. 1 =G= 1;
+  geq_6.L = eps;
+  geq_6.M = eps;
+  geq_6.LO = eps;
+  geq_6.UP = eps;
+  geq_6.SCALE = eps;
+
+  Equation geq_7(sv) "equation geq_7";
+
+  geq_7(sv).. 1 =G= 1;
+
+  geq_7.L("sv1") = 1;
+  geq_7.L("sv2") = 1/0;
+  geq_7.L("sv3") = NA;
+  geq_7.L("sv4") = +Inf;
+  geq_7.L("sv5") = -Inf;
+  geq_7.L("sv6") = eps;
+
+  geq_7.M("sv1") = 1;
+  geq_7.M("sv2") = 1/0;
+  geq_7.M("sv3") = NA;
+  geq_7.M("sv4") = +Inf;
+  geq_7.M("sv5") = -Inf;
+  geq_7.M("sv6") = eps;
+
+  geq_7.LO("sv1") = 1;
+  geq_7.LO("sv2") = 1/0;
+  geq_7.LO("sv3") = NA;
+  geq_7.LO("sv4") = +Inf;
+  geq_7.LO("sv5") = -Inf;
+  geq_7.LO("sv6") = eps;
+
+  geq_7.UP("sv1") = 1;
+  geq_7.UP("sv2") = 1/0;
+  geq_7.UP("sv3") = NA;
+  geq_7.UP("sv4") = +Inf;
+  geq_7.UP("sv5") = -Inf;
+  geq_7.UP("sv6") = eps;
+
+  geq_7.SCALE("sv1") = 1;
+  geq_7.SCALE("sv2") = 1/0;
+  geq_7.SCALE("sv3") = NA;
+  geq_7.SCALE("sv4") = +Inf;
+  geq_7.SCALE("sv5") = -Inf;
+  geq_7.SCALE("sv6") = eps;
+
+  Equation geq_8(sv,sv) "equation geq_8";
+  geq_8(sv,sv).. 1 =G= 1;
+
+  geq_8.L("sv1","sv1") = 1;
+  geq_8.L("sv2","sv2") = 1/0;
+  geq_8.L("sv3","sv3") = NA;
+  geq_8.L("sv4","sv4") = +Inf;
+  geq_8.L("sv5","sv5") = -Inf;
+  geq_8.L("sv6","sv6") = eps;
+
+  geq_8.M("sv1","sv1") = 1;
+  geq_8.M("sv2","sv2") = 1/0;
+  geq_8.M("sv3","sv3") = NA;
+  geq_8.M("sv4","sv4") = +Inf;
+  geq_8.M("sv5","sv5") = -Inf;
+  geq_8.M("sv6","sv6") = eps;
+
+  geq_8.LO("sv1","sv1") = 1;
+  geq_8.LO("sv2","sv2") = 1/0;
+  geq_8.LO("sv3","sv3") = NA;
+  geq_8.LO("sv4","sv4") = +Inf;
+  geq_8.LO("sv5","sv5") = -Inf;
+  geq_8.LO("sv6","sv6") = eps;
+
+  geq_8.UP("sv1","sv1") = 1;
+  geq_8.UP("sv2","sv2") = 1/0;
+  geq_8.UP("sv3","sv3") = NA;
+  geq_8.UP("sv4","sv4") = +Inf;
+  geq_8.UP("sv5","sv5") = -Inf;
+  geq_8.UP("sv6","sv6") = eps;
+
+  geq_8.SCALE("sv1","sv1") = 1;
+  geq_8.SCALE("sv2","sv2") = 1/0;
+  geq_8.SCALE("sv3","sv3") = NA;
+  geq_8.SCALE("sv4","sv4") = +Inf;
+  geq_8.SCALE("sv5","sv5") = -Inf;
+  geq_8.SCALE("sv6","sv6") = eps;
+
+  Equation geq_9(*,sv) "equation geq_9";
+  geq_9(sv,sv).. 1 =G= 1;
+
+  geq_9.L("sv1","sv1") = 1;
+  geq_9.L("sv2","sv2") = 1/0;
+  geq_9.L("sv3","sv3") = NA;
+  geq_9.L("sv4","sv4") = +Inf;
+  geq_9.L("sv5","sv5") = -Inf;
+  geq_9.L("sv6","sv6") = eps;
+
+  geq_9.M("sv1","sv1") = 1;
+  geq_9.M("sv2","sv2") = 1/0;
+  geq_9.M("sv3","sv3") = NA;
+  geq_9.M("sv4","sv4") = +Inf;
+  geq_9.M("sv5","sv5") = -Inf;
+  geq_9.M("sv6","sv6") = eps;
+
+  geq_9.LO("sv1","sv1") = 1;
+  geq_9.LO("sv2","sv2") = 1/0;
+  geq_9.LO("sv3","sv3") = NA;
+  geq_9.LO("sv4","sv4") = +Inf;
+  geq_9.LO("sv5","sv5") = -Inf;
+  geq_9.LO("sv6","sv6") = eps;
+
+  geq_9.UP("sv1","sv1") = 1;
+  geq_9.UP("sv2","sv2") = 1/0;
+  geq_9.UP("sv3","sv3") = NA;
+  geq_9.UP("sv4","sv4") = +Inf;
+  geq_9.UP("sv5","sv5") = -Inf;
+  geq_9.UP("sv6","sv6") = eps;
+
+  geq_9.SCALE("sv1","sv1") = 1;
+  geq_9.SCALE("sv2","sv2") = 1/0;
+  geq_9.SCALE("sv3","sv3") = NA;
+  geq_9.SCALE("sv4","sv4") = +Inf;
+  geq_9.SCALE("sv5","sv5") = -Inf;
+  geq_9.SCALE("sv6","sv6") = eps;
+
+
+  * test nonbinding equations
+  Equation nb_1 "scalar equation nb_1";
+  Equation nb_2 "scalar equation nb_2";
+  Equation nb_3 "scalar equation nb_3";
+  Equation nb_4 "scalar equation nb_4";
+  Equation nb_5 "scalar equation nb_5";
+  Equation nb_6 "scalar equation nb_6";
+
+  nb_1.. 1 =N= 1;
+  nb_1.L = 1;
+  nb_1.M = 1;
+  nb_1.LO = 1;
+  nb_1.UP = 1;
+  nb_1.SCALE = 1;
+
+  nb_2.. 1 =N= 1;
+  nb_2.L = 1/0;
+  nb_2.M = 1/0;
+  nb_2.LO = 1/0;
+  nb_2.UP = 1/0;
+  nb_2.SCALE = 1/0;
+
+  nb_3.. 1 =N= 1;
+  nb_3.L = NA;
+  nb_3.M = NA;
+  nb_3.LO = NA;
+  nb_3.UP = NA;
+  nb_3.SCALE = NA;
+
+  nb_4.. 1 =N= 1;
+  nb_4.L = Inf;
+  nb_4.M = Inf;
+  nb_4.LO = Inf;
+  nb_4.UP = Inf;
+  nb_4.SCALE = Inf;
+
+  nb_5.. 1 =N= 1;
+  nb_5.L = -Inf;
+  nb_5.M = -Inf;
+  nb_5.LO = -Inf;
+  nb_5.UP = -Inf;
+  nb_5.SCALE = -Inf;
+
+  nb_6.. 1 =N= 1;
+  nb_6.L = eps;
+  nb_6.M = eps;
+  nb_6.LO = eps;
+  nb_6.UP = eps;
+  nb_6.SCALE = eps;
+
+  Equation nb_7(sv) "equation nb_7";
+
+  nb_7(sv).. 1 =N= 1;
+
+  nb_7.L("sv1") = 1;
+  nb_7.L("sv2") = 1/0;
+  nb_7.L("sv3") = NA;
+  nb_7.L("sv4") = +Inf;
+  nb_7.L("sv5") = -Inf;
+  nb_7.L("sv6") = eps;
+
+  nb_7.M("sv1") = 1;
+  nb_7.M("sv2") = 1/0;
+  nb_7.M("sv3") = NA;
+  nb_7.M("sv4") = +Inf;
+  nb_7.M("sv5") = -Inf;
+  nb_7.M("sv6") = eps;
+
+  nb_7.LO("sv1") = 1;
+  nb_7.LO("sv2") = 1/0;
+  nb_7.LO("sv3") = NA;
+  nb_7.LO("sv4") = +Inf;
+  nb_7.LO("sv5") = -Inf;
+  nb_7.LO("sv6") = eps;
+
+  nb_7.UP("sv1") = 1;
+  nb_7.UP("sv2") = 1/0;
+  nb_7.UP("sv3") = NA;
+  nb_7.UP("sv4") = +Inf;
+  nb_7.UP("sv5") = -Inf;
+  nb_7.UP("sv6") = eps;
+
+  nb_7.SCALE("sv1") = 1;
+  nb_7.SCALE("sv2") = 1/0;
+  nb_7.SCALE("sv3") = NA;
+  nb_7.SCALE("sv4") = +Inf;
+  nb_7.SCALE("sv5") = -Inf;
+  nb_7.SCALE("sv6") = eps;
+
+  Equation nb_8(sv,sv) "equation nb_8";
+  nb_8(sv,sv).. 1 =N= 1;
+
+  nb_8.L("sv1","sv1") = 1;
+  nb_8.L("sv2","sv2") = 1/0;
+  nb_8.L("sv3","sv3") = NA;
+  nb_8.L("sv4","sv4") = +Inf;
+  nb_8.L("sv5","sv5") = -Inf;
+  nb_8.L("sv6","sv6") = eps;
+
+  nb_8.M("sv1","sv1") = 1;
+  nb_8.M("sv2","sv2") = 1/0;
+  nb_8.M("sv3","sv3") = NA;
+  nb_8.M("sv4","sv4") = +Inf;
+  nb_8.M("sv5","sv5") = -Inf;
+  nb_8.M("sv6","sv6") = eps;
+
+  nb_8.LO("sv1","sv1") = 1;
+  nb_8.LO("sv2","sv2") = 1/0;
+  nb_8.LO("sv3","sv3") = NA;
+  nb_8.LO("sv4","sv4") = +Inf;
+  nb_8.LO("sv5","sv5") = -Inf;
+  nb_8.LO("sv6","sv6") = eps;
+
+  nb_8.UP("sv1","sv1") = 1;
+  nb_8.UP("sv2","sv2") = 1/0;
+  nb_8.UP("sv3","sv3") = NA;
+  nb_8.UP("sv4","sv4") = +Inf;
+  nb_8.UP("sv5","sv5") = -Inf;
+  nb_8.UP("sv6","sv6") = eps;
+
+  nb_8.SCALE("sv1","sv1") = 1;
+  nb_8.SCALE("sv2","sv2") = 1/0;
+  nb_8.SCALE("sv3","sv3") = NA;
+  nb_8.SCALE("sv4","sv4") = +Inf;
+  nb_8.SCALE("sv5","sv5") = -Inf;
+  nb_8.SCALE("sv6","sv6") = eps;
+
+  Equation nb_9(*,sv) "equation nb_9";
+  nb_9(sv,sv).. 1 =N= 1;
+
+  nb_9.L("sv1","sv1") = 1;
+  nb_9.L("sv2","sv2") = 1/0;
+  nb_9.L("sv3","sv3") = NA;
+  nb_9.L("sv4","sv4") = +Inf;
+  nb_9.L("sv5","sv5") = -Inf;
+  nb_9.L("sv6","sv6") = eps;
+
+  nb_9.M("sv1","sv1") = 1;
+  nb_9.M("sv2","sv2") = 1/0;
+  nb_9.M("sv3","sv3") = NA;
+  nb_9.M("sv4","sv4") = +Inf;
+  nb_9.M("sv5","sv5") = -Inf;
+  nb_9.M("sv6","sv6") = eps;
+
+  nb_9.LO("sv1","sv1") = 1;
+  nb_9.LO("sv2","sv2") = 1/0;
+  nb_9.LO("sv3","sv3") = NA;
+  nb_9.LO("sv4","sv4") = +Inf;
+  nb_9.LO("sv5","sv5") = -Inf;
+  nb_9.LO("sv6","sv6") = eps;
+
+  nb_9.UP("sv1","sv1") = 1;
+  nb_9.UP("sv2","sv2") = 1/0;
+  nb_9.UP("sv3","sv3") = NA;
+  nb_9.UP("sv4","sv4") = +Inf;
+  nb_9.UP("sv5","sv5") = -Inf;
+  nb_9.UP("sv6","sv6") = eps;
+
+  nb_9.SCALE("sv1","sv1") = 1;
+  nb_9.SCALE("sv2","sv2") = 1/0;
+  nb_9.SCALE("sv3","sv3") = NA;
+  nb_9.SCALE("sv4","sv4") = +Inf;
+  nb_9.SCALE("sv5","sv5") = -Inf;
+  nb_9.SCALE("sv6","sv6") = eps;
+
+  * test cone equations
+  Equation cone_1 "scalar equation cone_1";
+  Equation cone_2 "scalar equation cone_2";
+  Equation cone_3 "scalar equation cone_3";
+  Equation cone_4 "scalar equation cone_4";
+  Equation cone_5 "scalar equation cone_5";
+  Equation cone_6 "scalar equation cone_6";
+
+  cone_1.. 1 =C= 1;
+  cone_1.L = 1;
+  cone_1.M = 1;
+  cone_1.LO = 1;
+  cone_1.UP = 1;
+  cone_1.SCALE = 1;
+
+  cone_2.. 1 =C= 1;
+  cone_2.L = 1/0;
+  cone_2.M = 1/0;
+  cone_2.LO = 1/0;
+  cone_2.UP = 1/0;
+  cone_2.SCALE = 1/0;
+
+  cone_3.. 1 =C= 1;
+  cone_3.L = NA;
+  cone_3.M = NA;
+  cone_3.LO = NA;
+  cone_3.UP = NA;
+  cone_3.SCALE = NA;
+
+  cone_4.. 1 =C= 1;
+  cone_4.L = Inf;
+  cone_4.M = Inf;
+  cone_4.LO = Inf;
+  cone_4.UP = Inf;
+  cone_4.SCALE = Inf;
+
+  cone_5.. 1 =C= 1;
+  cone_5.L = -Inf;
+  cone_5.M = -Inf;
+  cone_5.LO = -Inf;
+  cone_5.UP = -Inf;
+  cone_5.SCALE = -Inf;
+
+  cone_6.. 1 =C= 1;
+  cone_6.L = eps;
+  cone_6.M = eps;
+  cone_6.LO = eps;
+  cone_6.UP = eps;
+  cone_6.SCALE = eps;
+
+  Equation cone_7(sv) "equation cone_7";
+
+  cone_7(sv).. 1 =C= 1;
+
+  cone_7.L("sv1") = 1;
+  cone_7.L("sv2") = 1/0;
+  cone_7.L("sv3") = NA;
+  cone_7.L("sv4") = +Inf;
+  cone_7.L("sv5") = -Inf;
+  cone_7.L("sv6") = eps;
+
+  cone_7.M("sv1") = 1;
+  cone_7.M("sv2") = 1/0;
+  cone_7.M("sv3") = NA;
+  cone_7.M("sv4") = +Inf;
+  cone_7.M("sv5") = -Inf;
+  cone_7.M("sv6") = eps;
+
+  cone_7.LO("sv1") = 1;
+  cone_7.LO("sv2") = 1/0;
+  cone_7.LO("sv3") = NA;
+  cone_7.LO("sv4") = +Inf;
+  cone_7.LO("sv5") = -Inf;
+  cone_7.LO("sv6") = eps;
+
+  cone_7.UP("sv1") = 1;
+  cone_7.UP("sv2") = 1/0;
+  cone_7.UP("sv3") = NA;
+  cone_7.UP("sv4") = +Inf;
+  cone_7.UP("sv5") = -Inf;
+  cone_7.UP("sv6") = eps;
+
+  cone_7.SCALE("sv1") = 1;
+  cone_7.SCALE("sv2") = 1/0;
+  cone_7.SCALE("sv3") = NA;
+  cone_7.SCALE("sv4") = +Inf;
+  cone_7.SCALE("sv5") = -Inf;
+  cone_7.SCALE("sv6") = eps;
+
+  Equation cone_8(sv,sv) "equation cone_8";
+  cone_8(sv,sv).. 1 =C= 1;
+
+  cone_8.L("sv1","sv1") = 1;
+  cone_8.L("sv2","sv2") = 1/0;
+  cone_8.L("sv3","sv3") = NA;
+  cone_8.L("sv4","sv4") = +Inf;
+  cone_8.L("sv5","sv5") = -Inf;
+  cone_8.L("sv6","sv6") = eps;
+
+  cone_8.M("sv1","sv1") = 1;
+  cone_8.M("sv2","sv2") = 1/0;
+  cone_8.M("sv3","sv3") = NA;
+  cone_8.M("sv4","sv4") = +Inf;
+  cone_8.M("sv5","sv5") = -Inf;
+  cone_8.M("sv6","sv6") = eps;
+
+  cone_8.LO("sv1","sv1") = 1;
+  cone_8.LO("sv2","sv2") = 1/0;
+  cone_8.LO("sv3","sv3") = NA;
+  cone_8.LO("sv4","sv4") = +Inf;
+  cone_8.LO("sv5","sv5") = -Inf;
+  cone_8.LO("sv6","sv6") = eps;
+
+  cone_8.UP("sv1","sv1") = 1;
+  cone_8.UP("sv2","sv2") = 1/0;
+  cone_8.UP("sv3","sv3") = NA;
+  cone_8.UP("sv4","sv4") = +Inf;
+  cone_8.UP("sv5","sv5") = -Inf;
+  cone_8.UP("sv6","sv6") = eps;
+
+  cone_8.SCALE("sv1","sv1") = 1;
+  cone_8.SCALE("sv2","sv2") = 1/0;
+  cone_8.SCALE("sv3","sv3") = NA;
+  cone_8.SCALE("sv4","sv4") = +Inf;
+  cone_8.SCALE("sv5","sv5") = -Inf;
+  cone_8.SCALE("sv6","sv6") = eps;
+
+  Equation cone_9(*,sv) "equation cone_9";
+  cone_9(sv,sv).. 1 =C= 1;
+
+  cone_9.L("sv1","sv1") = 1;
+  cone_9.L("sv2","sv2") = 1/0;
+  cone_9.L("sv3","sv3") = NA;
+  cone_9.L("sv4","sv4") = +Inf;
+  cone_9.L("sv5","sv5") = -Inf;
+  cone_9.L("sv6","sv6") = eps;
+
+  cone_9.M("sv1","sv1") = 1;
+  cone_9.M("sv2","sv2") = 1/0;
+  cone_9.M("sv3","sv3") = NA;
+  cone_9.M("sv4","sv4") = +Inf;
+  cone_9.M("sv5","sv5") = -Inf;
+  cone_9.M("sv6","sv6") = eps;
+
+  cone_9.LO("sv1","sv1") = 1;
+  cone_9.LO("sv2","sv2") = 1/0;
+  cone_9.LO("sv3","sv3") = NA;
+  cone_9.LO("sv4","sv4") = +Inf;
+  cone_9.LO("sv5","sv5") = -Inf;
+  cone_9.LO("sv6","sv6") = eps;
+
+  cone_9.UP("sv1","sv1") = 1;
+  cone_9.UP("sv2","sv2") = 1/0;
+  cone_9.UP("sv3","sv3") = NA;
+  cone_9.UP("sv4","sv4") = +Inf;
+  cone_9.UP("sv5","sv5") = -Inf;
+  cone_9.UP("sv6","sv6") = eps;
+
+  cone_9.SCALE("sv1","sv1") = 1;
+  cone_9.SCALE("sv2","sv2") = 1/0;
+  cone_9.SCALE("sv3","sv3") = NA;
+  cone_9.SCALE("sv4","sv4") = +Inf;
+  cone_9.SCALE("sv5","sv5") = -Inf;
+  cone_9.SCALE("sv6","sv6") = eps;
+
+  * test bool equations
+  Equation bool_1 "scalar equation bool_1";
+  Equation bool_2 "scalar equation bool_2";
+  Equation bool_3 "scalar equation bool_3";
+  Equation bool_4 "scalar equation bool_4";
+  Equation bool_5 "scalar equation bool_5";
+  Equation bool_6 "scalar equation bool_6";
+
+  bool_1.. 1 =B= 1;
+  bool_1.L = 1;
+  bool_1.M = 1;
+  bool_1.LO = 1;
+  bool_1.UP = 1;
+  bool_1.SCALE = 1;
+
+  bool_2.. 1 =B= 1;
+  bool_2.L = 1/0;
+  bool_2.M = 1/0;
+  bool_2.LO = 1/0;
+  bool_2.UP = 1/0;
+  bool_2.SCALE = 1/0;
+
+  bool_3.. 1 =B= 1;
+  bool_3.L = NA;
+  bool_3.M = NA;
+  bool_3.LO = NA;
+  bool_3.UP = NA;
+  bool_3.SCALE = NA;
+
+  bool_4.. 1 =B= 1;
+  bool_4.L = Inf;
+  bool_4.M = Inf;
+  bool_4.LO = Inf;
+  bool_4.UP = Inf;
+  bool_4.SCALE = Inf;
+
+  bool_5.. 1 =B= 1;
+  bool_5.L = -Inf;
+  bool_5.M = -Inf;
+  bool_5.LO = -Inf;
+  bool_5.UP = -Inf;
+  bool_5.SCALE = -Inf;
+
+  bool_6.. 1 =B= 1;
+  bool_6.L = eps;
+  bool_6.M = eps;
+  bool_6.LO = eps;
+  bool_6.UP = eps;
+  bool_6.SCALE = eps;
+
+  Equation bool_7(sv) "equation bool_7";
+
+  bool_7(sv).. 1 =B= 1;
+
+  bool_7.L("sv1") = 1;
+  bool_7.L("sv2") = 1/0;
+  bool_7.L("sv3") = NA;
+  bool_7.L("sv4") = +Inf;
+  bool_7.L("sv5") = -Inf;
+  bool_7.L("sv6") = eps;
+
+  bool_7.M("sv1") = 1;
+  bool_7.M("sv2") = 1/0;
+  bool_7.M("sv3") = NA;
+  bool_7.M("sv4") = +Inf;
+  bool_7.M("sv5") = -Inf;
+  bool_7.M("sv6") = eps;
+
+  bool_7.LO("sv1") = 1;
+  bool_7.LO("sv2") = 1/0;
+  bool_7.LO("sv3") = NA;
+  bool_7.LO("sv4") = +Inf;
+  bool_7.LO("sv5") = -Inf;
+  bool_7.LO("sv6") = eps;
+
+  bool_7.UP("sv1") = 1;
+  bool_7.UP("sv2") = 1/0;
+  bool_7.UP("sv3") = NA;
+  bool_7.UP("sv4") = +Inf;
+  bool_7.UP("sv5") = -Inf;
+  bool_7.UP("sv6") = eps;
+
+  bool_7.SCALE("sv1") = 1;
+  bool_7.SCALE("sv2") = 1/0;
+  bool_7.SCALE("sv3") = NA;
+  bool_7.SCALE("sv4") = +Inf;
+  bool_7.SCALE("sv5") = -Inf;
+  bool_7.SCALE("sv6") = eps;
+
+  Equation bool_8(sv,sv) "equation bool_8";
+  bool_8(sv,sv).. 1 =B= 1;
+
+  bool_8.L("sv1","sv1") = 1;
+  bool_8.L("sv2","sv2") = 1/0;
+  bool_8.L("sv3","sv3") = NA;
+  bool_8.L("sv4","sv4") = +Inf;
+  bool_8.L("sv5","sv5") = -Inf;
+  bool_8.L("sv6","sv6") = eps;
+
+  bool_8.M("sv1","sv1") = 1;
+  bool_8.M("sv2","sv2") = 1/0;
+  bool_8.M("sv3","sv3") = NA;
+  bool_8.M("sv4","sv4") = +Inf;
+  bool_8.M("sv5","sv5") = -Inf;
+  bool_8.M("sv6","sv6") = eps;
+
+  bool_8.LO("sv1","sv1") = 1;
+  bool_8.LO("sv2","sv2") = 1/0;
+  bool_8.LO("sv3","sv3") = NA;
+  bool_8.LO("sv4","sv4") = +Inf;
+  bool_8.LO("sv5","sv5") = -Inf;
+  bool_8.LO("sv6","sv6") = eps;
+
+  bool_8.UP("sv1","sv1") = 1;
+  bool_8.UP("sv2","sv2") = 1/0;
+  bool_8.UP("sv3","sv3") = NA;
+  bool_8.UP("sv4","sv4") = +Inf;
+  bool_8.UP("sv5","sv5") = -Inf;
+  bool_8.UP("sv6","sv6") = eps;
+
+  bool_8.SCALE("sv1","sv1") = 1;
+  bool_8.SCALE("sv2","sv2") = 1/0;
+  bool_8.SCALE("sv3","sv3") = NA;
+  bool_8.SCALE("sv4","sv4") = +Inf;
+  bool_8.SCALE("sv5","sv5") = -Inf;
+  bool_8.SCALE("sv6","sv6") = eps;
+
+  Equation bool_9(*,sv) "equation bool_9";
+  bool_9(sv,sv).. 1 =B= 1;
+
+  bool_9.L("sv1","sv1") = 1;
+  bool_9.L("sv2","sv2") = 1/0;
+  bool_9.L("sv3","sv3") = NA;
+  bool_9.L("sv4","sv4") = +Inf;
+  bool_9.L("sv5","sv5") = -Inf;
+  bool_9.L("sv6","sv6") = eps;
+
+  bool_9.M("sv1","sv1") = 1;
+  bool_9.M("sv2","sv2") = 1/0;
+  bool_9.M("sv3","sv3") = NA;
+  bool_9.M("sv4","sv4") = +Inf;
+  bool_9.M("sv5","sv5") = -Inf;
+  bool_9.M("sv6","sv6") = eps;
+
+  bool_9.LO("sv1","sv1") = 1;
+  bool_9.LO("sv2","sv2") = 1/0;
+  bool_9.LO("sv3","sv3") = NA;
+  bool_9.LO("sv4","sv4") = +Inf;
+  bool_9.LO("sv5","sv5") = -Inf;
+  bool_9.LO("sv6","sv6") = eps;
+
+  bool_9.UP("sv1","sv1") = 1;
+  bool_9.UP("sv2","sv2") = 1/0;
+  bool_9.UP("sv3","sv3") = NA;
+  bool_9.UP("sv4","sv4") = +Inf;
+  bool_9.UP("sv5","sv5") = -Inf;
+  bool_9.UP("sv6","sv6") = eps;
+
+  bool_9.SCALE("sv1","sv1") = 1;
+  bool_9.SCALE("sv2","sv2") = 1/0;
+  bool_9.SCALE("sv3","sv3") = NA;
+  bool_9.SCALE("sv4","sv4") = +Inf;
+  bool_9.SCALE("sv5","sv5") = -Inf;
+  bool_9.SCALE("sv6","sv6") = eps;
+
+  * test external equations
+  Equation ext_1 "scalar equation ext_1";
+  Equation ext_2 "scalar equation ext_2";
+  Equation ext_3 "scalar equation ext_3";
+  Equation ext_4 "scalar equation ext_4";
+  Equation ext_5 "scalar equation ext_5";
+  Equation ext_6 "scalar equation ext_6";
+
+  ext_1.. 1 =X= 1;
+  ext_1.L = 1;
+  ext_1.M = 1;
+  ext_1.LO = 1;
+  ext_1.UP = 1;
+  ext_1.SCALE = 1;
+
+  ext_2.. 1 =X= 1;
+  ext_2.L = 1/0;
+  ext_2.M = 1/0;
+  ext_2.LO = 1/0;
+  ext_2.UP = 1/0;
+  ext_2.SCALE = 1/0;
+
+  ext_3.. 1 =X= 1;
+  ext_3.L = NA;
+  ext_3.M = NA;
+  ext_3.LO = NA;
+  ext_3.UP = NA;
+  ext_3.SCALE = NA;
+
+  ext_4.. 1 =X= 1;
+  ext_4.L = Inf;
+  ext_4.M = Inf;
+  ext_4.LO = Inf;
+  ext_4.UP = Inf;
+  ext_4.SCALE = Inf;
+
+  ext_5.. 1 =X= 1;
+  ext_5.L = -Inf;
+  ext_5.M = -Inf;
+  ext_5.LO = -Inf;
+  ext_5.UP = -Inf;
+  ext_5.SCALE = -Inf;
+
+  ext_6.. 1 =X= 1;
+  ext_6.L = eps;
+  ext_6.M = eps;
+  ext_6.LO = eps;
+  ext_6.UP = eps;
+  ext_6.SCALE = eps;
+
+  Equation ext_7(sv) "equation ext_7";
+
+  ext_7(sv).. 1 =X= 1;
+
+  ext_7.L("sv1") = 1;
+  ext_7.L("sv2") = 1/0;
+  ext_7.L("sv3") = NA;
+  ext_7.L("sv4") = +Inf;
+  ext_7.L("sv5") = -Inf;
+  ext_7.L("sv6") = eps;
+
+  ext_7.M("sv1") = 1;
+  ext_7.M("sv2") = 1/0;
+  ext_7.M("sv3") = NA;
+  ext_7.M("sv4") = +Inf;
+  ext_7.M("sv5") = -Inf;
+  ext_7.M("sv6") = eps;
+
+  ext_7.LO("sv1") = 1;
+  ext_7.LO("sv2") = 1/0;
+  ext_7.LO("sv3") = NA;
+  ext_7.LO("sv4") = +Inf;
+  ext_7.LO("sv5") = -Inf;
+  ext_7.LO("sv6") = eps;
+
+  ext_7.UP("sv1") = 1;
+  ext_7.UP("sv2") = 1/0;
+  ext_7.UP("sv3") = NA;
+  ext_7.UP("sv4") = +Inf;
+  ext_7.UP("sv5") = -Inf;
+  ext_7.UP("sv6") = eps;
+
+  ext_7.SCALE("sv1") = 1;
+  ext_7.SCALE("sv2") = 1/0;
+  ext_7.SCALE("sv3") = NA;
+  ext_7.SCALE("sv4") = +Inf;
+  ext_7.SCALE("sv5") = -Inf;
+  ext_7.SCALE("sv6") = eps;
+
+  Equation ext_8(sv,sv) "equation ext_8";
+  ext_8(sv,sv).. 1 =X= 1;
+
+  ext_8.L("sv1","sv1") = 1;
+  ext_8.L("sv2","sv2") = 1/0;
+  ext_8.L("sv3","sv3") = NA;
+  ext_8.L("sv4","sv4") = +Inf;
+  ext_8.L("sv5","sv5") = -Inf;
+  ext_8.L("sv6","sv6") = eps;
+
+  ext_8.M("sv1","sv1") = 1;
+  ext_8.M("sv2","sv2") = 1/0;
+  ext_8.M("sv3","sv3") = NA;
+  ext_8.M("sv4","sv4") = +Inf;
+  ext_8.M("sv5","sv5") = -Inf;
+  ext_8.M("sv6","sv6") = eps;
+
+  ext_8.LO("sv1","sv1") = 1;
+  ext_8.LO("sv2","sv2") = 1/0;
+  ext_8.LO("sv3","sv3") = NA;
+  ext_8.LO("sv4","sv4") = +Inf;
+  ext_8.LO("sv5","sv5") = -Inf;
+  ext_8.LO("sv6","sv6") = eps;
+
+  ext_8.UP("sv1","sv1") = 1;
+  ext_8.UP("sv2","sv2") = 1/0;
+  ext_8.UP("sv3","sv3") = NA;
+  ext_8.UP("sv4","sv4") = +Inf;
+  ext_8.UP("sv5","sv5") = -Inf;
+  ext_8.UP("sv6","sv6") = eps;
+
+  ext_8.SCALE("sv1","sv1") = 1;
+  ext_8.SCALE("sv2","sv2") = 1/0;
+  ext_8.SCALE("sv3","sv3") = NA;
+  ext_8.SCALE("sv4","sv4") = +Inf;
+  ext_8.SCALE("sv5","sv5") = -Inf;
+  ext_8.SCALE("sv6","sv6") = eps;
+
+  Equation ext_9(*,sv) "equation ext_9";
+  ext_9(sv,sv).. 1 =X= 1;
+
+  ext_9.L("sv1","sv1") = 1;
+  ext_9.L("sv2","sv2") = 1/0;
+  ext_9.L("sv3","sv3") = NA;
+  ext_9.L("sv4","sv4") = +Inf;
+  ext_9.L("sv5","sv5") = -Inf;
+  ext_9.L("sv6","sv6") = eps;
+
+  ext_9.M("sv1","sv1") = 1;
+  ext_9.M("sv2","sv2") = 1/0;
+  ext_9.M("sv3","sv3") = NA;
+  ext_9.M("sv4","sv4") = +Inf;
+  ext_9.M("sv5","sv5") = -Inf;
+  ext_9.M("sv6","sv6") = eps;
+
+  ext_9.LO("sv1","sv1") = 1;
+  ext_9.LO("sv2","sv2") = 1/0;
+  ext_9.LO("sv3","sv3") = NA;
+  ext_9.LO("sv4","sv4") = +Inf;
+  ext_9.LO("sv5","sv5") = -Inf;
+  ext_9.LO("sv6","sv6") = eps;
+
+  ext_9.UP("sv1","sv1") = 1;
+  ext_9.UP("sv2","sv2") = 1/0;
+  ext_9.UP("sv3","sv3") = NA;
+  ext_9.UP("sv4","sv4") = +Inf;
+  ext_9.UP("sv5","sv5") = -Inf;
+  ext_9.UP("sv6","sv6") = eps;
+
+  ext_9.SCALE("sv1","sv1") = 1;
+  ext_9.SCALE("sv2","sv2") = 1/0;
+  ext_9.SCALE("sv3","sv3") = NA;
+  ext_9.SCALE("sv4","sv4") = +Inf;
+  ext_9.SCALE("sv5","sv5") = -Inf;
+  ext_9.SCALE("sv6","sv6") = eps;
+
+  ExecError = 0;
+
+  execute_unload "data.gdx";
+
+  '
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+
+  # read all symbols
+  m$read(testthat::test_path("data.gdx"))
+
+  # write everything
+  m$write(testthat::test_path("gt.gdx"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  message(paste0("this is ret ", ret))
+  expect_equal(ret, 0)
+
+  #   }
+  # ,
+  # error = function(e) {
+  #   message(e)
+  #   message(paste0("gams ", testthat::test_path("data.gms"), " gdx=data.gdx"))
+  # }
+  # )
 }
 )
 
+test_that("test_num_1", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
 
-})
-# test_that("read set", {
-# c = Container$new()
-# c$read("trialgdx.gdx")
-# expect_equal(nrow(c$data$i$records), 2)
-# })
+  i <- Set$new(m, "i", records = c("a", "b"))
+  expect_true(is.data.frame(i$records))
+  expect_equal(nrow(i$records), 2)
 
-# test_that("read another set", {
-# c = Container$new()
-# c$read("trialgdx.gdx")
-# expect_equal(nrow(c$data$j$records), 3)
-# })
+  j <- Set$new(m, "j", records = c("c", "d"))
+  expect_true(is.data.frame(j$records))
+  expect_equal(nrow(j$records), 2)
 
-# test_that("multiplication works", {
-#   expect_equal(2 * 2, 4)
-# })
+  recs <- data.frame(list("i" = c("a", "b"), 
+  "j" = c("c", "d"), "values" = c(1, 1)))
+  a <- Parameter$new(m, "a", c("i", "j"), records = recs)
+  expect_true(is.data.frame(a$records))
+  expect_equal(nrow(a$records), 2)
+
+  m$write("gt.gdx")
+
+
+  # gams syntax
+  gams_text = '
+  set i / a, b /;
+  set j / c, d /;
+
+  parameter a(i,j) /
+  "a"."c" 1
+  "b"."d" 1
+  /;
+  '
+
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+}
+)
+
+test_that("test_num_2", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i")
+  expect_true(is.na(i$records))
+
+  j <- Set$new(m, "j")
+  expect_true(is.na(j$records))
+
+  recs <- data.frame(list("i" = c("a", "b"), 
+  "j" = c("c", "d"), "values" = c(1, 1)))
+  a <- Parameter$new(m, "a", c(i, j), recs, domain_forwarding = TRUE)
+
+  expect_true(is.data.frame(i$records))
+  expect_equal(i$records$uni_1, c("a", "b"))
+
+  expect_true(is.data.frame(j$records))
+  expect_equal(j$records$uni_1, c("c", "d"))
+
+  m$write("gt.gdx")
+
+  # gams syntax
+  gams_text = '
+  set i;
+  set j;
+
+  parameter a(i<,j<) /
+  "a"."c" 1
+  "b"."d" 1
+  /;
+  '
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+}
+)
+
+test_that("test_num_3", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i")
+  expect_true(is.na(i$records))
+
+  j <- Alias$new(m, "j", i)
+  expect_true(is.na(j$records))
+
+  recs <- data.frame(list("i" = c("a", "b"), 
+  "j" = c("a", "b"), "values" = c(1, 1)))
+  a <- Parameter$new(m, "a", c(i, j), recs, domain_forwarding = TRUE)
+
+  expect_true(is.data.frame(i$records))
+  expect_equal(i$records$uni_1, c("a", "b"))
+
+  expect_true(is.data.frame(j$records))
+  expect_equal(j$records$uni_1, c("a", "b"))
+  expect_equal(nrow(a$records), 2)
+
+  m$write("gt.gdx")
+
+  # gams syntax
+  gams_text = '
+  set i / a, b /;
+  alias(i, j);
+
+  parameter a(i,j) /
+  "a"."a" 1
+  "b"."b" 1
+  /;
+  '
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+}
+)
+
+test_that("test_num_4", {
+  m <- Container$new()
+
+  i <- Set$new(m, "i")
+  expect_true(is.na(i$records))
+
+  j <- Set$new(m, "j", i)
+  expect_true(is.na(j$records))
+
+  k <- Set$new(m, "k", j)
+  expect_true(is.na(k$records))
+
+  l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE )
+  expect_true(is.data.frame(i$records))
+  expect_equal(i$records$uni_1, c("a", "b"))
+
+  expect_true(is.data.frame(j$records))
+  expect_equal(j$records$i_1, c("a", "b"))
+
+  expect_true(is.data.frame(k$records))
+  expect_equal(k$records$j_1, c("a", "b"))
+
+  expect_true(is.data.frame(l$records))
+  expect_equal(l$records$k_1, c("a", "b"))
+
+  m$write("gt.gdx")
+
+  # gams syntax
+  gams_text = '
+  set i  / a,b /;
+  set j(i) / a,b /;
+  set k(j) / a,b /;
+  set l(k) / a,b /;
+  '
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+}
+)
+
+test_that("test_num_5", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i")
+  expect_true(is.na(i$records))
+
+  recs <- data.frame(list("i" = "c", "element_text" = "desc for elem 'c'"))
+  j <- Set$new(m, "j", i, records = recs, domain_forwarding = TRUE)
+  expect_true(is.data.frame(i$records))
+  expect_equal(i$records$uni_1, c("c"))
+  expect_true(is.data.frame(j$records))
+  expect_equal(j$records$i_1, c("c"))
+
+  k <- Set$new(m, "k", j)
+  expect_true(is.data.frame(i$records))
+  expect_equal(i$records$uni_1, c("c"))
+  expect_true(is.data.frame(j$records))
+  expect_equal(j$records$i_1, c("c"))
+  expect_true(is.na(k$records))
+
+  l <- Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
+  expect_true(is.data.frame(i$records))
+  expect_equal(i$records$uni_1, c("c", "a", "b"))
+  expect_true(is.data.frame(j$records))
+  expect_equal(j$records$i_1, c("c", "a", "b"))
+
+  expect_true(is.data.frame(k$records))
+  expect_equal(k$records$j_1, c("a", "b"))
+
+  expect_true(is.data.frame(l$records))
+  expect_equal(l$records$k_1, c("a", "b"))
+
+  m$write("gt.gdx")
+
+  # gams syntax
+  gams_text = '
+  set i  / c, a, b /;
+  set j(i) / c "desc for elem \'c\'", a, b /;
+  set k(j) / a, b /;
+  set l(k) / a, b /;
+  '
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+}
+)
+
+test_that("test_num_6", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i", records = c("c", "a", "b"))
+  expect_true(is.data.frame(i$records))
+  m$write("gt.gdx")
+
+  # gams syntax
+  gams_text = '
+  set i  / c, a, b /;
+  '
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdump", args=
+  paste(testthat::test_path("data.gdx"), "output=uels.gms uelTable=foo"),
+  stdout = FALSE)
+
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("uels.gms"), " gdx=uels.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m2 = Container$new(testthat::test_path("uels.gdx"))
+  expect_true(inherits(m2, "Container"))
+  expect_true(is.data.frame(m2$data$foo$records))
+
+  expect_equal(unlist(m$getUniverseSet()), m2$data$foo$records$uni_1)
+}
+)
