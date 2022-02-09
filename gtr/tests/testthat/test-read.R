@@ -2764,3 +2764,109 @@ test_that("test_num_6", {
   expect_equal(unlist(m$getUniverseSet()), m2$data$foo$records$uni_1)
 }
 )
+
+test_that("test_num_7", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i", records = c("c", "a", "b"))
+  expect_true(is.data.frame(i$records))
+
+  m$write("gt.gdx", uel_priority = list("a"))
+
+  # gams syntax
+  gams_text = '
+  set i  / a, c, b /;
+  '
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+  ret <- system2(command="gdxdump", args=
+  paste(testthat::test_path("data.gdx"), "output=uels.gms uelTable=foo"),
+  stdout = FALSE)
+
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("uels.gms"), " gdx=uels.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m2 = Container$new(testthat::test_path("uels.gdx"))
+  expect_true(inherits(m2, "Container"))
+  expect_true(is.data.frame(m2$data$foo$records))
+
+  expect_equal(c("a", "c", "b"), m2$data$foo$records$uni_1)
+  
+}
+)
+
+test_that("test_num_8", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i", records = c("a", "b"))
+  expect_equal(i$records$uni_1, c("a", "b"))
+
+  j <- Alias$new(m, "j", i)
+  expect_equal(j$records$uni_1, c("a", "b"))
+  expect_equal(j$aliasWith$name, "i")
+
+  k <- Alias$new(m, "k", j)
+  expect_equal(k$records$uni_1, c("a", "b"))
+  expect_equal(j$aliasWith$name, "i")
+
+  #try writing
+  m$write("out.gdx")
+}
+)
+
+test_that("test_num_9", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i", list("*", "*"), records = 
+  data.frame(list("col1"=c("a","b"), "col2"=c("c","d"))))
+
+  j <- Parameter$new(m, "j", "*", records = 
+  data.frame(list("col1" = c("e", "f"), "col2" = c(1, 1))))
+  expect_equal(i$records$uni_1, c("a", "b"))
+  expect_equal(i$records$uni_2, c("c", "d"))
+
+  expect_equal(m$getUniverseSet(), list("a", "b", "c", "d", "e", "f"))
+
+  #just try writing to see if there are any errors
+  m$write("out.gdx")
+}
+)
+
+test_that("test_num_10", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i")
+  expect_true(is.na(i$records))
+
+  j <- Set$new(m, "j")
+  expect_true(is.na(j$records))
+
+  a = Parameter$new(m, "a", list(i, j), domain_forwarding=TRUE)
+
+  df = data.frame(list("i_1"= c("a", "b"), 
+  "j_2" = c("c", "d"), "value" = c(1, 1)))
+
+  a$records = df
+
+  expect_equal(i$records$uni_1, c("a", "b"))
+  expect_equal(j$records$uni_1, c("c", "d"))
+
+  #try writing
+  m$write("out.gdx")
+}
+)
+
