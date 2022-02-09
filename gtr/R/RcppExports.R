@@ -17,8 +17,8 @@ getSymbols <- function(gdxName, sysDir) {
     .Call(`_gtr_getSymbols`, gdxName, sysDir)
 }
 
-gdxWriteSuper <- function(data, sysDir, fileName) {
-    invisible(.Call(`_gtr_gdxWriteSuper`, data, sysDir, fileName))
+gdxWriteSuper <- function(data, sysDir, fileName, uel_priority, is_uel_priority) {
+    invisible(.Call(`_gtr_gdxWriteSuper`, data, sysDir, fileName, uel_priority, is_uel_priority))
 }
 
 readSymbols <- function(symNames, gdxName, sysDir) {
