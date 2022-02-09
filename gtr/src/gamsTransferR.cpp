@@ -205,9 +205,10 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 }
 
 // [[Rcpp::export]]
-void gdxWriteSuper(List data,
-CharacterVector sysDir, CharacterVector fileName) {
+void gdxWriteSuper(List data, CharacterVector sysDir, 
+CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority) {
   Rcout << "here2\n";
+  std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
   gdxHandle_t PGX = NULL;
@@ -218,6 +219,7 @@ CharacterVector sysDir, CharacterVector fileName) {
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
   Rcout << "here1\n";
+
 	if (!gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg))) {
 		Rcout << "**** Could not load GDX library" << "\n" << "**** " << Msg << "\n";
 	}
@@ -237,6 +239,17 @@ CharacterVector sysDir, CharacterVector fileName) {
 	/* Write demand data */
 	rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
 	if (ErrNr) Rcout << "Error1" << "\n";
+
+  // register UELs
+  int UELno;
+  if (is_uel_priority) {
+    rc = gdxUELRegisterStrStart(PGX);
+    for (int i = 0; i < uel_priority.length(); i++) {
+      myUEL = uel_priority(i);
+      rc = gdxUELRegisterStr(PGX, myUEL.c_str(), &UELno);
+    }
+    gdxUELRegisterDone(PGX);
+  }
   // std::string mysym, varTypeStr;
   DataFrame df;
   List domain;

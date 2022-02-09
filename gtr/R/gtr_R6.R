@@ -680,7 +680,7 @@ Container <- R6::R6Class (
       print(private$gdx_specVals_write)
     },
 
-    write = function(gdxout) {
+    write = function(gdxout, uel_priority = NA) {
       if (!is.character(gdxout)) {
         stop("The argument gdxout must be of type string")
       }
@@ -694,6 +694,12 @@ Container <- R6::R6Class (
         # if (!file.exists(gdxout)) {
         #   stop(paste0("File ", gdxout, " doesn't exist"))
         # }
+      }
+      
+      if (!is.na(uel_priority)) {
+        if (!(is.character(uel_priority) || is.list(uel_priority))) {
+          stop("'uel_priority' must be type list or str")
+        }
       }
 
       if (!identical(self$listSymbols(), self$listSymbols(isValid=TRUE) )) {
@@ -711,8 +717,8 @@ Container <- R6::R6Class (
           # no mapping required for alias
           if (s$type == GMS_DT_ALIAS || s$type == GMS_DT_SET) next
           colrange = (s$dimension + 1):length(s$records)
-          s$records[,colrange][is.nan(
-            s$records[,colrange])] = 
+          s$records[, colrange][is.nan(
+            s$records[, colrange])] = 
             specialValsGDX[["UNDEF"]]
 
           s$records[,colrange][is.na(
@@ -771,14 +777,31 @@ Container <- R6::R6Class (
 
         }
       # }
-      gdxWriteSuper(self$data, self$systemDirectory, gdxout)
+      if (is.na(uel_priority)) {
+        gdxWriteSuper(self$data, self$systemDirectory, gdxout, NA, FALSE)
+      }
+      else {
+        universe = self$getUniverseSet()
+        if (!setequal(intersect(uel_priority, universe), uel_priority)) {
+          stop("uel_priority must be a subset of the universe, check 
+          spelling of an element in uel_priority? Also check 
+          getUniverseSet() method for assumed UniverseSet.")
+        }
+
+        reorder = uel_priority
+        reorder = append(reorder, universe)
+        reorder = unique(reorder)
+
+        gdxWriteSuper(self$data, self$systemDirectory, gdxout, unlist(reorder), TRUE)
+      }
+
 
     },
 
     isValid = function(verbose=FALSE, force=FALSE) {
       assertthat::assert_that(is.logical(verbose), 
       msg = "Argument 'verbose' must be logical")
-      
+
       assertthat::assert_that(is.logical(force), 
       msg = "Argument 'force' must be logical")
 
