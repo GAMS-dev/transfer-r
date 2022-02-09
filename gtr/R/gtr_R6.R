@@ -72,13 +72,14 @@ Container <- R6::R6Class (
         }
       }
 
-      if (!missing(load_from)) {
-        self$read(load_from, symbols="all")
-      }
-
       self$acronyms = list()
       self$data = list()
       self$.requiresStateCheck = TRUE
+
+      if (!missing(load_from)) {
+      self$read(load_from, symbols="all")
+
+      }
     },
 
     #' @description read data from a GDX file
