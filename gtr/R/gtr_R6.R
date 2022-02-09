@@ -2649,6 +2649,7 @@ Alias <- R6Class(
         }
 
         if (inherits(alias_with_input, "Alias")) {
+          parent = alias_with_input
           while (!inherits(parent, "Set")) {
             parent = parent$aliasWith
           }
