@@ -206,7 +206,8 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 
 // [[Rcpp::export]]
 void gdxWriteSuper(List data, CharacterVector sysDir, 
-CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority) {
+CharacterVector fileName, CharacterVector uel_priority, 
+bool is_uel_priority, bool compress) {
   Rcout << "here2\n";
   std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
@@ -237,8 +238,13 @@ CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority) {
 	gdxGetDLLVersion(PGX, Msg);
 
 	/* Write demand data */
-	rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
-	if (ErrNr) Rcout << "Error1" << "\n";
+  if (!compress) {
+    rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
+    if (ErrNr) Rcout << "Error1" << "\n";
+  }
+  else {
+    rc = gdxOpenWriteEx(PGX, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
+  }
 
   // register UELs
   int UELno;
@@ -363,6 +369,7 @@ CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority) {
     if (!gdxDataWriteDone(PGX)) Rcout << "Error3" << "\n";
   }
   Rcout << "here4\n";
+  gdxAutoConvert(PGX, 0);
   if (gdxClose(PGX)) Rcout << "Error4" << "\n";
   return;
 }

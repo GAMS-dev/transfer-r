@@ -680,7 +680,11 @@ Container <- R6::R6Class (
       print(private$gdx_specVals_write)
     },
 
-    write = function(gdxout, uel_priority = NA) {
+    write = function(gdxout, compress = FALSE, uel_priority = NA) {
+      if (!is.logical(compress)) {
+        stop("'compress' must be of type bool; default False (no compression)")
+      }
+
       if (!is.character(gdxout)) {
         stop("The argument gdxout must be of type string")
       }
@@ -695,7 +699,7 @@ Container <- R6::R6Class (
         #   stop(paste0("File ", gdxout, " doesn't exist"))
         # }
       }
-      
+
       if (!is.na(uel_priority)) {
         if (!(is.character(uel_priority) || is.list(uel_priority))) {
           stop("'uel_priority' must be type list or str")
@@ -778,7 +782,7 @@ Container <- R6::R6Class (
         }
       # }
       if (is.na(uel_priority)) {
-        gdxWriteSuper(self$data, self$systemDirectory, gdxout, NA, FALSE)
+        gdxWriteSuper(self$data, self$systemDirectory, gdxout, NA, FALSE, compress)
       }
       else {
         universe = self$getUniverseSet()
@@ -792,7 +796,8 @@ Container <- R6::R6Class (
         reorder = append(reorder, universe)
         reorder = unique(reorder)
 
-        gdxWriteSuper(self$data, self$systemDirectory, gdxout, unlist(reorder), TRUE)
+        gdxWriteSuper(self$data, self$systemDirectory, 
+        gdxout, unlist(reorder), TRUE, compress)
       }
 
 

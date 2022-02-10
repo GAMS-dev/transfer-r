@@ -59,8 +59,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // gdxWriteSuper
-void gdxWriteSuper(List data, CharacterVector sysDir, CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority);
-RcppExport SEXP _gtr_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP) {
+void gdxWriteSuper(List data, CharacterVector sysDir, CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority, bool compress);
+RcppExport SEXP _gtr_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP, SEXP compressSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type data(dataSEXP);
@@ -68,7 +68,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type uel_priority(uel_prioritySEXP);
     Rcpp::traits::input_parameter< bool >::type is_uel_priority(is_uel_prioritySEXP);
-    gdxWriteSuper(data, sysDir, fileName, uel_priority, is_uel_priority);
+    Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
+    gdxWriteSuper(data, sysDir, fileName, uel_priority, is_uel_priority, compress);
     return R_NilValue;
 END_RCPP
 }
@@ -91,7 +92,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gtr_checkAcronyms", (DL_FUNC) &_gtr_checkAcronyms, 2},
     {"_gtr_getSymbolNames", (DL_FUNC) &_gtr_getSymbolNames, 2},
     {"_gtr_getSymbols", (DL_FUNC) &_gtr_getSymbols, 2},
-    {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 5},
+    {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 6},
     {"_gtr_readSymbols", (DL_FUNC) &_gtr_readSymbols, 3},
     {NULL, NULL, 0}
 };
