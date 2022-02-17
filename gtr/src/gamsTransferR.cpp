@@ -6,10 +6,10 @@ using namespace Rcpp;
 
 void WriteData(gdxHandle_t PGX, StringVector s, 
 std::vector<double> V, int VarType, int Dim,
-std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumber) {
+std::string elemText) {
+
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
-
   gdxValues_t       Values;
 	int rc;
   GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
@@ -26,17 +26,12 @@ std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumbe
   }
   else if (VarType == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
-
-      if (elemTextToNumber.count(elemText) == 0) {
-        serialNo = serialNo + 1;
-        elemTextToNumber.insert(std::pair<std::string, int> (elemText, serialNo));
-        Values[GMS_VAL_LEVEL] = serialNo; //zero indexing in c++
+      int txtnr;
+      if (VarType == GMS_DT_SET) {
+        Rcout << "textinside Writedata " << elemText << "\n";
+        gdxAddSetText(PGX, elemText.c_str(), &txtnr);
       }
-      else {
-        Values[GMS_VAL_LEVEL] = elemTextToNumber[elemText];
-      }
-
-      // Values[GMS_VAL_LEVEL] = 1;
+      Values[GMS_VAL_LEVEL] = txtnr;
       Values[GMS_VAL_MARGINAL] = 0;
       Values[GMS_VAL_UPPER] = 0;
       Values[GMS_VAL_LOWER] = 0;
@@ -51,16 +46,8 @@ std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumbe
   else {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
   }
-  int txtnr;
-  if (VarType == GMS_DT_SET) {
-    Rcout << "textinside Writedata " << elemText << "\n";
-    gdxAddSetText(PGX, elemText.c_str(), &txtnr);
-  }
 
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
-
-
-
   return;
 }
 
@@ -215,7 +202,6 @@ bool is_uel_priority, bool compress) {
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE];
 	int         ErrNr, rc, varType;
-  std::map<std::string, int> elemTextToNumber;
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
@@ -264,7 +250,7 @@ bool is_uel_priority, bool compress) {
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
-  int elemTextCount = 0;
+  // int elemTextCount = 0;
   for (int d=0; d < data.length(); d++){
     Rcout << "inside data loop\n";
     Environment symname = data[d];
@@ -353,13 +339,11 @@ bool is_uel_priority, bool compress) {
 
 
       if (varType != GMS_DT_SET){
-        WriteData(PGX, names, values, varType, Dim, elemText, elemTextCount, elemTextToNumber);
+        WriteData(PGX, names, values, varType, Dim, elemText);
       }
       else {
 
-        Rcout << "elemTextCount " << elemTextCount << " elementText: " << elemText << "\n";
-        WriteData(PGX, names, values, varType, Dim, elemText, elemTextCount, elemTextToNumber);
-        Rcout << "elemTextCountAfter " << elemTextCount << "\n";
+        WriteData(PGX, names, values, varType, Dim, elemText);
       }
       elemText.clear();
       values.clear();
