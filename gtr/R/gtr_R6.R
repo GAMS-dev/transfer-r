@@ -822,7 +822,7 @@ Container <- R6::R6Class (
     .linkDomainCategories = function() {
       for (i in self$listSymbols()) {
         if (!inherits(self$data[[i]], "Alias")) {
-          self$data$.linkDomainCategories()
+          self$data[[i]]$.linkDomainCategories()
         }
       }
     }
