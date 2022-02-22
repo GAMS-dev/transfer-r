@@ -2551,10 +2551,10 @@ test_that("test_num_2", {
   a <- Parameter$new(m, "a", c(i, j), recs, domain_forwarding = TRUE)
 
   expect_true(is.data.frame(i$records))
-  expect_equal(i$records$uni_1, c("a", "b"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b"))
 
   expect_true(is.data.frame(j$records))
-  expect_equal(j$records$uni_1, c("c", "d"))
+  expect_equal(as.character(j$records$uni_1), c("c", "d"))
 
   m$write("gt.gdx")
 
@@ -2596,10 +2596,10 @@ test_that("test_num_3", {
   a <- Parameter$new(m, "a", c(i, j), recs, domain_forwarding = TRUE)
 
   expect_true(is.data.frame(i$records))
-  expect_equal(i$records$uni_1, c("a", "b"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b"))
 
   expect_true(is.data.frame(j$records))
-  expect_equal(j$records$uni_1, c("a", "b"))
+  expect_equal(as.character(j$records$uni_1), c("a", "b"))
   expect_equal(nrow(a$records), 2)
 
   m$write("gt.gdx")
@@ -2641,16 +2641,16 @@ test_that("test_num_4", {
 
   l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE )
   expect_true(is.data.frame(i$records))
-  expect_equal(i$records$uni_1, c("a", "b"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b"))
 
   expect_true(is.data.frame(j$records))
-  expect_equal(j$records$i_1, c("a", "b"))
+  expect_equal(as.character(j$records$i_1), c("a", "b"))
 
   expect_true(is.data.frame(k$records))
-  expect_equal(k$records$j_1, c("a", "b"))
+  expect_equal(as.character(k$records$j_1), c("a", "b"))
 
   expect_true(is.data.frame(l$records))
-  expect_equal(l$records$k_1, c("a", "b"))
+  expect_equal(as.character(l$records$k_1), c("a", "b"))
 
   m$write("gt.gdx")
 
@@ -2685,28 +2685,28 @@ test_that("test_num_5", {
   recs <- data.frame(list("i" = "c", "element_text" = "desc for elem 'c'"))
   j <- Set$new(m, "j", i, records = recs, domain_forwarding = TRUE)
   expect_true(is.data.frame(i$records))
-  expect_equal(i$records$uni_1, c("c"))
+  expect_equal(as.character(i$records$uni_1), c("c"))
   expect_true(is.data.frame(j$records))
-  expect_equal(j$records$i_1, c("c"))
+  expect_equal(as.character(j$records$i_1), c("c"))
 
   k <- Set$new(m, "k", j)
   expect_true(is.data.frame(i$records))
-  expect_equal(i$records$uni_1, c("c"))
+  expect_equal(as.character(i$records$uni_1), c("c"))
   expect_true(is.data.frame(j$records))
-  expect_equal(j$records$i_1, c("c"))
+  expect_equal(as.character(j$records$i_1), c("c"))
   expect_true(is.na(k$records))
 
   l <- Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
   expect_true(is.data.frame(i$records))
-  expect_equal(i$records$uni_1, c("c", "a", "b"))
+  expect_equal(as.character(i$records$uni_1), c("c", "a", "b"))
   expect_true(is.data.frame(j$records))
-  expect_equal(j$records$i_1, c("c", "a", "b"))
+  expect_equal(as.character(j$records$i_1), c("c", "a", "b"))
 
   expect_true(is.data.frame(k$records))
-  expect_equal(k$records$j_1, c("a", "b"))
+  expect_equal(as.character(k$records$j_1), c("a", "b"))
 
   expect_true(is.data.frame(l$records))
-  expect_equal(l$records$k_1, c("a", "b"))
+  expect_equal(as.character(l$records$k_1), c("a", "b"))
 
   m$write("gt.gdx")
 
@@ -2761,7 +2761,7 @@ test_that("test_num_6", {
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2$data$foo$records))
 
-  expect_equal(unlist(m$getUniverseSet()), m2$data$foo$records$uni_1)
+  expect_equal(as.character(m$getUniverseSet()), as.character(m2$data$foo$records$uni_1))
 }
 )
 
@@ -2801,7 +2801,7 @@ test_that("test_num_7", {
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2$data$foo$records))
 
-  expect_equal(c("a", "c", "b"), m2$data$foo$records$uni_1)
+  expect_equal(c("a", "c", "b"), as.character(m2$data$foo$records$uni_1))
   
 }
 )
@@ -2811,14 +2811,14 @@ test_that("test_num_8", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i", records = c("a", "b"))
-  expect_equal(i$records$uni_1, c("a", "b"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b"))
 
   j <- Alias$new(m, "j", i)
-  expect_equal(j$records$uni_1, c("a", "b"))
+  expect_equal(as.character(j$records$uni_1), c("a", "b"))
   expect_equal(j$aliasWith$name, "i")
 
   k <- Alias$new(m, "k", j)
-  expect_equal(k$records$uni_1, c("a", "b"))
+  expect_equal(as.character(k$records$uni_1), c("a", "b"))
   expect_equal(j$aliasWith$name, "i")
 
   #try writing
@@ -2835,10 +2835,10 @@ test_that("test_num_9", {
 
   j <- Parameter$new(m, "j", "*", records = 
   data.frame(list("col1" = c("e", "f"), "col2" = c(1, 1))))
-  expect_equal(i$records$uni_1, c("a", "b"))
-  expect_equal(i$records$uni_2, c("c", "d"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b"))
+  expect_equal(as.character(i$records$uni_2), c("c", "d"))
 
-  expect_equal(m$getUniverseSet(), list("a", "b", "c", "d", "e", "f"))
+  expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "d", "e", "f"))
 
   #just try writing to see if there are any errors
   m$write("out.gdx")
@@ -2855,18 +2855,17 @@ test_that("test_num_10", {
   j <- Set$new(m, "j")
   expect_true(is.na(j$records))
 
-  a = Parameter$new(m, "a", list(i, j), domain_forwarding=TRUE)
+  a <- Parameter$new(m, "a", list(i, j), domain_forwarding=TRUE)
 
-  df = data.frame(list("i_1"= c("a", "b"), 
+  df <- data.frame(list("i_1"= c("a", "b"),
   "j_2" = c("c", "d"), "value" = c(1, 1)))
 
-  a$records = df
+  a$records <- df
 
-  expect_equal(i$records$uni_1, c("a", "b"))
-  expect_equal(j$records$uni_1, c("c", "d"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b"))
+  expect_equal(as.character(j$records$uni_1), c("c", "d"))
 
   #try writing
   m$write("out.gdx")
 }
 )
-
