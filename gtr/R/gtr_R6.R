@@ -249,9 +249,9 @@ Container <- R6::R6Class (
           }
         }
         private$linkDomainObjects(symbolsToRead)
-
-        # check validity
-        validSymbols = self$listSymbols(isValid = TRUE)
+        self$.linkDomainCategories()
+        # # check validity
+        # validSymbols = self$listSymbols(isValid = TRUE)
       }
     },
 
@@ -816,6 +816,14 @@ Container <- R6::R6Class (
 
       if (self$.requiresStateCheck == TRUE) {
         private$check()
+      }
+    },
+
+    .linkDomainCategories = function() {
+      for (i in self$listSymbols()) {
+        if (!inherits(self$data[[i]], "Alias")) {
+          self$data$.linkDomainCategories()
+        }
       }
     }
 
@@ -1746,8 +1754,98 @@ Symbol <- R6Class(
       return(TRUE)
     }
 
+  },
+
+  shape = function() {
+    if (self$domain_type() == "regular") {
+      shapelist = list()
+      for (d in self$domain) {
+        shapelist = append(shapelist, nrow(d$records))
+      }
+      return(shapelist)
+    }
+
+    if (!any(is.na(self$records))) {
+      if (self$domain_type() == "none" || self$domain_type() == "relaxed") {
+        shapelist = list()
+        for (i in (1:self$dimension)) {
+          shapelist = append(shapelist, length(unique(self$records[, i])))
+        }
+        return(shapelist)
+      }
+    }
+    else {
+      return(NA)
+    }
+  },
+
+  toDense = function(column = "level") {
+    if (!is.character(column)) {
+      stop("Argument 'column' must be type str")
+    }
+    if (inherits(self, "Parameter")) {
+      column = "value"
+    }
+    else {
+      if (!any(private$attr() == column)) {
+        stop(paste0("Argument 'column' must be one 
+        of the following: ", self$attr()))
+      }
+    }
+
+    if (self$isValid() == FALSE) {
+      stop("Cannot create dense array (i.e., matrix) format because symbol 
+      is invalid -- use .isValid(verbose=TRUE) to debug symbol state.")
+    }
+
+    if (any(!is.na(self$records))) {
+      if (self$dimension  == 0) {
+        return(self$records[[column]])
+      }
+      else {
+        a = array(0, dim = unlist(self$shape()))
+        idx = lapply(self$records[,1:self$dimension], as.numeric)
+        # df = self$records
+        # for (i in (1:self$dimension)) {
+        #   d = self$domain[[i]]
+        #   if ((inherits(d, "Set")) || (inherits(d, "Alias"))) {
+        #     f = factor(d$records[,1])
+        #   }
+        #   df[, i] = factor(df[,i], levels = d$records[, 1])
+        # }
+
+        # idx = lapply(df[,1:self$dimension], as.numeric)
+
+        a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
+        return(a)
+      }
+    }
+    else {
+      return(NA)
+    }
+  },
+
+  .linkDomainCategories = function() {
+    if ((!any(is.na(self$records))) &&(!inherits(self, "Alias"))) {
+      for (n in seq_along(self$domain)) {
+        i  = self$domain[[n]]
+        if (((inherits(i, "Alias")) || (inherits(i, "Set"))) 
+        && (!any(is.na(i$records)))) {
+          if (i$isValid()) {
+            private$.records[, n] = factor(private$.records[, n], levels = i$records[, 1], ordered = TRUE)
+          }
+          else {
+            private$.records[, n] = factor(private$.records[, n], ordered = TRUE)
+          }
+        }
+        else {
+          private$.records[, n] = factor(private$.records[, n], ordered = TRUE)
+        }
+      }
+    }
   }
   ),
+
   active = list(
 
     records = function(records_input) {
@@ -1763,20 +1861,23 @@ Symbol <- R6Class(
         if (any(!is.na(self$records))) {
           if (self$domain_forwarding == TRUE) {
             private$domainForwarding()
-            # link domain (set incorrect elements to NA)
-            for (i in seq_along(self$domain)) {
-              d <- self$domain[[i]]
-
-              if (inherits(d, "Set") || inherits(d, "Alias")) {
-                if (d$isValid() && self$isValid()) {
-                  violations = is.element(self$records[, i], 
-                  d$records[, 1])
-                  if (any(violations) == FALSE) {
-                    self$records[!(violations), ][, i] <- NA
-                  }
-                }
-              }
+            if (inherits(self$ref_container, "Container")) {
+              self$ref_container$.linkDomainCategories()
             }
+            # link domain (set incorrect elements to NA)
+            # for (i in seq_along(self$domain)) {
+            #   d <- self$domain[[i]]
+
+            #   if (inherits(d, "Set") || inherits(d, "Alias")) {
+            #     if (d$isValid() && self$isValid()) {
+            #       violations = is.element(self$records[, i], 
+            #       d$records[, 1])
+            #       if (any(violations) == FALSE) {
+            #         self$records[!(violations), ][, i] <- NA
+            #       }
+            #     }
+            #   }
+            # }
 
             for (i in self$ref_container$listSymbols()) {
               self$ref_container$data[[i]]$.requiresStateCheck = TRUE
@@ -1786,20 +1887,22 @@ Symbol <- R6Class(
           }
           else {
               #link domain
-              for (i in seq_along(self$domain)) {
-                d <- self$domain[[i]]
-                if (inherits(d, "Set") || inherits(d, "Alias")) {
-                  if (d$isValid() && self$isValid()) {
-                    violations = is.element(self$records[, i], 
-                    d$records[, 1])
-                    if (any(violations) == FALSE) {
-                      self$records[!(violations), ][, i] <- NA
-                    }
-                  }
-                }
-              }
+              # for (i in seq_along(self$domain)) {
+              #   d <- self$domain[[i]]
+              #   if (inherits(d, "Set") || inherits(d, "Alias")) {
+              #     if (d$isValid() && self$isValid()) {
+              #       violations = is.element(self$records[, i], 
+              #       d$records[, 1])
+              #       if (any(violations) == FALSE) {
+              #         self$records[!(violations), ][, i] <- NA
+              #       }
+              #     }
+              #   }
+              # }
               self$.requiresStateCheck = TRUE
-              self$ref_container$.requiresStateCheck = TRUE
+              if (inherits(self$ref_container, "Container")) {
+                self$ref_container$.requiresStateCheck = TRUE
+              }
           }
         }
       }
@@ -1984,6 +2087,7 @@ Symbol <- R6Class(
         }
       }
     }
+
   ),
 
   private = list(
@@ -2243,6 +2347,7 @@ Set <- R6Class(
       colnames(records) = columnNames
 
       self$records = records
+      self$.linkDomainCategories()
     },
 
     isAlias = function() {
@@ -2328,6 +2433,7 @@ Parameter <- R6Class(
         stop("All entries in the 'values' column of a parameter must be numeric.")
       }
       self$records = records
+      self$.linkDomainCategories()
     }
 
   )
@@ -2366,6 +2472,7 @@ Variable <- R6Class(
       colnames(records) = columnNames
 
       self$records = records
+      self$.linkDomainCategories()
     }
   )
   )
@@ -2437,6 +2544,7 @@ Equation <- R6Class(
       columnNames = append(columnNames, private$attr())
       colnames(records) = columnNames
       self$records = records
+      self$.linkDomainCategories()
     }
   ),
 
