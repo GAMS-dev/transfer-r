@@ -127,6 +127,7 @@ Container <- R6::R6Class (
       print(self$systemDirectory)
       acrInfo = checkAcronyms(load_from, self$systemDirectory)
       nAcr = acrInfo[["nAcronyms"]]
+      print(paste("number of acronyms", nAcr))
       if (nAcr != 0) {
         warning("GDX file contains acronyms. 
         Acronyms are not supported and are set to GAMS NA.")
@@ -232,18 +233,22 @@ Container <- R6::R6Class (
             if (inherits(self$data[[s$names]], "Parameter")
             | inherits(self$data[[s$names]], "Variable")
             | inherits(self$data[[s$names]], "Equation")) {
-              for (d in 1:self$data[[s$names]]$dimension) {
-                for (a in self$acronyms) {
-                  col = self$data[[s$names]]$records[,d]
-                  if (any(col == a * 1e301)) {
-                    idx = which(col == a * 1e301)
-                    for (id in idx) {
-                      self$data[[s$names]]$records[id, d] = 
-                      SpecialValues[["NA"]]
-                    }
-                  }
-                }
+              for (a in self$acronyms) {
+                self$data[[s$names]]$records[(self$data[[s$names]]$records 
+                == a * 1e301)] = SpecialValues[["NA"]]
               }
+              # for (d in 1:self$data[[s$names]]$dimension) {
+              #   for (a in self$acronyms) {
+              #     col = self$data[[s$names]]$records[,d]
+              #     if (any(col == a * 1e301)) {
+              #       idx = which(col == a * 1e301)
+              #       for (id in idx) {
+              #         self$data[[s$names]]$records[id, d] = 
+              #         SpecialValues[["NA"]]
+              #       }
+              #     }
+              #   }
+              # }
 
             }
           }

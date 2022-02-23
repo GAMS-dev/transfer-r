@@ -80,9 +80,10 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   std::string myname = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   List L;
-  int rc;
+  int rc, errCode;
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  gdxOpenRead(PGX, myname.c_str(), &errCode);
 
   // check acronyms
   int nAcronym;
@@ -100,6 +101,7 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   else {
     L = List::create(_["nAcronyms"]=nAcronym);
   }
+  if (gdxClose(PGX)) Rcout << "Error4" << "\n";
   return L;
 
 }
