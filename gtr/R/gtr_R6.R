@@ -281,11 +281,11 @@ Container <- R6::R6Class (
         stop("Argument 'name' must contain only type character")
       }
 
-      for (n in names) {
+      for (n in name) {
         self$data[[n]] <- NULL
       }
 
-      private$checkOn()
+      self$.requiresStateCheck = TRUE
     },
 
     renameSymbols = function(old_name = NA, new_name = NA) {
@@ -303,7 +303,7 @@ Container <- R6::R6Class (
 
       if (old_name != new_name) {
         self$data[[old_name]]$name = new_name
-        self$checkOn()
+        self$.requiresStateCheck = TRUE
       }
     },
 
