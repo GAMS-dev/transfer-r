@@ -293,12 +293,14 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
     },
 
-    renameSymbols = function(old_name = NA, new_name = NA) {
-      if (is.character(old_name)) {
+    renameSymbol = function(old_name = NA, new_name = NA) {
+      print(paste("old name", old_name))
+      print(paste("new_name", new_name))
+      if (!is.character(old_name)) {
         stop("Argument 'old_name' must be type character")
       }
 
-      if (is.character(new_name)) {
+      if (!is.character(new_name)) {
         stop("Argument 'new_name' must be type character")
       }
 
@@ -307,7 +309,8 @@ Container <- R6::R6Class (
       }
 
       if (old_name != new_name) {
-        self$data[[old_name]]$name = new_name
+        sym = self$data[[old_name]]
+        sym$name = new_name
         self$.requiresStateCheck = TRUE
       }
     },
@@ -2087,6 +2090,12 @@ Symbol <- R6Class(
         else {
           if (private$.name != name_input) {
             self$.requiresStateCheck = TRUE
+
+            refcontainer = private$.ref_container
+
+            datalist = refcontainer$data
+            names(datalist)[names(datalist)== private$.name] = name_input
+            refcontainer$data = datalist
           }
           private$.name = name_input
         }
