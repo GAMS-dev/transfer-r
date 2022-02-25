@@ -263,7 +263,7 @@ Container <- R6::R6Class (
     getUniverseSet = function() {
       uni = list()
       for (i in self$listSymbols(isValid = TRUE)) {
-        if (!any(is.na(self$data[[i]]$records))) {
+        if (any(!is.na(self$data[[i]]$records))) {
           uni = append(uni, data.frame(unlist(x = 
           self$data[[i]]$records[,(1:self$data[[i]]$dimension)]))[, 1])
         }
@@ -1058,6 +1058,16 @@ Symbol <- R6Class(
     }
   },
 
+  findDomainViolations = function() {
+    idx = which(is.na(self$records[,(1:self$dimension)]), arr.ind = TRUE)
+    if (self$dimension > 1) {
+      return(idx[, 1])
+    }
+    else {
+      return(idx)
+    }
+  },
+
   domain_type = function() {
     regularCheck = list()
     for (d in self$domain) {
@@ -1773,7 +1783,7 @@ Symbol <- R6Class(
       return(shapelist)
     }
 
-    if (!any(is.na(self$records))) {
+    if (any(!is.na(self$records))) {
       if (self$domain_type() == "none" || self$domain_type() == "relaxed") {
         shapelist = list()
         for (i in (1:self$dimension)) {
@@ -1834,11 +1844,11 @@ Symbol <- R6Class(
   },
 
   .linkDomainCategories = function() {
-    if ((!any(is.na(self$records))) &&(!inherits(self, "Alias"))) {
+    if ((any(!is.na(self$records))) &&(!inherits(self, "Alias"))) {
       for (n in seq_along(self$domain)) {
         i  = self$domain[[n]]
         if (((inherits(i, "Alias")) || (inherits(i, "Set"))) 
-        && (!any(is.na(i$records)))) {
+        && (any(!is.na(i$records)))) {
           if (i$isValid()) {
             private$.records[, n] = factor(private$.records[, n], levels = i$records[, 1], ordered = TRUE)
           }
@@ -2149,16 +2159,23 @@ Symbol <- R6Class(
         # if regular domain, symbols in domain must be valid
         if (self$domain_type() == "regular") {
           for (i in self$domain) {
-            if (!( ( (inherits(i, "Set") || inherits(i, "Alias")) && 
-            (any(names(self$ref_container$data) == i$name))) ) ||
-            ( (is.character(i)) && 
-            ( any(names(self$ref_container$data) == i))
-             )) {
+            if (!any(names(self$ref_container$data) == i$name)) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the object reference is not in the", 
               " Container anymore -- must reset domain for symbol ", 
               self$name))
+
             }
+            # if (!( ( (inherits(i, "Set") || inherits(i, "Alias")) && 
+            # (any(names(self$ref_container$data) == i$name))) ) ||
+            # ( (is.character(i)) && 
+            # ( any(names(self$ref_container$data) == i))
+            #  )) {
+            #   stop(paste0("symbol defined over domain symbol ",
+            #   i$name, " however, the object reference is not in the", 
+            #   " Container anymore -- must reset domain for symbol ", 
+            #   self$name))
+            # }
           }
 
           for (i in self$domain) {
@@ -2169,9 +2186,8 @@ Symbol <- R6Class(
             }
           }
         }
-
         # if records exist, check consistency
-        if (!any(is.na(self$records))) {
+        if (any(!is.na(self$records))) {
           if (inherits(self, "Set")){
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
@@ -2225,8 +2241,14 @@ Symbol <- R6Class(
             stop("Domain columns in symbol 'records' must be of type character")
           }
 
-          # check for domain violations
+          # check if columns are factors
+          for (i in self$domainLabels()) {
+            if (!is.factor(self$records[[i]])) {
+              stop(paste0("Domain information in column ", i, " must be a factor"))
+            }
+          }
 
+          # check for domain violations
           if (self$dimension != 0) {
             nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
             narecords = self$records[,1:self$dimension][is.na(self$records[,1:self$dimension])]
@@ -2235,7 +2257,7 @@ Symbol <- R6Class(
             length(narecords) != 0 ) {
               stop(paste0("Symbol 'records' contain domain violations;",
               " ensure that all domain elements have",
-              " been mapped properly to a category"))
+              " been mapped properly to a factor"))
             }
           }
 
