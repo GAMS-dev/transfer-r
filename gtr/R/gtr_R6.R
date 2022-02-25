@@ -413,7 +413,7 @@ Container <- R6::R6Class (
       return(equations)
     },
 
-    addSet = function(name, domain = NA, is_singleton = FALSE,
+    addSet = function(name, domain = "*", is_singleton = FALSE,
     records = NA, domain_forwarding=FALSE, description = "") {
       Set$new(
       self, name, domain, is_singleton,
