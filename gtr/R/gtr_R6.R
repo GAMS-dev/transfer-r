@@ -823,8 +823,20 @@ Container <- R6::R6Class (
       }
 
       if (self$.requiresStateCheck == TRUE) {
-        private$check()
-      }
+      tryCatch(
+        {
+          private$check()
+          return(TRUE)
+        },
+        error = function(e) {
+          message(e)
+          return(FALSE)
+        }
+      )
+    }
+    else {
+      return(TRUE)
+    }
     },
 
     .linkDomainCategories = function() {
