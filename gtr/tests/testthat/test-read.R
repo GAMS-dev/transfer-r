@@ -2490,6 +2490,7 @@ test_that("readwritetest", {
 }
 )
 
+
 test_that("test_num_1", {
   m <- Container$new()
   expect_true(inherits(m, "Container"))
@@ -2867,5 +2868,338 @@ test_that("test_num_10", {
 
   #try writing
   m$write("out.gdx")
+}
+)
+
+test_that("test_num_11", {
+  m <- Container$new()
+  expect_true(inherits(m, "Container"))
+
+  i <- Set$new(m, "i", records = c("a", "b", "c"))
+  expect_equal(as.character(i$records$uni_1), c("a", "b", "c"))
+
+
+  j <- Parameter$new(m, "j", i, 
+  records = data.frame("j"=c("a", "c"), "val" = c(1, 2)))
+  expect_equal(as.character(j$records$i_1), c("a", "c"))
+  expect_equal(j$records$value, c(1, 2))
+
+  m$removeSymbols(c("i", "j"))
+
+  i <- Set$new(m, "i", records = c("a", "b", "c", "d"))
+  j <- Parameter$new(m, "j", i, 
+  records = data.frame("i"= c("a", "c"), "val" = c(1, 2)))
+  expect_equal(j$toDense(), array(c(1,0,2,0)))
+  m$write("out.gdx")
+}
+)
+
+test_that("test_num_12", {
+  # gams syntax
+  gams_text = "
+        set i / i1 * i3 /;
+        acronym
+          small 'baby bear'
+          medium 'mama bear'
+          large 'papa bear'
+          ;
+          parameter b(i) /
+          i1 1
+          i2 medium
+          i3 large
+          /;
+        execute_unload '%system.fn%.gdx';
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  testthat::expect_warning(Container$new(testthat::test_path("data.gdx")))
+}
+)
+
+test_that("test_num_13", {
+  m  = Container$new()
+  i = Set$new(m, "i", records=c("a", "b", "c"))
+  j = Set$new(m, "j", records=c("d", "e", "f"))
+  a = Parameter$new(m, "a", i, records=data.frame("i"=c("a","c"),"val"=c(1, 2) ))
+  b = Parameter$new(m, "b", j, records=data.frame("j"=c("e","f"),"val"=c(1, 2) ))
+
+  m$removeSymbols("i")
+  expect_equal(names(m$data), c("j", "a", "b"))
+
+  m$removeSymbols(c("a", "b"))
+  expect_equal(names(m$data), c("j"))
+
+  m$write("out.gdx")
+}
+)
+
+
+test_that("test_num_14", {
+  m  = Container$new()
+  i = Set$new(m, "i", records=c("a", "b", "c"))
+
+  expect_equal(names(m$data), c("i"))
+
+  m$renameSymbol("i", "h")
+  expect_equal(names(m$data), c("h"))
+
+  m$write("out.gdx")
+}
+)
+
+test_that("test_num_15", {
+  m  = Container$new()
+  i = Set$new(m, "i", records=c("a", "b", "c"))
+  a = Parameter$new(m, "a", i, records=data.frame(c("aa", "c"), c(1, 2)))
+
+  expect_equal(a$findDomainViolations(), 1)
+  # expect_equal(a$isValid(), TRUE)
+    expect_error(a$isValid())
+}
+)
+
+test_that("test_num_16", {
+  m  = Container$new()
+  i = Set$new(m, "i")
+  j = Set$new(m, "j", i, records = c("a", "b"), domain_forwarding = TRUE)
+  k = Set$new(m, "k")
+  l = Set$new(m, "l", k, records = c("c"), domain_forwarding = TRUE)
+  a = Parameter$new(m, "a", l, records = data.frame(c("aa", "c"), c(1, 2)), domain_forwarding = TRUE)
+
+  # check container
+  expect_equal(m$.requiresStateCheck, TRUE)
+  expect_equal(m$isValid(), TRUE)
+  expect_equal(m$.requiresStateCheck, FALSE)
+
+  expect_equal(as.character(m$data[["l"]]$records$k_1), c("c", "aa"))
+  expect_equal(as.character(m$data[["k"]]$records$uni_1), c("c", "aa"))
+  expect_equal(as.character(m$data[["j"]]$records$i_1), c("a", "b"))
+  expect_equal(as.character(m$data[["i"]]$records$uni_1), c("a", "b"))
+
+  expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
+  expect_equal(a$isValid(), TRUE)
+  expect_equal(l$isValid(), TRUE)
+}
+)
+
+test_that("test_num_17", {
+  m  = Container$new()
+  m$addSet("i")
+  m$addSet("j", m$data[["i"]], records = c("a", "b"), domain_forwarding = TRUE)
+  m$addSet("k")
+  m$addSet("l", m$data[["k"]], records = c("c"), domain_forwarding = TRUE)
+
+  m$addParameter("a", m$data[["l"]], records = data.frame(c("aa", "c"), c(1, 2)), domain_forwarding = TRUE)
+
+  # check container
+  expect_equal(m$.requiresStateCheck, TRUE)
+  expect_equal(m$isValid(), TRUE)
+  expect_equal(m$.requiresStateCheck, FALSE)
+
+  expect_equal(as.character(m$data[["l"]]$records$k_1), c("c", "aa"))
+  expect_equal(as.character(m$data[["k"]]$records$uni_1), c("c", "aa"))
+  expect_equal(as.character(m$data[["j"]]$records$i_1), c("a", "b"))
+  expect_equal(as.character(m$data[["i"]]$records$uni_1), c("a", "b"))
+
+  expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
+
+  expect_equal(m$listSymbols(isValid = FALSE), NULL)
+}
+)
+
+test_that("test_num_18", {
+
+    default_values = list(
+    "binary" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 0.0,
+        "upper" = 1.0,
+        "scale" = 1.0
+    ),
+    "integer" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 0.0,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "positive" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 0.0,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "negative" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = 0.0,
+        "scale" = 1.0
+    ),
+    "free" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "sos1" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 0.0,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "sos2" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 0.0,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "semicont" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 1.0,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "semiint" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = 1.0,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    )
+  )
+  m  = Container$new()
+  df = data.frame("domain"=c("i0"))
+
+  types = c(
+    "binary",
+    "integer",
+    "positive",
+    "negative",
+    "free",
+    "sos1",
+    "sos2",
+    "semicont",
+    "semiint"
+  )
+
+  for (i in types) {
+    varname = paste0("a_", i)
+    m$addVariable(varname, i, "*", records = df)
+
+    expect_equal(colnames(m$data[[varname]]$records),
+    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+
+    expect_equal(m$data[[varname]]$records[1, "level"], 
+    default_values[[i]][["level"]])
+
+    expect_equal(m$data[[varname]]$records[1, "marginal"], 
+    default_values[[i]][["marginal"]])
+
+    expect_equal(m$data[[varname]]$records[1, "lower"], 
+    default_values[[i]][["lower"]])
+
+    expect_equal(m$data[[varname]]$records[1, "upper"], 
+    default_values[[i]][["upper"]])
+
+    expect_equal(m$data[[varname]]$records[1, "scale"], 
+    default_values[[i]][["scale"]])
+  }
+}
+)
+
+test_that("test_num_19", {
+
+  default_values = list(
+    "eq" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "geq" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "leq" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "nonbinding" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "cone" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "external" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    ),
+    "boolean" = list(
+        "level" = 0.0,
+        "marginal" = 0.0,
+        "lower" = SpecialValues$NEGINF,
+        "upper" = SpecialValues$POSINF,
+        "scale" = 1.0
+    )
+  )
+
+  m  = Container$new()
+  df = data.frame("domain"= c("i0"))
+
+  types = c(
+  "eq", "geq", "leq", "nonbinding", "cone", "external", "boolean"
+  )
+
+  for (i in types) {
+    eqname = paste0("a_", i)
+    m$addEquation(eqname, i, "*", records = df)
+
+    expect_equal(colnames(m$data[[eqname]]$records),
+    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+
+    expect_equal(m$data[[eqname]]$records[1, "level"], 
+    default_values[[i]][["level"]])
+
+    expect_equal(m$data[[eqname]]$records[1, "marginal"], 
+    default_values[[i]][["marginal"]])
+
+    expect_equal(m$data[[eqname]]$records[1, "lower"], 
+    default_values[[i]][["lower"]])
+
+    expect_equal(m$data[[eqname]]$records[1, "upper"], 
+    default_values[[i]][["upper"]])
+
+    expect_equal(m$data[[eqname]]$records[1, "scale"], 
+    default_values[[i]][["scale"]])
+  }
 }
 )
