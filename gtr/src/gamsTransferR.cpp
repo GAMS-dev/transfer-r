@@ -6,10 +6,10 @@ using namespace Rcpp;
 
 void WriteData(gdxHandle_t PGX, StringVector s, 
 std::vector<double> V, int VarType, int Dim,
-std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumber) {
+std::string elemText) {
+
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
-
   gdxValues_t       Values;
 	int rc;
   GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
@@ -26,17 +26,12 @@ std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumbe
   }
   else if (VarType == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
-
-      if (elemTextToNumber.count(elemText) == 0) {
-        serialNo = serialNo + 1;
-        elemTextToNumber.insert(std::pair<std::string, int> (elemText, serialNo));
-        Values[GMS_VAL_LEVEL] = serialNo; //zero indexing in c++
+      int txtnr;
+      if (VarType == GMS_DT_SET) {
+        Rcout << "textinside Writedata " << elemText << "\n";
+        gdxAddSetText(PGX, elemText.c_str(), &txtnr);
       }
-      else {
-        Values[GMS_VAL_LEVEL] = elemTextToNumber[elemText];
-      }
-
-      // Values[GMS_VAL_LEVEL] = 1;
+      Values[GMS_VAL_LEVEL] = txtnr;
       Values[GMS_VAL_MARGINAL] = 0;
       Values[GMS_VAL_UPPER] = 0;
       Values[GMS_VAL_LOWER] = 0;
@@ -51,16 +46,8 @@ std::string elemText, int &serialNo, std::map<std::string, int> &elemTextToNumbe
   else {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
   }
-  int txtnr;
-  if (VarType == GMS_DT_SET) {
-    Rcout << "textinside Writedata " << elemText << "\n";
-    gdxAddSetText(PGX, elemText.c_str(), &txtnr);
-  }
 
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
-
-
-
   return;
 }
 
@@ -93,9 +80,10 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   std::string myname = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   List L;
-  int rc;
+  int rc, errCode;
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  gdxOpenRead(PGX, myname.c_str(), &errCode);
 
   // check acronyms
   int nAcronym;
@@ -113,6 +101,7 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   else {
     L = List::create(_["nAcronyms"]=nAcronym);
   }
+  if (gdxClose(PGX)) Rcout << "Error4" << "\n";
   return L;
 
 }
@@ -205,19 +194,21 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 }
 
 // [[Rcpp::export]]
-void gdxWriteSuper(List data,
-CharacterVector sysDir, CharacterVector fileName) {
+void gdxWriteSuper(List data, CharacterVector sysDir, 
+CharacterVector fileName, CharacterVector uel_priority, 
+bool is_uel_priority, bool compress) {
   Rcout << "here2\n";
+  std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE];
-	int         ErrNr, rc, varType;
-  std::map<std::string, int> elemTextToNumber;
+	int         ErrNr, rc, varType, varSubType;
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
   Rcout << "here1\n";
+
 	if (!gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg))) {
 		Rcout << "**** Could not load GDX library" << "\n" << "**** " << Msg << "\n";
 	}
@@ -235,8 +226,24 @@ CharacterVector sysDir, CharacterVector fileName) {
 	gdxGetDLLVersion(PGX, Msg);
 
 	/* Write demand data */
-	rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
-	if (ErrNr) Rcout << "Error1" << "\n";
+  if (!compress) {
+    rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
+    if (ErrNr) Rcout << "Error1" << "\n";
+  }
+  else {
+    rc = gdxOpenWriteEx(PGX, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
+  }
+
+  // register UELs
+  int UELno;
+  if (is_uel_priority) {
+    rc = gdxUELRegisterStrStart(PGX);
+    for (int i = 0; i < uel_priority.length(); i++) {
+      myUEL = uel_priority(i);
+      rc = gdxUELRegisterStr(PGX, myUEL.c_str(), &UELno);
+    }
+    gdxUELRegisterDone(PGX);
+  }
   // std::string mysym, varTypeStr;
   DataFrame df;
   List domain;
@@ -245,14 +252,15 @@ CharacterVector sysDir, CharacterVector fileName) {
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
-  int elemTextCount = 0;
+  // int elemTextCount = 0;
   for (int d=0; d < data.length(); d++){
     Rcout << "inside data loop\n";
     Environment symname = data[d];
     Rcout << "got symname\n";
     std::string mysym = symname["name"];
     Rcout << "here3 " << mysym << "\n";
-    varType = symname["type"];
+    varType = symname[".gams_type"];
+    varSubType = symname[".gams_subtype"];
 
     if (varType == GMS_DT_ALIAS) {
       Rcout << "herehere\n";
@@ -269,7 +277,6 @@ CharacterVector sysDir, CharacterVector fileName) {
     df = symname["records"];
     // domain = symname["domainstr"];
 
-    
     domain = symname["domain"];
     Rcout << "symbol: " << mysym << "\n";
     List domainstr;
@@ -288,7 +295,7 @@ CharacterVector sysDir, CharacterVector fileName) {
     Rcout << "varType " << varType << "\n";
     Rcout << "mysym " << mysym << "\n";
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
-    expltxt.c_str(), Dim, varType, 0))
+    expltxt.c_str(), Dim, varType, varSubType))
     Rcout << "Error2" << "\n";
 
     for (int D=0; D < Dim; D++) {
@@ -334,13 +341,11 @@ CharacterVector sysDir, CharacterVector fileName) {
 
 
       if (varType != GMS_DT_SET){
-        WriteData(PGX, names, values, varType, Dim, elemText, elemTextCount, elemTextToNumber);
+        WriteData(PGX, names, values, varType, Dim, elemText);
       }
       else {
 
-        Rcout << "elemTextCount " << elemTextCount << " elementText: " << elemText << "\n";
-        WriteData(PGX, names, values, varType, Dim, elemText, elemTextCount, elemTextToNumber);
-        Rcout << "elemTextCountAfter " << elemTextCount << "\n";
+        WriteData(PGX, names, values, varType, Dim, elemText);
       }
       elemText.clear();
       values.clear();
@@ -350,6 +355,7 @@ CharacterVector sysDir, CharacterVector fileName) {
     if (!gdxDataWriteDone(PGX)) Rcout << "Error3" << "\n";
   }
   Rcout << "here4\n";
+  gdxAutoConvert(PGX, 0);
   if (gdxClose(PGX)) Rcout << "Error4" << "\n";
   return;
 }

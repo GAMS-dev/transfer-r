@@ -13,3 +13,4 @@ LinkingTo: Rcpp
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+RoxygenNote: 7.1.1
