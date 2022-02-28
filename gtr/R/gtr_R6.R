@@ -42,7 +42,6 @@ SpecialValues = list(
 #' @field data is a list containgin all symbols
 #' @examples
 #' Container$new()
-#' \href{../../gtr/html/Container.html#method-read}{\code{Container$read()}}
 #' @export
 Container <- R6::R6Class (
   "Container",
