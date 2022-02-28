@@ -117,7 +117,7 @@ Container <- R6::R6Class (
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx")
         }
-        load_from = R.utils::getAbsolutePath(load_from)
+        load_from = R.utils::getAbsolutePath(path.expand(load_from))
         if (!file.exists(load_from)) {
           stop(paste0("File ", load_from, " doesn't exist"))
         }
@@ -704,7 +704,8 @@ Container <- R6::R6Class (
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx")
         }
-        gdxout = R.utils::getAbsolutePath(gdxout)
+
+        gdxout = R.utils::getAbsolutePath(path.expand(gdxout))
         # if (!file.exists(gdxout)) {
         #   stop(paste0("File ", gdxout, " doesn't exist"))
         # }
