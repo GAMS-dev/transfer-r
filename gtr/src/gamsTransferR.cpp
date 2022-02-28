@@ -3,8 +3,10 @@
 #include "gdxcc.h"
 #include "gclgms.h"
 using namespace Rcpp;
+std::string error_message = "Something went wrong. Please "
+"contact support@gams.com with a minimal reproducible example.";
 
-void WriteData(gdxHandle_t PGX, StringVector s, 
+void WriteData(gdxHandle_t PGX, StringVector s,
 std::vector<double> V, int VarType, int Dim,
 std::string elemText) {
 
@@ -48,6 +50,7 @@ std::string elemText) {
   }
 
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
+  if (!rc) stop("error calling gdxDataWriteStr");
   return;
 }
 
@@ -61,6 +64,7 @@ gdxSVals_t sVals;
 int rc;
 std::string mysysDir = Rcpp::as<std::string>(sysDir);
 rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+if (!rc) stop("Error creating GDX object: %s", Msg);
 
 gdxGetSpecialValues (PGX, sVals);
 List L = List::create(
@@ -83,6 +87,8 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   int rc, errCode;
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  if (!rc) stop("Error creating GDX object: %s", Msg);
+
   gdxOpenRead(PGX, myname.c_str(), &errCode);
 
   // check acronyms
@@ -101,7 +107,7 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   else {
     L = List::create(_["nAcronyms"]=nAcronym);
   }
-  if (gdxClose(PGX)) Rcout << "Error4" << "\n";
+  if (gdxClose(PGX)) stop("Error in closing GDX file");
   return L;
 
 }
@@ -115,9 +121,11 @@ List getSymbolNames(CharacterVector gdxName, CharacterVector sysDir) {
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  if (!rc) stop("Error creating GDX object: %s", Msg);
+
   gdxOpenRead(PGX, myname.c_str(), &errCode);
 
-  rc = gdxSystemInfo(PGX, &symCount, &UelCount);
+  gdxSystemInfo(PGX, &symCount, &UelCount);
 
 
   List L1;
@@ -148,13 +156,15 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  if (!rc) stop("Error creating GDX object: %s", Msg);
+
   Rcout << "gdxcreate return code: " << rc << "\n";
   Rcout << "gdxcreate message: " << Msg << "\n";
   gdxOpenRead(PGX, myname.c_str(), &errCode);
   Rcout << "Filename: " << myname << "\n";
   Rcout << "open read return code: " << errCode << "\n";
 
-  rc = gdxSystemInfo(PGX, &symCount, &UelCount);
+  gdxSystemInfo(PGX, &symCount, &UelCount);
   Rcout << "symbol count: " << symCount << "\n";
 
   List templist, L1;
@@ -166,6 +176,7 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
     gdxSymbolInfoX(PGX, i, &nrecs, &subtype, explText);
 
       rc = gdxSymbolGetDomainX(PGX, i, domains_ptr);
+      if (!rc) stop("Error calling gdxSymbolGetDomainX");
       for (int j=0; j < sym_dimension; j++) {
       domain.push_back(domains_ptr[j]);
 		  }
@@ -209,9 +220,9 @@ bool is_uel_priority, bool compress) {
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
   Rcout << "here1\n";
 
-	if (!gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg))) {
-		Rcout << "**** Could not load GDX library" << "\n" << "**** " << Msg << "\n";
-	}
+  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  if (!rc) stop("Error creating GDX object: %s", Msg);
+
   gdxSVals_t sVals;
   gdxGetSpecialValues(PGX, sVals);
 
@@ -228,19 +239,22 @@ bool is_uel_priority, bool compress) {
 	/* Write demand data */
   if (!compress) {
     rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
-    if (ErrNr) Rcout << "Error1" << "\n";
+    if (!rc) stop("Error opening the file %s with error code %i", myFileName, ErrNr);
   }
   else {
     rc = gdxOpenWriteEx(PGX, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
+    if (!rc) stop("Error opening the file %s with error code %i", myFileName, ErrNr);
   }
 
   // register UELs
   int UELno;
   if (is_uel_priority) {
     rc = gdxUELRegisterStrStart(PGX);
+    if (!rc) stop("Error in gdxUELRegisterStrStart.");
     for (int i = 0; i < uel_priority.length(); i++) {
       myUEL = uel_priority(i);
       rc = gdxUELRegisterStr(PGX, myUEL.c_str(), &UELno);
+      if (!rc) stop("Error registering UEL: %s", myUEL);
     }
     gdxUELRegisterDone(PGX);
   }
@@ -352,11 +366,11 @@ bool is_uel_priority, bool compress) {
     }
     Rcout << "here5\n";
 
-    if (!gdxDataWriteDone(PGX)) Rcout << "Error3" << "\n";
+    if (!gdxDataWriteDone(PGX)) stop("Error finishing the write operation with gdxDataWriteDone");
   }
   Rcout << "here4\n";
   gdxAutoConvert(PGX, 0);
-  if (gdxClose(PGX)) Rcout << "Error4" << "\n";
+  if (gdxClose(PGX)) stop("Error in closing GDX file");
   return;
 }
 
@@ -388,9 +402,11 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
 
   // find symbol in the gdx
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
+  if (!rc) stop("Error creating GDX object: %s", Msg);
 
   gdxOpenRead(PGX, mygdxName.c_str(), &ErrNr);
-  if (ErrNr) Rcout << "Error1" << "\n";
+  if (ErrNr) stop("Error in gdxOpenRead with error code %i", ErrNr);
+
   gdxFileVersion(PGX, Msg, Producer);
 
   gdxSVals_t sVals;
@@ -492,6 +508,6 @@ List readSymbols(CharacterVector symNames, CharacterVector gdxName,
     L.push_back(L1);
   }
   gdxDataReadDone(PGX);
-  if (ErrNr = gdxClose(PGX)) Rcout << "Error3" << "\n";
+  if (gdxClose(PGX)) stop("Error in closing GDX file");
   return L;
 }
