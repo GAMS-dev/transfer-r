@@ -203,7 +203,7 @@ bool is_uel_priority, bool compress) {
   std::string myFileName = Rcpp::as<std::string>(fileName);
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE];
-	int         ErrNr, rc, varType;
+	int         ErrNr, rc, varType, varSubType;
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
@@ -259,7 +259,8 @@ bool is_uel_priority, bool compress) {
     Rcout << "got symname\n";
     std::string mysym = symname["name"];
     Rcout << "here3 " << mysym << "\n";
-    varType = symname["type"];
+    varType = symname[".gams_type"];
+    varSubType = symname[".gams_subtype"];
 
     if (varType == GMS_DT_ALIAS) {
       Rcout << "herehere\n";
@@ -276,7 +277,6 @@ bool is_uel_priority, bool compress) {
     df = symname["records"];
     // domain = symname["domainstr"];
 
-    
     domain = symname["domain"];
     Rcout << "symbol: " << mysym << "\n";
     List domainstr;
@@ -295,7 +295,7 @@ bool is_uel_priority, bool compress) {
     Rcout << "varType " << varType << "\n";
     Rcout << "mysym " << mysym << "\n";
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
-    expltxt.c_str(), Dim, varType, 0))
+    expltxt.c_str(), Dim, varType, varSubType))
     Rcout << "Error2" << "\n";
 
     for (int D=0; D < Dim; D++) {

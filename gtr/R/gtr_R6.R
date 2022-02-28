@@ -193,15 +193,17 @@ Container <- R6::R6Class (
                 }
             }
             else if (m$type == GMS_DT_VAR) {
+                type = names(VarTypeSubtype())[[which(VarTypeSubtype() == m$subtype)]]
                 Variable$new(
-                self, m$name, m$type, m$domain,
-                domain_forwarding=FALSE,
-                description=m$expltext)
+                self, m$name, type, m$domain,
+                domain_forwarding = FALSE,
+                description = m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
+                type = names(EqTypeSubtype())[[which(EqTypeSubtype() == m$subtype)]]
                 Equation$new(
-                self, m$name, m$subtype, m$domain,
-                domain_forwarding=FALSE,
+                self, m$name, type, m$domain,
+                domain_forwarding = FALSE,
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_ALIAS) {
@@ -432,15 +434,15 @@ Container <- R6::R6Class (
     addVariable = function(name, type="free", domain = NA,
     records = NA, domain_forwarding=FALSE, description = "") {
       Variable$new(
-        self, name, type, domain,
+        self, name, type, domain, records,
         domain_forwarding, description)
         return(self$data[[name]])
     },
 
-    addEquation = function(name, domain = NA, type,
+    addEquation = function(name, type, domain = NA, 
     records = NA, domain_forwarding=FALSE, description = "") {
       Equation$new(
-        self, name, type, domain,
+        self, name, type, domain, records,
         domain_forwarding, description)
         return(self$data[[name]])
     },
@@ -727,7 +729,7 @@ Container <- R6::R6Class (
       # for (v in names(SpecialValues)) {
         for (s in self$data) {
           # no mapping required for alias
-          if (s$type == GMS_DT_ALIAS || s$type == GMS_DT_SET) next
+          if (inherits(s, "Alias") || inherits(s, "Set")) next
           colrange = (s$dimension + 1):length(s$records)
           s$records[, colrange][is.nan(
             s$records[, colrange])] = 
@@ -1006,13 +1008,43 @@ Container <- R6::R6Class (
   )
   )
 
+VarTypeSubtype = function() {
+  return(list(
+  "binary" = GMS_VARTYPE_BINARY,
+  "integer" = GMS_VARTYPE_INTEGER,
+  "positive" = GMS_VARTYPE_POSITIVE,
+  "negative" = GMS_VARTYPE_NEGATIVE,
+  "free" = GMS_VARTYPE_FREE,
+  "sos1" = GMS_VARTYPE_SOS1,
+  "sos2" = GMS_VARTYPE_SOS2,
+  "semicont" = GMS_VARTYPE_SEMICONT,
+  "semiint" = GMS_VARTYPE_SEMIINT
+  ))
+}
+
+EqTypeSubtype = function() {
+  return(list(
+  "eq" = GMS_EQUTYPE_E + GMS_EQU_USERINFO_BASE,
+  "geq" = GMS_EQUTYPE_G + GMS_EQU_USERINFO_BASE,
+  "leq" = GMS_EQUTYPE_L + GMS_EQU_USERINFO_BASE,
+  "nonbinding" = GMS_EQUTYPE_N + GMS_EQU_USERINFO_BASE,
+  "external" = GMS_EQUTYPE_X + GMS_EQU_USERINFO_BASE,
+  "cone" = GMS_EQUTYPE_C + GMS_EQU_USERINFO_BASE,
+  "boolean" = GMS_EQUTYPE_B + GMS_EQU_USERINFO_BASE
+  ))
+}
+SetTypeSubtype = function() {
+  return(list(
+  "set" = 0,
+  "singleton_set" = 1
+  ))
+}
 
 Symbol <- R6Class(
   "Symbol",
   public = list(
-  type = NULL,
-  subtype = NULL,
-
+    .gams_type = NULL,
+    .gams_subtype = NULL,
   .requiresStateCheck = NA,
 
   initialize = function(container=NA, name=NA,
@@ -1020,7 +1052,8 @@ Symbol <- R6Class(
                         domain=NA,
                         description=NA,
                         domain_forwarding=NA) {
-
+    self$.gams_type = type
+    self$.gams_subtype = subtype
 
     self$.requiresStateCheck = TRUE
     self$ref_container = container
@@ -1036,8 +1069,6 @@ Symbol <- R6Class(
     # }
     self$name <- name
     self$ref_container$data[[name]] = self
-    self$type = type
-    self$subtype = subtype
 
     self$records = NA
 
@@ -1047,18 +1078,6 @@ Symbol <- R6Class(
     self$description = description
     self$domain_forwarding = domain_forwarding
 
-  },
-
-  summary = function() {
-    list(
-      "name" = self$name,
-      "type" = self$type,
-      "subtype" = self$subtype,
-      "domain" = self$domain,
-      "dimension" = self$dimension,
-      "records" = NA,
-      "number_records" = self$number_records()
-    )
   },
 
   number_records = function() {
@@ -2136,32 +2155,6 @@ Symbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
-    lblTypeSubtype = function() {
-      return(list(
-      "set" = list(GMS_DT_SET, 0),
-      "parameter" = list(GMS_DT_PAR, 0),
-      "singleton_set" = list(GMS_DT_SET, 1),
-      "binary" = list(GMS_DT_VAR, GMS_VARTYPE_BINARY),
-      "integer" = list(GMS_DT_VAR, GMS_VARTYPE_INTEGER),
-      "positive" = list(GMS_DT_VAR, GMS_VARTYPE_POSITIVE),
-      "negative" = list(GMS_DT_VAR, GMS_VARTYPE_NEGATIVE),
-      "free" = list(GMS_DT_VAR, GMS_VARTYPE_FREE),
-      "sos1" = list(GMS_DT_VAR, GMS_VARTYPE_SOS1),
-      "sos2" = list(GMS_DT_VAR, GMS_VARTYPE_SOS2),
-      "semicont" = list(GMS_DT_VAR, GMS_VARTYPE_SEMICONT),
-      "semiint" = list(GMS_DT_VAR, GMS_VARTYPE_SEMIINT),
-      "eq" = list(GMS_DT_EQU, GMS_EQUTYPE_E + GMS_EQU_USERINFO_BASE),
-      "geq" = list(GMS_DT_EQU, GMS_EQUTYPE_G + GMS_EQU_USERINFO_BASE),
-      "leq" = list(GMS_DT_EQU, GMS_EQUTYPE_L + GMS_EQU_USERINFO_BASE),
-      "nonbinding" = list(GMS_DT_EQU, GMS_EQUTYPE_N + GMS_EQU_USERINFO_BASE),
-      "external" = list(GMS_DT_EQU, GMS_EQUTYPE_X + GMS_EQU_USERINFO_BASE),
-      "cone" = list(GMS_DT_EQU, GMS_EQUTYPE_C + GMS_EQU_USERINFO_BASE),
-      "boolean" = list(GMS_DT_EQU, GMS_EQUTYPE_B + GMS_EQU_USERINFO_BASE),
-      "alias" = list(GMS_DT_ALIAS, 1)
-      ))
-
-    },
-
     attr = function() {
       return(list("level", "marginal", "lower", "upper", "scale"))
     },
@@ -2349,12 +2342,12 @@ Set <- R6Class(
                           description="") {
       self$isSingleton <- is_singleton
       if (!is_singleton) {
-        type = super$lblTypeSubtype()[["set"]][[1]]
-        subtype = super$lblTypeSubtype()[["set"]][[2]]
+        type = GMS_DT_SET
+        subtype = SetTypeSubtype()[["set"]]
       }
       else {
-        type = super$lblTypeSubtype()[["singleton_set"]][[1]]
-        subtype = super$lblTypeSubtype()[["singleton_set"]][[2]]
+        type = GMS_DT_SET
+        subtype = SetTypeSubtype()[["singleton_set"]]
       }
 
       super$initialize(container, gams_name,
@@ -2400,10 +2393,22 @@ Set <- R6Class(
 
     isAlias = function() {
       return(private$is_alias)
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "is_singleton" = self$isSingleton,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names(),
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type()
+      ))
     }
-
-
   ),
+
   active = list(
     isSingleton = function(is_singleton) {
       if (missing(is_singleton)) {
@@ -2440,9 +2445,9 @@ Parameter <- R6Class(
                           domain_forwarding = FALSE,
                           description="") {
 
-      type = super$lblTypeSubtype()[["parameter"]][[1]]
+      type = GMS_DT_PAR
       super$initialize(container, gams_name,
-                      type, NA, 
+                      type, 0, 
                       domain, description, domain_forwarding)
       if (any(!is.na(records))) {
         self$setRecords(records)
@@ -2482,6 +2487,19 @@ Parameter <- R6Class(
       }
       self$records = records
       self$.linkDomainCategories()
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "is_scalar" = self$isScalar,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names(),
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type()
+      ))
     }
 
   )
@@ -2491,41 +2509,304 @@ Variable <- R6Class(
   "Variable",
   inherit = Symbol,
   public = list(
-    type = NULL,
-    initialize = function(container=NA, gams_name=NA, 
-                          type="free",
-                          domain=NA, records=NA,
+    initialize = function(container = NA, gams_name = NA, 
+                          type = "free",
+                          domain = NA, records = NA,
                           domain_forwarding = FALSE,
-                            description="") {
-      if (is.integer(type)){
-        symtype = type
-      }
-      else {
-         symtype = super$lblTypeSubtype()[[type]][[1]]
-      }
+                          description="") {
+
       self$type = type
 
+      # if (is.integer(type)){
+      #   symtype = type
+      # }
+      # else {
+         symtype = GMS_DT_VAR
+         symsubtype = VarTypeSubtype()[[type]]
+      # }
+
+
       super$initialize(container, gams_name,
-                      symtype, NA, 
+                      symtype, symsubtype, 
                       domain, description, domain_forwarding)
       if (any(!is.na(records))) {
         self$setRecords(records)
       }
     },
+
     setRecords = function(records) {
       # check if records is a dataframe and make if not
       records = data.frame(records)
+      usr_colnames = colnames(records)
+
       columnNames = self$domainLabels()
+      if (self$dimension +  1 > length(usr_colnames)) {
+        usr_attr = NULL
+      }
+      else {
+        usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+      }
+
+      for (i in setdiff(unlist(private$attr()), usr_attr)) {
+        records[i] = private$default_values[[private$.type]][[i]]
+      }
+
+      #check dimensionality
+      if (length(records) != self$dimension + length(private$attr())) {
+        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$attr())),
+        " is inconsistent with equation domain specification ", 
+        self$dimension, " must resolve before records can be added\n\n",
+        "NOTE:",
+        "columns not named ", unlist(private$attr()),
+        " will be interpreted as domain columns, check that the data.frame conforms",
+        "to the required notation.\n",
+        "User passed data.frame with columns: ", usr_colnames)))
+      }
+
       columnNames = append(columnNames, private$attr())
       colnames(records) = columnNames
 
       self$records = records
       self$.linkDomainCategories()
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "type" = self$type,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names(),
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type()
+      ))
     }
+  ),
+
+  active = list(
+    type = function(type_input) {
+      if (missing(type_input)) {
+        return(private$.type)
+      }
+      else {
+        if (!any(private$var_types == type_input)) {
+          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
+          " 1. 'binary' \n",
+          " 2. 'integer' \n",
+          " 3. 'positive' \n",
+          " 4. 'negative' \n",
+          " 5. 'free' \n",
+          " 6. 'sos1' \n",
+          " 7. 'sos2' \n",
+          " 8. 'semicont' \n",
+          " 9. 'semiint'"
+          )))
+        }
+
+        private$.type = type_input
+      }
+    }
+  ),
+
+  private = list(
+    .type= NULL,
+    var_types = c(
+      "binary",
+      "integer",
+      "positive",
+      "negative",
+      "free",
+      "sos1",
+      "sos2",
+      "semicont",
+      "semiint"
+    ),
+
+    default_values = list(
+      "binary" = list(
+          "level"= 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = 1.0,
+          "scale" = 1.0
+      ),
+      "integer" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "positive" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "negative" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = 0.0,
+          "scale" = 1.0
+      ),
+      "free" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "sos1" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "sos2" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "semicont" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 1.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "semiint" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 1.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      )
+    )
   )
   )
 
-equationTypes = list(
+
+
+Equation <- R6Class(
+  "Equation",
+  inherit = Symbol,
+  public = list(
+
+    initialize = function(container=NA, gams_name=NA, 
+                          type=NA,
+                          domain=NA,
+                          records = NA,
+                          domain_forwarding=FALSE,
+                          description="") {
+
+      self$type = type
+      # if (is.integer(type)) {
+      #   # call from container
+      #   symtype = GMS_DT_EQU
+      #   symsubtype = type
+      # }
+      # else {
+        # call from outside
+        type = private$equationTypes[[type]]
+        # if (!is.null(equationTypes[[type]])) {
+        #   type = equationTypes$type
+        # }
+        symtype = GMS_DT_EQU
+        symsubtype = EqTypeSubtype()[[type]]
+      # }
+
+      super$initialize(container, gams_name,
+                      symtype, symsubtype, 
+                      domain, description, domain_forwarding)
+      if (any(!is.na(records))) {
+        self$setRecords(records)
+      }
+    },
+
+    setRecords = function(records) {
+      # check if records is a dataframe and make if not
+      records = data.frame(records)
+
+      usr_colnames = colnames(records)
+      columnNames = self$domainLabels()
+
+      if (self$dimension +  1 > length(usr_colnames)) {
+        usr_attr = NULL
+      }
+      else {
+        usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+      }
+
+      usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+
+      for (i in setdiff(c(private$attr()), usr_attr)) {
+        records[i] = private$default_values[[private$.type]][[i]]
+      }
+
+      #check dimensionality
+      if (length(records) != self$dimension + length(private$attr())) {
+        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$attr())),
+        " is inconsistent with equation domain specification ", 
+        self$dimension, " must resolve before records can be added\n\n",
+        "NOTE:",
+        "columns not named ", unlist(private$attr()),
+        " will be interpreted as domain columns, check that the data.frame conforms",
+        "to the required notation.\n",
+        "User passed data.frame with columns: ", usr_colnames)))
+      }
+
+      columnNames = append(columnNames, private$attr())
+      colnames(records) = columnNames
+
+      self$records = records
+      self$.linkDomainCategories()
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "type" = self$type,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names(),
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type()
+      ))
+    }
+  ),
+
+  active = list(
+    type = function(type_input) {
+      if (missing(type_input)) {
+        return(private$.type)
+      }
+      else {
+        if (!any(private$equationTypes == type_input)) {
+          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
+              "1. 'eq', 'E', or 'e' -- equality\n",
+              "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
+              "3. 'leq', 'L', or 'l'  -- less than or equal to inequality\n",
+              "4. 'nonbinding', 'N', or 'n'  -- nonbinding relationship\n",
+              "5. 'cone', 'C', or 'c' -- cone equation\n",
+              "6. 'external', 'X', or 'x' -- external equation\n",
+              "7. 'boolean', 'B', or 'b' -- boolean equation\n"
+          )))
+        }
+
+        private$.type = type_input
+      }
+    }
+  ),
+  private = list(
+    .type = NULL,
+    equationTypes = list(
     eq = "eq",
     E = "eq",
     e = "eq",
@@ -2547,115 +2828,67 @@ equationTypes = list(
     boolean = "boolean",
     B = "boolean",
     b = "boolean"
-)
+    ),
 
-Equation <- R6Class(
-  "Equation",
-  inherit = Symbol,
-  public = list(
-
-    initialize = function(container=NA, gams_name=NA, 
-                          type=NA,
-                          domain=NA,
-                          records = NA,
-                          domain_forwarding=FALSE,
-                          description="") {
-      if (is.integer(type)) {
-        # call from container
-        symtype = GMS_DT_EQU
-        symsubtype = type
-      }
-      else {
-        # call from outside 
-        if (!is.null(equationTypes[[type]])) {
-          type = equationTypes$type
-        }
-        else {
-          stop("error. Wrong equation type")
-        }
-        symtype = super$lblTypeSubtype()[[type]][[1]]
-        symsubtype = super$lblTypeSubtype()[[type]][[2]]
-      }
-
-      super$initialize(container, gams_name,
-                      symtype, symsubtype, 
-                      domain, description, domain_forwarding)
-      if (any(!is.na(records))) {
-        self$setRecords(records)
-      }
-    },
-
-    setRecords = function(records) {
-      # check if records is a dataframe and make if not
-      records = data.frame(records)
-      columnNames = self$domainLabels()
-      columnNames = append(columnNames, private$attr())
-      colnames(records) = columnNames
-      self$records = records
-      self$.linkDomainCategories()
-    }
-  ),
-
-  private = list(
-      default_values = list(
-        "eq" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        ),
-        "geq" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        ),
-        "leq" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        ),
-        "nonbinding" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        ),
-        "cone" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        ),
-        "external" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        ),
-        "boolean" = list(
-            "level" = 0.0,
-            "marginal" = 0.0,
-            "lower" = SpecialValues$NEGINF,
-            "upper" = SpecialValues$POSINF,
-            "scale" = 1.0
-        )
+    default_values = list(
+      "eq" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "geq" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "leq" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "nonbinding" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "cone" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "external" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "boolean" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
       )
+    )
   )
 )
 
 Alias <- R6Class(
   "Alias",
   public = list(
-    type = NULL,
-
+    .gams_type = NULL,
+    .gams_subtype = NULL,
     .requiresStateCheck = NULL,
     initialize = function(container=NA, gams_name=NA, 
                           alias_for=NA) {
@@ -2663,7 +2896,8 @@ Alias <- R6Class(
       self$ref_container = container
       self$name = gams_name
       self$ref_container$data[[gams_name]] = self
-      self$type = private$lblTypeSubtype()[["alias"]][[1]]
+      self$.gams_type = GMS_DT_ALIAS
+      self$.gams_subtype = 1
       private$is_alias = TRUE
       self$aliasWith = alias_for
     },
@@ -2728,18 +2962,17 @@ Alias <- R6Class(
     },
 
     summary = function() {
-    list(
+    return(list(
       "name" = self$name,
       "alias_with" = self$aliasWith,
       "alias_with_name" = self$aliasWith$name,
       "is_singleton" = self$isSingleton(),
-      "is_alias" = self$isAlias,
       "domain_objects" = self$domain,
       "domain_names" = self$domain_names(),
       "dimension" = self$dimension,
       "description" = self$description,
       "number_records" = self$number_records
-    )
+    ))
     }
 
   ),
@@ -2867,11 +3100,11 @@ Alias <- R6Class(
     is_alias = NA,
     is_singleton = NA,
 
-    lblTypeSubtype = function() {
-      return(list(
-      "alias" = list(GMS_DT_ALIAS, 1)
-      ))
-    },
+    # lblTypeSubtype = function() {
+    #   return(list(
+    #   "alias" = list(GMS_DT_ALIAS, 1)
+    #   ))
+    # },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
