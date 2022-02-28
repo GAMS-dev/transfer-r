@@ -831,7 +831,9 @@ Container <- R6::R6Class (
           return(TRUE)
         },
         error = function(e) {
-          message(e)
+          if (verbose == TRUE) {
+            message(e)
+          }
           return(FALSE)
         }
       )
@@ -1794,7 +1796,9 @@ Symbol <- R6Class(
           return(TRUE)
         },
         error = function(e) {
-          message(e)
+          if (verbose == TRUE) {
+            message(e)
+          }
           return(FALSE)
         }
       )
@@ -2932,7 +2936,9 @@ Alias <- R6Class(
             return(TRUE)
           },
           error = function(e) {
-            message(e)
+            if (verbose == TRUE) {
+              message(e)
+            }
             return(FALSE)
           }
         )

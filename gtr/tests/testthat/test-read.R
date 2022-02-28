@@ -2957,8 +2957,8 @@ test_that("test_num_15", {
   a = Parameter$new(m, "a", i, records=data.frame(c("aa", "c"), c(1, 2)))
 
   expect_equal(a$findDomainViolations(), 1)
-  # expect_equal(a$isValid(), TRUE)
-    expect_error(a$isValid())
+    expect_equal(a$isValid(), FALSE)
+    # expect_error(a$isValid())
 }
 )
 
