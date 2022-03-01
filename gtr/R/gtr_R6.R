@@ -168,7 +168,7 @@ Container <- R6::R6Class (
       aliasCount = 0
       for (m in metadata) {
          if (any(symbolsToRead == m$name)) {
-            m1 = m[-1]
+            # m1 = m[-1]
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
@@ -2567,6 +2567,15 @@ Variable <- R6Class(
         "User passed data.frame with columns: ", usr_colnames)))
       }
 
+      # reorder columns
+      correct_order = c()
+      if (self$dimension > 0) {
+        correct_order = colnames(records)[(1:self$dimension)]
+      }
+      correct_order = append(correct_order, private$.attr())
+      records = records[, correct_order]
+
+      #rename columns
       columnNames = append(columnNames, private$.attr())
       colnames(records) = columnNames
 
@@ -2764,6 +2773,14 @@ Equation <- R6Class(
         "to the required notation.\n",
         "User passed data.frame with columns: ", usr_colnames)))
       }
+
+      # reorder columns
+      correct_order = c()
+      if (self$dimension > 0) {
+        correct_order = colnames(records)[(1:self$dimension)]
+      }
+      correct_order = append(correct_order, private$.attr())
+      records = records[, correct_order]
 
       columnNames = append(columnNames, private$.attr())
       colnames(records) = columnNames
