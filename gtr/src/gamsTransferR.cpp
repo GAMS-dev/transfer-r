@@ -111,35 +111,7 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   return L;
 
 }
-// [[Rcpp::export]]
-List getSymbolNames(CharacterVector gdxName, CharacterVector sysDir) {
-  gdxHandle_t PGX = NULL;
-  std::vector<std::string> domain;
-  int rc, errCode, symCount, UelCount, sym_dimension, sym_type;
-  char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE];
-  std::string myname = Rcpp::as<std::string>(gdxName);
-  std::string mysysDir = Rcpp::as<std::string>(sysDir);
 
-  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("Error creating GDX object: %s", Msg);
-
-  gdxOpenRead(PGX, myname.c_str(), &errCode);
-
-  gdxSystemInfo(PGX, &symCount, &UelCount);
-
-
-  List L1;
-	for (int i=0; i <= symCount; i++){
-		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
-
-    if (strcmp(symbolID, "*") != 0) {
-    L1.push_back(symbolID);
-    }
-  }
-
-  return L1;
-
-}
 // [[Rcpp::export]]
 List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
@@ -195,10 +167,6 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
     domain.clear();
 
     L1.push_back(templist);
-
-    // if (strcmp(symbolID, "*") != 0) {
-    // L1.push_back(templist);
-    // }
   }
 
   return L1;

@@ -134,7 +134,10 @@ Container <- R6::R6Class (
       }
 
       # get names for all symbols
-      syms = getSymbolNames(load_from, self$systemDirectory)
+      print("get metadata")
+      metadata = getSymbols(load_from, self$systemDirectory)
+      print("metadata obtained")
+      syms = lapply(metadata, "[[", 1)
 
       if (is.character(symbols) && symbols == "all") {
         symbolsToRead = syms
@@ -147,9 +150,8 @@ Container <- R6::R6Class (
           }
         }
       }
-      # check if load_from file exists
-      if (!file.exists(load_from)) {
-        stop(paste0("The file ", load_from, " doesn't exist."))
+      if (length(symbolsToRead) == 0){
+        return()
       }
 
       # check if container exists any of the symbols already
@@ -161,9 +163,9 @@ Container <- R6::R6Class (
           "Container with the removeSymbol() method."))
         }
       }
-      print("get metadata")
-      metadata = getSymbols(load_from, self$systemDirectory)
-      print("metadata obtained")
+      # print("get metadata")
+      # metadata = getSymbols(load_from, self$systemDirectory)
+      # print("metadata obtained")
       aliasList = list()
       aliasCount = 0
       for (m in metadata) {
@@ -238,26 +240,11 @@ Container <- R6::R6Class (
                 self$data[[s$names]]$records[(self$data[[s$names]]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
               }
-              # for (d in 1:self$data[[s$names]]$dimension) {
-              #   for (a in self$acronyms) {
-              #     col = self$data[[s$names]]$records[,d]
-              #     if (any(col == a * 1e301)) {
-              #       idx = which(col == a * 1e301)
-              #       for (id in idx) {
-              #         self$data[[s$names]]$records[id, d] = 
-              #         SpecialValues[["NA"]]
-              #       }
-              #     }
-              #   }
-              # }
-
             }
           }
         }
         private$linkDomainObjects(symbolsToRead)
         self$.linkDomainCategories()
-        # # check validity
-        # validSymbols = self$listSymbols(isValid = TRUE)
       }
     },
 

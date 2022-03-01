@@ -9,10 +9,6 @@ checkAcronyms <- function(gdxName, sysDir) {
     .Call(`_gtr_checkAcronyms`, gdxName, sysDir)
 }
 
-getSymbolNames <- function(gdxName, sysDir) {
-    .Call(`_gtr_getSymbolNames`, gdxName, sysDir)
-}
-
 getSymbols <- function(gdxName, sysDir) {
     .Call(`_gtr_getSymbols`, gdxName, sysDir)
 }
