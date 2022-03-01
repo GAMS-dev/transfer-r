@@ -1840,9 +1840,9 @@ Symbol <- R6Class(
       column = "value"
     }
     else {
-      if (!any(private$attr() == column)) {
+      if (!any(private$.attr() == column)) {
         stop(paste0("Argument 'column' must be one 
-        of the following: ", self$attr()))
+        of the following: ", toString(private$.attr())))
       }
     }
 
@@ -2159,8 +2159,8 @@ Symbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
-    attr = function() {
-      return(list("level", "marginal", "lower", "upper", "scale"))
+    .attr = function() {
+      return(c("level", "marginal", "lower", "upper", "scale"))
     },
 
     check = function() {
@@ -2217,10 +2217,10 @@ Symbol <- R6Class(
 
           if (inherits(self, "Variable") | inherits(self, "Equation")){
             if (length(self$records) != 
-            self$dimension + length(private$attr())) {
+            self$dimension + length(private$.attr())) {
               stop(paste0("Symbol 'records' does not have", 
               " the correct number of columns ", 
-              self$dimension + length(private$attr())))
+              self$dimension + length(private$.attr())))
             }
           }
 
@@ -2239,7 +2239,7 @@ Symbol <- R6Class(
           }
           else if (inherits(self, "Variable") ||
           inherits(self, "Equation")) {
-            cols = append(cols, private$attr())
+            cols = append(cols, private$.attr())
           }
 
           if (!identical(unlist(cols), colnames(self$records))) {
@@ -2551,23 +2551,23 @@ Variable <- R6Class(
         usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
       }
 
-      for (i in setdiff(unlist(private$attr()), usr_attr)) {
+      for (i in setdiff(private$.attr(), usr_attr)) {
         records[i] = private$default_values[[private$.type]][[i]]
       }
 
       #check dimensionality
-      if (length(records) != self$dimension + length(private$attr())) {
-        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$attr())),
+      if (length(records) != self$dimension + length(private$.attr())) {
+        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
         " is inconsistent with equation domain specification ", 
         self$dimension, " must resolve before records can be added\n\n",
         "NOTE:",
-        "columns not named ", unlist(private$attr()),
+        "columns not named ", toString(private$.attr()),
         " will be interpreted as domain columns, check that the data.frame conforms",
         "to the required notation.\n",
         "User passed data.frame with columns: ", usr_colnames)))
       }
 
-      columnNames = append(columnNames, private$attr())
+      columnNames = append(columnNames, private$.attr())
       colnames(records) = columnNames
 
       self$records = records
@@ -2749,23 +2749,23 @@ Equation <- R6Class(
 
       usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
 
-      for (i in setdiff(c(private$attr()), usr_attr)) {
+      for (i in setdiff(private$.attr(), usr_attr)) {
         records[i] = private$default_values[[private$.type]][[i]]
       }
 
       #check dimensionality
-      if (length(records) != self$dimension + length(private$attr())) {
-        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$attr())),
+      if (length(records) != self$dimension + length(private$.attr())) {
+        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
         " is inconsistent with equation domain specification ", 
         self$dimension, " must resolve before records can be added\n\n",
         "NOTE:",
-        "columns not named ", unlist(private$attr()),
+        "columns not named ", toString(private$.attr()),
         " will be interpreted as domain columns, check that the data.frame conforms",
         "to the required notation.\n",
         "User passed data.frame with columns: ", usr_colnames)))
       }
 
-      columnNames = append(columnNames, private$attr())
+      columnNames = append(columnNames, private$.attr())
       colnames(records) = columnNames
 
       self$records = records
