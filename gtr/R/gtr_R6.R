@@ -713,73 +713,39 @@ Container <- R6::R6Class (
 
       # remap special values
       specialValsGDX = getSpecialValues(gdxout, self$systemDirectory)
-      # for (v in names(SpecialValues)) {
-        for (s in self$data) {
-          # no mapping required for alias
-          if (inherits(s, "Alias") || inherits(s, "Set")) next
-          colrange = (s$dimension + 1):length(s$records)
-          s$records[, colrange][is.nan(
-            s$records[, colrange])] = 
-            specialValsGDX[["UNDEF"]]
 
-          s$records[,colrange][is.na(
-            s$records[,colrange])] = 
-            specialValsGDX[["NA"]]
+      for (s in self$data) {
+        # no mapping required for alias
+        if (inherits(s, "Alias") || inherits(s, "Set")) next
+        if (!any(!is.na(s$records))) next
+        colrange = (s$dimension + 1):length(s$records)
+        s$records[, colrange][is.nan(
+          s$records[, colrange])] = 
+          specialValsGDX[["UNDEF"]]
 
-          s$records[,colrange][
-            ((s$records[, colrange] == Inf)
-          & (sign(s$records[, colrange]) 
-          == 1))] = specialValsGDX[["POSINF"]]
+        s$records[,colrange][is.na(
+          s$records[,colrange])] = 
+          specialValsGDX[["NA"]]
 
-          s$records[, colrange][
-            ((s$records[, colrange] == -Inf)
-          &(sign(s$records[, colrange]) 
-          == -1))] = specialValsGDX[["NEGINF"]]
-          
-          s$records[,colrange][
-            ((s$records[,colrange] == 0)
-          & (sign(1/s$records[,colrange]) 
-          == -1))] = specialValsGDX[["EPS"]]
+        s$records[,colrange][
+          ((s$records[, colrange] == Inf)
+        & (sign(s$records[, colrange]) 
+        == 1))] = specialValsGDX[["POSINF"]]
 
-        #   if (length(s$records) != 1) {
-        #     for (c in length(s$records)) {
-        #       if (v == "EPS") {
-        #         idx = which((s$records[c] == SpecialValues[v]) && 
-        #         (sign(1/s$records[c]==-1) ))
-        #         s$records[idx, c] = specialValsGDX[v]
-        #       }
-        #       else if (v == "NA") {
-        #         idx = which(( is.na(s$records[c])) && 
-        #         (sign(1/s$records[c]==-1) ))
-        #         s$records[idx, c] = specialValsGDX[v]
-        #       }
-        #       else if (v == "UNDEF") {
-        #         idx = which(( is.na(s$records[c])) && 
-        #         (sign(1/s$records[c]==-1) ))
-        #         s$records[idx, c] = specialValsGDX[v]
-        #       }
-        #       else {
-        #         idx = which(s$records[c] == SpecialValues[v])
-        #         s$records[idx, c] = specialValsGDX[v]
-        #       }
-        #     }
-        #   }
-        #   else {
-        #     if (v == "EPS"){
-        #       idx = which((s$records == SpecialValues[v]) && 
-        #       (sign(1/s$records==-1) ))
-        #       s$records[idx] = specialValsGDX[v]
-        #     }
-        #     else {
-        #       idx = which(s$records == SpecialValues[v])
-        #       s$records[idx] = SpecialValues[v]
-        #     }
-        #   }
+        s$records[, colrange][
+          ((s$records[, colrange] == -Inf)
+        &(sign(s$records[, colrange]) 
+        == -1))] = specialValsGDX[["NEGINF"]]
 
-        }
-      # }
+        s$records[,colrange][
+          ((s$records[,colrange] == 0)
+        & (sign(1/s$records[,colrange]) 
+        == -1))] = specialValsGDX[["EPS"]]
+      }
+
       if (is.na(uel_priority)) {
-        gdxWriteSuper(self$data, self$systemDirectory, gdxout, NA, FALSE, compress)
+        gdxWriteSuper(self$data, self$systemDirectory, 
+        gdxout, NA, FALSE, compress)
       }
       else {
         universe = self$getUniverseSet()

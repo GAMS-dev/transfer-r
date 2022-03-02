@@ -282,19 +282,6 @@ bool is_uel_priority, bool compress) {
 
     for (int D=0; D < Dim; D++) {
       strcpy(domains_ptr[D], domainstr[D]);
-      // try
-      // {
-      //   Environment env = domain[D];
-      //   if (env.exists("name")) {
-      //     List assumedenv;
-      //     assumedenv = domain[D];
-      //     strcpy(domains_ptr[D], assumedenv["name"]);
-      //   }
-      // }
-      // catch(const std::exception& e)
-      // {
-      //  strcpy(domains_ptr[D], domain[D]);
-      // }
     }
 
     gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
@@ -326,7 +313,6 @@ bool is_uel_priority, bool compress) {
         WriteData(PGX, names, values, varType, Dim, elemText);
       }
       else {
-
         WriteData(PGX, names, values, varType, Dim, elemText);
       }
       elemText.clear();
