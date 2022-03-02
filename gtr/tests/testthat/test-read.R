@@ -2477,7 +2477,6 @@ test_that("readwritetest", {
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
-  message(paste0("this is ret ", ret))
   expect_equal(ret, 0)
 
   #   }
@@ -2958,7 +2957,6 @@ test_that("test_num_15", {
 
   expect_equal(a$findDomainViolations(), 1)
     expect_equal(a$isValid(), FALSE)
-    # expect_error(a$isValid())
 }
 )
 
@@ -3201,5 +3199,358 @@ test_that("test_num_19", {
     expect_equal(m$data[[eqname]]$records[1, "scale"], 
     default_values[[i]][["scale"]])
   }
+}
+)
+
+test_that("test_num_20", {
+  m = Container$new()
+  df=  data.frame(list("i0", 1, 1, 1, 1, 1))
+  colnames(df)= c("domain", "marginal", "lower", "scale", "upper", "level")
+
+  type = c(
+    "binary",
+    "integer",
+    "positive",
+    "negative",
+    "free",
+    "sos1",
+    "sos2",
+    "semicont",
+    "semiint"
+  )
+
+  for (i in type) {
+    varname = paste0("a_", i)
+    m$addVariable(varname, i, "*", records = df)
+    expect_equal(colnames(m$data[[varname]]$records),
+    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+  }
+}
+)
+
+test_that("test_num_21", {
+  m = Container$new()
+  df=  data.frame(list("i0", 1, 1, 1, 1, 1))
+  colnames(df)= c("domain", "marginal", "lower", "scale", "upper", "level")
+
+  type = c(
+    "eq", "geq", "leq", "nonbinding", "cone", "external", "boolean"
+  )
+
+  for (i in type) {
+    eqname = paste0("a_", i)
+    m$addEquation(eqname, i, "*", records = df)
+    expect_equal(colnames(m$data[[eqname]]$records),
+    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+  }
+}
+)
+
+
+test_that("test_num_22", {
+  # gams syntax
+  gams_text = "
+    Set
+        i 'canning plants' / seattle,  san-diego /
+        j 'markets'        / new-york, chicago, topeka /;
+
+    Parameter
+        a(i) 'capacity of plant i in cases'
+            / seattle    350
+              san-diego  600 /
+
+        b(j) 'demand at market j in cases'
+            / new-york   325
+              chicago    300
+              topeka     275 /;
+
+    Table d(i,j) 'distance in thousands of miles'
+                  new-york  chicago  topeka
+        seattle         2.5      1.7     1.8
+        san-diego       2.5      1.8     1.4;
+
+    Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+    Parameter c(i,j) 'transport cost in thousands of dollars per case';
+    c(i,j) = f*d(i,j)/1000;
+
+    Variable
+        x(i,j) 'shipment quantities in cases'
+        z      'total transportation costs in thousands of dollars';
+
+    Positive Variable x;
+
+    Equation
+        cost      'define objective function'
+        supply(i) 'observe supply limit at plant i'
+        demand(j) 'satisfy demand at market j';
+
+    cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+    supply(i).. sum(j, x(i,j)) =l= a(i);
+
+    demand(j).. sum(i, x(i,j)) =g= b(j);
+
+    Model transport / all /;
+
+    solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"), values = FALSE)
+
+  for (i in m$data) {
+    expect_equal(m$data[[i$name]]$records, NA)
+  }
+}
+)
+
+
+test_that("test_num_23", {
+  # gams syntax
+  gams_text = "
+    Set
+        i 'canning plants' / seattle,  san-diego /
+        j 'markets'        / new-york, chicago, topeka /;
+
+    Parameter
+        a(i) 'capacity of plant i in cases'
+            / seattle    350
+              san-diego  600 /
+
+        b(j) 'demand at market j in cases'
+            / new-york   325
+              chicago    300
+              topeka     275 /;
+
+    Table d(i,j) 'distance in thousands of miles'
+                  new-york  chicago  topeka
+        seattle         2.5      1.7     1.8
+        san-diego       2.5      1.8     1.4;
+
+    Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+    Parameter c(i,j) 'transport cost in thousands of dollars per case';
+    c(i,j) = f*d(i,j)/1000;
+
+    Variable
+        x(i,j) 'shipment quantities in cases'
+        z      'total transportation costs in thousands of dollars';
+
+    Positive Variable x;
+
+    Equation
+        cost      'define objective function'
+        supply(i) 'observe supply limit at plant i'
+        demand(j) 'satisfy demand at market j';
+
+    cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+    supply(i).. sum(j, x(i,j)) =l= a(i);
+
+    demand(j).. sum(i, x(i,j)) =g= b(j);
+
+    Model transport / all /;
+
+    solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"), c("i", "j", "x"))
+
+  expect_equal(m$data[["i"]]$domain_type(), "none")
+  expect_equal(m$data[["j"]]$domain_type(), "none")
+  expect_equal(m$data[["x"]]$domain_type(), "regular")
+}
+)
+
+test_that("test_num_24", {
+  # gams syntax
+  gams_text = "
+    Set
+        i 'canning plants' / seattle,  san-diego /
+        j 'markets'        / new-york, chicago, topeka /;
+
+    Parameter
+        a(i) 'capacity of plant i in cases'
+            / seattle    350
+              san-diego  600 /
+
+        b(j) 'demand at market j in cases'
+            / new-york   325
+              chicago    300
+              topeka     275 /;
+
+    Table d(i,j) 'distance in thousands of miles'
+                  new-york  chicago  topeka
+        seattle         2.5      1.7     1.8
+        san-diego       2.5      1.8     1.4;
+
+    Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+    Parameter c(i,j) 'transport cost in thousands of dollars per case';
+    c(i,j) = f*d(i,j)/1000;
+
+    Variable
+        x(i,j) 'shipment quantities in cases'
+        z      'total transportation costs in thousands of dollars';
+
+    Positive Variable x;
+
+    Equation
+        cost      'define objective function'
+        supply(i) 'observe supply limit at plant i'
+        demand(j) 'satisfy demand at market j';
+
+    cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+    supply(i).. sum(j, x(i,j)) =l= a(i);
+
+    demand(j).. sum(i, x(i,j)) =g= b(j);
+
+    Model transport / all /;
+
+    solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"), c("x"))
+
+  expect_equal(names(m$data), "x")
+  expect_equal(m$data[["x"]]$domain_type(), "relaxed")
+}
+)
+
+test_that("test_num_25", {
+  # gams syntax
+  gams_text = "
+    Set i(i) / a,b,c /;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  expect_equal(names(m$data), "i")
+  expect_equal(m$data[["i"]]$domain, list("i"))
+  expect_equal(m$data[["i"]]$domain_type(), "relaxed")
+}
+)
+
+
+test_that("test_num_26", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i", "p")
+  expect_equal(i$domain_type(), "relaxed")
+
+  j = Set$new(m, "j", i, records = 
+  data.frame(c("c"), c("desc for elem 'c'")), domain_forwarding=TRUE)
+
+  df = data.frame("p_1" =c("c"), "element_text" = c(""))
+  df$p_1 = factor(df$p_1, ordered = TRUE)
+  expect_equal(i$records, df)
+
+  df = data.frame("i_1" =c("c"), "element_text" = c("desc for elem 'c'"))
+  df$i_1 = factor(df$i_1, ordered = TRUE)
+  expect_equal(j$records, df)
+
+  k = Set$new(m ,"k", "j")
+  expect_equal(k$records, NA)
+
+  l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
+
+  # test l
+  df = data.frame("k_1"=c("a", "b"), "element_text"=c("", ""))
+  df$k_1 = factor(df$k_1, ordered=TRUE)
+  expect_equal(l$records, df)
+
+  # test k
+  df = data.frame("j_1"=c("a", "b"), "element_text"=c("",""))
+  df$j_1 = factor(df$j_1, ordered = TRUE)
+  expect_equal(k$records, df)
+
+  # test j
+  df = data.frame("i_1"=c("c"), "element_text"=c("desc for elem 'c'"))
+  df$i_1 = factor(df$i_1, ordered = TRUE)
+  expect_equal(j$records, df)
+
+  # test i
+  df = data.frame("p_1"=c("c"), "element_text"=c(""))
+  df$p_1 = factor(df$p_1, ordered = TRUE)
+  expect_equal(i$records, df)
+
+}
+)
+
+test_that("test_num_27", {
+  # gams syntax
+  gams_text = "
+    Set i(*);
+    Set j(*);
+    Set a(a);
+    Set k(i);
+    Set l(i);
+    Set m(j);
+    Set n(j);
+    Set o(l);
+    Set p(m);
+    Set b(a);
+    Set c(a);
+    Set d(b);
+    Set e(b);
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"))
+
+  # write everything
+  m$write(testthat::test_path("gt.gdx"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+}
+)
+
+test_that("test_num_28", {
+  # gams syntax
+  m = Container$new()
+
+  i = Set$new(m, "i")
+  a_eq = Equation$new(m, "a_eq", "eq", i)
+  a_geq = Equation$new(m, "a_geq", "geq", i)
+  a_leq = Equation$new(m, "a_leq", "leq", i)
+  a_nonbinding = Equation$new(m, "a_nonbinding", "nonbinding", i)
+  a_cone = Equation$new(m, "a_cone", "cone", i)
+  a_external = Equation$new(m, "a_external", "external", i)
+  a_boolean = Equation$new(m, "a_boolean", "boolean", i)
+  
+  # try writing
+  m$write("gt.gdx")
 }
 )
