@@ -181,14 +181,14 @@ Container <- R6::R6Class (
                 if (m$subtype == 0) {
                 Set$new(
                 self, m$name, m$domain, FALSE,
-                NA,
+                records = NULL,
                 domain_forwarding=FALSE,
                 m$expltext)
                 }
                 else {
                 Set$new(
                 self, m$name, m$domain, TRUE,
-                NA,
+                records = NULL,
                 domain_forwarding=FALSE, 
                 m$expltext)
                 }
@@ -230,6 +230,9 @@ Container <- R6::R6Class (
         print("symbol_read_done")
 
         for (s in symbolrecords) {
+          if (is.null(s$records)) {
+            next
+          }
           self$data[[s$names]]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
@@ -243,6 +246,7 @@ Container <- R6::R6Class (
             }
           }
         }
+
         private$linkDomainObjects(symbolsToRead)
         self$.linkDomainCategories()
       }
@@ -251,7 +255,7 @@ Container <- R6::R6Class (
     getUniverseSet = function() {
       uni = list()
       for (i in self$listSymbols(isValid = TRUE)) {
-        if (any(!is.na(self$data[[i]]$records))) {
+        if (!is.null(self$data[[i]]$records)) {
           uni = append(uni, data.frame(unlist(x = 
           self$data[[i]]$records[,(1:self$data[[i]]$dimension)]))[, 1])
         }
@@ -402,7 +406,7 @@ Container <- R6::R6Class (
     },
 
     addSet = function(name, domain = "*", is_singleton = FALSE,
-    records = NA, domain_forwarding=FALSE, description = "") {
+    records = NULL, domain_forwarding=FALSE, description = "") {
       Set$new(
       self, name, domain, is_singleton,
       records, domain_forwarding, description)
@@ -410,7 +414,7 @@ Container <- R6::R6Class (
     },
 
     addParameter = function(name, domain = NA,
-    records = NA, domain_forwarding=FALSE, description = "") {
+    records = NULL, domain_forwarding=FALSE, description = "") {
       Parameter$new(
         self, name, domain, records,
         domain_forwarding, description)
@@ -418,7 +422,7 @@ Container <- R6::R6Class (
     },
 
     addVariable = function(name, type="free", domain = NA,
-    records = NA, domain_forwarding=FALSE, description = "") {
+    records = NULL, domain_forwarding=FALSE, description = "") {
       Variable$new(
         self, name, type, domain, records,
         domain_forwarding, description)
@@ -426,7 +430,7 @@ Container <- R6::R6Class (
     },
 
     addEquation = function(name, type, domain = NA, 
-    records = NA, domain_forwarding=FALSE, description = "") {
+    records = NULL, domain_forwarding=FALSE, description = "") {
       Equation$new(
         self, name, type, domain, records,
         domain_forwarding, description)
@@ -717,7 +721,7 @@ Container <- R6::R6Class (
       for (s in self$data) {
         # no mapping required for alias
         if (inherits(s, "Alias") || inherits(s, "Set")) next
-        if (!any(!is.na(s$records))) next
+        if (is.null(s$records)) next
         colrange = (s$dimension + 1):length(s$records)
         s$records[, colrange][is.nan(
           s$records[, colrange])] = 
@@ -1012,20 +1016,12 @@ Symbol <- R6Class(
 
     self$.requiresStateCheck = TRUE
     self$ref_container = container
+    self$ref_container$.requiresStateCheck = TRUE
 
-    # if (!is.null(self$ref_container$data[[name]])) {
-    #   stop(paste0("Attempting to add symbol ", s, ", however,",
-    #   " one already exists in the Container. Symbol replacement",
-    #   " is only possible if the symbol is first removed from the", 
-    #   "Container with the removeSymbol() method."))
-    # }
-    # else {
-    #   self$ref_container$data[[name]] = self
-    # }
     self$name <- name
     self$ref_container$data[[name]] = self
 
-    self$records = NA
+    self$records = NULL
 
     self$domain = domain
 
@@ -1036,7 +1032,7 @@ Symbol <- R6Class(
   },
 
   number_records = function() {
-    if (any(!is.na(self$records))) {
+    if (!is.null(self$records)) {
       return(nrow(self$records))
     }
     else {
@@ -1771,7 +1767,7 @@ Symbol <- R6Class(
       return(shapelist)
     }
 
-    if (any(!is.na(self$records))) {
+    if (!is.null(self$records)) {
       if (self$domain_type() == "none" || self$domain_type() == "relaxed") {
         shapelist = list()
         for (i in (1:self$dimension)) {
@@ -1804,7 +1800,7 @@ Symbol <- R6Class(
       is invalid -- use .isValid(verbose=TRUE) to debug symbol state.")
     }
 
-    if (any(!is.na(self$records))) {
+    if (!is.null(self$records)) {
       if (self$dimension  == 0) {
         return(self$records[[column]])
       }
@@ -1832,11 +1828,11 @@ Symbol <- R6Class(
   },
 
   .linkDomainCategories = function() {
-    if ((any(!is.na(self$records))) &&(!inherits(self, "Alias"))) {
+    if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
       for (n in seq_along(self$domain)) {
         i  = self$domain[[n]]
         if (((inherits(i, "Alias")) || (inherits(i, "Set"))) 
-        && (any(!is.na(i$records)))) {
+        && (!is.null(i$records))) {
           if (i$isValid()) {
             private$.records[, n] = factor(private$.records[, n], levels = i$records[, 1], ordered = TRUE)
           }
@@ -1859,31 +1855,14 @@ Symbol <- R6Class(
         return(private$.records)
       }
       else {
-        # if (!is.data.frame(records_input)) {
-        #   stop("Symbol 'records' must be type DataFrame")
-        # }
         private$.records = records_input
 
-        if (any(!is.na(self$records))) {
+        if (!is.null(self$records)) {
           if (self$domain_forwarding == TRUE) {
             private$domainForwarding()
             if (inherits(self$ref_container, "Container")) {
               self$ref_container$.linkDomainCategories()
             }
-            # link domain (set incorrect elements to NA)
-            # for (i in seq_along(self$domain)) {
-            #   d <- self$domain[[i]]
-
-            #   if (inherits(d, "Set") || inherits(d, "Alias")) {
-            #     if (d$isValid() && self$isValid()) {
-            #       violations = is.element(self$records[, i], 
-            #       d$records[, 1])
-            #       if (any(violations) == FALSE) {
-            #         self$records[!(violations), ][, i] <- NA
-            #       }
-            #     }
-            #   }
-            # }
 
             for (i in self$ref_container$listSymbols()) {
               self$ref_container$data[[i]]$.requiresStateCheck = TRUE
@@ -1892,19 +1871,6 @@ Symbol <- R6Class(
             self$ref_container$.requiresStateCheck = TRUE
           }
           else {
-              #link domain
-              # for (i in seq_along(self$domain)) {
-              #   d <- self$domain[[i]]
-              #   if (inherits(d, "Set") || inherits(d, "Alias")) {
-              #     if (d$isValid() && self$isValid()) {
-              #       violations = is.element(self$records[, i], 
-              #       d$records[, 1])
-              #       if (any(violations) == FALSE) {
-              #         self$records[!(violations), ][, i] <- NA
-              #       }
-              #     }
-              #   }
-              # }
               self$.requiresStateCheck = TRUE
               if (inherits(self$ref_container, "Container")) {
                 self$ref_container$.requiresStateCheck = TRUE
@@ -2108,7 +2074,7 @@ Symbol <- R6Class(
     .domain = NA,
     .ref_container = NA,
     .name = NA,
-    .records = NA,
+    .records = NULL,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
@@ -2123,21 +2089,18 @@ Symbol <- R6Class(
           for (i in self$domain) {
             if (!any(names(self$ref_container$data) == i$name)) {
               stop(paste0("symbol defined over domain symbol ",
-              i$name, " however, the object reference is not in the", 
+              i$name, " however, the object referenced is not in the", 
               " Container anymore -- must reset domain for symbol ", 
-              self$name))
+              self$name, "\n"))
 
             }
-            # if (!( ( (inherits(i, "Set") || inherits(i, "Alias")) && 
-            # (any(names(self$ref_container$data) == i$name))) ) ||
-            # ( (is.character(i)) && 
-            # ( any(names(self$ref_container$data) == i))
-            #  )) {
-            #   stop(paste0("symbol defined over domain symbol ",
-            #   i$name, " however, the object reference is not in the", 
-            #   " Container anymore -- must reset domain for symbol ", 
-            #   self$name))
-            # }
+            if (!identical(i, self$ref_container$data[[i$name]])) {
+              stop(paste0("symbol defined over domain symbol ",
+              i$name, " however, the symbol with name ", i$name, 
+              " in the container is different. Seems to be a broken link.
+               -- must reset domain for symbol ",
+              self$name, "\n"))
+            }
           }
 
           for (i in self$domain) {
@@ -2149,7 +2112,7 @@ Symbol <- R6Class(
           }
         }
         # if records exist, check consistency
-        if (any(!is.na(self$records))) {
+        if (!is.null(self$records)) {
           if (inherits(self, "Set")){
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
@@ -2265,7 +2228,7 @@ Symbol <- R6Class(
 
       for (i in to_grow) {
         dim = (self$ref_container$data[[i]]$domainLabels())[[1]]
-        if (any(!is.na(self$ref_container$data[[i]]$records))) {
+        if (!is.null(self$ref_container$data[[i]]$records)) {
           recs = self$ref_container$data[[i]]$records
           assert_that((self$ref_container$data[[i]]$dimension == 1),
           msg = "attempting to forward a domain set that has dimension > 1")
@@ -2294,7 +2257,7 @@ Set <- R6Class(
   public = list(
     initialize = function(container=NA, gams_name=NA,
                           domain="*", is_singleton=FALSE,
-                          records = NA, 
+                          records = NULL, 
                           domain_forwarding = FALSE,
                           description="") {
       self$isSingleton <- is_singleton
@@ -2311,7 +2274,7 @@ Set <- R6Class(
                       type, subtype,
                       domain, description, domain_forwarding)
 
-      if (any(!is.na(records))) {
+      if (!is.null(records)) {
         self$setRecords(records)
       }
       private$is_alias = FALSE
@@ -2398,7 +2361,7 @@ Parameter <- R6Class(
     isScalar = NULL,
 
     initialize = function(container=NA, gams_name=NA,
-                          domain=NA,records=NA,
+                          domain=NA,records = NULL,
                           domain_forwarding = FALSE,
                           description="") {
 
@@ -2406,7 +2369,7 @@ Parameter <- R6Class(
       super$initialize(container, gams_name,
                       type, 0, 
                       domain, description, domain_forwarding)
-      if (any(!is.na(records))) {
+      if (!is.null(records)) {
         self$setRecords(records)
       }
 
@@ -2468,7 +2431,7 @@ Variable <- R6Class(
   public = list(
     initialize = function(container = NA, gams_name = NA, 
                           type = "free",
-                          domain = NA, records = NA,
+                          domain = NA, records = NULL,
                           domain_forwarding = FALSE,
                           description="") {
 
@@ -2486,7 +2449,7 @@ Variable <- R6Class(
       super$initialize(container, gams_name,
                       symtype, symsubtype, 
                       domain, description, domain_forwarding)
-      if (any(!is.na(records))) {
+      if (!is.null(records)) {
         self$setRecords(records)
       }
     },
@@ -2667,7 +2630,7 @@ Equation <- R6Class(
     initialize = function(container=NA, gams_name=NA, 
                           type=NA,
                           domain=NA,
-                          records = NA,
+                          records = NULL,
                           domain_forwarding=FALSE,
                           description="") {
 
@@ -2690,7 +2653,7 @@ Equation <- R6Class(
       super$initialize(container, gams_name,
                       symtype, symsubtype, 
                       domain, description, domain_forwarding)
-      if (any(!is.na(records))) {
+      if (!is.null(records)) {
         self$setRecords(records)
       }
     },
