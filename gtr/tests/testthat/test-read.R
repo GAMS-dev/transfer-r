@@ -2541,10 +2541,10 @@ test_that("test_num_2", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i")
-  expect_true(is.na(i$records))
+  expect_true(is.null(i$records))
 
   j <- Set$new(m, "j")
-  expect_true(is.na(j$records))
+  expect_true(is.null(j$records))
 
   recs <- data.frame(list("i" = c("a", "b"), 
   "j" = c("c", "d"), "values" = c(1, 1)))
@@ -2586,10 +2586,10 @@ test_that("test_num_3", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i")
-  expect_true(is.na(i$records))
+  expect_true(is.null(i$records))
 
   j <- Alias$new(m, "j", i)
-  expect_true(is.na(j$records))
+  expect_true(is.null(j$records))
 
   recs <- data.frame(list("i" = c("a", "b"), 
   "j" = c("a", "b"), "values" = c(1, 1)))
@@ -2631,13 +2631,13 @@ test_that("test_num_4", {
   m <- Container$new()
 
   i <- Set$new(m, "i")
-  expect_true(is.na(i$records))
+  expect_true(is.null(i$records))
 
   j <- Set$new(m, "j", i)
-  expect_true(is.na(j$records))
+  expect_true(is.null(j$records))
 
   k <- Set$new(m, "k", j)
-  expect_true(is.na(k$records))
+  expect_true(is.null(k$records))
 
   l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE )
   expect_true(is.data.frame(i$records))
@@ -2680,7 +2680,7 @@ test_that("test_num_5", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i")
-  expect_true(is.na(i$records))
+  expect_true(is.null(i$records))
 
   recs <- data.frame(list("i" = "c", "element_text" = "desc for elem 'c'"))
   j <- Set$new(m, "j", i, records = recs, domain_forwarding = TRUE)
@@ -2694,7 +2694,7 @@ test_that("test_num_5", {
   expect_equal(as.character(i$records$uni_1), c("c"))
   expect_true(is.data.frame(j$records))
   expect_equal(as.character(j$records$i_1), c("c"))
-  expect_true(is.na(k$records))
+  expect_true(is.null(k$records))
 
   l <- Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
   expect_true(is.data.frame(i$records))
@@ -2850,10 +2850,10 @@ test_that("test_num_10", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i")
-  expect_true(is.na(i$records))
+  expect_true(is.null(i$records))
 
   j <- Set$new(m, "j")
-  expect_true(is.na(j$records))
+  expect_true(is.null(j$records))
 
   a <- Parameter$new(m, "a", list(i, j), domain_forwarding=TRUE)
 
@@ -3305,7 +3305,7 @@ test_that("test_num_22", {
   m$read(testthat::test_path("data.gdx"), values = FALSE)
 
   for (i in m$data) {
-    expect_equal(m$data[[i$name]]$records, NA)
+    expect_equal(m$data[[i$name]]$records, NULL)
   }
 }
 )
@@ -3474,7 +3474,7 @@ test_that("test_num_26", {
   expect_equal(j$records, df)
 
   k = Set$new(m ,"k", "j")
-  expect_equal(k$records, NA)
+  expect_equal(k$records, NULL)
 
   l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
 
@@ -3549,8 +3549,68 @@ test_that("test_num_28", {
   a_cone = Equation$new(m, "a_cone", "cone", i)
   a_external = Equation$new(m, "a_external", "external", i)
   a_boolean = Equation$new(m, "a_boolean", "boolean", i)
-  
   # try writing
-  m$write("gt.gdx")
+
+  expect_equal(m$write("gt.gdx"), NULL)
 }
 )
+
+test_that("test_num_29", {
+  # gams syntax
+  m = Container$new()
+
+  i = Set$new(m, "i")
+  a_binary = Variable$new(m, "a_binary", "binary", i)
+  a_integer = Variable$new(m, "a_integer", "integer", i)
+  a_positive = Variable$new(m, "a_positive", "positive", i)
+  a_negative = Variable$new(m, "a_negative", "negative", i)
+  a_free = Variable$new(m, "a_free", "free", i)
+  a_sos1 = Variable$new(m, "a_sos1", "sos1", i)
+  a_sos2 = Variable$new(m, "a_sos2", "sos2", i)
+  a_semicont = Variable$new(m, "a_semicont", "semicont", i)
+  a_semiint = Variable$new(m, "a_semiint", "semiint", i)
+
+  # try writing
+  expect_equal(m$write("gt.gdx"), NULL)
+}
+)
+
+test_that("test_num_30", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+
+  a = Parameter$new(m, "a", i)
+  # try writing
+  expect_equal(m$write("gt.gdx"), NULL)
+}
+)
+
+test_that("test_num_31", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i", "j")
+  j = Set$new(m, "j", "i")
+
+  a = Parameter$new(m, "a", c(i, j))
+  m$removeSymbols("j")
+  j = Set$new(m, "j", "i")
+  expect_error(a$isValid(verbose=TRUE))
+
+}
+)
+
+test_that("test_num_32", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+  m$isValid()
+
+  expect_equal(m$.requiresStateCheck, FALSE)
+
+  j = Set$new(m, "j")
+
+  expect_true(m$.requiresStateCheck)
+}
+)
+
