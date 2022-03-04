@@ -1900,24 +1900,24 @@ Symbol <- R6Class(
       }
       else {
         if (!is.character(description_input)) {
-          stop("Symbol 'description' must be type character")
+          stop("Symbol 'description' must be type character\n")
         }
 
         if (length(description_input) >= gams_description_max_length) {
           stop(paste0("Symbol 'description' must have length ",
-          gams_description_max_length, " or smaller"))
+          gams_description_max_length, " or smaller\n"))
         }
 
         if (!is.na(private$.description)) {
           if (private$.description != description_input) {
             self$.requiresStateCheck = TRUE
+            self$ref_container$.requiresStateCheck = TRUE
           }
-          else {
-            private$.description = description_input
-          }
+          private$.description = description_input
         }
         else {
           self$.requiresStateCheck = TRUE
+          self$ref_container$.requiresStateCheck = TRUE
           private$.description = description_input
         }
       }
@@ -2336,14 +2336,9 @@ Set <- R6Class(
       }
       else {
         if (!is.logical(is_singleton)) {
-          stop("Argument 'is_singleton' must be type bool")
+          stop("Argument 'is_singleton' must be type bool\n")
         }
-        if (missing(is_singleton)) {
-          return(private$is_singleton)
-        }
-        else {
-          private$is_singleton = is_singleton
-        }
+        private$is_singleton = is_singleton
       }
 
       }
@@ -2994,26 +2989,40 @@ Alias <- R6Class(
 
     isSingleton = function(is_singleton) {
       if (missing(is_singleton)) {
-        return(private$is_singleton)
+        refcontainer = self$ref_container
+        sym = refcontainer$data[[self$aliasWith$name]]
+        return(sym$isSingleton)
       }
       else {
-        self$ref_container$data[[self$aliasWith$name]]$isSingleton = is_singleton
+        refcontainer = self$ref_container
+        sym = refcontainer$data[[self$aliasWith$name]]
+        sym$isSingleton = is_singleton
       }
     },
+
     description = function(description_input) {
       if (missing(description_input)) {
-        return(self$ref_container$data[[self$aliasWith$name]]$description)
+        refcontainer = self$ref_container
+        aliaswithname = self$aliasWith$name
+        sym = refcontainer$data[[aliaswithname]]
+        return(sym$description)
       }
       else {
-        self$ref_container$data[[self$aliasWith$name]]$description = description_input
+        refcontainer = self$ref_container
+        aliaswithname = self$aliasWith$name
+        sym = refcontainer$data[[aliaswithname]]
+        sym$description = description_input
       }
     },
+
     dimension = function(dimension_input) {
       if (missing(dimension_input)) {
         return(self$ref_container$data[[self$aliasWith$name]]$dimension)
       }
       else {
-        self$ref_container$data[[self$aliasWith$name]]$dimension = dimension_input
+        refcontainer = self$ref_container
+        sym = refcontainer$data[[self$aliasWith$name]]
+        sym$dimension = dimension_input
       }
     },
 
@@ -3026,7 +3035,9 @@ Alias <- R6Class(
         return(self$ref_container$data[[self$aliasWith$name]]$domain)
       }
       else {
-        self$ref_container$data[[self$aliasWith$name]]$domain = domain_input
+        refcontainer = self$ref_container
+        sym = refcontainer$data[[self$aliasWith$name]]
+        sym$domain = domain_input
       }
     }
   ),
