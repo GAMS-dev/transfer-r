@@ -3614,3 +3614,63 @@ test_that("test_num_32", {
 }
 )
 
+test_that("test_num_33", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+  j = Set$new(m, "j")
+  k = Set$new(m, "k")
+
+  i$domain = j
+  j$domain = k
+  k$domain = i
+
+  expect_error(m$.__enclos_env__$private$validSymbolOrder())
+}
+)
+
+test_that("test_num_34", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+  j = Alias$new(m, "j", i)
+  j$setRecords(c("a", "b"))
+  df = data.frame("uni_1"=c("a", "b"), "element_text"=c("",""))
+  df$uni_1 = factor(df$uni_1, ordered=TRUE)
+
+  expect_equal(i$records, df)
+}
+)
+
+test_that("test_num_35", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+  j = Alias$new(m, "j", i)
+  j$description = "just a test"
+  expect_equal(i$description, "just a test")
+}
+)
+
+test_that("test_num_36", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+  k = Set$new(m, "k")
+  j = Alias$new(m, "j", i)
+  j$domain = c(k, k)
+  expect_equal(i$domain_names(), c("k", "k"))
+}
+)
+
+test_that("test_num_37", {
+  # gams syntax
+  m = Container$new()
+  i = Set$new(m, "i")
+  j = Alias$new(m, "j", i)
+  j$isSingleton = TRUE
+  expect_equal(i$isSingleton, TRUE)
+}
+)
+
+
