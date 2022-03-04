@@ -1032,11 +1032,16 @@ Symbol <- R6Class(
   },
 
   number_records = function() {
-    if (!is.null(self$records)) {
-      return(nrow(self$records))
+    if (self$isValid() == TRUE) {
+      if (!is.null(self$records)) {
+        return(nrow(self$records))
+      }
+      else {
+        return(0)
+      }
     }
     else {
-      return(0)
+      return(NA)
     }
   },
 
