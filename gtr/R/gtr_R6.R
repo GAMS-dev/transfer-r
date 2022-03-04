@@ -56,7 +56,7 @@ Container <- R6::R6Class (
     #' \href{../../gtr/html/Container.html#method-read}{\code{$read()}}
     #' @param load_from name of the GDX file to load data from
     #' @param system_directory optional argument for the path to GAMS System directory
-    initialize = function(load_from=NA, system_directory=NA) {
+    initialize = function(load_from=NULL, system_directory=NULL) {
 
       if (missing(system_directory)) {
         self$systemDirectory = find_gams()
@@ -67,7 +67,7 @@ Container <- R6::R6Class (
           self$systemDirectory = system_directory
         }
         else {
-          stop("must enter valid full (absolute) path to GAMS system_directory")
+          stop("must enter valid full (absolute) path to GAMS system_directory\n")
         }
       }
 
@@ -94,49 +94,44 @@ Container <- R6::R6Class (
 
       # check if values is boolean
       if (!is.logical(values)) {
-        stop("values must be type logical")
+        stop("values must be type logical\n")
       }
 
       if (!(is.character(symbols)) && !(is.list(symbols))) {
-        stop("argument symbols must be of the type list or string")
+        stop("argument symbols must be of the type list or string\n")
       }
 
       for (s in symbols) {
         if (!is.character(s)) {
-          stop("argument symbols must contain only type string")
+          stop("argument symbols must contain only type string\n")
         }
       }
 
       if (!is.character(load_from)) {
-        stop("The argument load_from must be of type string")
+        stop("The argument load_from must be of type string\n")
       }
       else {
         namesplit = strsplit(load_from, "\\.")
         ext = tail(unlist(namesplit), 1)
         if (ext != "gdx") {
-          stop("check filename extension, must be .gdx")
+          stop("check filename extension, must be .gdx\n")
         }
         load_from = R.utils::getAbsolutePath(path.expand(load_from))
         if (!file.exists(load_from)) {
-          stop(paste0("File ", load_from, " doesn't exist"))
+          stop(paste0("File ", load_from, " doesn't exist\n"))
         }
       }
       # check acronyms
-      print("system directory")
-      print(self$systemDirectory)
       acrInfo = checkAcronyms(load_from, self$systemDirectory)
       nAcr = acrInfo[["nAcronyms"]]
-      print(paste("number of acronyms", nAcr))
       if (nAcr != 0) {
         warning("GDX file contains acronyms. 
-        Acronyms are not supported and are set to GAMS NA.")
+        Acronyms are not supported and are set to GAMS NA.\n")
         self$acronyms = acrInfo[["acronyms"]]
       }
 
       # get names for all symbols
-      print("get metadata")
       metadata = getSymbols(load_from, self$systemDirectory)
-      print("metadata obtained")
       syms = lapply(metadata, "[[", 1)
 
       if (is.character(symbols) && symbols == "all") {
@@ -160,12 +155,10 @@ Container <- R6::R6Class (
           stop(paste0("Attempting to add symbol ", s, ", however,",
           " one already exists in the Container. Symbol replacement",
           " is only possible if the symbol is first removed from the", 
-          "Container with the removeSymbol() method."))
+          "Container with the removeSymbol() method.\n"))
         }
       }
-      # print("get metadata")
-      # metadata = getSymbols(load_from, self$systemDirectory)
-      # print("metadata obtained")
+
       aliasList = list()
       aliasCount = 0
       for (m in metadata) {
@@ -212,7 +205,7 @@ Container <- R6::R6Class (
               aliasList = append(aliasList, list(m))
             }
             else {
-                stop("incorrect data type.")
+                stop("incorrect data type.\n")
             }
          }
       }
@@ -265,17 +258,17 @@ Container <- R6::R6Class (
         return(unique(uni))
       }
       else {
-        return(NA)
+        return(NULL)
       }
     },
 
-    removeSymbols = function(name = NA) {
+    removeSymbols = function(name = NULL) {
       if (!(is.character(name) || is.vector(name) || is.list(name))) {
-        stop("Argument 'name' must be of type string, list, or vector")
+        stop("Argument 'name' must be of type string, list, or vector\n")
       }
 
       if (!all(unlist(lapply(name, is.character)))) {
-        stop("Argument 'name' must contain only type character")
+        stop("Argument 'name' must contain only type character\n")
       }
 
       for (n in name) {
@@ -285,19 +278,17 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
     },
 
-    renameSymbol = function(old_name = NA, new_name = NA) {
-      print(paste("old name", old_name))
-      print(paste("new_name", new_name))
+    renameSymbol = function(old_name = NULL, new_name = NULL) {
       if (!is.character(old_name)) {
-        stop("Argument 'old_name' must be type character")
+        stop("Argument 'old_name' must be type character\n")
       }
 
       if (!is.character(new_name)) {
-        stop("Argument 'new_name' must be type character")
+        stop("Argument 'new_name' must be type character\n")
       }
 
       if (is.null(self$data[[old_name]])) {
-        stop(paste0("Symbol ", old_name, " does not exist"))
+        stop(paste0("Symbol ", old_name, " does not exist\n"))
       }
 
       if (old_name != new_name) {
@@ -310,7 +301,7 @@ Container <- R6::R6Class (
     listSymbols = function(isValid = NULL) {
       if (!is.null(isValid)) {
         assertthat::assert_that(is.logical(isValid),
-        msg = "argument 'isValid' must be type logical")
+        msg = "argument 'isValid' must be type logical\n")
         l = NULL
         for (d in self$data) {
           if (d$isValid() == isValid) {
@@ -413,7 +404,7 @@ Container <- R6::R6Class (
       return(self$data[[name]])
     },
 
-    addParameter = function(name, domain = NA,
+    addParameter = function(name, domain = list(),
     records = NULL, domain_forwarding=FALSE, description = "") {
       Parameter$new(
         self, name, domain, records,
@@ -421,7 +412,7 @@ Container <- R6::R6Class (
         return(self$data[[name]])
     },
 
-    addVariable = function(name, type="free", domain = NA,
+    addVariable = function(name, type="free", domain = list(),
     records = NULL, domain_forwarding=FALSE, description = "") {
       Variable$new(
         self, name, type, domain, records,
@@ -429,7 +420,7 @@ Container <- R6::R6Class (
         return(self$data[[name]])
     },
 
-    addEquation = function(name, type, domain = NA, 
+    addEquation = function(name, type, domain = list(), 
     records = NULL, domain_forwarding=FALSE, description = "") {
       Equation$new(
         self, name, type, domain, records,
@@ -443,8 +434,8 @@ Container <- R6::R6Class (
       return(self$data[[name]])
     },
 
-    describeSets = function(symbols=NA) {
-      if (is.na(symbols)) {
+    describeSets = function(symbols=NULL) {
+      if (is.null(symbols)) {
         symbols = self$listSets()
       }
       colNames = list("name",
@@ -483,12 +474,12 @@ Container <- R6::R6Class (
         return(df[order(df[, 1]), ])
       }
       else {
-        return(NA)
+        return(NULL)
       }
     },
 
-    describeParameters = function(symbols = NA) {
-      if (is.na(symbols)) {
+    describeParameters = function(symbols = NULL) {
+      if (is.null(symbols)) {
         symbols = self$listParameters()
       }
       colNames = list(
@@ -543,12 +534,12 @@ Container <- R6::R6Class (
         return(df[order(df[, 1]),])
       }
       else {
-        return(NA)
+        return(NULL)
       }
     },
 
-    describeVariables = function(symbols=NA) {
-      if (is.na(symbols)) {
+    describeVariables = function(symbols=NULL) {
+      if (is.null(symbols)) {
         symbols = self$listVariables()
       }
       colNames = list(
@@ -608,12 +599,12 @@ Container <- R6::R6Class (
         return(df[order( df[,1]),])
       }
       else {
-        return(NA)
+        return(NULL)
       }
     },
 
-    describeEquations = function(symbols=NA) {
-      if (is.na(symbols)) {
+    describeEquations = function(symbols=NULL) {
+      if (is.null(symbols)) {
         symbols = self$listEquations()
       }
       colNames = list(
@@ -672,7 +663,7 @@ Container <- R6::R6Class (
         return(df[order(df[, 1]),])
       }
       else {
-        return(NA)
+        return(NULL)
       }
     },
 
@@ -680,37 +671,34 @@ Container <- R6::R6Class (
       print(private$gdx_specVals_write)
     },
 
-    write = function(gdxout, compress = FALSE, uel_priority = NA) {
+    write = function(gdxout, compress = FALSE, uel_priority = NULL) {
       if (!is.logical(compress)) {
-        stop("'compress' must be of type bool; default False (no compression)")
+        stop("'compress' must be of type bool; default False (no compression)\n")
       }
 
       if (!is.character(gdxout)) {
-        stop("The argument gdxout must be of type string")
+        stop("The argument gdxout must be of type string\n")
       }
       else {
         namesplit = strsplit(gdxout, "\\.")
         ext = tail(unlist(namesplit), 1)
         if (ext != "gdx") {
-          stop("check filename extension, must be .gdx")
+          stop("check filename extension, must be .gdx\n")
         }
 
         gdxout = R.utils::getAbsolutePath(path.expand(gdxout))
-        # if (!file.exists(gdxout)) {
-        #   stop(paste0("File ", gdxout, " doesn't exist"))
-        # }
       }
 
-      if (!is.na(uel_priority)) {
+      if (!is.null(uel_priority)) {
         if (!(is.character(uel_priority) || is.list(uel_priority))) {
-          stop("'uel_priority' must be type list or str")
+          stop("'uel_priority' must be type list or str\n")
         }
       }
 
       if (!identical(self$listSymbols(), self$listSymbols(isValid=TRUE) )) {
         stop(paste0("There are symbol(s) in Container that are not valid;",
          "all symbols must be valid before writing",
-         " (i.e., <symbol object>$isValid() == TRUE)"))
+         " (i.e., <symbol object>$isValid() == TRUE)\n"))
       }
 
       private$validSymbolOrder()
@@ -747,16 +735,17 @@ Container <- R6::R6Class (
         == -1))] = specialValsGDX[["EPS"]]
       }
 
-      if (is.na(uel_priority)) {
+      if (is.null(uel_priority)) {
         gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, NA, FALSE, compress)
       }
       else {
         universe = self$getUniverseSet()
-        if (!setequal(intersect(uel_priority, universe), uel_priority)) {
+        if ((is.null(universe)) ||
+        (!setequal(intersect(uel_priority, universe), uel_priority))) {
           stop("uel_priority must be a subset of the universe, check 
           spelling of an element in uel_priority? Also check 
-          getUniverseSet() method for assumed UniverseSet.")
+          getUniverseSet() method for assumed UniverseSet.\n")
         }
 
         reorder = uel_priority
@@ -842,7 +831,7 @@ Container <- R6::R6Class (
           stop(paste0("Container contains invalid symbols; ",
           "invalid symbols can be found with the .listSymbols() ",
           "method. Debug invalid symbol(s) by running .",
-          "isValid(verbose=TRUE, force=TRUE) method on the symbol object."))
+          "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n"))
         }
         self$.requiresStateCheck = FALSE
       }
@@ -919,7 +908,7 @@ Container <- R6::R6Class (
           }
 
           stop(paste0("Error: Graph cycle detected among symbols: ",
-          symString, " -- must resolve circular domain referencing"))
+          symString, " -- must resolve circular domain referencing\n"))
         }
       }
       return(orderedSymbols)
@@ -1004,7 +993,7 @@ Symbol <- R6Class(
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
-  .requiresStateCheck = NA,
+  .requiresStateCheck = NULL,
 
   initialize = function(container, name,
                         type, subtype, 
@@ -1121,12 +1110,12 @@ Symbol <- R6Class(
     )
   },
 
-  getMaxValue = function(columns=NA) {
-    if (!is.na(columns)) {
+  getMaxValue = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1135,20 +1124,20 @@ Symbol <- R6Class(
         stop(paste0("User entered column '", columns, "' must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ))
+        ,"\n"))
       }
     }
 
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(max(self$records[[columns]]))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1164,13 +1153,13 @@ Symbol <- R6Class(
     )
   },
 
-  getMinValue = function(columns=NA) {
-    if (!is.na(columns)) {
+  getMinValue = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input '", columns, 
         "', however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1179,19 +1168,19 @@ Symbol <- R6Class(
         stop(paste0("User entered column '", columns, "' must be a subset",
         " of valid numeric columns", 
         colnames(self$records[,(self$dimension+1):length(self$records)])
-        ))
+        , "\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(min(self$records[[columns]]))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1209,12 +1198,12 @@ Symbol <- R6Class(
 
   },
 
-  getMeanValue = function(columns=NA) {
-    if (!is.na(columns)) {
+  getMeanValue = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1223,14 +1212,14 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ))
+        ,"\n"))
       }
     }
 
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           meanVal = mean(self$records[[columns]])
@@ -1243,7 +1232,7 @@ Symbol <- R6Class(
 
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1266,12 +1255,12 @@ Symbol <- R6Class(
       }
     )
   },
-  getMaxAbsValue = function(columns=NA) {
-    if (!is.na(columns)) {
+  getMaxAbsValue = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1280,19 +1269,19 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records[,(self$dimension+1):length(self$records)])
-        ))
+        , "\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(max(abs(self$records[[columns]])))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1308,12 +1297,12 @@ Symbol <- R6Class(
       }
     )
   },
-  whereMax = function(columns=NA) {
-    if (!is.na(columns)) {
+  whereMax = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1322,13 +1311,13 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ))
+        ,"\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           whereMaxVal = which.max(self$records[[columns]])
@@ -1340,7 +1329,7 @@ Symbol <- R6Class(
           }
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1362,12 +1351,12 @@ Symbol <- R6Class(
     )
   },
 
-  whereMaxAbs = function(columns=NA) {
-    if (!is.na(columns)) {
+  whereMaxAbs = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1376,14 +1365,14 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension + 1):length(self$records)]
-        ))
+        , "\n"))
       }
     }
 
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
 
@@ -1396,7 +1385,7 @@ Symbol <- R6Class(
           }
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1418,12 +1407,12 @@ Symbol <- R6Class(
       }
     )
   },
-  whereMin = function(columns=NA) {
-    if (!is.na(columns)) {
+  whereMin = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1432,13 +1421,13 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension + 1):length(self$records)]
-        ))
+        , "\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           whereMinVal = which.min(self$records[[columns]])
@@ -1450,7 +1439,7 @@ Symbol <- R6Class(
           }
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1474,12 +1463,12 @@ Symbol <- R6Class(
 
   },
 
-  countNA = function(columns=NA) {
-    if (!is.na(columns)) {
+  countNA = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1488,20 +1477,20 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ))
+        , "\n"))
       }
     }
 
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(sum(is.na(self$records[[columns]])))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1518,12 +1507,12 @@ Symbol <- R6Class(
     )
   },
 
-  countEps = function(columns=NA) {
-    if (!is.na(columns)) {
+  countEps = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1532,19 +1521,19 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records[(self$dimension + 1):length(self$records)]
-        )))
+        , "\n")))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(sum(self$records[[columns]] == SpecialValues$EPS))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1561,12 +1550,12 @@ Symbol <- R6Class(
 
   },
 
-  countUndef = function(columns=NA) {
-    if (!is.na(columns)) {
+  countUndef = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1575,19 +1564,19 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension + 1):length(self$records)]
-        ))
+        , "\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(sum(is.nan(self$records[[columns]])))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1604,12 +1593,12 @@ Symbol <- R6Class(
     )
   },
 
-  countPosinf = function(columns=NA) {
-    if (!is.na(columns)) {
+  countPosinf = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1618,19 +1607,19 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ))
+        , "\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "value"
           }
           return(sum(self$records[[columns]] == SpecialValues$POSINF))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1646,12 +1635,12 @@ Symbol <- R6Class(
     )
   },
 
-  countNeginf = function(columns=NA) {
-    if (!is.na(columns)) {
+  countNeginf = function(columns=NULL) {
+    if (!is.null(columns)) {
       if (!is.character(columns)){
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
-        " character)"))
+        " character)\n"))
       }
 
       if (!setequal(intersect(columns, 
@@ -1660,19 +1649,19 @@ Symbol <- R6Class(
         stop(paste0("User entered column ", columns, " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ))
+        , "\n"))
       }
     }
     tryCatch(
       {
         if (inherits(self, "Parameter")) {
-          if (is.na(columns)){
+          if (is.null(columns)){
             columns = "value"
           }
           return(sum(self$records[[columns]] == SpecialValues$NEGINF))
         }
         else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.na(columns)) {
+          if (is.null(columns)) {
             columns = "level"
           }
 
@@ -1782,13 +1771,13 @@ Symbol <- R6Class(
       }
     }
     else {
-      return(NA)
+      return(NULL)
     }
   },
 
   toDense = function(column = "level") {
     if (!is.character(column)) {
-      stop("Argument 'column' must be type str")
+      stop("Argument 'column' must be type str\n")
     }
     if (inherits(self, "Parameter")) {
       column = "value"
@@ -1796,13 +1785,13 @@ Symbol <- R6Class(
     else {
       if (!any(private$.attr() == column)) {
         stop(paste0("Argument 'column' must be one 
-        of the following: ", toString(private$.attr())))
+        of the following: ", toString(private$.attr()), "\n"))
       }
     }
 
     if (self$isValid() == FALSE) {
       stop("Cannot create dense array (i.e., matrix) format because symbol 
-      is invalid -- use .isValid(verbose=TRUE) to debug symbol state.")
+      is invalid -- use .isValid(verbose=TRUE) to debug symbol state.\n")
     }
 
     if (!is.null(self$records)) {
@@ -1812,23 +1801,12 @@ Symbol <- R6Class(
       else {
         a = array(0, dim = unlist(self$shape()))
         idx = lapply(self$records[,1:self$dimension], as.numeric)
-        # df = self$records
-        # for (i in (1:self$dimension)) {
-        #   d = self$domain[[i]]
-        #   if ((inherits(d, "Set")) || (inherits(d, "Alias"))) {
-        #     f = factor(d$records[,1])
-        #   }
-        #   df[, i] = factor(df[,i], levels = d$records[, 1])
-        # }
-
-        # idx = lapply(df[,1:self$dimension], as.numeric)
-
         a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
         return(a)
       }
     }
     else {
-      return(NA)
+      return(NULL)
     }
   },
 
@@ -1891,7 +1869,7 @@ Symbol <- R6Class(
       }
       else {
         if (!is.logical(domain_forwarding_input)) {
-          stop("Argument 'domain_forwarding' must be type bool")
+          stop("Argument 'domain_forwarding' must be type bool\n")
         }
         else {
           private$.domain_forwarding = domain_forwarding_input
@@ -1913,7 +1891,7 @@ Symbol <- R6Class(
           gams_description_max_length, " or smaller\n"))
         }
 
-        if (!is.na(private$.description)) {
+        if (!is.null(private$.description)) {
           if (private$.description != description_input) {
             self$.requiresStateCheck = TRUE
             self$ref_container$.requiresStateCheck = TRUE
@@ -2003,7 +1981,7 @@ Symbol <- R6Class(
                 domaintemp = append(domaintemp, d)
               }
               else {
-                stop("domain elements cannot belong to a different container")
+                stop("domain elements cannot belong to a different container\n")
               }
             }
             else if (inherits(d, "Alias")) {
@@ -2011,7 +1989,7 @@ Symbol <- R6Class(
                 domaintemp = append(domaintemp, d)
               }
               else {
-                stop("domain elements cannot belong to a different container")
+                stop("domain elements cannot belong to a different container\n")
               }
             }
           }
@@ -2026,7 +2004,7 @@ Symbol <- R6Class(
       }
       else {
         if (!inherits(ref_container_input, "Container")) {
-          stop("Symbol 'container' must be type Container")
+          stop("Symbol 'container' must be type Container\n")
         }
         if (is.null(self$ref_container)){
           if (!identical(self$ref_container, ref_container_input)) {
@@ -2046,20 +2024,20 @@ Symbol <- R6Class(
       }
       else {
         if (!is.character(name_input)) {
-          stop("GAMS symbol 'name' must be type chracter")
+          stop("GAMS symbol 'name' must be type chracter\n")
         }
 
         if (nchar(name_input) > private$symbolMaxLength) {
           stop(paste0("GAMS symbol 'name' is too long,",
-          " max is ", private$symbolMaxLength, " characters"))
+          " max is ", private$symbolMaxLength, " characters\n"))
         }
 
         if (!is.null(self$ref_container$data[[name_input]])) {
           stop(paste0("A symbol with the name ", name_input, 
-          " already exists in the container"))
+          " already exists in the container\n"))
         }
 
-        if (is.na(private$.name)) {
+        if (is.null(private$.name)) {
           self$.requiresStateCheck = TRUE
           private$.name = name_input
         }
@@ -2081,11 +2059,11 @@ Symbol <- R6Class(
   ),
 
   private = list(
-    .domain_forwarding = NA,
-    .description = NA,
-    .domain = NA,
-    .ref_container = NA,
-    .name = NA,
+    .domain_forwarding = NULL,
+    .description = NULL,
+    .domain = NULL,
+    .ref_container = NULL,
+    .name = NULL,
     .records = NULL,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
@@ -2111,7 +2089,7 @@ Symbol <- R6Class(
               i$name, " however, the symbol with name ", i$name, 
               " in the container is different. Seems to be a broken link.
                -- must reset domain for symbol ",
-              self$name, "\n"))
+              self$name))
             }
           }
 
@@ -2119,7 +2097,7 @@ Symbol <- R6Class(
             if (i$isValid() != TRUE) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, this object is not a valid object ",
-              "in the Container -- all domain objects must be valid."))
+              "in the Container -- all domain objects must be valid.\n"))
             }
           }
         }
@@ -2128,17 +2106,17 @@ Symbol <- R6Class(
           if (inherits(self, "Set")){
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns (<symbol dimension> + 1)"))
+              " the correct number of columns (<symbol dimension> + 1)\n"))
             }
           }
           if (inherits(self, "Parameter")) {
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns (<symbol dimension> + 1)"))
+              " the correct number of columns (<symbol dimension> + 1)\n"))
 
               if (self$dimension == 0 && nrow(self$records != 1)) {
               stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns (<symbol dimension> + 1)"))
+              " the correct number of columns (<symbol dimension> + 1)\n"))
               }
             }
           }
@@ -2148,13 +2126,13 @@ Symbol <- R6Class(
             self$dimension + length(private$.attr())) {
               stop(paste0("Symbol 'records' does not have", 
               " the correct number of columns ", 
-              self$dimension + length(private$.attr())))
+              self$dimension + length(private$.attr()), "\n"))
             }
           }
 
           # check if records are dataframe
           if (!is.data.frame(self$records)){
-            stop("Symbol 'records' must be type dataframe")
+            stop("Symbol 'records' must be type dataframe\n")
           }
 
           # check column names and order
@@ -2171,17 +2149,17 @@ Symbol <- R6Class(
           }
 
           if (!identical(unlist(cols), colnames(self$records))) {
-            stop(paste0("Records columns must be named and ordered as: ", toString(cols)))
+            stop(paste0("Records columns must be named and ordered as: ", toString(cols),"\n"))
           }
 
           if (!all(unlist(lapply(cols, is.character) ))) {
-            stop("Domain columns in symbol 'records' must be of type character")
+            stop("Domain columns in symbol 'records' must be of type character\n")
           }
 
           # check if columns are factors
           for (i in self$domainLabels()) {
             if (!is.factor(self$records[[i]])) {
-              stop(paste0("Domain information in column ", i, " must be a factor"))
+              stop(paste0("Domain information in column ", i, " must be a factor\n"))
             }
           }
 
@@ -2194,7 +2172,7 @@ Symbol <- R6Class(
             length(narecords) != 0 ) {
               stop(paste0("Symbol 'records' contain domain violations;",
               " ensure that all domain elements have",
-              " been mapped properly to a factor"))
+              " been mapped properly to a factor\n"))
             }
           }
 
@@ -2202,7 +2180,7 @@ Symbol <- R6Class(
           if (self$dimension != 0) {
             if (nrow(self$records) != nrow(unique(self$records))) {
               stop(paste0("Symbol 'records' contain non-unique",
-               " domain members; ensure that only unique members exist"))
+               " domain members; ensure that only unique members exist\n"))
             }
           }
 
@@ -2212,7 +2190,7 @@ Symbol <- R6Class(
           inherits(self, "Equation")) {
             for (i in (self$dimension + 1):length(self$records)) {
               if (!all(is.numeric(self$records[, i]))) {
-                stop("Data in column", i, " must be numeric")
+                stop("Data in column", i, " must be numeric\n")
               }
             }
           }
@@ -2267,7 +2245,7 @@ Set <- R6Class(
   "Set",
   inherit = Symbol,
   public = list(
-    initialize = function(container=NA, gams_name=NA,
+    initialize = function(container=NULL, gams_name=NULL,
                           domain="*", is_singleton=FALSE,
                           records = NULL, 
                           domain_forwarding = FALSE,
@@ -2312,7 +2290,7 @@ Set <- R6Class(
       }
       else {
         stop(paste0("The argument 'records' is of length",
-        c, " Expecting ", self$dimension + 1))
+        c, " Expecting ", self$dimension + 1, "\n"))
       }
       columnNames = self$domainLabels()
       columnNames = append(columnNames, "element_text")
@@ -2356,8 +2334,8 @@ Set <- R6Class(
       }
   ),
   private = list(
-    is_singleton = NA,
-    is_alias = NA
+    is_singleton = NULL,
+    is_alias = NULL
   )
   )
 
@@ -2365,7 +2343,7 @@ Parameter <- R6Class(
   "Parameter",
   inherit = Symbol,
   public = list(
-    initialize = function(container=NA, gams_name=NA,
+    initialize = function(container=NULL, gams_name=NULL,
                           domain=list(),records = NULL,
                           domain_forwarding = FALSE,
                           description="") {
@@ -2402,7 +2380,7 @@ Parameter <- R6Class(
 
       #if records "value" is not numeric, stop.
       if (any(!is.numeric(records[,length(records)]))) {
-        stop("All entries in the 'values' column of a parameter must be numeric.")
+        stop("All entries in the 'values' column of a parameter must be numeric.\n")
       }
       self$records = records
       self$.linkDomainCategories()
@@ -2441,7 +2419,7 @@ Variable <- R6Class(
   "Variable",
   inherit = Symbol,
   public = list(
-    initialize = function(container = NA, gams_name = NA, 
+    initialize = function(container = NULL, gams_name = NULL, 
                           type = "free",
                           domain = list(), records = NULL,
                           domain_forwarding = FALSE,
@@ -2492,7 +2470,7 @@ Variable <- R6Class(
         "columns not named ", toString(private$.attr()),
         " will be interpreted as domain columns, check that the data.frame conforms",
         "to the required notation.\n",
-        "User passed data.frame with columns: ", usr_colnames)))
+        "User passed data.frame with columns: ", usr_colnames, "\n")))
       }
 
       # reorder columns
@@ -2541,7 +2519,7 @@ Variable <- R6Class(
           " 6. 'sos1' \n",
           " 7. 'sos2' \n",
           " 8. 'semicont' \n",
-          " 9. 'semiint'"
+          " 9. 'semiint'\n"
           )))
         }
 
@@ -2639,8 +2617,8 @@ Equation <- R6Class(
   inherit = Symbol,
   public = list(
 
-    initialize = function(container=NA, gams_name=NA, 
-                          type=NA,
+    initialize = function(container=NULL, gams_name=NULL, 
+                          type=NULL,
                           domain=list(),
                           records = NULL,
                           domain_forwarding=FALSE,
@@ -2699,7 +2677,7 @@ Equation <- R6Class(
         "columns not named ", toString(private$.attr()),
         " will be interpreted as domain columns, check that the data.frame conforms",
         "to the required notation.\n",
-        "User passed data.frame with columns: ", usr_colnames)))
+        "User passed data.frame with columns: ", usr_colnames, "\n")))
       }
 
       # reorder columns
@@ -2839,8 +2817,8 @@ Alias <- R6Class(
     .gams_type = NULL,
     .gams_subtype = NULL,
     .requiresStateCheck = NULL,
-    initialize = function(container=NA, gams_name=NA, 
-                          alias_for=NA) {
+    initialize = function(container=NULL, gams_name=NULL, 
+                          alias_for=NULL) {
       self$.requiresStateCheck = TRUE
       self$ref_container = container
       self$name = gams_name
@@ -2935,7 +2913,7 @@ Alias <- R6Class(
       }
       else {
         if (!inherits(ref_container_input, "Container")) {
-          stop("Symbol 'container' must be type Container")
+          stop("Symbol 'container' must be type Container\n")
         }
         if (is.null(self$ref_container)){
           if (!identical(self$ref_container, ref_container_input)) {
@@ -2956,7 +2934,7 @@ Alias <- R6Class(
       }
       else {
         if (!is.character(name_input)) {
-          stop("GAMS symbol 'name' must be type chracter")
+          stop("GAMS symbol 'name' must be type chracter\n")
         }
 
         if (nchar(name_input) > private$symbolMaxLength) {
@@ -2966,10 +2944,10 @@ Alias <- R6Class(
 
         if (!is.null(self$ref_container$data[[name_input]])) {
           stop(paste0("A symbol with the name ", name_input, 
-          " already exists in the container"))
+          " already exists in the container\n"))
         }
 
-        if (is.na(private$.name)) {
+        if (is.null(private$.name)) {
           self$.requiresStateCheck = TRUE
           private$.name = name_input
         }
@@ -2990,7 +2968,7 @@ Alias <- R6Class(
       else {
         if (!((inherits(alias_with_input, "Set")) || 
         (inherits(alias_with_input, "Alias") ))) {
-          stop("GAMS 'alias_with' must be type Set or Alias")
+          stop("GAMS 'alias_with' must be type Set or Alias\n")
         }
 
         if (inherits(alias_with_input, "Alias")) {
@@ -3061,11 +3039,11 @@ Alias <- R6Class(
 
   private = list(
     symbolMaxLength = 63,
-    .ref_container = NA,
-    .name = NA,
-    .aliasWith = NA,
-    is_alias = NA,
-    is_singleton = NA,
+    .ref_container = NULL,
+    .name = NULL,
+    .aliasWith = NULL,
+    is_alias = NULL,
+    is_singleton = NULL,
 
     # lblTypeSubtype = function() {
     #   return(list(
@@ -3077,7 +3055,7 @@ Alias <- R6Class(
       if (self$.requiresStateCheck == TRUE) {
         if (self$ref_container$data[[self$aliasWith$name]]$isValid() == FALSE) {
           stop(paste0("Alias symbol is not valid because parent set ", self$aliasWith$name,
-          "is not valid"))
+          "is not valid\n"))
         }
       }
     }
@@ -3100,7 +3078,7 @@ find_gams <- function() {
     }
   }
   if (is.null(sysDirPath)) {
-  stop("Could not find a GAMS installation, must manually specify system_directory")
+  stop("Could not find a GAMS installation, must manually specify system_directory\n")
   }
   return(sysDirPath)
 }
