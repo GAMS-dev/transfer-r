@@ -1006,11 +1006,11 @@ Symbol <- R6Class(
     .gams_subtype = NULL,
   .requiresStateCheck = NA,
 
-  initialize = function(container=NA, name=NA,
-                        type=NA, subtype=NA, 
-                        domain=NA,
-                        description=NA,
-                        domain_forwarding=NA) {
+  initialize = function(container, name,
+                        type, subtype, 
+                        domain,
+                        description,
+                        domain_forwarding) {
     self$.gams_type = type
     self$.gams_subtype = subtype
 
@@ -1928,18 +1928,25 @@ Symbol <- R6Class(
         return(length(self$domain))
       }
       else {
-         assertthat::assert_that(
-           (is.integer(dimension_input)) && (dimension_input >= 0),
+        assertthat::assert_that(
+           (is.numeric(dimension_input)) && 
+           (dimension_input %% 1 == 0) && (dimension_input >= 0),
            msg = "Symbol 'dimension' must be type 
            int (greater than or equal to 0)")
 
         if (length(self$domain) > dimension_input) {
-          self$domain = self$domain[1:dimension_input]
+          if (dimension_input == 0) {
+            self$domain = list()
+          }
+          else {
+            self$domain = self$domain[1:dimension_input]
+          }
         }
         else if (length(self$domain) < dimension_input) {
            new = self$domain
            new = append(new, replicate(dimension_input - 
            length(self$domain), "*"))
+           self$domain = new
         }
         else {
         }
@@ -2353,10 +2360,8 @@ Parameter <- R6Class(
   "Parameter",
   inherit = Symbol,
   public = list(
-    isScalar = NULL,
-
     initialize = function(container=NA, gams_name=NA,
-                          domain=NA,records = NULL,
+                          domain=list(),records = NULL,
                           domain_forwarding = FALSE,
                           description="") {
 
@@ -2364,15 +2369,9 @@ Parameter <- R6Class(
       super$initialize(container, gams_name,
                       type, 0, 
                       domain, description, domain_forwarding)
+
       if (!is.null(records)) {
         self$setRecords(records)
-      }
-
-      if (self$dimension == 0) {
-        self$isScalar = TRUE
-      }
-      else {
-         self$isScalar = FALSE
       }
     },
 
@@ -2417,6 +2416,19 @@ Parameter <- R6Class(
       ))
     }
 
+  ),
+
+  active = list(
+    isScalar = function(isScalar_input) {
+      if (missing(isScalar_input)) {
+        if (length(self$domain) == 0) {
+          return(TRUE)
+        }
+        else {
+          return(FALSE)
+        }
+      }
+    }
   )
 )
 
@@ -2426,7 +2438,7 @@ Variable <- R6Class(
   public = list(
     initialize = function(container = NA, gams_name = NA, 
                           type = "free",
-                          domain = NA, records = NULL,
+                          domain = list(), records = NULL,
                           domain_forwarding = FALSE,
                           description="") {
 
@@ -2624,7 +2636,7 @@ Equation <- R6Class(
 
     initialize = function(container=NA, gams_name=NA, 
                           type=NA,
-                          domain=NA,
+                          domain=list(),
                           records = NULL,
                           domain_forwarding=FALSE,
                           description="") {
