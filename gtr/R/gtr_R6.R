@@ -1118,31 +1118,37 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
         stop(paste0("User entered column '", columns, "' must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
+        , "\n"))
       }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
     }
 
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(max(self$records[[columns]]))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(max(self$records[, columns]))
-        }
+        return(max(self$records[[columns]]))
       },
       error = function(cond) {
         return(NA)
@@ -1162,6 +1168,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
@@ -1171,22 +1185,19 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(min(self$records[[columns]]))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(min(self$records[, columns]))
-
-        }
+        return(min(self$records[, columns]))
       },
       error = function(cond) {
         return(NA)
@@ -1206,6 +1217,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
@@ -1215,37 +1234,20 @@ Symbol <- R6Class(
         ,"\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
 
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          meanVal = mean(self$records[[columns]])
-          if (is.nan(meanVal)) {
-            return(NA)
-          }
-          else {
-              return(meanVal)
-          }
-
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          meanVal = mean(colMeans(self$records[columns]))
-          if (is.nan(meanVal)) {
-            return(NA)
-          }
-          else {
-              return(meanVal)
-          }
-
-        }
-
+        meanVal = mean(self$records[[columns]])
       },
       error = function(cond) {
         return(NA)
@@ -1263,6 +1265,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
@@ -1272,22 +1282,20 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(max(abs(self$records[[columns]])))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(max(abs(self$records[, columns])))
-
-        }
+        return(max(abs(self$records[[columns]])))
       },
       error = function(cond) {
         return(NA)
@@ -1297,12 +1305,21 @@ Symbol <- R6Class(
       }
     )
   },
+
   whereMax = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
       }
 
       if (!setequal(intersect(columns, 
@@ -1314,32 +1331,25 @@ Symbol <- R6Class(
         ,"\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          whereMaxVal = which.max(self$records[[columns]])
-          if (is.integer0(whereMaxVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMaxVal)
-          }
+        whereMaxVal = which.max(self$records[[columns]])
+        if (is.integer0(whereMaxVal)) {
+          return(NA)
         }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          whereMaxVal = which.max(self$records[, columns])
-          if (is.integer0(whereMaxVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMaxVal)
-          }
+        else {
+          return(whereMaxVal)
         }
       },
       error = function(cond) {
@@ -1359,6 +1369,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
@@ -1368,35 +1386,25 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
 
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-
-          whereMaxVal = which.max(abs(self$records[[columns]]))
-          if (is.integer0(whereMaxVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMaxVal)
-          }
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-        whereMaxVal = which.max(abs(self$records[, columns]))
+        whereMaxVal = which.max(abs(self$records[[columns]]))
         if (is.integer0(whereMaxVal)) {
           return(NA)
         }
         else {
           return(whereMaxVal)
-        }
-
         }
       },
       error = function(cond) {
@@ -1407,12 +1415,21 @@ Symbol <- R6Class(
       }
     )
   },
+
   whereMin = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", columns, ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
       }
 
       if (!setequal(intersect(columns, 
@@ -1424,12 +1441,19 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
           whereMinVal = which.min(self$records[[columns]])
           if (is.integer0(whereMinVal)) {
             return(NA)
@@ -1437,21 +1461,6 @@ Symbol <- R6Class(
           else {
             return(whereMinVal)
           }
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-        whereMinVal = which.min(self$records[, columns])
-        if (is.integer0(whereMinVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMinVal)
-        }
-
-        }
       },
       error = function(cond) {
         return(NA)
@@ -1471,6 +1480,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
@@ -1480,23 +1497,20 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
 
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(sum(is.na(self$records[[columns]])))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-
-          return(sum(is.na(self$records[,columns])))
-        }
+        return(sum(is.na(self$records[[columns]])))
       },
       error = function(cond) {
         return(NA)
@@ -1515,6 +1529,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
@@ -1524,21 +1546,20 @@ Symbol <- R6Class(
         , "\n")))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(sum(self$records[[columns]] == SpecialValues$EPS))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(sum(self$records[,columns] == SpecialValues$EPS))
-        }
+        return(sum(self$records[,columns] == SpecialValues$EPS))
       },
       error = function(cond) {
         return(NA)
@@ -1558,6 +1579,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
@@ -1567,22 +1596,20 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(sum(is.nan(self$records[[columns]])))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(sum(is.nan(self$records[,columns])))
-        }
-
+        return(sum(is.nan(self$records[[columns]])))
       },
       error = function(cond) {
         return(NA)
@@ -1601,6 +1628,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
@@ -1610,21 +1645,20 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)) {
-            columns = "value"
-          }
-          return(sum(self$records[[columns]] == SpecialValues$POSINF))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(sum(self$records[,columns] == SpecialValues$POSINF))
-        }
+        return(sum(self$records[[columns]] == SpecialValues$POSINF))
       },
       error = function(cond) {
         return(NA)
@@ -1643,6 +1677,14 @@ Symbol <- R6Class(
         " character)\n"))
       }
 
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, "Set")) {
+        return(NA)
+      }
+
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
@@ -1652,22 +1694,20 @@ Symbol <- R6Class(
         , "\n"))
       }
     }
+    else {
+      #columns argument is NULL
+        if (inherits(self, "Parameter")) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
     tryCatch(
       {
-        if (inherits(self, "Parameter")) {
-          if (is.null(columns)){
-            columns = "value"
-          }
-          return(sum(self$records[[columns]] == SpecialValues$NEGINF))
-        }
-        else if (inherits(self, "Variable") | inherits(self, "Equation")) {
-          if (is.null(columns)) {
-            columns = "level"
-          }
-
-          return(sum(self$records[,columns] == SpecialValues$NEGINF))
-        }
-
+        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
       },
       error = function(cond) {
         return(NA)
