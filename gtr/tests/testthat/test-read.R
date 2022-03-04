@@ -3457,7 +3457,6 @@ test_that("test_num_25", {
 
 
 test_that("test_num_26", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i", "p")
   expect_equal(i$domain_type(), "relaxed")
@@ -3538,7 +3537,6 @@ test_that("test_num_27", {
 )
 
 test_that("test_num_28", {
-  # gams syntax
   m = Container$new()
 
   i = Set$new(m, "i")
@@ -3556,7 +3554,6 @@ test_that("test_num_28", {
 )
 
 test_that("test_num_29", {
-  # gams syntax
   m = Container$new()
 
   i = Set$new(m, "i")
@@ -3576,7 +3573,6 @@ test_that("test_num_29", {
 )
 
 test_that("test_num_30", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
 
@@ -3587,7 +3583,6 @@ test_that("test_num_30", {
 )
 
 test_that("test_num_31", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i", "j")
   j = Set$new(m, "j", "i")
@@ -3601,7 +3596,6 @@ test_that("test_num_31", {
 )
 
 test_that("test_num_32", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
   m$isValid()
@@ -3615,7 +3609,6 @@ test_that("test_num_32", {
 )
 
 test_that("test_num_33", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
   j = Set$new(m, "j")
@@ -3630,7 +3623,6 @@ test_that("test_num_33", {
 )
 
 test_that("test_num_34", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
   j = Alias$new(m, "j", i)
@@ -3643,7 +3635,6 @@ test_that("test_num_34", {
 )
 
 test_that("test_num_35", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
   j = Alias$new(m, "j", i)
@@ -3653,7 +3644,6 @@ test_that("test_num_35", {
 )
 
 test_that("test_num_36", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
   k = Set$new(m, "k")
@@ -3664,7 +3654,6 @@ test_that("test_num_36", {
 )
 
 test_that("test_num_37", {
-  # gams syntax
   m = Container$new()
   i = Set$new(m, "i")
   j = Alias$new(m, "j", i)
@@ -3673,4 +3662,74 @@ test_that("test_num_37", {
 }
 )
 
+test_that("test_num_38", {
+  m = Container$new()
+  i = Set$new(m, "i")
 
+  expect_equal(i$dimension, 1)
+  expect_equal(i$domain, list("*"))
+
+  i$dimension = 2
+  expect_equal(i$dimension, 2)
+  expect_equal(i$domain, list("*", "*"))
+
+  i$dimension = 0
+  expect_equal(i$dimension, 0)
+  expect_equal(i$domain, list())
+
+  a = Parameter$new(m, "a")
+  expect_equal(a$dimension, 0)
+  expect_equal(a$domain, list())
+  expect_equal(a$isScalar, TRUE)
+
+  a$dimension = 2
+  expect_equal(a$domain, list("*", "*"))
+  expect_equal(a$isScalar, FALSE)
+
+  a$dimension = 0
+  expect_equal(a$domain, list())
+  expect_equal(a$isScalar, TRUE)
+
+  ip = Alias$new(m, "ip", i)
+  ip$dimension = 2
+  expect_equal(ip$dimension, 2)
+  expect_equal(i$dimension, 2)
+  expect_equal(ip$domain, list("*", "*"))
+  expect_equal(i$domain, list("*", "*"))
+}
+)
+
+test_that("test_num_39", {
+  m = Container$new()
+  i = Set$new(m, "i")
+  expect_equal(i$number_records(), 0)
+  m$removeSymbols("i")
+
+  i = Set$new(m, "i", records = c("a", "b"))
+  expect_equal(i$number_records(), 2)
+
+  j = Set$new(m, "j", i, records = c("a", "c"))
+
+  expect_true(is.na(j$number_records())) #because NA
+}
+)
+
+test_that("test_num_40", {
+  # gams syntax
+  gams_text = "
+    set i / a, b /;
+    set j / c, d /;
+
+    parameter a(i,j) //;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+  expect_true(m$data$a$domain_type() == "regular")
+  expect_true(is.null(m$data$a$records))
+}
+)
