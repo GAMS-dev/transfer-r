@@ -455,7 +455,7 @@ Container <- R6::R6Class (
         if (any(self$listSets() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$isAlias(),
+            self$data[[i]]$isAlias,
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
             self$data[[i]]$domain_type,
@@ -2347,10 +2347,6 @@ Set <- R6Class(
 
       self$records = records
       self$.linkDomainCategories()
-    },
-
-    isAlias = function() {
-      return(private$is_alias)
     }
   ),
 
@@ -2378,6 +2374,10 @@ Set <- R6Class(
         "number_records" = self$number_records,
         "domain_type" = self$domain_type
       ))
+    },
+
+    isAlias = function() {
+      return(private$is_alias)
     }
   ),
   private = list(
@@ -2869,10 +2869,6 @@ Alias <- R6Class(
       self$aliasWith = alias_for
     },
 
-    isAlias = function() {
-      return(private$is_alias)
-    },
-
     getCardinality = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$getCardinality())
     },
@@ -3074,6 +3070,10 @@ Alias <- R6Class(
       "description" = self$description,
       "number_records" = self$number_records
     ))
+    },
+
+    isAlias = function() {
+      return(private$is_alias)
     }
   ),
 
