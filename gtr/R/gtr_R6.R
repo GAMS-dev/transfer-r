@@ -1001,11 +1001,11 @@ Symbol <- R6Class(
     self$.gams_subtype = subtype
 
     self$.requiresStateCheck = TRUE
-    self$ref_container = container
-    self$ref_container$.requiresStateCheck = TRUE
+    self$refContainer = container
+    self$refContainer$.requiresStateCheck = TRUE
 
     self$name <- name
-    self$ref_container$data[[name]] = self
+    self$refContainer$data[[name]] = self
 
     self$records = NULL
 
@@ -1807,20 +1807,20 @@ Symbol <- R6Class(
         if (!is.null(self$records)) {
           if (self$domainForwarding == TRUE) {
             private$domain_forwarding()
-            if (inherits(self$ref_container, "Container")) {
-              self$ref_container$.linkDomainCategories()
+            if (inherits(self$refContainer, "Container")) {
+              self$refContainer$.linkDomainCategories()
             }
 
-            for (i in self$ref_container$listSymbols()) {
-              self$ref_container$data[[i]]$.requiresStateCheck = TRUE
+            for (i in self$refContainer$listSymbols()) {
+              self$refContainer$data[[i]]$.requiresStateCheck = TRUE
             }
 
-            self$ref_container$.requiresStateCheck = TRUE
+            self$refContainer$.requiresStateCheck = TRUE
           }
           else {
               self$.requiresStateCheck = TRUE
-              if (inherits(self$ref_container, "Container")) {
-                self$ref_container$.requiresStateCheck = TRUE
+              if (inherits(self$refContainer, "Container")) {
+                self$refContainer$.requiresStateCheck = TRUE
               }
           }
         }
@@ -1858,13 +1858,13 @@ Symbol <- R6Class(
         if (!is.null(private$.description)) {
           if (private$.description != description_input) {
             self$.requiresStateCheck = TRUE
-            self$ref_container$.requiresStateCheck = TRUE
+            self$refContainer$.requiresStateCheck = TRUE
           }
           private$.description = description_input
         }
         else {
           self$.requiresStateCheck = TRUE
-          self$ref_container$.requiresStateCheck = TRUE
+          self$refContainer$.requiresStateCheck = TRUE
           private$.description = description_input
         }
       }
@@ -1928,11 +1928,11 @@ Symbol <- R6Class(
         domaintemp = list()
         for (d in domain_input) {
           if (is.character(d)) {
-            if (inherits(self$ref_container$data[[d]], "Set") ||
-            inherits(self$ref_container$data[[d]], "Alias")) {
+            if (inherits(self$refContainer$data[[d]], "Set") ||
+            inherits(self$refContainer$data[[d]], "Alias")) {
               domaintemp = append(domaintemp, d)
               # domaintemp = append(domaintemp, 
-              # self$ref_container$data[[d]])
+              # self$refContainer$data[[d]])
             }
             else {
               # attach as a plain string
@@ -1941,7 +1941,7 @@ Symbol <- R6Class(
           }
           else {
             if ((inherits(d, "Set"))) {
-              if (identical(d$ref_container,self$ref_container)) {
+              if (identical(d$refContainer,self$refContainer)) {
                 domaintemp = append(domaintemp, d)
               }
               else {
@@ -1949,7 +1949,7 @@ Symbol <- R6Class(
               }
             }
             else if (inherits(d, "Alias")) {
-              if (identical(d$aliasWith$ref_container, self$ref_container)) {
+              if (identical(d$aliasWith$refContainer, self$refContainer)) {
                 domaintemp = append(domaintemp, d)
               }
               else {
@@ -1962,7 +1962,7 @@ Symbol <- R6Class(
       }
     },
 
-    ref_container = function(ref_container_input) {
+    refContainer = function(ref_container_input) {
       if (missing(ref_container_input)) {
         return(private$.ref_container)
       }
@@ -1970,8 +1970,8 @@ Symbol <- R6Class(
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }
-        if (is.null(self$ref_container)){
-          if (!identical(self$ref_container, ref_container_input)) {
+        if (is.null(self$refContainer)){
+          if (!identical(self$refContainer, ref_container_input)) {
             self$.requiresStateCheck = TRUE
           }
           private$.ref_container = ref_container_input
@@ -1996,7 +1996,7 @@ Symbol <- R6Class(
           " max is ", private$symbolMaxLength, " characters\n"))
         }
 
-        if (!is.null(self$ref_container$data[[name_input]])) {
+        if (!is.null(self$refContainer$data[[name_input]])) {
           stop(paste0("A symbol with the name ", name_input, 
           " already exists in the container\n"))
         }
@@ -2122,14 +2122,14 @@ Symbol <- R6Class(
         # if regular domain, symbols in domain must be valid
         if (self$domain_type == "regular") {
           for (i in self$domain) {
-            if (!any(names(self$ref_container$data) == i$name)) {
+            if (!any(names(self$refContainer$data) == i$name)) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the object referenced is not in the", 
               " Container anymore -- must reset domain for symbol ", 
               self$name, "\n"))
 
             }
-            if (!identical(i, self$ref_container$data[[i$name]])) {
+            if (!identical(i, self$refContainer$data[[i$name]])) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the symbol with name ", i$name, 
               " in the container is different. Seems to be a broken link.
@@ -2262,10 +2262,10 @@ Symbol <- R6Class(
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$ref_container$data[[i]]$domainLabels)[[1]]
-        if (!is.null(self$ref_container$data[[i]]$records)) {
-          recs = self$ref_container$data[[i]]$records
-          assert_that((self$ref_container$data[[i]]$dimension == 1),
+        dim = (self$refContainer$data[[i]]$domainLabels)[[1]]
+        if (!is.null(self$refContainer$data[[i]]$records)) {
+          recs = self$refContainer$data[[i]]$records
+          assert_that((self$refContainer$data[[i]]$dimension == 1),
           msg = "attempting to forward a domain set that has dimension > 1")
 
           df = self$records[dl]
@@ -2279,7 +2279,7 @@ Symbol <- R6Class(
           colnames(recs) = dim
           recs[["element_text"]] = ""
         }
-        self$ref_container$data[[i]]$records = recs
+        self$refContainer$data[[i]]$records = recs
       }
     }
   }
@@ -2857,9 +2857,9 @@ Alias <- R6Class(
     initialize = function(container=NULL, name=NULL, 
                           aliasFor=NULL) {
       self$.requiresStateCheck = TRUE
-      self$ref_container = container
+      self$refContainer = container
       self$name = name
-      refcontainer = self$ref_container
+      refcontainer = self$refContainer
       refcontainer$data[[name]] = self
       self$.gams_type = GMS_DT_ALIAS
       self$.gams_subtype = 1
@@ -2868,11 +2868,11 @@ Alias <- R6Class(
     },
 
     getCardinality = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$getCardinality())
+      return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
     },
 
     getSparsity = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$getSparsity())
+      return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
     },
 
     isValid = function(verbose=FALSE, force=FALSE) {
@@ -2906,12 +2906,12 @@ Alias <- R6Class(
     },
 
     setRecords = function(records) {
-      return(self$ref_container$data[[self$aliasWith$name]]$setRecords(records))
+      return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
   ),
 
   active = list(
-    ref_container = function(ref_container_input) {
+    refContainer = function(ref_container_input) {
       if (missing(ref_container_input)) {
         return(private$.ref_container)
       }
@@ -2919,8 +2919,8 @@ Alias <- R6Class(
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }
-        if (is.null(self$ref_container)){
-          if (!identical(self$ref_container, ref_container_input)) {
+        if (is.null(self$refContainer)){
+          if (!identical(self$refContainer, ref_container_input)) {
             self$.requiresStateCheck = TRUE
           }
           private$.ref_container = ref_container_input
@@ -2946,7 +2946,7 @@ Alias <- R6Class(
           " max is ", private$symbolMaxLength, " characters"))
         }
 
-        if (!is.null(self$ref_container$data[[name_input]])) {
+        if (!is.null(self$refContainer$data[[name_input]])) {
           stop(paste0("A symbol with the name ", name_input, 
           " already exists in the container\n"))
         }
@@ -2988,12 +2988,12 @@ Alias <- R6Class(
 
     isSingleton = function(is_singleton) {
       if (missing(is_singleton)) {
-        refcontainer = self$ref_container
+        refcontainer = self$refContainer
         sym = refcontainer$data[[self$aliasWith$name]]
         return(sym$isSingleton)
       }
       else {
-        refcontainer = self$ref_container
+        refcontainer = self$refContainer
         sym = refcontainer$data[[self$aliasWith$name]]
         sym$isSingleton = is_singleton
       }
@@ -3001,13 +3001,13 @@ Alias <- R6Class(
 
     description = function(description_input) {
       if (missing(description_input)) {
-        refcontainer = self$ref_container
+        refcontainer = self$refContainer
         aliaswithname = self$aliasWith$name
         sym = refcontainer$data[[aliaswithname]]
         return(sym$description)
       }
       else {
-        refcontainer = self$ref_container
+        refcontainer = self$refContainer
         aliaswithname = self$aliasWith$name
         sym = refcontainer$data[[aliaswithname]]
         sym$description = description_input
@@ -3016,44 +3016,44 @@ Alias <- R6Class(
 
     dimension = function(dimension_input) {
       if (missing(dimension_input)) {
-        return(self$ref_container$data[[self$aliasWith$name]]$dimension)
+        return(self$refContainer$data[[self$aliasWith$name]]$dimension)
       }
       else {
-        refcontainer = self$ref_container
+        refcontainer = self$refContainer
         sym = refcontainer$data[[self$aliasWith$name]]
         sym$dimension = dimension_input
       }
     },
 
     records = function(records_input) {
-      return(self$ref_container$data[[self$aliasWith$name]]$records)
+      return(self$refContainer$data[[self$aliasWith$name]]$records)
     },
 
     domain = function(domain_input) {
       if (missing(domain_input)) {
-        return(self$ref_container$data[[self$aliasWith$name]]$domain)
+        return(self$refContainer$data[[self$aliasWith$name]]$domain)
       }
       else {
-        refcontainer = self$ref_container
+        refcontainer = self$refContainer
         sym = refcontainer$data[[self$aliasWith$name]]
         sym$domain = domain_input
       }
     },
 
     number_records = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$number_records)
+      return(self$refContainer$data[[self$aliasWith$name]]$number_records)
     },
 
     domain_type = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$domain_type)
+      return(self$refContainer$data[[self$aliasWith$name]]$domain_type)
     },
 
     domain_names = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$domain_names)
+      return(self$refContainer$data[[self$aliasWith$name]]$domain_names)
     },
 
     domainLabels = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$domainLabels)
+      return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
     },
 
     summary = function() {
@@ -3085,7 +3085,7 @@ Alias <- R6Class(
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
-        if (self$ref_container$data[[self$aliasWith$name]]$isValid() == FALSE) {
+        if (self$refContainer$data[[self$aliasWith$name]]$isValid() == FALSE) {
           stop(paste0("Alias symbol is not valid because parent set ", self$aliasWith$name,
           "is not valid\n"))
         }
