@@ -220,8 +220,6 @@ Container <- R6::R6Class (
         symbolrecords = readSymbols(unlist(symbolsToRead),
         load_from, self$systemDirectory)
 
-        print("symbol_read_done")
-
         for (s in symbolrecords) {
           if (is.null(s$records)) {
             next
@@ -2477,14 +2475,8 @@ Variable <- R6Class(
 
       self$type = type
 
-      # if (is.integer(type)){
-      #   symtype = type
-      # }
-      # else {
-         symtype = GMS_DT_VAR
-         symsubtype = VarTypeSubtype()[[type]]
-      # }
-
+      symtype = GMS_DT_VAR
+      symsubtype = VarTypeSubtype()[[type]]
 
       super$initialize(container, gams_name,
                       symtype, symsubtype, 
