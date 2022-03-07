@@ -2351,19 +2351,6 @@ Set <- R6Class(
 
     isAlias = function() {
       return(private$is_alias)
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "is_singleton" = self$isSingleton,
-        "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
-      ))
     }
   ),
 
@@ -2378,8 +2365,20 @@ Set <- R6Class(
         }
         private$is_singleton = is_singleton
       }
+    },
 
-      }
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "is_singleton" = self$isSingleton,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type
+      ))
+    }
   ),
   private = list(
     is_singleton = NULL,
@@ -2432,6 +2431,19 @@ Parameter <- R6Class(
       }
       self$records = records
       self$.linkDomainCategories()
+    }
+  ),
+
+  active = list(
+    isScalar = function(isScalar_input) {
+      if (missing(isScalar_input)) {
+        if (length(self$domain) == 0) {
+          return(TRUE)
+        }
+        else {
+          return(FALSE)
+        }
+      }
     },
 
     summary = function() {
@@ -2445,20 +2457,6 @@ Parameter <- R6Class(
         "number_records" = self$number_records,
         "domain_type" = self$domain_type
       ))
-    }
-
-  ),
-
-  active = list(
-    isScalar = function(isScalar_input) {
-      if (missing(isScalar_input)) {
-        if (length(self$domain) == 0) {
-          return(TRUE)
-        }
-        else {
-          return(FALSE)
-        }
-      }
     }
   )
 )
@@ -2529,19 +2527,6 @@ Variable <- R6Class(
 
       self$records = records
       self$.linkDomainCategories()
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "type" = self$type,
-        "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
-      ))
     }
   ),
 
@@ -2567,6 +2552,19 @@ Variable <- R6Class(
 
         private$.type = type_input
       }
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "type" = self$type,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type
+      ))
     }
   ),
 
@@ -2735,19 +2733,6 @@ Equation <- R6Class(
 
       self$records = records
       self$.linkDomainCategories()
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "type" = self$type,
-        "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
-      ))
     }
   ),
 
@@ -2771,6 +2756,19 @@ Equation <- R6Class(
 
         private$.type = type_input
       }
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "type" = self$type,
+        "domain_objects" = self$domain,
+        "domain_names" = self$domain_names,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "number_records" = self$number_records,
+        "domain_type" = self$domain_type
+      ))
     }
   ),
   private = list(
@@ -2915,22 +2913,7 @@ Alias <- R6Class(
 
     setRecords = function(records) {
       return(self$ref_container$data[[self$aliasWith$name]]$setRecords(records))
-    },
-
-    summary = function() {
-    return(list(
-      "name" = self$name,
-      "alias_with" = self$aliasWith,
-      "alias_with_name" = self$aliasWith$name,
-      "is_singleton" = self$isSingleton(),
-      "domain_objects" = self$domain,
-      "domain_names" = self$domain_names,
-      "dimension" = self$dimension,
-      "description" = self$description,
-      "number_records" = self$number_records
-    ))
     }
-
   ),
 
   active = list(
@@ -3077,6 +3060,20 @@ Alias <- R6Class(
 
     domainLabels = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$domainLabels)
+    },
+
+    summary = function() {
+    return(list(
+      "name" = self$name,
+      "alias_with" = self$aliasWith,
+      "alias_with_name" = self$aliasWith$name,
+      "is_singleton" = self$isSingleton(),
+      "domain_objects" = self$domain,
+      "domain_names" = self$domain_names,
+      "dimension" = self$dimension,
+      "description" = self$description,
+      "number_records" = self$number_records
+    ))
     }
   ),
 
