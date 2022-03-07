@@ -3063,7 +3063,7 @@ Alias <- R6Class(
       "name" = self$name,
       "alias_with" = self$aliasWith,
       "alias_with_name" = self$aliasWith$name,
-      "is_singleton" = self$isSingleton(),
+      "is_singleton" = self$isSingleton,
       "domain_objects" = self$domain,
       "domain_names" = self$domain_names,
       "dimension" = self$dimension,
