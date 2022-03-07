@@ -1684,26 +1684,6 @@ Symbol <- R6Class(
     )
   },
 
-  domainLabels = function() {
-    column_names = list()
-    for (i in seq_along(self$domain)) {
-      if (is.character(self$domain[[i]])) {
-        d = self$domain[[i]]
-      }
-      else {
-        d = self$domain[[i]]$name
-      }
-
-      if (d != "*") {
-        column_names = append(column_names, paste0(d, "_", i))
-      }
-      else {
-        column_names = append(column_names, paste0("uni_", i))
-      }
-    }
-    return(column_names)
-  },
-
   isValid = function(verbose=FALSE, force=FALSE) {
     assertthat::assert_that(is.logical(verbose), 
     msg = "Argument 'verbose' must be logical")
@@ -2102,6 +2082,26 @@ Symbol <- R6Class(
         }
       }
       return(d)
+    },
+
+    domainLabels = function() {
+      column_names = list()
+      for (i in seq_along(self$domain)) {
+        if (is.character(self$domain[[i]])) {
+          d = self$domain[[i]]
+        }
+        else {
+          d = self$domain[[i]]$name
+        }
+
+        if (d != "*") {
+          column_names = append(column_names, paste0(d, "_", i))
+        }
+        else {
+          column_names = append(column_names, paste0("uni_", i))
+        }
+      }
+      return(column_names)
     }
 
   ),
@@ -2184,7 +2184,7 @@ Symbol <- R6Class(
           }
 
           # check column names and order
-          cols = self$domainLabels()
+          cols = self$domainLabels
           if (inherits(self, "Set")) {
             cols = append(cols, "element_text")
           }
@@ -2205,7 +2205,7 @@ Symbol <- R6Class(
           }
 
           # check if columns are factors
-          for (i in self$domainLabels()) {
+          for (i in self$domainLabels) {
             if (!is.factor(self$records[[i]])) {
               stop(paste0("Domain information in column ", i, " must be a factor\n"))
             }
@@ -2252,7 +2252,7 @@ Symbol <- R6Class(
     # find symbols to grow
     for (diter in seq_len(self$dimension)) {
       d = self$domain[[diter]]
-      dl = self$domainLabels()[[diter]]
+      dl = self$domainLabels[[diter]]
       to_grow = list()
       while (inherits(d, "Set")) {
         to_grow = append(to_grow, d$name)
@@ -2265,7 +2265,7 @@ Symbol <- R6Class(
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$ref_container$data[[i]]$domainLabels())[[1]]
+        dim = (self$ref_container$data[[i]]$domainLabels)[[1]]
         if (!is.null(self$ref_container$data[[i]]$records)) {
           recs = self$ref_container$data[[i]]$records
           assert_that((self$ref_container$data[[i]]$dimension == 1),
@@ -2340,7 +2340,7 @@ Set <- R6Class(
         stop(paste0("The argument 'records' is of length",
         c, " Expecting ", self$dimension + 1, "\n"))
       }
-      columnNames = self$domainLabels()
+      columnNames = self$domainLabels
       columnNames = append(columnNames, "element_text")
       # columnNames = self$getColLabelsForRecords()
       colnames(records) = columnNames
@@ -2421,7 +2421,7 @@ Parameter <- R6Class(
         self$dimension)
       )
 
-      columnNames = self$domainLabels()
+      columnNames = self$domainLabels
       columnNames = append(columnNames, "value")
       # columnNames = self$getColLabelsForRecords()
       colnames(records) = columnNames
@@ -2491,7 +2491,7 @@ Variable <- R6Class(
       records = data.frame(records)
       usr_colnames = colnames(records)
 
-      columnNames = self$domainLabels()
+      columnNames = self$domainLabels
       if (self$dimension +  1 > length(usr_colnames)) {
         usr_attr = NULL
       }
@@ -2695,7 +2695,7 @@ Equation <- R6Class(
       records = data.frame(records)
 
       usr_colnames = colnames(records)
-      columnNames = self$domainLabels()
+      columnNames = self$domainLabels
 
       if (self$dimension +  1 > length(usr_colnames)) {
         usr_attr = NULL
@@ -2917,10 +2917,6 @@ Alias <- R6Class(
       return(self$ref_container$data[[self$aliasWith$name]]$setRecords(records))
     },
 
-    domainLabels = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$domainLabels())
-    },
-
     summary = function() {
     return(list(
       "name" = self$name,
@@ -3077,6 +3073,10 @@ Alias <- R6Class(
 
     domain_names = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$domain_names)
+    },
+
+    domainLabels = function() {
+      return(self$ref_container$data[[self$aliasWith$name]]$domainLabels)
     }
   ),
 
