@@ -460,7 +460,7 @@ Container <- R6::R6Class (
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records(),
+            self$data[[i]]$number_records,
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity()
           )
@@ -511,7 +511,7 @@ Container <- R6::R6Class (
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records(),
+            self$data[[i]]$number_records,
             self$data[[i]]$getMinValue("value"),
             self$data[[i]]$getMeanValue("value"),
             self$data[[i]]$getMaxValue("value"),
@@ -574,7 +574,7 @@ Container <- R6::R6Class (
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records(),
+            self$data[[i]]$number_records,
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity(),
             self$data[[i]]$getMinValue("level"),
@@ -639,7 +639,7 @@ Container <- R6::R6Class (
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
             self$data[[i]]$domain_type(),
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records(),
+            self$data[[i]]$number_records,
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity(),
             self$data[[i]]$getMinValue("level"),
@@ -1020,26 +1020,12 @@ Symbol <- R6Class(
 
   },
 
-  number_records = function() {
-    if (self$isValid() == TRUE) {
-      if (!is.null(self$records)) {
-        return(nrow(self$records))
-      }
-      else {
-        return(0)
-      }
-    }
-    else {
-      return(NA)
-    }
-  },
-
   findDomainViolations = function() {
     if (self$dimension == 0) {
       return(NULL)
     }
 
-    idx = which(is.na(self$records[,(1:self$dimension)]), arr.ind = TRUE)
+    idx = which(is.na(self$records[, (1:self$dimension)]), arr.ind = TRUE)
     if (self$dimension > 1) {
       return(idx[, 1])
     }
@@ -1081,7 +1067,7 @@ Symbol <- R6Class(
         else {
           card = 1
           for (i in self$domain) {
-            card = card * i$number_records()
+            card = card * i$number_records
           }
           return(card)
         }
@@ -1102,7 +1088,7 @@ Symbol <- R6Class(
           return(NA)
         }
         else {
-          return(1 - self$number_records()/self$getCardinality())
+          return(1 - self$number_records/self$getCardinality())
         }
       },
       error = function(cond) {
@@ -2102,6 +2088,20 @@ Symbol <- R6Class(
           private$.name = name_input
         }
       }
+    },
+    
+    number_records = function() {
+      if (self$isValid() == TRUE) {
+        if (!is.null(self$records)) {
+          return(nrow(self$records))
+        }
+        else {
+          return(0)
+        }
+      }
+      else {
+        return(NA)
+      }
     }
 
   ),
@@ -2924,10 +2924,6 @@ Alias <- R6Class(
       return(self$ref_container$data[[self$aliasWith$name]]$setRecords(records))
     },
 
-    number_records = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$number_records())
-    },
-
     domainLabels = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$domainLabels())
     },
@@ -3076,6 +3072,10 @@ Alias <- R6Class(
         sym = refcontainer$data[[self$aliasWith$name]]
         sym$domain = domain_input
       }
+    },
+
+    number_records = function() {
+      return(self$ref_container$data[[self$aliasWith$name]]$number_records)
     }
   ),
 

@@ -3702,15 +3702,15 @@ test_that("test_num_38", {
 test_that("test_num_39", {
   m = Container$new()
   i = Set$new(m, "i")
-  expect_equal(i$number_records(), 0)
+  expect_equal(i$number_records, 0)
   m$removeSymbols("i")
 
   i = Set$new(m, "i", records = c("a", "b"))
-  expect_equal(i$number_records(), 2)
+  expect_equal(i$number_records, 2)
 
   j = Set$new(m, "j", i, records = c("a", "c"))
 
-  expect_true(is.na(j$number_records())) #because NA
+  expect_true(is.na(j$number_records)) #because NA
 }
 )
 
