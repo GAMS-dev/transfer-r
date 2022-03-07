@@ -436,12 +436,12 @@ Container <- R6::R6Class (
         symbols = self$listSets()
       }
       colNames = list("name",
-            "is_alias",
-            "is_singleton",
+            "isAlias",
+            "isSingleton",
             "domain",
-            "domain_type",
+            "domainType",
             "dim",
-            "num_recs",
+            "numberRecs",
             "cardinality",
             "sparsity"
             )
@@ -454,10 +454,10 @@ Container <- R6::R6Class (
             i,
             self$data[[i]]$isAlias,
             self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
-            self$data[[i]]$domain_type,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records,
+            self$data[[i]]$numberRecords,
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity()
           )
@@ -483,7 +483,7 @@ Container <- R6::R6Class (
             "name",
             "is_scalar",
             "domain",
-            "domain_type",
+            "domainType",
             "dim",
             "num_recs",
             "min_value",
@@ -505,10 +505,10 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
-            self$data[[i]]$domain_type,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records,
+            self$data[[i]]$numberRecords,
             self$data[[i]]$getMinValue("value"),
             self$data[[i]]$getMeanValue("value"),
             self$data[[i]]$getMaxValue("value"),
@@ -543,7 +543,7 @@ Container <- R6::R6Class (
             "name",
             "type",
             "domain",
-            "domain_type",
+            "domainType",
             "dim",
             "num_recs",
             "cardinality",
@@ -568,10 +568,10 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$type,
-            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
-            self$data[[i]]$domain_type,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records,
+            self$data[[i]]$numberRecords,
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity(),
             self$data[[i]]$getMinValue("level"),
@@ -608,7 +608,7 @@ Container <- R6::R6Class (
             "name",
             "type",
             "domain",
-            "domain_type",
+            "domainType",
             "dim",
             "num_recs",
             "cardinality",
@@ -633,10 +633,10 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$type,
-            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
-            self$data[[i]]$domain_type,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
             self$data[[i]]$dimension,
-            self$data[[i]]$number_records,
+            self$data[[i]]$numberRecords,
             self$data[[i]]$getCardinality(),
             self$data[[i]]$getSparsity(),
             self$data[[i]]$getMinValue("level"),
@@ -1034,13 +1034,13 @@ Symbol <- R6Class(
   getCardinality = function() {
     tryCatch(
       {
-        if (self$domain_type() == "relaxed" | self$domain_type == "none"){
+        if (self$domainType == "relaxed" | self$domainType == "none"){
           return(NA)
         }
         else {
           card = 1
           for (i in self$domain) {
-            card = card * i$number_records
+            card = card * i$numberRecords
           }
           return(card)
         }
@@ -1057,11 +1057,11 @@ Symbol <- R6Class(
   getSparsity = function() {
     tryCatch(
       {
-        if (self$domain_type == "relaxed" | self$domain_type == "none"){
+        if (self$domainType == "relaxed" | self$domainType == "none"){
           return(NA)
         }
         else {
-          return(1 - self$number_records/self$getCardinality())
+          return(1 - self$numberRecords/self$getCardinality())
         }
       },
       error = function(cond) {
@@ -1713,7 +1713,7 @@ Symbol <- R6Class(
   },
 
   shape = function() {
-    if (self$domain_type == "regular") {
+    if (self$domainType == "regular") {
       shapelist = list()
       for (d in self$domain) {
         shapelist = append(shapelist, nrow(d$records))
@@ -1726,7 +1726,7 @@ Symbol <- R6Class(
         return(list())
       }
 
-      if (self$domain_type == "none" || self$domain_type == "relaxed") {
+      if (self$domainType == "none" || self$domainType == "relaxed") {
         shapelist = list()
         for (i in (1:self$dimension)) {
           shapelist = append(shapelist, length(unique(self$records[, i])))
@@ -2020,7 +2020,7 @@ Symbol <- R6Class(
       }
     },
 
-    number_records = function() {
+    numberRecords = function() {
       if (self$isValid() == TRUE) {
         if (!is.null(self$records)) {
           return(nrow(self$records))
@@ -2034,7 +2034,7 @@ Symbol <- R6Class(
       }
     },
 
-    domain_type = function() {
+    domainType = function() {
       regularCheck = list()
       for (d in self$domain) {
         if (inherits(d, "Set") | inherits(d, "Alias")) {
@@ -2058,7 +2058,7 @@ Symbol <- R6Class(
         }
     },
 
-    domain_names = function() {
+    domainNames = function() {
       d = NA
       for (i in self$domain) {
         if (inherits(i, "Set") | inherits(i, "Alias")) {
@@ -2120,7 +2120,7 @@ Symbol <- R6Class(
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         # if regular domain, symbols in domain must be valid
-        if (self$domain_type == "regular") {
+        if (self$domainType == "regular") {
           for (i in self$domain) {
             if (!any(names(self$refContainer$data) == i$name)) {
               stop(paste0("symbol defined over domain symbol ",
@@ -2312,7 +2312,7 @@ Set <- R6Class(
       if (!is.null(records)) {
         self$setRecords(records)
       }
-      private$is_alias = FALSE
+      private$.is_alias = FALSE
       invisible(self)
     },
 
@@ -2348,15 +2348,15 @@ Set <- R6Class(
   ),
 
   active = list(
-    isSingleton = function(is_singleton) {
-      if (missing(is_singleton)) {
-        return(private$is_singleton)
+    isSingleton = function(is_singleton_input) {
+      if (missing(is_singleton_input)) {
+        return(private$.is_singleton)
       }
       else {
-        if (!is.logical(is_singleton)) {
+        if (!is.logical(is_singleton_input)) {
           stop("Argument 'is_singleton' must be type bool\n")
         }
-        private$is_singleton = is_singleton
+        private$.is_singleton = is_singleton_input
       }
     },
 
@@ -2365,21 +2365,21 @@ Set <- R6Class(
         "name" = self$name,
         "isSingleton" = self$isSingleton,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
+        "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
       ))
     },
 
     isAlias = function() {
-      return(private$is_alias)
+      return(private$.is_alias)
     }
   ),
   private = list(
-    is_singleton = NULL,
-    is_alias = NULL
+    .is_singleton = NULL,
+    .is_alias = NULL
   )
   )
 
@@ -2448,11 +2448,11 @@ Parameter <- R6Class(
         "name" = self$name,
         "is_scalar" = self$isScalar,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
+        "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
       ))
     }
   )
@@ -2495,7 +2495,7 @@ Variable <- R6Class(
       }
 
       for (i in setdiff(private$.attr(), usr_attr)) {
-        records[i] = private$default_values[[private$.type]][[i]]
+        records[i] = private$.default_values[[private$.type]][[i]]
       }
 
       #check dimensionality
@@ -2533,7 +2533,7 @@ Variable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(private$var_types == type_input)) {
+        if (!any(private$.var_types == type_input)) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
           " 1. 'binary' \n",
           " 2. 'integer' \n",
@@ -2556,18 +2556,18 @@ Variable <- R6Class(
         "name" = self$name,
         "type" = self$type,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
+        "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
       ))
     }
   ),
 
   private = list(
     .type= NULL,
-    var_types = c(
+    .var_types = c(
       "binary",
       "integer",
       "positive",
@@ -2579,7 +2579,7 @@ Variable <- R6Class(
       "semiint"
     ),
 
-    default_values = list(
+    .default_values = list(
       "binary" = list(
           "level"= 0.0,
           "marginal" = 0.0,
@@ -2662,20 +2662,12 @@ Equation <- R6Class(
                           description="") {
 
       self$type = type
-      # if (is.integer(type)) {
-      #   # call from container
-      #   symtype = GMS_DT_EQU
-      #   symsubtype = type
-      # }
-      # else {
-        # call from outside
-        type = private$equationTypes[[type]]
-        # if (!is.null(equationTypes[[type]])) {
-        #   type = equationTypes$type
-        # }
-        symtype = GMS_DT_EQU
-        symsubtype = EqTypeSubtype()[[type]]
-      # }
+      # call from outside
+      type = private$.equationTypes[[type]]
+
+      symtype = GMS_DT_EQU
+      symsubtype = EqTypeSubtype()[[type]]
+
 
       super$initialize(container, name,
                       symtype, symsubtype, 
@@ -2702,7 +2694,7 @@ Equation <- R6Class(
       usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
 
       for (i in setdiff(private$.attr(), usr_attr)) {
-        records[i] = private$default_values[[private$.type]][[i]]
+        records[i] = private$.default_values[[private$.type]][[i]]
       }
 
       #check dimensionality
@@ -2739,7 +2731,7 @@ Equation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(private$equationTypes == type_input)) {
+        if (!any(private$.equationTypes == type_input)) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
               "1. 'eq', 'E', or 'e' -- equality\n",
               "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
@@ -2760,17 +2752,17 @@ Equation <- R6Class(
         "name" = self$name,
         "type" = self$type,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names,
+        "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
-        "number_records" = self$number_records,
-        "domain_type" = self$domain_type
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
       ))
     }
   ),
   private = list(
     .type = NULL,
-    equationTypes = list(
+    .equationTypes = list(
     eq = "eq",
     E = "eq",
     e = "eq",
@@ -2794,7 +2786,7 @@ Equation <- R6Class(
     b = "boolean"
     ),
 
-    default_values = list(
+    .default_values = list(
       "eq" = list(
           "level" = 0.0,
           "marginal" = 0.0,
@@ -2863,7 +2855,7 @@ Alias <- R6Class(
       refcontainer$data[[name]] = self
       self$.gams_type = GMS_DT_ALIAS
       self$.gams_subtype = 1
-      private$is_alias = TRUE
+      private$.is_alias = TRUE
       self$aliasWith = aliasFor
     },
 
@@ -3040,16 +3032,16 @@ Alias <- R6Class(
       }
     },
 
-    number_records = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$number_records)
+    numberRecords = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
     },
 
-    domain_type = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domain_type)
+    domainType = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$domainType)
     },
 
-    domain_names = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domain_names)
+    domainNames = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
     },
 
     domainLabels = function() {
@@ -3063,15 +3055,15 @@ Alias <- R6Class(
       "alias_with_name" = self$aliasWith$name,
       "isSingleton" = self$isSingleton,
       "domain_objects" = self$domain,
-      "domain_names" = self$domain_names,
+      "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
-      "number_records" = self$number_records
+      "numberRecords" = self$numberRecords
     ))
     },
 
     isAlias = function() {
-      return(private$is_alias)
+      return(private$.is_alias)
     }
   ),
 
@@ -3080,8 +3072,7 @@ Alias <- R6Class(
     .ref_container = NULL,
     .name = NULL,
     .aliasWith = NULL,
-    is_alias = NULL,
-    is_singleton = NULL,
+    .is_alias = NULL,
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
