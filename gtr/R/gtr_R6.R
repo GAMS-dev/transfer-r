@@ -457,7 +457,7 @@ Container <- R6::R6Class (
             i,
             self$data[[i]]$isAlias(),
             self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
+            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
             self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
@@ -508,7 +508,7 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
+            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
             self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
@@ -571,7 +571,7 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$type,
-            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
+            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
             self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
@@ -636,7 +636,7 @@ Container <- R6::R6Class (
           symDescription = list(
             i,
             self$data[[i]]$type,
-            paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
+            paste(self$data[[i]]$domain_names, sep = "", collapse = " "),
             self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
@@ -1684,29 +1684,6 @@ Symbol <- R6Class(
     )
   },
 
-  domain_names = function() {
-    d = NA
-    for (i in self$domain) {
-      if (inherits(i, "Set") | inherits(i, "Alias")) {
-        if (any(is.na(d))) {
-          d = i$name
-        }
-        else {
-          d = append(d, i$name)
-        }
-      }
-      else {
-        if (any(is.na(d))) {
-          d = i
-        }
-        else {
-          d = append(d, i)
-        }
-      }
-    }
-    return(d)
-  },
-
   domainLabels = function() {
     column_names = list()
     for (i in seq_along(self$domain)) {
@@ -2065,7 +2042,7 @@ Symbol <- R6Class(
         }
       }
     },
-    
+
     number_records = function() {
       if (self$isValid() == TRUE) {
         if (!is.null(self$records)) {
@@ -2102,6 +2079,29 @@ Symbol <- R6Class(
         else {
           return("relaxed")
         }
+    },
+
+    domain_names = function() {
+      d = NA
+      for (i in self$domain) {
+        if (inherits(i, "Set") | inherits(i, "Alias")) {
+          if (any(is.na(d))) {
+            d = i$name
+          }
+          else {
+            d = append(d, i$name)
+          }
+        }
+        else {
+          if (any(is.na(d))) {
+            d = i
+          }
+          else {
+            d = append(d, i)
+          }
+        }
+      }
+      return(d)
     }
 
   ),
@@ -2358,7 +2358,7 @@ Set <- R6Class(
         "name" = self$name,
         "is_singleton" = self$isSingleton,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names(),
+        "domain_names" = self$domain_names,
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
@@ -2439,7 +2439,7 @@ Parameter <- R6Class(
         "name" = self$name,
         "is_scalar" = self$isScalar,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names(),
+        "domain_names" = self$domain_names,
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
@@ -2536,7 +2536,7 @@ Variable <- R6Class(
         "name" = self$name,
         "type" = self$type,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names(),
+        "domain_names" = self$domain_names,
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
@@ -2742,7 +2742,7 @@ Equation <- R6Class(
         "name" = self$name,
         "type" = self$type,
         "domain_objects" = self$domain,
-        "domain_names" = self$domain_names(),
+        "domain_names" = self$domain_names,
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
@@ -2912,9 +2912,6 @@ Alias <- R6Class(
         return(TRUE)
       }
     },
-    domain_names = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$domain_names())
-    },
 
     setRecords = function(records) {
       return(self$ref_container$data[[self$aliasWith$name]]$setRecords(records))
@@ -2931,7 +2928,7 @@ Alias <- R6Class(
       "alias_with_name" = self$aliasWith$name,
       "is_singleton" = self$isSingleton(),
       "domain_objects" = self$domain,
-      "domain_names" = self$domain_names(),
+      "domain_names" = self$domain_names,
       "dimension" = self$dimension,
       "description" = self$description,
       "number_records" = self$number_records
@@ -3076,6 +3073,10 @@ Alias <- R6Class(
 
     domain_type = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$domain_type)
+    },
+
+    domain_names = function() {
+      return(self$ref_container$data[[self$aliasWith$name]]$domain_names)
     }
   ),
 

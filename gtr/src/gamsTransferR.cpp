@@ -248,8 +248,7 @@ bool is_uel_priority, bool compress) {
     domain = symname["domain"];
     List domainstr;
     if (Dim != 0) {
-      Rcpp::Function  domain_names = symname["domain_names"];
-      domainstr = domain_names();
+      domainstr = symname["domain_names"];
       std::string blah = domainstr[0];
     }
     std::string expltxt = symname["description"];

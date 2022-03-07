@@ -3649,7 +3649,7 @@ test_that("test_num_36", {
   k = Set$new(m, "k")
   j = Alias$new(m, "j", i)
   j$domain = c(k, k)
-  expect_equal(i$domain_names(), c("k", "k"))
+  expect_equal(i$domain_names, c("k", "k"))
 }
 )
 
