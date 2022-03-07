@@ -3368,9 +3368,9 @@ test_that("test_num_23", {
   m = Container$new()
   m$read(testthat::test_path("data.gdx"), c("i", "j", "x"))
 
-  expect_equal(m$data[["i"]]$domain_type(), "none")
-  expect_equal(m$data[["j"]]$domain_type(), "none")
-  expect_equal(m$data[["x"]]$domain_type(), "regular")
+  expect_equal(m$data[["i"]]$domain_type, "none")
+  expect_equal(m$data[["j"]]$domain_type, "none")
+  expect_equal(m$data[["x"]]$domain_type, "regular")
 }
 )
 
@@ -3432,7 +3432,7 @@ test_that("test_num_24", {
   m$read(testthat::test_path("data.gdx"), c("x"))
 
   expect_equal(names(m$data), "x")
-  expect_equal(m$data[["x"]]$domain_type(), "relaxed")
+  expect_equal(m$data[["x"]]$domain_type, "relaxed")
 }
 )
 
@@ -3451,7 +3451,7 @@ test_that("test_num_25", {
 
   expect_equal(names(m$data), "i")
   expect_equal(m$data[["i"]]$domain, list("i"))
-  expect_equal(m$data[["i"]]$domain_type(), "relaxed")
+  expect_equal(m$data[["i"]]$domain_type, "relaxed")
 }
 )
 
@@ -3459,7 +3459,7 @@ test_that("test_num_25", {
 test_that("test_num_26", {
   m = Container$new()
   i = Set$new(m, "i", "p")
-  expect_equal(i$domain_type(), "relaxed")
+  expect_equal(i$domain_type, "relaxed")
 
   j = Set$new(m, "j", i, records = 
   data.frame(c("c"), c("desc for elem 'c'")), domain_forwarding=TRUE)
@@ -3729,7 +3729,7 @@ test_that("test_num_40", {
   stdout = TRUE, stderr = TRUE)
 
   m = Container$new(testthat::test_path("data.gdx"))
-  expect_true(m$data$a$domain_type() == "regular")
+  expect_true(m$data$a$domain_type == "regular")
   expect_true(is.null(m$data$a$records))
 }
 )

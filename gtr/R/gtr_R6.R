@@ -458,7 +458,7 @@ Container <- R6::R6Class (
             self$data[[i]]$isAlias(),
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
-            self$data[[i]]$domain_type(),
+            self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
             self$data[[i]]$getCardinality(),
@@ -509,7 +509,7 @@ Container <- R6::R6Class (
             i,
             self$data[[i]]$isScalar,
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
-            self$data[[i]]$domain_type(),
+            self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
             self$data[[i]]$getMinValue("value"),
@@ -572,7 +572,7 @@ Container <- R6::R6Class (
             i,
             self$data[[i]]$type,
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
-            self$data[[i]]$domain_type(),
+            self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
             self$data[[i]]$getCardinality(),
@@ -637,7 +637,7 @@ Container <- R6::R6Class (
             i,
             self$data[[i]]$type,
             paste(self$data[[i]]$domain_names(), sep = "", collapse = " "),
-            self$data[[i]]$domain_type(),
+            self$data[[i]]$domain_type,
             self$data[[i]]$dimension,
             self$data[[i]]$number_records,
             self$data[[i]]$getCardinality(),
@@ -1034,34 +1034,10 @@ Symbol <- R6Class(
     }
   },
 
-  domain_type = function() {
-    regularCheck = list()
-    for (d in self$domain) {
-      if (inherits(d, "Set") | inherits(d, "Alias")) {
-        regularCheck = append(regularCheck, TRUE)
-      }
-      else {
-          regularCheck = append(regularCheck, FALSE)
-      }
-    }
-    if (all(regularCheck == TRUE) && self$dimension != 0) {
-        return("regular")
-      }
-      else if (all(self$domain == "*")) {
-         return("none")
-      }
-      else if (self$dimension == 0) {
-        return("none")
-      }
-      else {
-         return("relaxed")
-      }
-  },
-
   getCardinality = function() {
     tryCatch(
       {
-        if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
+        if (self$domain_type() == "relaxed" | self$domain_type == "none"){
           return(NA)
         }
         else {
@@ -1084,7 +1060,7 @@ Symbol <- R6Class(
   getSparsity = function() {
     tryCatch(
       {
-        if (self$domain_type() == "relaxed" | self$domain_type() == "none"){
+        if (self$domain_type == "relaxed" | self$domain_type == "none"){
           return(NA)
         }
         else {
@@ -1783,7 +1759,7 @@ Symbol <- R6Class(
   },
 
   shape = function() {
-    if (self$domain_type() == "regular") {
+    if (self$domain_type == "regular") {
       shapelist = list()
       for (d in self$domain) {
         shapelist = append(shapelist, nrow(d$records))
@@ -1796,7 +1772,7 @@ Symbol <- R6Class(
         return(list())
       }
 
-      if (self$domain_type() == "none" || self$domain_type() == "relaxed") {
+      if (self$domain_type == "none" || self$domain_type == "relaxed") {
         shapelist = list()
         for (i in (1:self$dimension)) {
           shapelist = append(shapelist, length(unique(self$records[, i])))
@@ -2102,6 +2078,30 @@ Symbol <- R6Class(
       else {
         return(NA)
       }
+    },
+
+    domain_type = function() {
+      regularCheck = list()
+      for (d in self$domain) {
+        if (inherits(d, "Set") | inherits(d, "Alias")) {
+          regularCheck = append(regularCheck, TRUE)
+        }
+        else {
+            regularCheck = append(regularCheck, FALSE)
+        }
+      }
+      if (all(regularCheck == TRUE) && self$dimension != 0) {
+          return("regular")
+        }
+        else if (all(self$domain == "*")) {
+          return("none")
+        }
+        else if (self$dimension == 0) {
+          return("none")
+        }
+        else {
+          return("relaxed")
+        }
     }
 
   ),
@@ -2123,7 +2123,7 @@ Symbol <- R6Class(
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         # if regular domain, symbols in domain must be valid
-        if (self$domain_type() == "regular") {
+        if (self$domain_type == "regular") {
           for (i in self$domain) {
             if (!any(names(self$ref_container$data) == i$name)) {
               stop(paste0("symbol defined over domain symbol ",
@@ -2362,7 +2362,7 @@ Set <- R6Class(
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
-        "domain_type" = self$domain_type()
+        "domain_type" = self$domain_type
       ))
     }
   ),
@@ -2443,7 +2443,7 @@ Parameter <- R6Class(
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
-        "domain_type" = self$domain_type()
+        "domain_type" = self$domain_type
       ))
     }
 
@@ -2540,7 +2540,7 @@ Variable <- R6Class(
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
-        "domain_type" = self$domain_type()
+        "domain_type" = self$domain_type
       ))
     }
   ),
@@ -2746,7 +2746,7 @@ Equation <- R6Class(
         "dimension" = self$dimension,
         "description" = self$description,
         "number_records" = self$number_records,
-        "domain_type" = self$domain_type()
+        "domain_type" = self$domain_type
       ))
     }
   ),
@@ -2916,10 +2916,6 @@ Alias <- R6Class(
       return(self$ref_container$data[[self$aliasWith$name]]$domain_names())
     },
 
-    domain_type = function() {
-      return(self$ref_container$data[[self$aliasWith$name]]$domain_type())
-    },
-
     setRecords = function(records) {
       return(self$ref_container$data[[self$aliasWith$name]]$setRecords(records))
     },
@@ -3076,6 +3072,10 @@ Alias <- R6Class(
 
     number_records = function() {
       return(self$ref_container$data[[self$aliasWith$name]]$number_records)
+    },
+
+    domain_type = function() {
+      return(self$ref_container$data[[self$aliasWith$name]]$domain_type)
     }
   ),
 
