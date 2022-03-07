@@ -249,8 +249,10 @@ Container <- R6::R6Class (
       uni = list()
       for (i in self$listSymbols(isValid = TRUE)) {
         if (!is.null(self$data[[i]]$records)) {
-          uni = append(uni, data.frame(unlist(x = 
-          self$data[[i]]$records[,(1:self$data[[i]]$dimension)]))[, 1])
+          if (self$data[[i]]$dimension > 0) {
+            uni = append(uni, data.frame(unlist(x = 
+            self$data[[i]]$records[, (1:self$data[[i]]$dimension)]))[, 1])
+          }
         }
       }
 
@@ -1035,6 +1037,10 @@ Symbol <- R6Class(
   },
 
   findDomainViolations = function() {
+    if (self$dimension == 0) {
+      return(NULL)
+    }
+
     idx = which(is.na(self$records[,(1:self$dimension)]), arr.ind = TRUE)
     if (self$dimension > 1) {
       return(idx[, 1])
@@ -1802,6 +1808,10 @@ Symbol <- R6Class(
     }
 
     if (!is.null(self$records)) {
+      if (self$dimension == 0) {
+        return(list())
+      }
+
       if (self$domain_type() == "none" || self$domain_type() == "relaxed") {
         shapelist = list()
         for (i in (1:self$dimension)) {
