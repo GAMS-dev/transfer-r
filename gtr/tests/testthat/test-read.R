@@ -2548,7 +2548,7 @@ test_that("test_num_2", {
 
   recs <- data.frame(list("i" = c("a", "b"), 
   "j" = c("c", "d"), "values" = c(1, 1)))
-  a <- Parameter$new(m, "a", c(i, j), recs, domain_forwarding = TRUE)
+  a <- Parameter$new(m, "a", c(i, j), recs, domainForwarding = TRUE)
 
   expect_true(is.data.frame(i$records))
   expect_equal(as.character(i$records$uni_1), c("a", "b"))
@@ -2593,7 +2593,7 @@ test_that("test_num_3", {
 
   recs <- data.frame(list("i" = c("a", "b"), 
   "j" = c("a", "b"), "values" = c(1, 1)))
-  a <- Parameter$new(m, "a", c(i, j), recs, domain_forwarding = TRUE)
+  a <- Parameter$new(m, "a", c(i, j), recs, domainForwarding = TRUE)
 
   expect_true(is.data.frame(i$records))
   expect_equal(as.character(i$records$uni_1), c("a", "b"))
@@ -2639,7 +2639,7 @@ test_that("test_num_4", {
   k <- Set$new(m, "k", j)
   expect_true(is.null(k$records))
 
-  l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE )
+  l = Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE )
   expect_true(is.data.frame(i$records))
   expect_equal(as.character(i$records$uni_1), c("a", "b"))
 
@@ -2683,7 +2683,7 @@ test_that("test_num_5", {
   expect_true(is.null(i$records))
 
   recs <- data.frame(list("i" = "c", "element_text" = "desc for elem 'c'"))
-  j <- Set$new(m, "j", i, records = recs, domain_forwarding = TRUE)
+  j <- Set$new(m, "j", i, records = recs, domainForwarding = TRUE)
   expect_true(is.data.frame(i$records))
   expect_equal(as.character(i$records$uni_1), c("c"))
   expect_true(is.data.frame(j$records))
@@ -2696,7 +2696,7 @@ test_that("test_num_5", {
   expect_equal(as.character(j$records$i_1), c("c"))
   expect_true(is.null(k$records))
 
-  l <- Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
+  l <- Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE)
   expect_true(is.data.frame(i$records))
   expect_equal(as.character(i$records$uni_1), c("c", "a", "b"))
   expect_true(is.data.frame(j$records))
@@ -2772,7 +2772,7 @@ test_that("test_num_7", {
   i <- Set$new(m, "i", records = c("c", "a", "b"))
   expect_true(is.data.frame(i$records))
 
-  m$write("gt.gdx", uel_priority = list("a"))
+  m$write("gt.gdx", uelPriority = list("a"))
 
   # gams syntax
   gams_text = '
@@ -2855,7 +2855,7 @@ test_that("test_num_10", {
   j <- Set$new(m, "j")
   expect_true(is.null(j$records))
 
-  a <- Parameter$new(m, "a", list(i, j), domain_forwarding=TRUE)
+  a <- Parameter$new(m, "a", list(i, j), domainForwarding=TRUE)
 
   df <- data.frame(list("i_1"= c("a", "b"),
   "j_2" = c("c", "d"), "value" = c(1, 1)))
@@ -2963,10 +2963,10 @@ test_that("test_num_15", {
 test_that("test_num_16", {
   m  = Container$new()
   i = Set$new(m, "i")
-  j = Set$new(m, "j", i, records = c("a", "b"), domain_forwarding = TRUE)
+  j = Set$new(m, "j", i, records = c("a", "b"), domainForwarding = TRUE)
   k = Set$new(m, "k")
-  l = Set$new(m, "l", k, records = c("c"), domain_forwarding = TRUE)
-  a = Parameter$new(m, "a", l, records = data.frame(c("aa", "c"), c(1, 2)), domain_forwarding = TRUE)
+  l = Set$new(m, "l", k, records = c("c"), domainForwarding = TRUE)
+  a = Parameter$new(m, "a", l, records = data.frame(c("aa", "c"), c(1, 2)), domainForwarding = TRUE)
 
   # check container
   expect_equal(m$.requiresStateCheck, TRUE)
@@ -2987,11 +2987,11 @@ test_that("test_num_16", {
 test_that("test_num_17", {
   m  = Container$new()
   m$addSet("i")
-  m$addSet("j", m$data[["i"]], records = c("a", "b"), domain_forwarding = TRUE)
+  m$addSet("j", m$data[["i"]], records = c("a", "b"), domainForwarding = TRUE)
   m$addSet("k")
-  m$addSet("l", m$data[["k"]], records = c("c"), domain_forwarding = TRUE)
+  m$addSet("l", m$data[["k"]], records = c("c"), domainForwarding = TRUE)
 
-  m$addParameter("a", m$data[["l"]], records = data.frame(c("aa", "c"), c(1, 2)), domain_forwarding = TRUE)
+  m$addParameter("a", m$data[["l"]], records = data.frame(c("aa", "c"), c(1, 2)), domainForwarding = TRUE)
 
   # check container
   expect_equal(m$.requiresStateCheck, TRUE)
@@ -3462,7 +3462,7 @@ test_that("test_num_26", {
   expect_equal(i$domain_type, "relaxed")
 
   j = Set$new(m, "j", i, records = 
-  data.frame(c("c"), c("desc for elem 'c'")), domain_forwarding=TRUE)
+  data.frame(c("c"), c("desc for elem 'c'")), domainForwarding=TRUE)
 
   df = data.frame("p_1" =c("c"), "element_text" = c(""))
   df$p_1 = factor(df$p_1, ordered = TRUE)
@@ -3475,7 +3475,7 @@ test_that("test_num_26", {
   k = Set$new(m ,"k", "j")
   expect_equal(k$records, NULL)
 
-  l = Set$new(m, "l", k, records = c("a", "b"), domain_forwarding = TRUE)
+  l = Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE)
 
   # test l
   df = data.frame("k_1"=c("a", "b"), "element_text"=c("", ""))

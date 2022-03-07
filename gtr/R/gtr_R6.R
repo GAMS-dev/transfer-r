@@ -1,6 +1,3 @@
-# library(R6)
-# library(assertthat)
-
 GMS_DT_SET = 0
 GMS_DT_PAR = 1
 GMS_DT_VAR = 2
@@ -54,20 +51,20 @@ Container <- R6::R6Class (
     #' Create a new container
     #' @details read a file using 
     #' \href{../../gtr/html/Container.html#method-read}{\code{$read()}}
-    #' @param load_from name of the GDX file to load data from
-    #' @param system_directory optional argument for the path to GAMS System directory
-    initialize = function(load_from=NULL, system_directory=NULL) {
+    #' @param loadFrom name of the GDX file to load data from
+    #' @param systemDirectory optional argument for the path to GAMS System directory
+    initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
-      if (missing(system_directory)) {
+      if (missing(systemDirectory)) {
         self$systemDirectory = find_gams()
 
       }
       else {
-        if (R.utils::isAbsolutePath(system_directory)) {
-          self$systemDirectory = system_directory
+        if (R.utils::isAbsolutePath(systemDirectory)) {
+          self$systemDirectory = systemDirectory
         }
         else {
-          stop("must enter valid full (absolute) path to GAMS system_directory\n")
+          stop("must enter valid full (absolute) path to GAMS system directory\n")
         }
       }
 
@@ -75,8 +72,8 @@ Container <- R6::R6Class (
       self$data = list()
       self$.requiresStateCheck = TRUE
 
-      if (!missing(load_from)) {
-      self$read(load_from, symbols="all")
+      if (!missing(loadFrom)) {
+      self$read(loadFrom, symbols="all")
 
       }
     },
@@ -84,10 +81,10 @@ Container <- R6::R6Class (
     #' @description read data from a GDX file
     #' @details 
     #' `$read()` reads a file
-    #' @param load_from name of the file to load data from
+    #' @param loadFrom name of the file to load data from
     #' @symbols optional argument to specify the names of the symbols to be read
     #' @values optional boolean argument to specify whether to read symbol records
-    read = function(load_from, symbols="all", values=TRUE) {
+    read = function(loadFrom, symbols="all", values=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
       # process it and populate various fields
@@ -107,22 +104,22 @@ Container <- R6::R6Class (
         }
       }
 
-      if (!is.character(load_from)) {
-        stop("The argument load_from must be of type string\n")
+      if (!is.character(loadFrom)) {
+        stop("The argument loadFrom must be of type string\n")
       }
       else {
-        namesplit = strsplit(load_from, "\\.")
+        namesplit = strsplit(loadFrom, "\\.")
         ext = tail(unlist(namesplit), 1)
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx\n")
         }
-        load_from = R.utils::getAbsolutePath(path.expand(load_from))
-        if (!file.exists(load_from)) {
-          stop(paste0("File ", load_from, " doesn't exist\n"))
+        loadFrom = R.utils::getAbsolutePath(path.expand(loadFrom))
+        if (!file.exists(loadFrom)) {
+          stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
       }
       # check acronyms
-      acrInfo = checkAcronyms(load_from, self$systemDirectory)
+      acrInfo = checkAcronyms(loadFrom, self$systemDirectory)
       nAcr = acrInfo[["nAcronyms"]]
       if (nAcr != 0) {
         warning("GDX file contains acronyms. 
@@ -131,7 +128,7 @@ Container <- R6::R6Class (
       }
 
       # get names for all symbols
-      metadata = getSymbols(load_from, self$systemDirectory)
+      metadata = getSymbols(loadFrom, self$systemDirectory)
       syms = lapply(metadata, "[[", 1)
 
       if (is.character(symbols) && symbols == "all") {
@@ -167,7 +164,7 @@ Container <- R6::R6Class (
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
-                domain_forwarding=FALSE,
+                domainForwarding=FALSE,
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_SET) {
@@ -175,14 +172,14 @@ Container <- R6::R6Class (
                 Set$new(
                 self, m$name, m$domain, FALSE,
                 records = NULL,
-                domain_forwarding=FALSE,
+                domainForwarding=FALSE,
                 m$expltext)
                 }
                 else {
                 Set$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
-                domain_forwarding=FALSE, 
+                domainForwarding=FALSE, 
                 m$expltext)
                 }
             }
@@ -190,14 +187,14 @@ Container <- R6::R6Class (
                 type = names(VarTypeSubtype())[[which(VarTypeSubtype() == m$subtype)]]
                 Variable$new(
                 self, m$name, type, m$domain,
-                domain_forwarding = FALSE,
+                domainForwarding = FALSE,
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
                 type = names(EqTypeSubtype())[[which(EqTypeSubtype() == m$subtype)]]
                 Equation$new(
                 self, m$name, type, m$domain,
-                domain_forwarding = FALSE,
+                domainForwarding = FALSE,
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_ALIAS) {
@@ -218,7 +215,7 @@ Container <- R6::R6Class (
 
       if (values == TRUE) {
         symbolrecords = readSymbols(unlist(symbolsToRead),
-        load_from, self$systemDirectory)
+        loadFrom, self$systemDirectory)
 
         for (s in symbolrecords) {
           if (is.null(s$records)) {
@@ -278,22 +275,22 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
     },
 
-    renameSymbol = function(old_name = NULL, new_name = NULL) {
-      if (!is.character(old_name)) {
-        stop("Argument 'old_name' must be type character\n")
+    renameSymbol = function(oldName = NULL, newName = NULL) {
+      if (!is.character(oldName)) {
+        stop("Argument 'oldName' must be type character\n")
       }
 
-      if (!is.character(new_name)) {
-        stop("Argument 'new_name' must be type character\n")
+      if (!is.character(newName)) {
+        stop("Argument 'newName' must be type character\n")
       }
 
-      if (is.null(self$data[[old_name]])) {
-        stop(paste0("Symbol ", old_name, " does not exist\n"))
+      if (is.null(self$data[[oldName]])) {
+        stop(paste0("Symbol ", oldName, " does not exist\n"))
       }
 
-      if (old_name != new_name) {
-        sym = self$data[[old_name]]
-        sym$name = new_name
+      if (oldName != newName) {
+        sym = self$data[[oldName]]
+        sym$name = newName
         self$.requiresStateCheck = TRUE
       }
     },
@@ -396,41 +393,41 @@ Container <- R6::R6Class (
       return(equations)
     },
 
-    addSet = function(name, domain = "*", is_singleton = FALSE,
-    records = NULL, domain_forwarding=FALSE, description = "") {
+    addSet = function(name, domain = "*", isSingleton = FALSE,
+    records = NULL, domainForwarding=FALSE, description = "") {
       Set$new(
-      self, name, domain, is_singleton,
-      records, domain_forwarding, description)
+      self, name, domain, isSingleton,
+      records, domainForwarding, description)
       return(self$data[[name]])
     },
 
     addParameter = function(name, domain = list(),
-    records = NULL, domain_forwarding=FALSE, description = "") {
+    records = NULL, domainForwarding=FALSE, description = "") {
       Parameter$new(
         self, name, domain, records,
-        domain_forwarding, description)
+        domainForwarding, description)
         return(self$data[[name]])
     },
 
     addVariable = function(name, type="free", domain = list(),
-    records = NULL, domain_forwarding=FALSE, description = "") {
+    records = NULL, domainForwarding=FALSE, description = "") {
       Variable$new(
         self, name, type, domain, records,
-        domain_forwarding, description)
+        domainForwarding, description)
         return(self$data[[name]])
     },
 
     addEquation = function(name, type, domain = list(), 
-    records = NULL, domain_forwarding=FALSE, description = "") {
+    records = NULL, domainForwarding=FALSE, description = "") {
       Equation$new(
         self, name, type, domain, records,
-        domain_forwarding, description)
+        domainForwarding, description)
         return(self$data[[name]])
     },
 
-    addAlias = function(name, alias_with) {
+    addAlias = function(name, aliasWith) {
       Alias$new(
-      self, name, alias_with)
+      self, name, aliasWith)
       return(self$data[[name]])
     },
 
@@ -671,7 +668,7 @@ Container <- R6::R6Class (
       print(private$gdx_specVals_write)
     },
 
-    write = function(gdxout, compress = FALSE, uel_priority = NULL) {
+    write = function(gdxout, compress = FALSE, uelPriority = NULL) {
       if (!is.logical(compress)) {
         stop("'compress' must be of type bool; default False (no compression)\n")
       }
@@ -689,9 +686,9 @@ Container <- R6::R6Class (
         gdxout = R.utils::getAbsolutePath(path.expand(gdxout))
       }
 
-      if (!is.null(uel_priority)) {
-        if (!(is.character(uel_priority) || is.list(uel_priority))) {
-          stop("'uel_priority' must be type list or str\n")
+      if (!is.null(uelPriority)) {
+        if (!(is.character(uelPriority) || is.list(uelPriority))) {
+          stop("'uelPriority' must be type list or str\n")
         }
       }
 
@@ -735,20 +732,20 @@ Container <- R6::R6Class (
         == -1))] = specialValsGDX[["EPS"]]
       }
 
-      if (is.null(uel_priority)) {
+      if (is.null(uelPriority)) {
         gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, NA, FALSE, compress)
       }
       else {
         universe = self$getUniverseSet()
         if ((is.null(universe)) ||
-        (!setequal(intersect(uel_priority, universe), uel_priority))) {
-          stop("uel_priority must be a subset of the universe, check 
-          spelling of an element in uel_priority? Also check 
+        (!setequal(intersect(uelPriority, universe), uelPriority))) {
+          stop("uelPriority must be a subset of the universe, check 
+          spelling of an element in uelPriority? Also check 
           getUniverseSet() method for assumed UniverseSet.\n")
         }
 
-        reorder = uel_priority
+        reorder = uelPriority
         reorder = append(reorder, universe)
         reorder = unique(reorder)
 
@@ -999,7 +996,7 @@ Symbol <- R6Class(
                         type, subtype, 
                         domain,
                         description,
-                        domain_forwarding) {
+                        domainForwarding) {
     self$.gams_type = type
     self$.gams_subtype = subtype
 
@@ -1016,7 +1013,7 @@ Symbol <- R6Class(
 
     self$dimension = length(self$domain)
     self$description = description
-    self$domain_forwarding = domain_forwarding
+    self$domainForwarding = domainForwarding
 
   },
 
@@ -1808,8 +1805,8 @@ Symbol <- R6Class(
         private$.records = records_input
 
         if (!is.null(self$records)) {
-          if (self$domain_forwarding == TRUE) {
-            private$domainForwarding()
+          if (self$domainForwarding == TRUE) {
+            private$domain_forwarding()
             if (inherits(self$ref_container, "Container")) {
               self$ref_container$.linkDomainCategories()
             }
@@ -1830,7 +1827,7 @@ Symbol <- R6Class(
       }
     },
 
-    domain_forwarding = function(domain_forwarding_input) {
+    domainForwarding = function(domain_forwarding_input) {
       if (missing(domain_forwarding_input)) {
         return(private$.domain_forwarding)
       }
@@ -2248,7 +2245,7 @@ Symbol <- R6Class(
       self$.requiresStateCheck = FALSE
     },
 
-    domainForwarding = function() {
+    domain_forwarding = function() {
     # find symbols to grow
     for (diter in seq_len(self$dimension)) {
       d = self$domain[[diter]]
@@ -2293,13 +2290,13 @@ Set <- R6Class(
   "Set",
   inherit = Symbol,
   public = list(
-    initialize = function(container=NULL, gams_name=NULL,
-                          domain="*", is_singleton=FALSE,
+    initialize = function(container=NULL, name=NULL,
+                          domain="*", isSingleton=FALSE,
                           records = NULL, 
-                          domain_forwarding = FALSE,
+                          domainForwarding = FALSE,
                           description="") {
-      self$isSingleton <- is_singleton
-      if (!is_singleton) {
+      self$isSingleton <- isSingleton
+      if (!isSingleton) {
         type = GMS_DT_SET
         subtype = SetTypeSubtype()[["set"]]
       }
@@ -2308,9 +2305,9 @@ Set <- R6Class(
         subtype = SetTypeSubtype()[["singleton_set"]]
       }
 
-      super$initialize(container, gams_name,
+      super$initialize(container, name,
                       type, subtype,
-                      domain, description, domain_forwarding)
+                      domain, description, domainForwarding)
 
       if (!is.null(records)) {
         self$setRecords(records)
@@ -2366,7 +2363,7 @@ Set <- R6Class(
     summary = function() {
       return(list(
         "name" = self$name,
-        "is_singleton" = self$isSingleton,
+        "isSingleton" = self$isSingleton,
         "domain_objects" = self$domain,
         "domain_names" = self$domain_names,
         "dimension" = self$dimension,
@@ -2390,15 +2387,15 @@ Parameter <- R6Class(
   "Parameter",
   inherit = Symbol,
   public = list(
-    initialize = function(container=NULL, gams_name=NULL,
+    initialize = function(container=NULL, name=NULL,
                           domain=list(),records = NULL,
-                          domain_forwarding = FALSE,
+                          domainForwarding = FALSE,
                           description="") {
 
       type = GMS_DT_PAR
-      super$initialize(container, gams_name,
+      super$initialize(container, name,
                       type, 0, 
-                      domain, description, domain_forwarding)
+                      domain, description, domainForwarding)
 
       if (!is.null(records)) {
         self$setRecords(records)
@@ -2465,10 +2462,10 @@ Variable <- R6Class(
   "Variable",
   inherit = Symbol,
   public = list(
-    initialize = function(container = NULL, gams_name = NULL, 
+    initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = list(), records = NULL,
-                          domain_forwarding = FALSE,
+                          domainForwarding = FALSE,
                           description="") {
 
       self$type = type
@@ -2476,9 +2473,9 @@ Variable <- R6Class(
       symtype = GMS_DT_VAR
       symsubtype = VarTypeSubtype()[[type]]
 
-      super$initialize(container, gams_name,
+      super$initialize(container, name,
                       symtype, symsubtype, 
-                      domain, description, domain_forwarding)
+                      domain, description, domainForwarding)
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -2657,11 +2654,11 @@ Equation <- R6Class(
   inherit = Symbol,
   public = list(
 
-    initialize = function(container=NULL, gams_name=NULL, 
+    initialize = function(container=NULL, name=NULL, 
                           type=NULL,
                           domain=list(),
                           records = NULL,
-                          domain_forwarding=FALSE,
+                          domainForwarding=FALSE,
                           description="") {
 
       self$type = type
@@ -2680,9 +2677,9 @@ Equation <- R6Class(
         symsubtype = EqTypeSubtype()[[type]]
       # }
 
-      super$initialize(container, gams_name,
+      super$initialize(container, name,
                       symtype, symsubtype, 
-                      domain, description, domain_forwarding)
+                      domain, description, domainForwarding)
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -2857,16 +2854,17 @@ Alias <- R6Class(
     .gams_type = NULL,
     .gams_subtype = NULL,
     .requiresStateCheck = NULL,
-    initialize = function(container=NULL, gams_name=NULL, 
-                          alias_for=NULL) {
+    initialize = function(container=NULL, name=NULL, 
+                          aliasFor=NULL) {
       self$.requiresStateCheck = TRUE
       self$ref_container = container
-      self$name = gams_name
-      self$ref_container$data[[gams_name]] = self
+      self$name = name
+      refcontainer = self$ref_container
+      refcontainer$data[[name]] = self
       self$.gams_type = GMS_DT_ALIAS
       self$.gams_subtype = 1
       private$is_alias = TRUE
-      self$aliasWith = alias_for
+      self$aliasWith = aliasFor
     },
 
     getCardinality = function() {
@@ -3063,7 +3061,7 @@ Alias <- R6Class(
       "name" = self$name,
       "alias_with" = self$aliasWith,
       "alias_with_name" = self$aliasWith$name,
-      "is_singleton" = self$isSingleton,
+      "isSingleton" = self$isSingleton,
       "domain_objects" = self$domain,
       "domain_names" = self$domain_names,
       "dimension" = self$dimension,
@@ -3084,12 +3082,6 @@ Alias <- R6Class(
     .aliasWith = NULL,
     is_alias = NULL,
     is_singleton = NULL,
-
-    # lblTypeSubtype = function() {
-    #   return(list(
-    #   "alias" = list(GMS_DT_ALIAS, 1)
-    #   ))
-    # },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
@@ -3118,7 +3110,7 @@ find_gams <- function() {
     }
   }
   if (is.null(sysDirPath)) {
-  stop("Could not find a GAMS installation, must manually specify system_directory\n")
+  stop("Could not find a GAMS installation, must manually specify system directory\n")
   }
   return(sysDirPath)
 }
