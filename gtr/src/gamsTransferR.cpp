@@ -168,7 +168,7 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 void gdxWriteSuper(List data, CharacterVector sysDir, 
 CharacterVector fileName, CharacterVector uel_priority, 
 bool is_uel_priority, bool compress) {
-  Rcout << "here2\n";
+
   std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
@@ -178,7 +178,7 @@ bool is_uel_priority, bool compress) {
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
-  Rcout << "here1\n";
+
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
   if (!rc) stop("Error creating GDX object: %s", Msg);
@@ -218,7 +218,7 @@ bool is_uel_priority, bool compress) {
     }
     gdxUELRegisterDone(PGX);
   }
-  // std::string mysym, varTypeStr;
+
   DataFrame df;
   List domain;
   int Dim;
@@ -226,7 +226,7 @@ bool is_uel_priority, bool compress) {
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
-  // int elemTextCount = 0;
+
   for (int d=0; d < data.length(); d++){
     Environment symname = data[d];
     std::string mysym = symname["name"];
