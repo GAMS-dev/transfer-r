@@ -11,17 +11,18 @@ GAMS Transfer R.
 The devtools package is installed by running the following command in R.
 ```
 install.packages("devtools")
+install.packages("usethis")
 ```
 
 devtools can then be loaded
 ```
+library(usethis)
 library(devtools)
 ```
 
 Installation from GitHub will install a package and all of its
-prerequisites (in this case the reshape2 package):
-```
-install_github("GAMS-dev/gdxrrw/gams-transfer-r")
-```
+prerequisites:
 
-
+```
+install_github("GAMS-dev/gams-transfer-r")
+```
