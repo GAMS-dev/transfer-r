@@ -698,7 +698,10 @@ Container <- R6::R6Class (
          " (i.e., <symbol object>$isValid() == TRUE)\n"))
       }
 
-      private$validSymbolOrder()
+      if (private$isValidSymbolOrder() == FALSE) {
+        self$reOrderSymbols()
+      }
+      # private$validSymbolOrder()
 
       # remap special values
       specialValsGDX = getSpecialValues(gdxout, self$systemDirectory)
@@ -752,8 +755,15 @@ Container <- R6::R6Class (
         gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, unlist(reorder), TRUE, compress)
       }
+    },
 
-
+    reOrderSymbols = function() {
+      orderedSymbols = private$validSymbolOrder()
+      datacopy = self$data
+      self$data = list()
+      for (s in orderedSymbols) {
+        self$data[[s]] = datacopy[[s]]
+      }
     },
 
     isValid = function(verbose=FALSE, force=FALSE) {
@@ -911,21 +921,10 @@ Container <- R6::R6Class (
       return(orderedSymbols)
     },
 
-    reOrderSymbols = function() {
-      orderedSymbols = private$validSymbolOrder()
-      datacopy = self$data
-      self$data = list()
-      for (s in orderedSymbols) {
-        self$data[[s]] = datacopy[[s]]
-      }
-    },
-
     isValidSymbolOrder = function() {
       validOrder = private$validSymbolOrder()
-      print("valid order")
-      print(validOrder)
       currentOrder = names(self$data)
-      h = list()
+      h = c()
       for (i in seq_along(self$data)) {
         symName = names(self$data)[i]
         if ( inherits(self$data[[symName]], "Set") | 
@@ -2403,31 +2402,113 @@ Parameter <- R6Class(
     },
 
     setRecords = function(records) {
-      # check if records is a dataframe and make if not
-      records = data.frame(records)
+      if (is.array(records)) {
+        if ((length(records) > 1) && (self$domainType != "regular")) {
+          stop(paste0(
+            "Data conversion for non-scalar array (i.e., matrix) format into 
+            records is only possible for symbols where 
+            self.domain_type = 'regular'. 
+            Must define symbol with specific domain set objects, 
+            symbol domain_type is currently ",self$domainType,".\n" ))
+        }
 
-      # check dimensionality of dataframe
-      r = nrow(records)
-      c = length(records)
+        for (i in self$domain) {
+          if (i$isValid() == FALSE) {
+            stop(paste0(
+              "Domain set ", i$name, " is invalid and cannot be used to convert array-to-records.
+               Use $isValid(verbose = TRUE) to debug this domain set symbol before proceeding.\n"
+            ))
+          }
+        }
 
-      assertthat::assert_that(
-        c == self$dimension + 1,
-        msg = paste0("Dimensionality of records ", c - 1, 
-        " is inconsistent with parameter domain specification ", 
-        self$dimension)
-      )
+        if (self$dimension >= 2) {
+          if (!all(dim(records) == unlist(self$shape()))) {
+            stop(paste0("User passed array/matrix with shape ", toString(dim(records)), " but anticipated 
+            shape was ", toString(unlist(self$shape())), " based on domain set information -- 
+            must reconcile before array-to-records conversion is possible.\n"))
+          }
+        }
 
-      columnNames = self$domainLabels
-      columnNames = append(columnNames, "value")
-      # columnNames = self$getColLabelsForRecords()
-      colnames(records) = columnNames
+        tryCatch(
+          {
+            values = as.numeric(records)
+          },
+          error = function(cond) {
+            stop("error converting array to numeric type\n")
+          },
+          warning = function(cond) {
+            stop("error converting array to numeric type\n")
+          }
+        )
 
-      #if records "value" is not numeric, stop.
-      if (any(!is.numeric(records[,length(records)]))) {
-        stop("All entries in the 'values' column of a parameter must be numeric.\n")
+        if (self$dimension == 0) {
+          if (length(records) > 1) {
+            stop("A scalar provided with more than one entries.\n")
+          }
+          else {
+            self$records = data.frame(value=records)
+          }
+          return()
+        }
+
+        #everything from here on is a parameter
+        listOfDomains = replicate(self$dimension, list(NA))
+        for (i in seq_along(self$domain)) {
+          d = self$domain[[i]]
+          listOfDomains[[i]] = d$records[,1]
+        }
+        df = expand.grid(listOfDomains, stringsAsFactors = FALSE) # ij is a dataframe
+        colnames(df) = self$domainLabels
+
+        df["value"] = values
+        print("df before")
+        print(df)
+        # drop zeros but not EPS
+        colrange = (self$dimension + 1):length(df)
+
+        logicalVector = ((df[,colrange] == 0) & 
+        !(sign(1/df[,colrange])==-1) )
+        print("logical vector")
+        print(logicalVector)
+        df = df[(!logicalVector),]
+
+        print("df")
+        print(df)
+        if (nrow(df) == 0) {
+          self$records = NULL
+        }
+        else {
+          self$records = df
+          self$.linkDomainCategories()
+        }
       }
-      self$records = records
-      self$.linkDomainCategories()
+      else {
+        # check if records is a dataframe and make if not
+        records = data.frame(records)
+
+        # check dimensionality of dataframe
+        r = nrow(records)
+        c = length(records)
+
+        assertthat::assert_that(
+          c == self$dimension + 1,
+          msg = paste0("Dimensionality of records ", c - 1, 
+          " is inconsistent with parameter domain specification ", 
+          self$dimension)
+        )
+
+        columnNames = self$domainLabels
+        columnNames = append(columnNames, "value")
+        # columnNames = self$getColLabelsForRecords()
+        colnames(records) = columnNames
+
+        #if records "value" is not numeric, stop.
+        if (any(!is.numeric(records[,length(records)]))) {
+          stop("All entries in the 'values' column of a parameter must be numeric.\n")
+        }
+        self$records = records
+        self$.linkDomainCategories()
+      }
     }
   ),
 
