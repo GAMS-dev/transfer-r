@@ -2459,6 +2459,7 @@ Parameter <- R6Class(
         }
         df = expand.grid(listOfDomains, stringsAsFactors = FALSE) # ij is a dataframe
         colnames(df) = self$domainLabels
+        attr(df, "out.attrs") <- NULL
 
         df["value"] = values
         print("df before")
