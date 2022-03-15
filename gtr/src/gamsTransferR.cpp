@@ -93,7 +93,6 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   int nAcronym;
   nAcronym = gdxAcronymCount(PGX);
   if (nAcronym > 0) {
-    Rcout << "warning! Acronyms are not supported!" << "\n";
     int acrID;
     std::vector<int> acronyms;
     for (int i=0; i < nAcronym; i++){
