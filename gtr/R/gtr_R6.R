@@ -2402,7 +2402,7 @@ Parameter <- R6Class(
     },
 
     setRecords = function(records) {
-      if (is.array(records)) {
+      if (is.array(records)) { # checks for matrix + arrays
         if ((length(records) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
@@ -2462,19 +2462,14 @@ Parameter <- R6Class(
         attr(df, "out.attrs") <- NULL
 
         df["value"] = values
-        print("df before")
-        print(df)
         # drop zeros but not EPS
         colrange = (self$dimension + 1):length(df)
 
         logicalVector = ((df[,colrange] == 0) & 
         !(sign(1/df[,colrange])==-1) )
-        print("logical vector")
-        print(logicalVector)
         df = df[(!logicalVector),]
 
-        print("df")
-        print(df)
+        row.names(df) <- NULL
         if (nrow(df) == 0) {
           self$records = NULL
         }
@@ -2564,49 +2559,196 @@ Variable <- R6Class(
     },
 
     setRecords = function(records) {
-      # check if records is a dataframe and make if not
-      records = data.frame(records)
-      usr_colnames = colnames(records)
+      if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
 
-      columnNames = self$domainLabels
-      if (self$dimension +  1 > length(usr_colnames)) {
-        usr_attr = NULL
+        if (is.array(records)){
+          records= list(level = records) # default to level
+        }
+
+        #check if user attributes are valid
+        if (length(intersect(private$.attr(), names(records))) == 0) {
+          stop(paste0("Unrecognized user attribute detected in `records`. 
+          The attributes must be one of the following", toString(private$.attr()),
+          "and must be passed as names of a named list.\n"))
+        }
+        # check if all records have equal size
+        size1 = dim(records[[1]])
+        size = lapply(records, dim)
+
+        for (i in seq_along(records)) {
+          if(!all(dim(records[[i]]) == size1)) {
+            stop("array sizes passed into records must be all equal.\n")
+          }
+        }
+
+        if ((length(records) > 1) && (self$domainType != "regular")) {
+          stop(paste0(
+            "Data conversion for non-scalar array (i.e., matrix) format into 
+            records is only possible for symbols where 
+            self.domain_type = 'regular'. 
+            Must define symbol with specific domain set objects, 
+            symbol domain_type is currently ",self$domainType,".\n" ))
+        }
+
+        for (i in self$domain) {
+          if (i$isValid() == FALSE) {
+            stop(paste0(
+              "Domain set ", i$name, " is invalid and cannot be used to convert array-to-records.
+               Use $isValid(verbose = TRUE) to debug this domain set symbol before proceeding.\n"
+            ))
+          }
+        }
+
+        if (self$dimension >= 2) {
+          for (i in names(records)) {
+            recs = records[[i]]
+            if (!all(dim(recs) == unlist(self$shape()))) {
+              stop(paste0("User passed array/matrix with shape ", toString(dim(recs)), " but anticipated 
+              shape was ", toString(unlist(self$shape())), " based on domain set information -- 
+              must reconcile before array-to-records conversion is possible.\n"))
+            }
+          }
+        }
+
+        values = list()
+        valuenames = names(records)
+        for (i in seq_along(records)) {
+          tryCatch(
+            {
+              values[[i]] = as.numeric(records[[i]])
+            },
+            error = function(cond) {
+              stop("error converting array to numeric type\n")
+            },
+            warning = function(cond) {
+              stop("error converting array to numeric type\n")
+            }
+          )
+        }
+
+        if (self$dimension == 0) {
+          self$records = data.frame(matrix(nrow=1, ncol=length(private$.attr())))
+          colnames(self$records) = private$.attr()
+
+          for (i in seq_along(records)) {
+            if (length(records[[i]]) > 1) {
+              stop("A scalar provided with more than one entries.\n")
+            }
+            else {
+              self$records[names(records)[[i]]] = records[[i]]
+            }
+          }
+          for (i in private$.attr()) {
+            if (is.na(self$records[[i]])) {
+              self$records[i] = private$.default_values[[private$.type]][[i]]
+            }
+          }
+          return()
+        }
+
+        #everything from here on is a parameter
+        listOfDomains = replicate(self$dimension, list(NA))
+        for (i in seq_along(self$domain)) {
+          d = self$domain[[i]]
+          listOfDomains[[i]] = d$records[,1]
+        }
+        df = expand.grid(listOfDomains, stringsAsFactors = FALSE) # ij is a dataframe
+        colnames(df) = self$domainLabels
+        attr(df, "out.attrs") <- NULL
+        for (i in seq_along(values)) {
+          df[valuenames[[i]]] = values[[i]]
+        }
+
+        # drop zeros but not EPS
+        colrange = (self$dimension + 1):length(df)
+        df1 = df[colrange]
+        rsum = rowSums(df1)
+        iseps = ((df1 == 0) & 
+        (sign(1/df1)==-1) )
+        iseps_rowsums= rowSums(iseps)
+        df = df[which(!(rsum==0 & iseps_rowsums == 0)),]
+
+        row.names(df) <- NULL
+        if (nrow(df) == 0) {
+          self$records = NULL
+        }
+        else {
+          usr_colnames = colnames(df)
+          columnNames = self$domainLabels
+          if (self$dimension +  1 > length(usr_colnames)) {
+            usr_attr = NULL
+          }
+          else {
+            usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+          }
+          for (i in setdiff(private$.attr(), usr_attr)) {
+            df[i] = private$.default_values[[private$.type]][[i]]
+          }
+
+          # reorder columns
+          correct_order = c()
+          if (self$dimension > 0) {
+            correct_order = colnames(df)[(1:self$dimension)]
+          }
+          correct_order = append(correct_order, private$.attr())
+          df = df[, correct_order]
+
+          #rename columns
+          columnNames = append(columnNames, private$.attr())
+          colnames(df) = columnNames
+
+          self$records = df
+          self$.linkDomainCategories()
+        }
+
       }
       else {
-        usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+        # check if records is a dataframe and make if not
+        records = data.frame(records)
+        usr_colnames = colnames(records)
+
+        columnNames = self$domainLabels
+        if (self$dimension +  1 > length(usr_colnames)) {
+          usr_attr = NULL
+        }
+        else {
+          usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+        }
+
+        for (i in setdiff(private$.attr(), usr_attr)) {
+          records[i] = private$.default_values[[private$.type]][[i]]
+        }
+
+        #check dimensionality
+        if (length(records) != self$dimension + length(private$.attr())) {
+          stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
+          " is inconsistent with equation domain specification ", 
+          self$dimension, " must resolve before records can be added\n\n",
+          "NOTE:",
+          "columns not named ", toString(private$.attr()),
+          " will be interpreted as domain columns, check that the data.frame conforms",
+          "to the required notation.\n",
+          "User passed data.frame with columns: ", usr_colnames, "\n")))
+        }
+
+        # reorder columns
+        correct_order = c()
+        if (self$dimension > 0) {
+          correct_order = colnames(records)[(1:self$dimension)]
+        }
+        correct_order = append(correct_order, private$.attr())
+        records = records[, correct_order]
+
+        #rename columns
+        columnNames = append(columnNames, private$.attr())
+        colnames(records) = columnNames
+
+        self$records = records
+        self$.linkDomainCategories()
+
       }
-
-      for (i in setdiff(private$.attr(), usr_attr)) {
-        records[i] = private$.default_values[[private$.type]][[i]]
-      }
-
-      #check dimensionality
-      if (length(records) != self$dimension + length(private$.attr())) {
-        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
-        " is inconsistent with equation domain specification ", 
-        self$dimension, " must resolve before records can be added\n\n",
-        "NOTE:",
-        "columns not named ", toString(private$.attr()),
-        " will be interpreted as domain columns, check that the data.frame conforms",
-        "to the required notation.\n",
-        "User passed data.frame with columns: ", usr_colnames, "\n")))
-      }
-
-      # reorder columns
-      correct_order = c()
-      if (self$dimension > 0) {
-        correct_order = colnames(records)[(1:self$dimension)]
-      }
-      correct_order = append(correct_order, private$.attr())
-      records = records[, correct_order]
-
-      #rename columns
-      columnNames = append(columnNames, private$.attr())
-      colnames(records) = columnNames
-
-      self$records = records
-      self$.linkDomainCategories()
     }
+
   ),
 
   active = list(
@@ -2760,50 +2902,199 @@ Equation <- R6Class(
     },
 
     setRecords = function(records) {
-      # check if records is a dataframe and make if not
-      records = data.frame(records)
+      if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
 
-      usr_colnames = colnames(records)
-      columnNames = self$domainLabels
+        if (is.array(records)){
+          records= list(level = records) # default to level
+        }
 
-      if (self$dimension +  1 > length(usr_colnames)) {
-        usr_attr = NULL
+        #check if user attributes are valid
+        if (length(intersect(private$.attr(), names(records))) == 0) {
+          stop(paste0("Unrecognized user attribute detected in `records`. 
+          The attributes must be one of the following", toString(private$.attr()),
+          "and must be passed as names of a named list.\n"))
+        }
+        # check if all records have equal size
+        size1 = dim(records[[1]])
+        size = lapply(records, dim)
+
+        for (i in seq_along(records)) {
+          if(!all(dim(records[[i]]) == size1)) {
+            stop("array sizes passed into records must be all equal.\n")
+          }
+        }
+
+        if ((length(records) > 1) && (self$domainType != "regular")) {
+          stop(paste0(
+            "Data conversion for non-scalar array (i.e., matrix) format into 
+            records is only possible for symbols where 
+            self.domain_type = 'regular'. 
+            Must define symbol with specific domain set objects, 
+            symbol domain_type is currently ",self$domainType,".\n" ))
+        }
+
+        for (i in self$domain) {
+          if (i$isValid() == FALSE) {
+            stop(paste0(
+              "Domain set ", i$name, " is invalid and cannot be used to convert array-to-records.
+               Use $isValid(verbose = TRUE) to debug this domain set symbol before proceeding.\n"
+            ))
+          }
+        }
+
+        if (self$dimension >= 2) {
+          for (i in names(records)) {
+            recs = records[[i]]
+            if (!all(dim(recs) == unlist(self$shape()))) {
+              stop(paste0("User passed array/matrix with shape ", toString(dim(recs)), " but anticipated 
+              shape was ", toString(unlist(self$shape())), " based on domain set information -- 
+              must reconcile before array-to-records conversion is possible.\n"))
+            }
+          }
+        }
+
+        values = list()
+        valuenames = names(records)
+
+        for (i in seq_along(records)) {
+          tryCatch(
+            {
+              values[[i]] = as.numeric(records[[i]])
+            },
+            error = function(cond) {
+              stop("error converting array to numeric type\n")
+            },
+            warning = function(cond) {
+              stop("error converting array to numeric type\n")
+            }
+          )
+        }
+        if (self$dimension == 0) {
+          self$records = data.frame(matrix(nrow=1, ncol=length(private$.attr())))
+          colnames(self$records) = private$.attr()
+
+          for (i in seq_along(records)) {
+            if (length(records[[i]]) > 1) {
+              stop("A scalar provided with more than one entries.\n")
+            }
+            else {
+              self$records[names(records)[[i]]] = records[[i]]
+            }
+          }
+          for (i in private$.attr()) {
+            if (is.na(self$records[[i]])) {
+              self$records[i] = private$.default_values[[private$.type]][[i]]
+            }
+          }
+          return()
+        }
+
+        #everything from here on is a parameter
+        listOfDomains = replicate(self$dimension, list(NA))
+        for (i in seq_along(self$domain)) {
+          d = self$domain[[i]]
+          listOfDomains[[i]] = d$records[,1]
+        }
+        df = expand.grid(listOfDomains, stringsAsFactors = FALSE) # ij is a dataframe
+        colnames(df) = self$domainLabels
+        attr(df, "out.attrs") <- NULL
+        for (i in seq_along(values)) {
+          df[valuenames[[i]]] = values[[i]]
+        }
+
+        # drop zeros but not EPS
+        colrange = (self$dimension + 1):length(df)
+        df1 = df[colrange]
+        rsum = rowSums(df1)
+        iseps = ((df1 == 0) & 
+        (sign(1/df1)==-1) )
+        iseps_rowsums= rowSums(iseps)
+        df = df[which(!(rsum==0 & iseps_rowsums == 0)),]
+
+        row.names(df) <- NULL
+
+        if (nrow(df) == 0) {
+          self$records = NULL
+        }
+        else {
+          usr_colnames = colnames(df)
+
+          columnNames = self$domainLabels
+          if (self$dimension +  1 > length(usr_colnames)) {
+            usr_attr = NULL
+          }
+          else {
+            usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+          }
+
+          for (i in setdiff(private$.attr(), usr_attr)) {
+            df[i] = private$.default_values[[private$.type]][[i]]
+          }
+
+          # reorder columns
+          correct_order = c()
+          if (self$dimension > 0) {
+            correct_order = colnames(df)[(1:self$dimension)]
+          }
+          correct_order = append(correct_order, private$.attr())
+          df = df[, correct_order]
+
+          #rename columns
+          columnNames = append(columnNames, private$.attr())
+          colnames(df) = columnNames
+
+          self$records = df
+          self$.linkDomainCategories()
+        }
+
       }
       else {
+        # check if records is a dataframe and make if not
+        records = data.frame(records)
+
+        usr_colnames = colnames(records)
+        columnNames = self$domainLabels
+
+        if (self$dimension +  1 > length(usr_colnames)) {
+          usr_attr = NULL
+        }
+        else {
+          usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+        }
+
         usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+
+        for (i in setdiff(private$.attr(), usr_attr)) {
+          records[i] = private$.default_values[[private$.type]][[i]]
+        }
+
+        #check dimensionality
+        if (length(records) != self$dimension + length(private$.attr())) {
+          stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
+          " is inconsistent with equation domain specification ", 
+          self$dimension, " must resolve before records can be added\n\n",
+          "NOTE:",
+          "columns not named ", toString(private$.attr()),
+          " will be interpreted as domain columns, check that the data.frame conforms",
+          "to the required notation.\n",
+          "User passed data.frame with columns: ", usr_colnames, "\n")))
+        }
+
+        # reorder columns
+        correct_order = c()
+        if (self$dimension > 0) {
+          correct_order = colnames(records)[(1:self$dimension)]
+        }
+        correct_order = append(correct_order, private$.attr())
+        records = records[, correct_order]
+
+        columnNames = append(columnNames, private$.attr())
+        colnames(records) = columnNames
+
+        self$records = records
+        self$.linkDomainCategories()
+
       }
-
-      usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
-
-      for (i in setdiff(private$.attr(), usr_attr)) {
-        records[i] = private$.default_values[[private$.type]][[i]]
-      }
-
-      #check dimensionality
-      if (length(records) != self$dimension + length(private$.attr())) {
-        stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
-        " is inconsistent with equation domain specification ", 
-        self$dimension, " must resolve before records can be added\n\n",
-        "NOTE:",
-        "columns not named ", toString(private$.attr()),
-        " will be interpreted as domain columns, check that the data.frame conforms",
-        "to the required notation.\n",
-        "User passed data.frame with columns: ", usr_colnames, "\n")))
-      }
-
-      # reorder columns
-      correct_order = c()
-      if (self$dimension > 0) {
-        correct_order = colnames(records)[(1:self$dimension)]
-      }
-      correct_order = append(correct_order, private$.attr())
-      records = records[, correct_order]
-
-      columnNames = append(columnNames, private$.attr())
-      colnames(records) = columnNames
-
-      self$records = records
-      self$.linkDomainCategories()
     }
   ),
 

@@ -3774,3 +3774,109 @@ test_that("test_num_41", {
   expect_equal(d3$records, df)
 }
 )
+
+test_that("test_num_42", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", c(1:5)))
+  j = Set$new(m, "j", records = paste0("j", c(1:5)))
+  recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "val"=c(1,1,1,1,1))
+  a = Parameter$new(m, "a", domain=c(i, j), records = recs)
+  ap = Parameter$new(m, "ap", domain=c(i, j), records = a$toDense())
+  expect_equal(a$records, ap$records)
+
+  v = Variable$new(m, "v", domain=c(i, j), records = list("level"=a$toDense()))
+
+  df = data.frame(i_1=i$records[,1], 
+  j_2=j$records[,1],
+  level= c(1,1,1,1,1),
+  marginal=c(0,0,0,0,0),
+  lower = replicate(5, -Inf),
+  upper = replicate(5, Inf),
+  scale = replicate(5, 1)
+  )
+
+  expect_equal(v$records, df)
+
+  v2 = Variable$new(m, "v2", domain=c(i, j),
+  records = list(
+    "level" = a$toDense(),
+    marginal = a$toDense(),
+    lower = a$toDense(),
+    upper = a$toDense(),
+    scale = a$toDense()
+  )
+  )
+
+  e = Equation$new(m, "e", "eq", domain=c(i, j),
+  records = list(
+    "level" = a$toDense(),
+    marginal = a$toDense(),
+    lower = a$toDense(),
+    upper = a$toDense(),
+    scale = a$toDense()
+  )
+  )
+
+  df = data.frame(i_1=i$records[,1], 
+  j_2=j$records[,1],
+  level= c(1,1,1,1,1),
+  marginal = replicate(5, 1),
+  lower = replicate(5, 1),
+  upper = replicate(5, 1),
+  scale = replicate(5, 1)
+  )
+
+  expect_equal(v2$records, df)
+  expect_equal(e$records, df)
+}
+)
+
+test_that("test_num_43", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", c(1:5)))
+  j = Set$new(m, "j", records = paste0("j", c(1:5)))
+  recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "val"=c(0,0,0,0,0))
+  recs[2,"val"] = 1
+  recs[4, "val"] = SpecialValues$EPS
+  recs = recs[-c(1,3,5),]
+  row.names(recs) <- NULL
+
+  recs2 = data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "val"=c(0,0,0,0,0))
+  recs2["val"] = SpecialValues$EPS
+
+  a = Parameter$new(m, "a", domain=c(i, j), records = recs)
+  ap = Parameter$new(m, "ap", domain=c(i, j), records = recs2)
+
+  v = Variable$new(m, "v", domain=c(i, j),
+  records = list(
+    "level"=a$toDense(),
+    "marginal"= ap$toDense()
+  ))
+
+  e = Equation$new(m, "e", "eq", domain=c(i, j),
+  records = list(
+    "level"=a$toDense(),
+    "marginal"= ap$toDense()
+  ))
+
+  cols = v$domainLabels
+  cols = append(cols, c("level", "marginal", "lower", "upper", "scale"))
+
+  recs=data.frame("i_1"=c("i1","i2","i3","i4","i5"), 
+  "j_2"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
+  "marginal"=replicate(5, SpecialValues$EPS),
+  "lower" = replicate(5, -Inf),
+  "upper" = replicate(5, Inf),
+  "scale" = replicate(5, 1))
+  recs[,1] = factor(recs[,1], ordered=TRUE)
+  recs[,2] = factor(recs[,2], ordered=TRUE)
+  recs[2,"level"] = 1
+  recs[4, "level"] = SpecialValues$EPS
+  
+  expect_equal(v$records, recs)
+  expect_equal(e$records, recs)
+}
+)
