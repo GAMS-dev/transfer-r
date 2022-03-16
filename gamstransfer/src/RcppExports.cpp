@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // getSpecialValues
 List getSpecialValues(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gtr_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+RcppExport SEXP _gamstransfer_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -24,7 +24,7 @@ END_RCPP
 }
 // checkAcronyms
 List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gtr_checkAcronyms(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+RcppExport SEXP _gamstransfer_checkAcronyms(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -36,7 +36,7 @@ END_RCPP
 }
 // getSymbols
 List getSymbols(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gtr_getSymbols(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+RcppExport SEXP _gamstransfer_getSymbols(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +48,7 @@ END_RCPP
 }
 // gdxWriteSuper
 void gdxWriteSuper(List data, CharacterVector sysDir, CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority, bool compress);
-RcppExport SEXP _gtr_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP, SEXP compressSEXP) {
+RcppExport SEXP _gamstransfer_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP, SEXP compressSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type data(dataSEXP);
@@ -63,7 +63,7 @@ END_RCPP
 }
 // readSymbols
 List readSymbols(CharacterVector symNames, CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gtr_readSymbols(SEXP symNamesSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+RcppExport SEXP _gamstransfer_readSymbols(SEXP symNamesSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -76,15 +76,15 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gtr_getSpecialValues", (DL_FUNC) &_gtr_getSpecialValues, 2},
-    {"_gtr_checkAcronyms", (DL_FUNC) &_gtr_checkAcronyms, 2},
-    {"_gtr_getSymbols", (DL_FUNC) &_gtr_getSymbols, 2},
-    {"_gtr_gdxWriteSuper", (DL_FUNC) &_gtr_gdxWriteSuper, 6},
-    {"_gtr_readSymbols", (DL_FUNC) &_gtr_readSymbols, 3},
+    {"_gamstransfer_getSpecialValues", (DL_FUNC) &_gamstransfer_getSpecialValues, 2},
+    {"_gamstransfer_checkAcronyms", (DL_FUNC) &_gamstransfer_checkAcronyms, 2},
+    {"_gamstransfer_getSymbols", (DL_FUNC) &_gamstransfer_getSymbols, 2},
+    {"_gamstransfer_gdxWriteSuper", (DL_FUNC) &_gamstransfer_gdxWriteSuper, 6},
+    {"_gamstransfer_readSymbols", (DL_FUNC) &_gamstransfer_readSymbols, 3},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_gtr(DllInfo *dll) {
+RcppExport void R_init_gamstransfer(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

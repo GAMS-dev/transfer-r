@@ -1,4 +1,4 @@
-useDynLib(gtr, .registration=TRUE)
+useDynLib(gamstransfer, .registration=TRUE)
 exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
 importFrom(R6,R6Class)

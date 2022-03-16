@@ -1,10 +1,10 @@
-Package: gtr
+Package: gamstransfer
 Type: Package
 Title: What the Package Does in One 'Title Case' Line
 Version: 1.0
 Date: 2021-06-22
 Author: Atharv Bhosekar
-Maintainer: Your Name <abhosekar@gams.com>
+Maintainer: Atharv Bhosekar <abhosekar@gams.com>
 Description: One paragraph description of what the package does as one
         or more full sentences.
 License: GPL (>= 2)

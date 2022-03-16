@@ -34,9 +34,10 @@ SpecialValues = list(
   "POSINF" = Inf,
   "NEGINF" = -Inf
   )
-#' This is GDX Container class
+#' Container object
 #' @description Container is the unified object that contains data
-#' @field data is a list containgin all symbols
+#' @field data is a list containing all symbols
+#' @field systemDirectory is the path to GAMS System directory
 #' @examples
 #' Container$new()
 #' @export
@@ -50,7 +51,6 @@ Container <- R6::R6Class (
     #' @description
     #' Create a new container
     #' @details read a file using 
-    #' \href{../../gtr/html/Container.html#method-read}{\code{$read()}}
     #' @param loadFrom name of the GDX file to load data from
     #' @param systemDirectory optional argument for the path to GAMS System directory
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
@@ -82,8 +82,8 @@ Container <- R6::R6Class (
     #' @details 
     #' `$read()` reads a file
     #' @param loadFrom name of the file to load data from
-    #' @symbols optional argument to specify the names of the symbols to be read
-    #' @values optional boolean argument to specify whether to read symbol records
+    #' @param symbols optional argument to specify the names of the symbols to be read
+    #' @param values optional boolean argument to specify whether to read symbol records
     read = function(loadFrom, symbols="all", values=TRUE) {
       # read metadata
       # get all symbols and metadata from c++

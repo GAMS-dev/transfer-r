@@ -1,6 +1,6 @@
-\name{gtr-package}
-\alias{gtr-package}
-\alias{gtr}
+\name{gamstransfer-package}
+\alias{gamstransfer-package}
+\alias{gamstransfer}
 \docType{package}
 \title{
   A short title line describing what the package does

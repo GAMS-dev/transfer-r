@@ -1,4 +1,4 @@
-library(gtr)
+library(gamstransfer)
 
 test_that("readwritetest", {
 

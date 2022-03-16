@@ -2,7 +2,7 @@
 % Please edit documentation in R/gtr_R6.R
 \name{Container}
 \alias{Container}
-\title{This is GDX Container class}
+\title{Container object}
 \description{
 Container is the unified object that contains data
 }
@@ -12,7 +12,9 @@ Container$new()
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{data}}{is a list containgin all symbols}
+\item{\code{data}}{is a list containing all symbols}
+
+\item{\code{systemDirectory}}{is the path to GAMS System directory}
 }
 \if{html}{\out{</div>}}
 }
@@ -41,6 +43,7 @@ Container$new()
 \item \href{#method-describeEquations}{\code{Container$describeEquations()}}
 \item \href{#method-printSpecialValues}{\code{Container$printSpecialValues()}}
 \item \href{#method-write}{\code{Container$write()}}
+\item \href{#method-reOrderSymbols}{\code{Container$reOrderSymbols()}}
 \item \href{#method-isValid}{\code{Container$isValid()}}
 \item \href{#method-.linkDomainCategories}{\code{Container$.linkDomainCategories()}}
 \item \href{#method-clone}{\code{Container$clone()}}
@@ -52,21 +55,20 @@ Container$new()
 \subsection{Method \code{new()}}{
 Create a new container
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$new(load_from = NA, system_directory = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$new(loadFrom = NULL, systemDirectory = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{load_from}}{name of the GDX file to load data from}
+\item{\code{loadFrom}}{name of the GDX file to load data from}
 
-\item{\code{system_directory}}{optional argument for the path to GAMS System directory}
+\item{\code{systemDirectory}}{optional argument for the path to GAMS System directory}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-read a file using 
-\href{../../gtr/html/Container.html#method-read}{\code{$read()}}
+read a file using
 }
 
 }
@@ -76,13 +78,17 @@ read a file using
 \subsection{Method \code{read()}}{
 read data from a GDX file
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$read(load_from, symbols = "all", values = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$read(loadFrom, symbols = "all", values = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{load_from}}{name of the file to load data from}
+\item{\code{loadFrom}}{name of the file to load data from}
+
+\item{\code{symbols}}{optional argument to specify the names of the symbols to be read}
+
+\item{\code{values}}{optional boolean argument to specify whether to read symbol records}
 }
 \if{html}{\out{</div>}}
 }
@@ -105,7 +111,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-removeSymbols}{}}}
 \subsection{Method \code{removeSymbols()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$removeSymbols(name = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$removeSymbols(name = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -114,7 +120,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-renameSymbol}{}}}
 \subsection{Method \code{renameSymbol()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$renameSymbol(old_name = NA, new_name = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$renameSymbol(oldName = NULL, newName = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -180,9 +186,9 @@ read data from a GDX file
 \if{html}{\out{<div class="r">}}\preformatted{Container$addSet(
   name,
   domain = "*",
-  is_singleton = FALSE,
-  records = NA,
-  domain_forwarding = FALSE,
+  isSingleton = FALSE,
+  records = NULL,
+  domainForwarding = FALSE,
   description = ""
 )}\if{html}{\out{</div>}}
 }
@@ -195,9 +201,9 @@ read data from a GDX file
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addParameter(
   name,
-  domain = NA,
-  records = NA,
-  domain_forwarding = FALSE,
+  domain = list(),
+  records = NULL,
+  domainForwarding = FALSE,
   description = ""
 )}\if{html}{\out{</div>}}
 }
@@ -211,9 +217,9 @@ read data from a GDX file
 \if{html}{\out{<div class="r">}}\preformatted{Container$addVariable(
   name,
   type = "free",
-  domain = NA,
-  records = NA,
-  domain_forwarding = FALSE,
+  domain = list(),
+  records = NULL,
+  domainForwarding = FALSE,
   description = ""
 )}\if{html}{\out{</div>}}
 }
@@ -227,9 +233,9 @@ read data from a GDX file
 \if{html}{\out{<div class="r">}}\preformatted{Container$addEquation(
   name,
   type,
-  domain = NA,
-  records = NA,
-  domain_forwarding = FALSE,
+  domain = list(),
+  records = NULL,
+  domainForwarding = FALSE,
   description = ""
 )}\if{html}{\out{</div>}}
 }
@@ -240,7 +246,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-addAlias}{}}}
 \subsection{Method \code{addAlias()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$addAlias(name, alias_with)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$addAlias(name, aliasWith)}\if{html}{\out{</div>}}
 }
 
 }
@@ -249,7 +255,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-describeSets}{}}}
 \subsection{Method \code{describeSets()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeSets(symbols = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$describeSets(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -258,7 +264,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-describeParameters}{}}}
 \subsection{Method \code{describeParameters()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeParameters(symbols = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$describeParameters(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -267,7 +273,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-describeVariables}{}}}
 \subsection{Method \code{describeVariables()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeVariables(symbols = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$describeVariables(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -276,7 +282,7 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-describeEquations}{}}}
 \subsection{Method \code{describeEquations()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeEquations(symbols = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$describeEquations(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -294,7 +300,16 @@ read data from a GDX file
 \if{latex}{\out{\hypertarget{method-write}{}}}
 \subsection{Method \code{write()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$write(gdxout, compress = FALSE, uel_priority = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$write(gdxout, compress = FALSE, uelPriority = NULL)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-reOrderSymbols"></a>}}
+\if{latex}{\out{\hypertarget{method-reOrderSymbols}{}}}
+\subsection{Method \code{reOrderSymbols()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Container$reOrderSymbols()}\if{html}{\out{</div>}}
 }
 
 }

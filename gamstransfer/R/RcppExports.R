@@ -2,22 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 getSpecialValues <- function(gdxName, sysDir) {
-    .Call(`_gtr_getSpecialValues`, gdxName, sysDir)
+    .Call(`_gamstransfer_getSpecialValues`, gdxName, sysDir)
 }
 
 checkAcronyms <- function(gdxName, sysDir) {
-    .Call(`_gtr_checkAcronyms`, gdxName, sysDir)
+    .Call(`_gamstransfer_checkAcronyms`, gdxName, sysDir)
 }
 
 getSymbols <- function(gdxName, sysDir) {
-    .Call(`_gtr_getSymbols`, gdxName, sysDir)
+    .Call(`_gamstransfer_getSymbols`, gdxName, sysDir)
 }
 
 gdxWriteSuper <- function(data, sysDir, fileName, uel_priority, is_uel_priority, compress) {
-    invisible(.Call(`_gtr_gdxWriteSuper`, data, sysDir, fileName, uel_priority, is_uel_priority, compress))
+    invisible(.Call(`_gamstransfer_gdxWriteSuper`, data, sysDir, fileName, uel_priority, is_uel_priority, compress))
 }
 
 readSymbols <- function(symNames, gdxName, sysDir) {
-    .Call(`_gtr_readSymbols`, symNames, gdxName, sysDir)
+    .Call(`_gamstransfer_readSymbols`, symNames, gdxName, sysDir)
 }
 
