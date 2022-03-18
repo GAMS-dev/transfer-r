@@ -4,15 +4,25 @@
 \alias{Container}
 \title{Container object}
 \description{
-Container is the unified object that contains data
+The main object class within GAMS Transfer is called 
+Container. The Container is the vessel that allows symbols to be 
+linked together (through their domain definitions), it enables 
+implicit set definitions, it enables structural manipulations of the 
+data (matrix generation), and it allows the user to perform different 
+read/write operations.
 }
 \examples{
+
+## ------------------------------------------------
+## Method `Container$new`
+## ------------------------------------------------
+
 Container$new()
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{data}}{is a list containing all symbols}
+\item{\code{data}}{is a named list containing all symbol data}
 
 \item{\code{systemDirectory}}{is the path to GAMS System directory}
 }
@@ -53,7 +63,7 @@ Container$new()
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new container
+Create a new container simply by initializing an object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$new(loadFrom = NULL, systemDirectory = NULL)}\if{html}{\out{</div>}}
 }
@@ -61,14 +71,20 @@ Create a new container
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{loadFrom}}{name of the GDX file to load data from}
+\item{\code{loadFrom}}{optional argument to point to the GDX file being 
+read into the Container}
 
-\item{\code{systemDirectory}}{optional argument for the path to GAMS System directory}
+\item{\code{systemDirectory}}{optional argument for the absolute path to 
+GAMS system directory}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Details}{
-read a file using
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{Container$new()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -76,7 +92,9 @@ read a file using
 \if{html}{\out{<a id="method-read"></a>}}
 \if{latex}{\out{\hypertarget{method-read}{}}}
 \subsection{Method \code{read()}}{
-read data from a GDX file
+main method to read loadFrom, can be provided 
+with a list of symbols to read in subsets, records controls 
+if symbol records are loaded or just metadata
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$read(loadFrom, symbols = "all", values = TRUE)}\if{html}{\out{</div>}}
 }
@@ -84,23 +102,22 @@ read data from a GDX file
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{loadFrom}}{name of the file to load data from}
+\item{\code{loadFrom}}{name of the file to load data from as a string}
 
-\item{\code{symbols}}{optional argument to specify the names of the symbols to be read}
+\item{\code{symbols}}{optional argument to specify the names of the 
+symbols to be read (string or a list of strings)}
 
-\item{\code{values}}{optional boolean argument to specify whether to read symbol records}
+\item{\code{values}}{optional boolean argument to specify whether to 
+read symbol records (logical)}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Details}{
-`$read()` reads a file
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getUniverseSet"></a>}}
 \if{latex}{\out{\hypertarget{method-getUniverseSet}{}}}
 \subsection{Method \code{getUniverseSet()}}{
+provides a universe for all symbols
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$getUniverseSet()}\if{html}{\out{</div>}}
 }
@@ -110,78 +127,180 @@ read data from a GDX file
 \if{html}{\out{<a id="method-removeSymbols"></a>}}
 \if{latex}{\out{\hypertarget{method-removeSymbols}{}}}
 \subsection{Method \code{removeSymbols()}}{
+removes symbols from the Container
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$removeSymbols(name = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$removeSymbols(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{symbols}}{a string specifying the symbol name or a list of symbols 
+to be removed from the container}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-renameSymbol"></a>}}
 \if{latex}{\out{\hypertarget{method-renameSymbol}{}}}
 \subsection{Method \code{renameSymbol()}}{
+rename a symbol in the Container
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$renameSymbol(oldName = NULL, newName = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{oldName}}{string specifying the old name of the symbol}
+
+\item{\code{newName}}{string specifying the new name of the symbol}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-listSymbols"></a>}}
 \if{latex}{\out{\hypertarget{method-listSymbols}{}}}
 \subsection{Method \code{listSymbols()}}{
+list all symbols in the container if isValid = NULL
+list all valid symbols if  isValid = TRUE
+list all invalid symbols if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listSymbols(isValid = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{isValid}}{an optional logical argument}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector of symbols
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-listSets"></a>}}
 \if{latex}{\out{\hypertarget{method-listSets}{}}}
 \subsection{Method \code{listSets()}}{
+list all sets in the container if isValid = NULL
+list all valid sets if  isValid = TRUE
+list all invalid sets if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listSets(isValid = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{isValid}}{an optional logical argument}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector of symbols
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-listParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-listParameters}{}}}
 \subsection{Method \code{listParameters()}}{
+list all parameters in the container if isValid = NULL
+list all valid parameters if  isValid = TRUE
+list all invalid parameters if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listParameters(isValid = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{isValid}}{an optional logical argument}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector of symbols
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-listAliases"></a>}}
 \if{latex}{\out{\hypertarget{method-listAliases}{}}}
 \subsection{Method \code{listAliases()}}{
+list all aliases in the container if isValid = NULL
+list all valid aliases if  isValid = TRUE
+list all invalid aliases if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listAliases(isValid = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{isValid}}{an optional logical argument}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector of symbols
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-listVariables"></a>}}
 \if{latex}{\out{\hypertarget{method-listVariables}{}}}
 \subsection{Method \code{listVariables()}}{
+list all variables in the container if isValid = NULL
+list all valid variables if  isValid = TRUE
+list all invalid variables if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listVariables(isValid = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{isValid}}{an optional logical argument}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector of symbols
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-listEquations"></a>}}
 \if{latex}{\out{\hypertarget{method-listEquations}{}}}
 \subsection{Method \code{listEquations()}}{
+list all equations in the container if isValid = NULL
+list all valid equations if  isValid = TRUE
+list all invalid equations if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listEquations(isValid = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{isValid}}{an optional logical argument}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector of symbols
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addSet"></a>}}
 \if{latex}{\out{\hypertarget{method-addSet}{}}}
 \subsection{Method \code{addSet()}}{
+There are two ways to create a GAMS set and 
+add it to a Container. One is using the Set constructor and 
+the other is using addSet method which calls the Set constructor
+internally.
+addSet is a Container method to add a Set.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addSet(
   name,
@@ -193,11 +312,39 @@ read data from a GDX file
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{string argument for name of the set}
+
+\item{\code{domain}}{an optional argument specifying a list of strings, 
+a string. default value is "*".}
+
+\item{\code{isSingleton}}{an optional logical argument specifying if a set
+is singleton. Default value is FALSE.}
+
+\item{\code{records}}{specify set records as a string vector or a dataframe.}
+
+\item{\code{domainForwarding}}{an optional logical argument to specify 
+domain forwarding. Default value is FALSE.}
+
+\item{\code{description}}{string specifying description for the set}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a Set object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addParameter"></a>}}
 \if{latex}{\out{\hypertarget{method-addParameter}{}}}
 \subsection{Method \code{addParameter()}}{
+There are two ways to create a GAMS parameter and 
+add it to a Container. One is using the Parameter constructor and 
+the other is using addParameter method which calls the Parameter constructor
+internally.
+addParameter is a Container method to add a Parameter.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addParameter(
   name,
@@ -208,11 +355,36 @@ read data from a GDX file
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{string argument for name of the Parameter}
+
+\item{\code{domain}}{an optional argument specifying a list of strings, 
+a string. default value is "*".}
+
+\item{\code{records}}{specify set records as a string vector or a dataframe.}
+
+\item{\code{domainForwarding}}{an optional logical argument to specify 
+domain forwarding. Default value is FALSE.}
+
+\item{\code{description}}{string specifying description for the set}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a Parameter object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addVariable"></a>}}
 \if{latex}{\out{\hypertarget{method-addVariable}{}}}
 \subsection{Method \code{addVariable()}}{
+There are two ways to create a GAMS Variable and 
+add it to a Container. One is using the Variable constructor and 
+the other is using addVariable method which calls the Parameter 
+constructor internally.
+addVariable is a Container method to add a Variable.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addVariable(
   name,
@@ -224,11 +396,40 @@ read data from a GDX file
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{string argument for name of the Variable}
+
+\item{\code{type}}{Type of variable being created [binary, integer, 
+positive, negative, free, sos1, sos2, semicont, semiint]. The default
+is "free"}
+
+\item{\code{domain}}{an optional argument specifying a list of strings, 
+a string. default value is "*".}
+
+\item{\code{records}}{specify set records as a string vector or a dataframe.}
+
+\item{\code{domainForwarding}}{an optional logical argument to specify 
+domain forwarding. Default value is FALSE.}
+
+\item{\code{description}}{string specifying description for the set}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a Variable object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addEquation"></a>}}
 \if{latex}{\out{\hypertarget{method-addEquation}{}}}
 \subsection{Method \code{addEquation()}}{
+There are two ways to create a GAMS Equation and 
+add it to a Container. One is using the Equation constructor and 
+the other is using addEquation method which calls the Equation 
+constructor internally.
+addEquation is a Container method to add a Equation.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addEquation(
   name,
@@ -240,51 +441,125 @@ read data from a GDX file
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{string argument for name of the Equation}
+
+\item{\code{type}}{Type of equation being created [eq (or E/e), geq 
+(or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]}
+
+\item{\code{domain}}{an optional argument specifying a list of strings, 
+a string. default value is "*".}
+
+\item{\code{records}}{specify set records as a string vector or a dataframe.}
+
+\item{\code{domainForwarding}}{an optional logical argument to specify 
+domain forwarding. Default value is FALSE.}
+
+\item{\code{description}}{string specifying description for the set}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a Equation object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addAlias"></a>}}
 \if{latex}{\out{\hypertarget{method-addAlias}{}}}
 \subsection{Method \code{addAlias()}}{
+There are two ways to create a GAMS Alias and 
+add it to a Container. One is using the Alias constructor and 
+the other is using addAlias method which calls the Alias 
+constructor internally.
+addAlias is a Container method to add a Alias.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addAlias(name, aliasWith)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{string argument for name of the Alias}
+
+\item{\code{aliasWith}}{string argument for the set/alias we want to add
+an alias for}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-describeSets"></a>}}
 \if{latex}{\out{\hypertarget{method-describeSets}{}}}
 \subsection{Method \code{describeSets()}}{
+create a summary table with descriptive statistics for Sets
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeSets(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{symbols}}{an optional argument of type string or a list of sets 
+to describe. The default value is NULL which assumes all sets.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-describeParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-describeParameters}{}}}
 \subsection{Method \code{describeParameters()}}{
+create a summary table with descriptive statistics for Parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeParameters(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{symbols}}{an optional argument of type string or a list of parameters 
+to describe. The default value is NULL which assumes all parameters.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-describeVariables"></a>}}
 \if{latex}{\out{\hypertarget{method-describeVariables}{}}}
 \subsection{Method \code{describeVariables()}}{
+create a summary table with descriptive statistics for Variables
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeVariables(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{symbols}}{an optional argument of type string or a list of Variables 
+to describe. The default value is NULL which assumes all variables.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-describeEquations"></a>}}
 \if{latex}{\out{\hypertarget{method-describeEquations}{}}}
 \subsection{Method \code{describeEquations()}}{
+create a summary table with descriptive statistics for Equations
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeEquations(symbols = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{symbols}}{an optional argument of type string or a list of equations 
+to describe. The default value is NULL which assumes all equations.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-printSpecialValues"></a>}}
@@ -299,15 +574,33 @@ read data from a GDX file
 \if{html}{\out{<a id="method-write"></a>}}
 \if{latex}{\out{\hypertarget{method-write}{}}}
 \subsection{Method \code{write()}}{
+a write method to write to a gdxout GDX file
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$write(gdxout, compress = FALSE, uelPriority = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{gdxout}}{name of the GDX file to write to}
+
+\item{\code{compress}}{write tge GDX file in compressed format by setting
+compress = TRUE.}
+
+\item{\code{uelPriority}}{Advanced users might want to specify an order 
+to their UEL list (i.e., the universe set); The UEL 
+ordering follows that dictated by the data. As a convenience, it 
+is possible to prepend the UEL list with a user specified order 
+using the uel_priority argument.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-reOrderSymbols"></a>}}
 \if{latex}{\out{\hypertarget{method-reOrderSymbols}{}}}
 \subsection{Method \code{reOrderSymbols()}}{
+reorder symbols in order to avoid domain violations
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$reOrderSymbols()}\if{html}{\out{</div>}}
 }
@@ -317,10 +610,21 @@ read data from a GDX file
 \if{html}{\out{<a id="method-isValid"></a>}}
 \if{latex}{\out{\hypertarget{method-isValid}{}}}
 \subsection{Method \code{isValid()}}{
+checks if the symbol is in a valid format, throw 
+exceptions if verbose=True, recheck a symbol if force=True
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$isValid(verbose = FALSE, force = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{type logical}
+
+\item{\code{force}}{type logical}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.linkDomainCategories"></a>}}
