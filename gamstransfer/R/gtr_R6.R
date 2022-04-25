@@ -1121,6 +1121,8 @@ SetTypeSubtype = function() {
   ))
 }
 
+#' An absract symbol class from which the classes Set, Parameter, Variable, 
+#' and Equation are inherited.
 Symbol <- R6Class(
   "Symbol",
   public = list(
@@ -1137,9 +1139,11 @@ Symbol <- R6Class(
     self$.gams_subtype = subtype
 
     self$.requiresStateCheck = TRUE
+    #' @field refContainer reference to the Container that the symbol 
+    #' belongs to. Type Container.
     self$refContainer = container
     self$refContainer$.requiresStateCheck = TRUE
-
+    #' @field name name of the symbol
     self$name <- name
     self$refContainer$data[[name]] = self
 
@@ -1167,6 +1171,7 @@ Symbol <- R6Class(
     }
   },
 
+  #' @method getCardinality get the full cartesian product of the domain
   getCardinality = function() {
     tryCatch(
       {
