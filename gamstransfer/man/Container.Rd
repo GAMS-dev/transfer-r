@@ -2,7 +2,7 @@
 % Please edit documentation in R/gtr_R6.R
 \name{Container}
 \alias{Container}
-\title{Container object}
+\title{Container Class}
 \description{
 The main object class within GAMS Transfer is called 
 Container. The Container is the vessel that allows symbols to be 
@@ -107,7 +107,7 @@ if symbol records are loaded or just metadata
 \item{\code{symbols}}{optional argument to specify the names of the 
 symbols to be read (string or a list of strings)}
 
-\item{\code{values}}{optional boolean argument to specify whether to 
+\item{\code{values}}{optional logical argument to specify whether to 
 read symbol records (logical)}
 }
 \if{html}{\out{</div>}}
@@ -165,8 +165,8 @@ rename a symbol in the Container
 \if{latex}{\out{\hypertarget{method-listSymbols}{}}}
 \subsection{Method \code{listSymbols()}}{
 list all symbols in the container if isValid = NULL
-list all valid symbols if  isValid = TRUE
-list all invalid symbols if isValid = FALSE
+list all valid symbols in the container if  isValid = TRUE
+list all invalid symbols in the container if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listSymbols(isValid = NULL)}\if{html}{\out{</div>}}
 }
@@ -187,8 +187,8 @@ a vector of symbols
 \if{latex}{\out{\hypertarget{method-listSets}{}}}
 \subsection{Method \code{listSets()}}{
 list all sets in the container if isValid = NULL
-list all valid sets if  isValid = TRUE
-list all invalid sets if isValid = FALSE
+list all valid sets in the container if  isValid = TRUE
+list all invalid sets in the container if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listSets(isValid = NULL)}\if{html}{\out{</div>}}
 }
@@ -209,8 +209,8 @@ a vector of symbols
 \if{latex}{\out{\hypertarget{method-listParameters}{}}}
 \subsection{Method \code{listParameters()}}{
 list all parameters in the container if isValid = NULL
-list all valid parameters if  isValid = TRUE
-list all invalid parameters if isValid = FALSE
+list all valid parameters in the container if  isValid = TRUE
+list all invalid parameters in the container if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listParameters(isValid = NULL)}\if{html}{\out{</div>}}
 }
@@ -231,8 +231,8 @@ a vector of symbols
 \if{latex}{\out{\hypertarget{method-listAliases}{}}}
 \subsection{Method \code{listAliases()}}{
 list all aliases in the container if isValid = NULL
-list all valid aliases if  isValid = TRUE
-list all invalid aliases if isValid = FALSE
+list all valid aliases in the container if  isValid = TRUE
+list all invalid aliases in the container if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listAliases(isValid = NULL)}\if{html}{\out{</div>}}
 }
@@ -253,8 +253,8 @@ a vector of symbols
 \if{latex}{\out{\hypertarget{method-listVariables}{}}}
 \subsection{Method \code{listVariables()}}{
 list all variables in the container if isValid = NULL
-list all valid variables if  isValid = TRUE
-list all invalid variables if isValid = FALSE
+list all valid variables in the container if  isValid = TRUE
+list all invalid variables in the container if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listVariables(isValid = NULL)}\if{html}{\out{</div>}}
 }
@@ -275,8 +275,8 @@ a vector of symbols
 \if{latex}{\out{\hypertarget{method-listEquations}{}}}
 \subsection{Method \code{listEquations()}}{
 list all equations in the container if isValid = NULL
-list all valid equations if  isValid = TRUE
-list all invalid equations if isValid = FALSE
+list all valid equations in the container if  isValid = TRUE
+list all invalid equations in the container if isValid = FALSE
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$listEquations(isValid = NULL)}\if{html}{\out{</div>}}
 }
@@ -296,7 +296,7 @@ a vector of symbols
 \if{html}{\out{<a id="method-addSet"></a>}}
 \if{latex}{\out{\hypertarget{method-addSet}{}}}
 \subsection{Method \code{addSet()}}{
-There are two ways to create a GAMS set and 
+There are two different ways to create a GAMS set and 
 add it to a Container. One is using the Set constructor and 
 the other is using addSet method which calls the Set constructor
 internally.
@@ -340,7 +340,7 @@ a Set object
 \if{html}{\out{<a id="method-addParameter"></a>}}
 \if{latex}{\out{\hypertarget{method-addParameter}{}}}
 \subsection{Method \code{addParameter()}}{
-There are two ways to create a GAMS parameter and 
+There are two different ways to create a GAMS parameter and 
 add it to a Container. One is using the Parameter constructor and 
 the other is using addParameter method which calls the Parameter constructor
 internally.
@@ -380,7 +380,7 @@ a Parameter object
 \if{html}{\out{<a id="method-addVariable"></a>}}
 \if{latex}{\out{\hypertarget{method-addVariable}{}}}
 \subsection{Method \code{addVariable()}}{
-There are two ways to create a GAMS Variable and 
+There are two different ways to create a GAMS Variable and 
 add it to a Container. One is using the Variable constructor and 
 the other is using addVariable method which calls the Parameter 
 constructor internally.
@@ -425,7 +425,7 @@ a Variable object
 \if{html}{\out{<a id="method-addEquation"></a>}}
 \if{latex}{\out{\hypertarget{method-addEquation}{}}}
 \subsection{Method \code{addEquation()}}{
-There are two ways to create a GAMS Equation and 
+There are two different ways to create a GAMS Equation and 
 add it to a Container. One is using the Equation constructor and 
 the other is using addEquation method which calls the Equation 
 constructor internally.
@@ -469,7 +469,7 @@ a Equation object
 \if{html}{\out{<a id="method-addAlias"></a>}}
 \if{latex}{\out{\hypertarget{method-addAlias}{}}}
 \subsection{Method \code{addAlias()}}{
-There are two ways to create a GAMS Alias and 
+There are two different ways to create a GAMS Alias and 
 add it to a Container. One is using the Alias constructor and 
 the other is using addAlias method which calls the Alias 
 constructor internally.
@@ -511,7 +511,8 @@ to describe. The default value is NULL which assumes all sets.}
 \if{html}{\out{<a id="method-describeParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-describeParameters}{}}}
 \subsection{Method \code{describeParameters()}}{
-create a summary table with descriptive statistics for Parameters
+create a summary table with descriptive statistics 
+for Parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeParameters(symbols = NULL)}\if{html}{\out{</div>}}
 }
@@ -519,8 +520,9 @@ create a summary table with descriptive statistics for Parameters
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{symbols}}{an optional argument of type string or a list of parameters 
-to describe. The default value is NULL which assumes all parameters.}
+\item{\code{symbols}}{an optional argument of type string or a 
+list of parameters to describe. The default value is 
+NULL which assumes all parameters.}
 }
 \if{html}{\out{</div>}}
 }
@@ -529,7 +531,8 @@ to describe. The default value is NULL which assumes all parameters.}
 \if{html}{\out{<a id="method-describeVariables"></a>}}
 \if{latex}{\out{\hypertarget{method-describeVariables}{}}}
 \subsection{Method \code{describeVariables()}}{
-create a summary table with descriptive statistics for Variables
+create a summary table with descriptive 
+statistics for Variables
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeVariables(symbols = NULL)}\if{html}{\out{</div>}}
 }
@@ -537,8 +540,9 @@ create a summary table with descriptive statistics for Variables
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{symbols}}{an optional argument of type string or a list of Variables 
-to describe. The default value is NULL which assumes all variables.}
+\item{\code{symbols}}{an optional argument of type string 
+or a list of Variables to describe. The default value 
+is NULL which assumes all variables.}
 }
 \if{html}{\out{</div>}}
 }
@@ -547,7 +551,8 @@ to describe. The default value is NULL which assumes all variables.}
 \if{html}{\out{<a id="method-describeEquations"></a>}}
 \if{latex}{\out{\hypertarget{method-describeEquations}{}}}
 \subsection{Method \code{describeEquations()}}{
-create a summary table with descriptive statistics for Equations
+create a summary table with descriptive 
+statistics for Equations
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$describeEquations(symbols = NULL)}\if{html}{\out{</div>}}
 }
@@ -555,8 +560,9 @@ create a summary table with descriptive statistics for Equations
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{symbols}}{an optional argument of type string or a list of equations 
-to describe. The default value is NULL which assumes all equations.}
+\item{\code{symbols}}{an optional argument of type string or 
+a list of equations to describe. The default value is 
+NULL which assumes all equations.}
 }
 \if{html}{\out{</div>}}
 }
@@ -610,8 +616,9 @@ reorder symbols in order to avoid domain violations
 \if{html}{\out{<a id="method-isValid"></a>}}
 \if{latex}{\out{\hypertarget{method-isValid}{}}}
 \subsection{Method \code{isValid()}}{
-checks if the symbol is in a valid format, throw 
-exceptions if verbose=True, recheck a symbol if force=True
+TRUE if all the symbols is in the Container are 
+valid, throw exceptions if verbose=True, check all symbols if 
+force=TRUE.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$isValid(verbose = FALSE, force = FALSE)}\if{html}{\out{</div>}}
 }

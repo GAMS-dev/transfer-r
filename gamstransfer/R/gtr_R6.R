@@ -34,7 +34,7 @@ SpecialValues = list(
   "POSINF" = Inf,
   "NEGINF" = -Inf
   )
-#' Container object
+#' @title Container Class
 #' @description The main object class within GAMS Transfer is called 
 #' Container. The Container is the vessel that allows symbols to be 
 #' linked together (through their domain definitions), it enables 
@@ -91,14 +91,14 @@ Container <- R6::R6Class (
     #' @param loadFrom name of the file to load data from as a string
     #' @param symbols optional argument to specify the names of the 
     #' symbols to be read (string or a list of strings)
-    #' @param values optional boolean argument to specify whether to 
+    #' @param values optional logical argument to specify whether to 
     #' read symbol records (logical)
     read = function(loadFrom, symbols="all", values=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
       # process it and populate various fields
 
-      # check if values is boolean
+      # check if values is logical
       if (!is.logical(values)) {
         stop("values must be type logical\n")
       }
@@ -314,8 +314,8 @@ Container <- R6::R6Class (
     },
 
     #' @description list all symbols in the container if isValid = NULL
-    #' list all valid symbols if  isValid = TRUE
-    #' list all invalid symbols if isValid = FALSE
+    #' list all valid symbols in the container if  isValid = TRUE
+    #' list all invalid symbols in the container if isValid = FALSE
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listSymbols = function(isValid = NULL) {
@@ -341,8 +341,8 @@ Container <- R6::R6Class (
     },
 
     #' @description list all sets in the container if isValid = NULL
-    #' list all valid sets if  isValid = TRUE
-    #' list all invalid sets if isValid = FALSE
+    #' list all valid sets in the container if  isValid = TRUE
+    #' list all invalid sets in the container if isValid = FALSE
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listSets = function(isValid = NULL) {
@@ -362,8 +362,8 @@ Container <- R6::R6Class (
     },
 
     #' @description list all parameters in the container if isValid = NULL
-    #' list all valid parameters if  isValid = TRUE
-    #' list all invalid parameters if isValid = FALSE
+    #' list all valid parameters in the container if  isValid = TRUE
+    #' list all invalid parameters in the container if isValid = FALSE
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listParameters = function(isValid = NULL) {
@@ -382,8 +382,8 @@ Container <- R6::R6Class (
     },
 
     #' @description list all aliases in the container if isValid = NULL
-    #' list all valid aliases if  isValid = TRUE
-    #' list all invalid aliases if isValid = FALSE
+    #' list all valid aliases in the container if  isValid = TRUE
+    #' list all invalid aliases in the container if isValid = FALSE
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listAliases = function(isValid = NULL) {
@@ -402,8 +402,8 @@ Container <- R6::R6Class (
     },
 
     #' @description list all variables in the container if isValid = NULL
-    #' list all valid variables if  isValid = TRUE
-    #' list all invalid variables if isValid = FALSE
+    #' list all valid variables in the container if  isValid = TRUE
+    #' list all invalid variables in the container if isValid = FALSE
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listVariables = function(isValid = NULL) {
@@ -422,8 +422,8 @@ Container <- R6::R6Class (
     },
 
     #' @description list all equations in the container if isValid = NULL
-    #' list all valid equations if  isValid = TRUE
-    #' list all invalid equations if isValid = FALSE
+    #' list all valid equations in the container if  isValid = TRUE
+    #' list all invalid equations in the container if isValid = FALSE
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listEquations = function(isValid=NULL) {
@@ -441,7 +441,7 @@ Container <- R6::R6Class (
       return(equations)
     },
 
-    #' @description There are two ways to create a GAMS set and 
+    #' @description There are two different ways to create a GAMS set and 
     #' add it to a Container. One is using the Set constructor and 
     #' the other is using addSet method which calls the Set constructor
     #' internally.
@@ -463,7 +463,7 @@ Container <- R6::R6Class (
       records, domainForwarding, description)
       return(self$data[[name]])
     },
-    #' @description There are two ways to create a GAMS parameter and 
+    #' @description There are two different ways to create a GAMS parameter and 
     #' add it to a Container. One is using the Parameter constructor and 
     #' the other is using addParameter method which calls the Parameter constructor
     #' internally.
@@ -484,7 +484,7 @@ Container <- R6::R6Class (
         return(self$data[[name]])
     },
 
-    #' @description There are two ways to create a GAMS Variable and 
+    #' @description There are two different ways to create a GAMS Variable and 
     #' add it to a Container. One is using the Variable constructor and 
     #' the other is using addVariable method which calls the Parameter 
     #' constructor internally.
@@ -508,7 +508,7 @@ Container <- R6::R6Class (
         return(self$data[[name]])
     },
 
-    #' @description There are two ways to create a GAMS Equation and 
+    #' @description There are two different ways to create a GAMS Equation and 
     #' add it to a Container. One is using the Equation constructor and 
     #' the other is using addEquation method which calls the Equation 
     #' constructor internally.
@@ -531,7 +531,7 @@ Container <- R6::R6Class (
         return(self$data[[name]])
     },
 
-    #' @description There are two ways to create a GAMS Alias and 
+    #' @description There are two different ways to create a GAMS Alias and 
     #' add it to a Container. One is using the Alias constructor and 
     #' the other is using addAlias method which calls the Alias 
     #' constructor internally.
@@ -592,9 +592,11 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description create a summary table with descriptive statistics for Parameters
-    #' @param symbols an optional argument of type string or a list of parameters 
-    #' to describe. The default value is NULL which assumes all parameters.
+    #' @description create a summary table with descriptive statistics 
+    #' for Parameters
+    #' @param symbols an optional argument of type string or a 
+    #' list of parameters to describe. The default value is 
+    #' NULL which assumes all parameters.
     describeParameters = function(symbols = NULL) {
       if (is.null(symbols)) {
         symbols = self$listParameters()
@@ -655,9 +657,11 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description create a summary table with descriptive statistics for Variables
-    #' @param symbols an optional argument of type string or a list of Variables 
-    #' to describe. The default value is NULL which assumes all variables.
+    #' @description create a summary table with descriptive 
+    #' statistics for Variables
+    #' @param symbols an optional argument of type string 
+    #' or a list of Variables to describe. The default value 
+    #' is NULL which assumes all variables.
     describeVariables = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listVariables()
@@ -722,9 +726,11 @@ Container <- R6::R6Class (
         return(NULL)
       }
     },
-    #' @description create a summary table with descriptive statistics for Equations
-    #' @param symbols an optional argument of type string or a list of equations 
-    #' to describe. The default value is NULL which assumes all equations.
+    #' @description create a summary table with descriptive 
+    #' statistics for Equations
+    #' @param symbols an optional argument of type string or 
+    #' a list of equations to describe. The default value is 
+    #' NULL which assumes all equations.
     describeEquations = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listEquations()
@@ -804,7 +810,8 @@ Container <- R6::R6Class (
     #' using the uel_priority argument.
     write = function(gdxout, compress = FALSE, uelPriority = NULL) {
       if (!is.logical(compress)) {
-        stop("'compress' must be of type bool; default False (no compression)\n")
+        stop("'compress' must be of type logical; 
+        default False (no compression)\n")
       }
 
       if (!is.character(gdxout)) {
@@ -899,8 +906,10 @@ Container <- R6::R6Class (
         self$data[[s]] = datacopy[[s]]
       }
     },
-    #' @description checks if the symbol is in a valid format, throw 
-    #' exceptions if verbose=True, recheck a symbol if force=True
+
+    #' @description TRUE if all the symbols is in the Container are 
+    #' valid, throw exceptions if verbose=True, check all symbols if 
+    #' force=TRUE.
     #' @param verbose type logical
     #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
@@ -1121,7 +1130,8 @@ SetTypeSubtype = function() {
   ))
 }
 
-#' An absract symbol class from which the classes Set, Parameter, Variable, 
+#' @title Symbol Abstract Class
+#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
 Symbol <- R6Class(
   "Symbol",
@@ -1171,7 +1181,7 @@ Symbol <- R6Class(
     }
   },
 
-  #' @method getCardinality get the full cartesian product of the domain
+  #' @description getCardinality get the full cartesian product of the domain
   getCardinality = function() {
     tryCatch(
       {
@@ -1195,6 +1205,7 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
   getSparsity = function() {
     tryCatch(
       {
@@ -1214,6 +1225,11 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description getMaxValue get the maximum value
+  #' @param columns columns over which one wants to get the maximum.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   getMaxValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1263,6 +1279,11 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description getMinValue get the minimum value in value column
+  #' @param columns columns over which one wants to get the minimum.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   getMinValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1313,6 +1334,11 @@ Symbol <- R6Class(
 
   },
 
+  #' @description getMeanValue get the mean value in value column
+  #' @param columns columns over which one wants to get the mean.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   getMeanValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1361,6 +1387,13 @@ Symbol <- R6Class(
       }
     )
   },
+
+  #' @description getMaxAbsValue get the maximum absolute value in value column
+  #' @param columns columns over which one wants to get the 
+  #' maximum absolute value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   getMaxAbsValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1410,6 +1443,13 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description whereMax find the domain entry of records with a 
+  #' maximum value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   whereMax = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1465,6 +1505,15 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description whereMaxAbs find the domain entry of records with a maximum 
+  #' absolute value (return first instance only)
+  #' @description whereMax find the domain entry of records with a 
+  #' maximum absolute value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   whereMaxAbs = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1520,6 +1569,15 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description whereMin 	find the domain entry of records with a 
+  #' minimum value (return first instance only)
+  #' @description whereMax find the domain entry of records with a 
+  #' minimum value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   whereMin = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1576,6 +1634,12 @@ Symbol <- R6Class(
 
   },
 
+  #'@description countNA total number of SpecialValues$NA in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$NA.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   countNA = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1625,6 +1689,12 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description countEps total number of SpecialValues$EPS in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$EPS.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   countEps = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1675,6 +1745,12 @@ Symbol <- R6Class(
 
   },
 
+  #'@description countUndef total number of SpecialValues$UNDEF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$UNDEF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   countUndef = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1724,6 +1800,13 @@ Symbol <- R6Class(
     )
   },
 
+  #'@description countPosinf total number of 
+  #' SpecialValues$POSINF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$POSINF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.  
   countPosinf = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
@@ -1773,6 +1856,13 @@ Symbol <- R6Class(
     )
   },
 
+  #'@description countNeginf total number of 
+  #' SpecialValues$NEGINF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$NEGINF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.  
   countNeginf = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)){
@@ -1822,6 +1912,10 @@ Symbol <- R6Class(
     )
   },
 
+  #' @description TRUE if the symbol is in a valid format, 
+  #' throw exceptions if verbose=True, recheck a symbol if force=True
+  #' @param verbose type logical
+  #' @param force type logical
   isValid = function(verbose=FALSE, force=FALSE) {
     assertthat::assert_that(is.logical(verbose), 
     msg = "Argument 'verbose' must be logical")
@@ -1880,6 +1974,11 @@ Symbol <- R6Class(
     }
   },
 
+  #' @description toDense convert symbol to a dense matrix/array format
+  #' @param column column to be converted to dense format.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
   toDense = function(column = "level") {
     if (!is.character(column)) {
       stop("Argument 'column' must be type str\n")
@@ -1974,7 +2073,7 @@ Symbol <- R6Class(
       }
       else {
         if (!is.logical(domain_forwarding_input)) {
-          stop("Argument 'domain_forwarding' must be type bool\n")
+          stop("Argument 'domain_forwarding' must be type logical\n")
         }
         else {
           private$.domain_forwarding = domain_forwarding_input
@@ -2427,10 +2526,45 @@ Symbol <- R6Class(
   )
 )
 
+#' @title Set Class
+#' @description A class for Set objects. This class inherits from an abstract symbol class.
+#' To access the documentation for the methods getCardnality, getSparsity, 
+#' and isValid, please use help(Symbol).
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of 
+#' domain links
+#' @field isSingleton logical if symbol is a singleton set
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field summary output a list of only the metadata
 Set <- R6Class(
   "Set",
   inherit = Symbol,
   public = list(
+    #' @description There are two different ways to create a GAMS set and 
+    #' add it to a Container. One is using the Set constructor and 
+    #' the other is using addSet method which calls the Set constructor
+    #' internally.
+    #' addSet is a Container method to add a Set.
+    #' @param container A reference to the Container object that the symbol 
+    #' is being added to
+    #' @param name string argument for name of the set
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is "*".
+    #' @param isSingleton an optional logical argument specifying if a set
+    #'  is singleton. Default value is FALSE.
+    #' @param records specify set records as a string vector or a dataframe.
+    #' @param domainForwarding an optional logical argument to specify 
+    #' domain forwarding. Default value is FALSE.
+    #' @param description string specifying description for the set
+    #' @return a Set object
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
                           records = NULL, 
@@ -2457,6 +2591,8 @@ Set <- R6Class(
       invisible(self)
     },
 
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
       # check if records is a dataframe and make if not
       records = data.frame(records)
@@ -2489,7 +2625,7 @@ Set <- R6Class(
       }
       else {
         if (!is.logical(is_singleton_input)) {
-          stop("Argument 'is_singleton' must be type bool\n")
+          stop("Argument 'is_singleton' must be type logical\n")
         }
         private$.is_singleton = is_singleton_input
       }
@@ -2518,10 +2654,46 @@ Set <- R6Class(
   )
   )
 
+#' @title Parameter Class
+#' @description A class for Parameter objects. This class inherits from an abstract 
+#' symbol class.To access the documentation for any of the following methods, 
+#' use help(Symbol).
+#' countEPS, countNA, countNeginf, countPosinf, countUndef, getCardinality,
+#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
+#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field shape a list describing the array dimensions if records were
+#'  converted with $toDense()
+#' @field summary output a list of only the metadata
 Parameter <- R6Class(
   "Parameter",
   inherit = Symbol,
   public = list(
+    #' @description There are two different ways to create a GAMS 
+    #' parameter and add it to a Container. One is using the 
+    #' Parameter constructor and the other is using addParameter 
+    #' method which calls the Parameter constructor internally.
+    #' addParameter is a Container method to add a Parameter.
+    #' @param container A reference to the Container object that the symbol is 
+    #' added to
+    #' @param name string argument for name of the Parameter
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is "*".
+    #' @param records specify set records as a string vector or a dataframe.
+    #' @param domainForwarding an optional logical argument to specify 
+    #' domain forwarding. Default value is FALSE.
+    #' @param description string specifying description for the set
+    #' @return a Parameter object
     initialize = function(container=NULL, name=NULL,
                           domain=list(),records = NULL,
                           domainForwarding = FALSE,
@@ -2537,6 +2709,9 @@ Parameter <- R6Class(
       }
     },
 
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a vector, matrix, 
+    #' array or a dataframe.
     setRecords = function(records) {
       if (is.array(records)) { # checks for matrix + arrays
         if ((length(records) > 1) && (self$domainType != "regular")) {
@@ -2671,10 +2846,51 @@ Parameter <- R6Class(
   )
 )
 
+#' @title Variable Class
+#' @description A class for Variable objects. This class inherits from an abstract 
+#' symbol class.To access the documentation for any of the following methods, 
+#' use help(Symbol).
+#' countEPS, countNA, countNeginf, countPosinf, countUndef, getCardinality,
+#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
+#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field shape a list describing the array dimensions if records were
+#'  converted with $toDense()
+#' @field summary output a list of only the metadata
+#' @field type type of variable (string)
 Variable <- R6Class(
   "Variable",
   inherit = Symbol,
   public = list(
+
+    #' @description There are two different ways to create a GAMS Variable and 
+    #' add it to a Container. One is using the Variable constructor and 
+    #' the other is using addVariable method which calls the Parameter 
+    #' constructor internally.
+    #' addVariable is a Container method to add a Variable.
+    #' @param container A reference to the Container object that the 
+    #' symbol is being added to
+    #' @param name string argument for name of the Variable
+    #' @param type Type of variable being created [binary, integer, 
+    #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
+    #' is "free"
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is "*".
+    #' @param records specify set records as a string vector or a dataframe.
+    #' @param domainForwarding an optional logical argument to specify 
+    #' domain forwarding. Default value is FALSE.
+    #' @param description string specifying description for the set
+    #' @return a Variable object
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = list(), records = NULL,
@@ -2694,6 +2910,9 @@ Variable <- R6Class(
       }
     },
 
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a vector, matrix, 
+    #' array or a dataframe.
     setRecords = function(records) {
       if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
 
@@ -3007,13 +3226,50 @@ Variable <- R6Class(
   )
   )
 
-
-
+#' @title Equation Class
+#' @description A class for Equation objects. This class inherits from an abstract 
+#' symbol class.To access the documentation for any of the following methods, 
+#' use help(Symbol).
+#' countEPS, countNA, countNeginf, countPosinf, countUndef, getCardinality,
+#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
+#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field shape a list describing the array dimensions if records were
+#'  converted with $toDense()
+#' @field summary output a list of only the metadata
+#' @field type type of variable (string)
 Equation <- R6Class(
   "Equation",
   inherit = Symbol,
   public = list(
 
+    #' @description There are two different ways to create a GAMS Equation and 
+    #' add it to a Container. One is using the Equation constructor and 
+    #' the other is using addEquation method which calls the Equation 
+    #' constructor internally.
+    #' addEquation is a Container method to add a Equation.
+    #' @param container A reference to the Container object that the symbol 
+    #' is being added to
+    #' @param name string argument for name of the Equation
+    #' @param type Type of equation being created [eq (or E/e), geq 
+    #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is "*".
+    #' @param records specify set records as a string vector or a dataframe.
+    #' @param domainForwarding an optional logical argument to specify 
+    #' domain forwarding. Default value is FALSE.
+    #' @param description string specifying description for the set
+    #' @return a Equation object
     initialize = function(container=NULL, name=NULL, 
                           type=NULL,
                           domain=list(),
@@ -3037,6 +3293,9 @@ Equation <- R6Class(
       }
     },
 
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a vector, matrix, 
+    #' array or a dataframe.
     setRecords = function(records) {
       if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
 
@@ -3349,12 +3608,39 @@ Equation <- R6Class(
   )
 )
 
+#' @title Alias Class
+#' @description A class for Alias objects.
+#' @field aliasWith aliased object
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field isSingleton if symbol is a singleton set
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field summary output a list of only the metadata
 Alias <- R6Class(
   "Alias",
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
     .requiresStateCheck = NULL,
+
+    #' @description There are two different ways to create a GAMS Alias and 
+    #' add it to a Container. One is using the Alias constructor and 
+    #' the other is using addAlias method which calls the Alias 
+    #' constructor internally.
+    #' addAlias is a Container method to add a Alias.
+    #' @param container A reference to the Container object that the symbol 
+    #' is being added to
+    #' @param name string argument for name of the Alias
+    #' @param aliasFor string argument for the set/alias we want to add
+    #' an alias for
     initialize = function(container=NULL, name=NULL, 
                           aliasFor=NULL) {
       self$.requiresStateCheck = TRUE
@@ -3368,14 +3654,23 @@ Alias <- R6Class(
       self$aliasWith = aliasFor
     },
 
+
+    #' @description getCardinality get the full cartesian product of the domain
     getCardinality = function() {
       return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
     },
 
+
+    #' @description getSparsity get the sparsity of the symbol 
+    #' w.r.t the cardinality
     getSparsity = function() {
       return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
     },
 
+    #' @description TRUE if the symbol is in a valid format, 
+    #' throw exceptions if verbose=True, recheck a symbol if force=True
+    #' @param verbose type logical
+    #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
       assertthat::assert_that(is.logical(verbose),
       msg = "Argument 'verbose' must be logical")
@@ -3406,6 +3701,9 @@ Alias <- R6Class(
       }
     },
 
+
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
       return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
