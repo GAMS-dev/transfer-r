@@ -86,7 +86,7 @@ Container <- R6::R6Class (
     },
 
     #' @description main method to read loadFrom, can be provided 
-    #' with a list of symbols to read in subsets, records controls 
+    #' with a list of symbols to read in subsets, `values` controls 
     #' if symbol records are loaded or just metadata
     #' @param loadFrom name of the file to load data from as a string
     #' @param symbols optional argument to specify the names of the 
@@ -471,7 +471,7 @@ Container <- R6::R6Class (
     #' @param name string argument for name of the Parameter
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a string vector or a dataframe.
+    #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
@@ -495,7 +495,7 @@ Container <- R6::R6Class (
     #' is "free"
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a string vector or a dataframe.
+    #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
@@ -518,7 +518,7 @@ Container <- R6::R6Class (
     #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a string vector or a dataframe.
+    #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
@@ -2689,7 +2689,7 @@ Parameter <- R6Class(
     #' @param name string argument for name of the Parameter
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a string vector or a dataframe.
+    #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
@@ -2886,7 +2886,7 @@ Variable <- R6Class(
     #' is "free"
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a string vector or a dataframe.
+    #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
@@ -3265,7 +3265,7 @@ Equation <- R6Class(
     #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a string vector or a dataframe.
+    #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
