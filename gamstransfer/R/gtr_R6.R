@@ -2448,6 +2448,25 @@ Symbol <- R6Class(
             }
           }
 
+          # check if domain has records
+          for (i in self$domain) {
+            if (inherits(i, "Set") || inherits(i, "Alias")) {
+              if (is.null(i$records)) {
+                stop(paste0("Referenced domain set ", i$name, " does 
+                not does not contain records; ",
+                "cannot properly establish domain information link."))
+              }
+            }
+          }
+
+          #check if factors are ordered
+          for (i in self$domainLabels) {
+            if (!is.ordered(self$records[[i]])) {
+              stop(paste0("Domain information in column ", i, 
+              " must be an ORDERED factor\n"))
+            }
+          }
+          
           # check for domain violations
           if (self$dimension != 0) {
             nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
