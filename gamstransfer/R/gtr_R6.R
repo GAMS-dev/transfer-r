@@ -1443,7 +1443,7 @@ Symbol <- R6Class(
     )
   },
 
-  #' @description whereMax find the domain entry of records with a 
+  #' @description whereMax find the row number in records data frame with a 
   #' maximum value (return first instance only)
   #' @param columns columns over which one wants to find the 
   #' domain entry of records with a maximum value.
@@ -1505,8 +1505,8 @@ Symbol <- R6Class(
     )
   },
 
-  #' @description whereMaxAbs find the domain entry of records with a maximum 
-  #' absolute value (return first instance only)
+  #' @description whereMaxAbs find the row number in records data frame 
+  #' with a maximum absolute value (return first instance only)
   #' @description whereMax find the domain entry of records with a 
   #' maximum absolute value (return first instance only)
   #' @param columns columns over which one wants to find the 
@@ -1569,8 +1569,8 @@ Symbol <- R6Class(
     )
   },
 
-  #' @description whereMin 	find the domain entry of records with a 
-  #' minimum value (return first instance only)
+  #' @description whereMin find the the row number in records data frame 
+  #' with a minimum value (return first instance only)
   #' @description whereMax find the domain entry of records with a 
   #' minimum value (return first instance only)
   #' @param columns columns over which one wants to find the 
@@ -2606,7 +2606,7 @@ Set <- R6Class(
 
       }
       else {
-        stop(paste0("The argument 'records' is of length",
+        stop(paste0("The argument 'records' is of length ",
         c, " Expecting ", self$dimension + 1, "\n"))
       }
       columnNames = self$domainLabels
@@ -2689,7 +2689,8 @@ Parameter <- R6Class(
     #' @param name string argument for name of the Parameter
     #' @param domain an optional argument specifying a list of strings, 
     #' a string. default value is "*".
-    #' @param records specify set records as a vector or a dataframe.
+    #' @param records specify set records as a vector, matrix, array,
+    #'  or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
