@@ -603,19 +603,19 @@ Container <- R6::R6Class (
       }
       colNames = list(
             "name",
-            "is_scalar",
+            "isScalar",
             "domain",
             "domainType",
             "dim",
-            "num_recs",
-            "min_value",
-            "mean_value",
-            "max_value",
-            "where_min",
-            "where_max",
-            "count_eps",
-            "count_na",
-            "count_undef",
+            "numRecs",
+            "minValue",
+            "meanValue",
+            "maxValue",
+            "whereMin",
+            "whereMax",
+            "countEps",
+            "countNa",
+            "countUndef",
             "cardinality",
             "sparsity"
             )
@@ -672,19 +672,19 @@ Container <- R6::R6Class (
             "domain",
             "domainType",
             "dim",
-            "num_recs",
+            "numRecs",
             "cardinality",
             "sparsity",
-            "min_level",
-            "mean_level",
-            "max_level",
-            "where_max_abs_level",
-            "count_eps_level",
-            "min_marginal",
-            "mean_marginal",
-            "max_marginal",
-            "where_max_abs_marginal",
-            "count_eps_marginal"
+            "minLevel",
+            "meanLevel",
+            "maxLevel",
+            "whereMaxAbsLevel",
+            "countEpsLevel",
+            "minMarginal",
+            "meanMarginal",
+            "maxMarginal",
+            "whereMaxAbsMarginal",
+            "countEpsMarginal"
             )
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
@@ -741,19 +741,19 @@ Container <- R6::R6Class (
             "domain",
             "domainType",
             "dim",
-            "num_recs",
+            "numRecs",
             "cardinality",
             "sparsity",
-            "min_level",
-            "mean_level",
-            "max_level",
-            "where_max_abs_level",
-            "count_eps_level",
-            "min_marginal",
-            "mean_marginal",
-            "max_marginal",
-            "where_max_abs_marginal",
-            "count_eps_marginal"
+            "minLevel",
+            "meanLevel",
+            "maxLevel",
+            "whereMaxAbsLevel",
+            "countEpsLevel",
+            "minMarginal",
+            "meanMarginal",
+            "maxMarginal",
+            "whereMaxAbsMarginal",
+            "countEpsMarginal"
             )
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
@@ -980,7 +980,7 @@ Container <- R6::R6Class (
       if (self$.requiresStateCheck == TRUE) {
          private$validSymbolOrder()
 
-        if (all(self$listSymbols() != self$listSymbols(isValid = TRUE))) {
+        if (!setequal(self$listSymbols(), self$listSymbols(isValid = TRUE))) {
           stop(paste0("Container contains invalid symbols; ",
           "invalid symbols can be found with the .listSymbols() ",
           "method. Debug invalid symbol(s) by running .",
