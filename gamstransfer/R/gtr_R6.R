@@ -2905,7 +2905,7 @@ Variable <- R6Class(
     #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
     #' is "free"
     #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
+    #' a string. default value is list().
     #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
@@ -3799,9 +3799,19 @@ Alias <- R6Class(
           while (!inherits(parent, "Set")) {
             parent = parent$aliasWith
           }
-          private$.aliasWith = parent
+          alias_with_input = parent
         }
-        private$.aliasWith = alias_with_input
+        if (is.null(private$.aliasWith)) {
+          private$.aliasWith = alias_with_input
+        }
+        else {
+          if (!identical(private$.aliasWith, alias_with_input)) {
+            self$.requiresStateCheck = TRUE
+            if (inherits(self$refContainer, "Container")) {
+              self$refContainer$.requiresStateCheck = TRUE
+            }
+          }
+        }
       }
     },
 
