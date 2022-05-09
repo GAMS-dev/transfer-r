@@ -1733,7 +1733,10 @@ Symbol <- R6Class(
 
     tryCatch(
       {
-        return(sum(self$records[,columns] == SpecialValues$EPS))
+        return(sum(
+          (self$records[,columns] == SpecialValues$EPS) &&
+          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
+          ))
       },
       error = function(cond) {
         return(NA)
