@@ -253,12 +253,17 @@ Container <- R6::R6Class (
 
     #' @description provides a universe for all symbols
     getUniverseSet = function() {
-      uni = list()
+      uni = c()
       for (i in self$listSymbols(isValid = TRUE)) {
         if (!is.null(self$data[[i]]$records)) {
           if (self$data[[i]]$dimension > 0) {
-            uni = append(uni, data.frame(unlist(x = 
-            self$data[[i]]$records[, (1:self$data[[i]]$dimension)]))[, 1])
+            df = self$data[[i]]$records[, (1:self$data[[i]]$dimension)]
+            if (is.factor(df)) {
+              uni = append(uni, levels(df))
+            }
+            else {
+              uni = append(uni, c(t(df)))
+            }
           }
         }
       }
@@ -2027,11 +2032,13 @@ Symbol <- R6Class(
             private$.records[, n] = factor(private$.records[, n], levels = i$records[, 1], ordered = TRUE)
           }
           else {
-            private$.records[, n] = factor(private$.records[, n], ordered = TRUE)
+            private$.records[, n] = factor(private$.records[, n], 
+            levels = unique(private$.records[, n]), ordered = TRUE)
           }
         }
         else {
-          private$.records[, n] = factor(private$.records[, n], ordered = TRUE)
+          private$.records[, n] = factor(private$.records[, n], 
+          levels = unique(private$.records[, n]), ordered = TRUE)
         }
       }
     }
