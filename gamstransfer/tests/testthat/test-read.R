@@ -2838,7 +2838,7 @@ test_that("test_num_9", {
   expect_equal(as.character(i$records$uni_1), c("a", "b"))
   expect_equal(as.character(i$records$uni_2), c("c", "d"))
 
-  expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "d", "e", "f"))
+  expect_equal(as.character(m$getUniverseSet()), c("a", "c", "b", "d", "e", "f"))
 
   #just try writing to see if there are any errors
   m$write("out.gdx")
