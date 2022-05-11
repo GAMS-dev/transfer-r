@@ -845,7 +845,7 @@ Container <- R6::R6Class (
       }
 
       if (private$isValidSymbolOrder() == FALSE) {
-        self$reOrderSymbols()
+        self$reorderSymbols()
       }
       # private$validSymbolOrder()
 
@@ -903,7 +903,7 @@ Container <- R6::R6Class (
       }
     },
     #' @description reorder symbols in order to avoid domain violations
-    reOrderSymbols = function() {
+    reorderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
       datacopy = self$data
       self$data = list()
