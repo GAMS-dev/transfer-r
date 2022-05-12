@@ -1957,7 +1957,7 @@ Symbol <- R6Class(
 
   shape = function() {
     if (self$domainType == "regular") {
-      shapelist = list()
+      shapelist = c()
       for (d in self$domain) {
         shapelist = append(shapelist, nrow(d$records))
       }
@@ -1966,11 +1966,11 @@ Symbol <- R6Class(
 
     if (!is.null(self$records)) {
       if (self$dimension == 0) {
-        return(list())
+        return(c())
       }
 
       if (self$domainType == "none" || self$domainType == "relaxed") {
-        shapelist = list()
+        shapelist = c()
         for (i in (1:self$dimension)) {
           shapelist = append(shapelist, length(unique(self$records[, i])))
         }
@@ -2011,7 +2011,7 @@ Symbol <- R6Class(
         return(self$records[[column]])
       }
       else {
-        a = array(0, dim = unlist(self$shape()))
+        a = array(0, dim = self$shape())
         idx = lapply(self$records[,1:self$dimension], as.numeric)
         a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
         return(a)
@@ -2768,9 +2768,9 @@ Parameter <- R6Class(
         }
 
         if (self$dimension >= 2) {
-          if (!all(dim(records) == unlist(self$shape()))) {
+          if (!all(dim(records) == self$shape())) {
             stop(paste0("User passed array/matrix with shape ", toString(dim(records)), " but anticipated 
-            shape was ", toString(unlist(self$shape())), " based on domain set information -- 
+            shape was ", toString(self$shape()), " based on domain set information -- 
             must reconcile before array-to-records conversion is possible.\n"))
           }
         }
@@ -2992,9 +2992,9 @@ Variable <- R6Class(
         if (self$dimension >= 2) {
           for (i in names(records)) {
             recs = records[[i]]
-            if (!all(dim(recs) == unlist(self$shape()))) {
+            if (!all(dim(recs) == self$shape())) {
               stop(paste0("User passed array/matrix with shape ", toString(dim(recs)), " but anticipated 
-              shape was ", toString(unlist(self$shape())), " based on domain set information -- 
+              shape was ", toString(self$shape()), " based on domain set information -- 
               must reconcile before array-to-records conversion is possible.\n"))
             }
           }
@@ -3375,9 +3375,9 @@ Equation <- R6Class(
         if (self$dimension >= 2) {
           for (i in names(records)) {
             recs = records[[i]]
-            if (!all(dim(recs) == unlist(self$shape()))) {
+            if (!all(dim(recs) == self$shape())) {
               stop(paste0("User passed array/matrix with shape ", toString(dim(recs)), " but anticipated 
-              shape was ", toString(unlist(self$shape())), " based on domain set information -- 
+              shape was ", toString(self$shape()), " based on domain set information -- 
               must reconcile before array-to-records conversion is possible.\n"))
             }
           }
