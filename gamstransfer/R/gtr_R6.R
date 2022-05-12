@@ -475,13 +475,13 @@ Container <- R6::R6Class (
     #' addParameter is a Container method to add a Parameter.
     #' @param name string argument for name of the Parameter
     #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
+    #' a string. default value is NULL.
     #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
     #' @return a Parameter object
-    addParameter = function(name, domain = list(),
+    addParameter = function(name, domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
       Parameter$new(
         self, name, domain, records,
@@ -499,13 +499,13 @@ Container <- R6::R6Class (
     #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
     #' is "free"
     #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
+    #' a string. default value is NULL.
     #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
     #' @return a Variable object
-    addVariable = function(name, type="free", domain = list(),
+    addVariable = function(name, type="free", domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
       Variable$new(
         self, name, type, domain, records,
@@ -528,7 +528,7 @@ Container <- R6::R6Class (
     #' domain forwarding. Default value is FALSE.
     #' @param description string specifying description for the set
     #' @return a Equation object
-    addEquation = function(name, type, domain = list(), 
+    addEquation = function(name, type, domain = NULL, 
     records = NULL, domainForwarding=FALSE, description = "") {
       Equation$new(
         self, name, type, domain, records,
@@ -2156,9 +2156,14 @@ Symbol <- R6Class(
         return(private$.domain)
       }
       else {
+        if (is.null(domain_input)) {
+          domain_input = list()
+        }
+
         if (!(is.list(domain_input) || is.vector(domain_input))) {
           domain_input = list(domain_input)
         }
+
         for (d in domain_input) {
           assertthat::assert_that((inherits(d, "Set") || 
           inherits(d, "Alias") ||
@@ -2717,7 +2722,7 @@ Parameter <- R6Class(
     #' added to
     #' @param name string argument for name of the Parameter
     #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
+    #' a string. default value is NULL.
     #' @param records specify set records as a vector, matrix, array,
     #'  or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
@@ -2725,7 +2730,7 @@ Parameter <- R6Class(
     #' @param description string specifying description for the set
     #' @return a Parameter object
     initialize = function(container=NULL, name=NULL,
-                          domain=list(),records = NULL,
+                          domain=NULL,records = NULL,
                           domainForwarding = FALSE,
                           description="") {
 
@@ -2915,7 +2920,7 @@ Variable <- R6Class(
     #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
     #' is "free"
     #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is list().
+    #' a string. default value is NULL.
     #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
@@ -2923,7 +2928,7 @@ Variable <- R6Class(
     #' @return a Variable object
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
-                          domain = list(), records = NULL,
+                          domain = NULL, records = NULL,
                           domainForwarding = FALSE,
                           description="") {
 
@@ -3294,7 +3299,7 @@ Equation <- R6Class(
     #' @param type Type of equation being created [eq (or E/e), geq 
     #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
     #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
+    #' a string. default value is NULL.
     #' @param records specify set records as a vector or a dataframe.
     #' @param domainForwarding an optional logical argument to specify 
     #' domain forwarding. Default value is FALSE.
@@ -3302,7 +3307,7 @@ Equation <- R6Class(
     #' @return a Equation object
     initialize = function(container=NULL, name=NULL, 
                           type=NULL,
-                          domain=list(),
+                          domain=NULL,
                           records = NULL,
                           domainForwarding=FALSE,
                           description="") {
