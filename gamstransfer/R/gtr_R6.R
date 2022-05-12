@@ -1639,9 +1639,9 @@ Symbol <- R6Class(
 
   },
 
-  #'@description countNA total number of SpecialValues$NA in value column
+  #'@description countNA total number of SpecialValues[["NA"]] in value column
   #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$NA.
+  #' SpecialValues[["NA"]].
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
@@ -1808,14 +1808,14 @@ Symbol <- R6Class(
     )
   },
 
-  #'@description countPosinf total number of 
+  #'@description countPosInf total number of 
   #' SpecialValues$POSINF in value column
   #' @param columns columns in which one wants to count the number of 
   #' SpecialValues$POSINF.
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.  
-  countPosinf = function(columns=NULL) {
+  countPosInf = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
         stop(paste0("User input ", toString(columns), ", however it is only possible to",
@@ -1864,14 +1864,14 @@ Symbol <- R6Class(
     )
   },
 
-  #'@description countNeginf total number of 
+  #'@description countNegInf total number of 
   #' SpecialValues$NEGINF in value column
   #' @param columns columns in which one wants to count the number of 
   #' SpecialValues$NEGINF.
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.  
-  countNeginf = function(columns=NULL) {
+  countNegInf = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)){
         stop(paste0("User input ", toString(columns), ", however it is only possible to",
@@ -2692,7 +2692,7 @@ Set <- R6Class(
 #' @description A class for Parameter objects. This class inherits from an abstract 
 #' symbol class.To access the documentation for any of the following methods, 
 #' use help(Symbol).
-#' countEPS, countNA, countNeginf, countPosinf, countUndef, getCardinality,
+#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
 #' @field description description of symbol
@@ -2885,7 +2885,7 @@ Parameter <- R6Class(
 #' @description A class for Variable objects. This class inherits from an abstract 
 #' symbol class.To access the documentation for any of the following methods, 
 #' use help(Symbol).
-#' countEPS, countNA, countNeginf, countPosinf, countUndef, getCardinality,
+#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
 #' @field description description of symbol
@@ -3265,7 +3265,7 @@ Variable <- R6Class(
 #' @description A class for Equation objects. This class inherits from an abstract 
 #' symbol class.To access the documentation for any of the following methods, 
 #' use help(Symbol).
-#' countEPS, countNA, countNeginf, countPosinf, countUndef, getCardinality,
+#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
 #' @field description description of symbol
