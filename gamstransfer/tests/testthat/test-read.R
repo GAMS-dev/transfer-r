@@ -3743,9 +3743,9 @@ test_that("test_num_41", {
   recs = matrix(c(1:6), nrow = 2, ncol=3)
   d = Parameter$new(m, "d", c(i, j), records = recs)
 
-  df = data.frame(i_1 = c("a","b", "a", "b","a","b"), 
-  j_2 = c("x", "x", "y", "y", "z", "z"),
-  value = c(1:6))
+  df = data.frame(i_1 = c("a","a", "a", "b","b","b"), 
+  j_2 = c("x", "y", "z", "x", "y", "z"),
+  value = c(1,3,5,2,4,6))
   df[,1] = factor(df[,1], ordered = TRUE)
   df[,2] = factor(df[,2], ordered = TRUE)
 
@@ -3763,11 +3763,11 @@ test_that("test_num_41", {
   k = Set$new(m, "k", records = c("alpha", "beta"))
   d3 = Parameter$new(m, "d3", c(i, j, k), records = recs)
 
-  df = data.frame(i_1 = c("a","b", "a", "b","a","b", "a", "b","a","b", "a", "b"), 
-  j_2 = c("x", "x", "y", "y", "z", "z","x", "x", "y", "y", "z", "z"),
-  k_3 = c("alpha","alpha","alpha","alpha","alpha","alpha",
-  "beta","beta","beta","beta","beta","beta"),
-  value = c(1:12))
+  df = data.frame(i_1 = c("a","a", "a", "a","a","a", "b", "b","b","b", "b", "b"), 
+  j_2 = c("x", "x", "y", "y", "z", "z", "x", "x", "y", "y", "z", "z"),
+  k_3 = c("alpha","beta","alpha","beta","alpha","beta",
+  "alpha","beta","alpha","beta","alpha","beta"),
+  value = c(1,7,3,9,5,11,2,8,4,10,6,12))
   df[,1] = factor(df[,1], ordered = TRUE)
   df[,2] = factor(df[,2], ordered = TRUE)
   df[,3] = factor(df[,3], ordered = TRUE)

@@ -2777,7 +2777,7 @@ Parameter <- R6Class(
 
         tryCatch(
           {
-            values = as.numeric(records)
+            values = as.numeric(aperm(records))
           },
           error = function(cond) {
             stop("error converting array to numeric type\n")
@@ -2803,7 +2803,7 @@ Parameter <- R6Class(
           d = self$domain[[i]]
           listOfDomains[[i]] = d$records[,1]
         }
-        df = expand.grid(listOfDomains, stringsAsFactors = FALSE) # ij is a dataframe
+        df = rev(expand.grid(rev(listOfDomains), stringsAsFactors = FALSE)) # ij is a dataframe
         colnames(df) = self$domainLabels
         attr(df, "out.attrs") <- NULL
 
