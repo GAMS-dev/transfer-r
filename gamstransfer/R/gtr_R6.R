@@ -1238,7 +1238,7 @@ Symbol <- R6Class(
   getMaxValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1254,7 +1254,7 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column '", columns, "' must be a subset",
+        stop(paste0("User entered column '", toString(columns), "' must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
         , "\n"))
@@ -1292,7 +1292,7 @@ Symbol <- R6Class(
   getMinValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input '", columns, 
+        stop(paste0("User input '", toString(columns), 
         "', however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
@@ -1347,7 +1347,7 @@ Symbol <- R6Class(
   getMeanValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1363,7 +1363,7 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
         ,"\n"))
@@ -1402,7 +1402,7 @@ Symbol <- R6Class(
   getMaxAbsValue = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1418,7 +1418,7 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
         colnames(self$records[,(self$dimension+1):length(self$records)])
         , "\n"))
@@ -1458,7 +1458,7 @@ Symbol <- R6Class(
   whereMax = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1474,7 +1474,7 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
         colnames(self$records)[(self$dimension+1):length(self$records)]
         ,"\n"))
@@ -1522,7 +1522,7 @@ Symbol <- R6Class(
   whereMaxAbs = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1538,9 +1538,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records)[(self$dimension + 1):length(self$records)]
+        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
         , "\n"))
       }
     }
@@ -1586,7 +1586,7 @@ Symbol <- R6Class(
   whereMin = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1602,9 +1602,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records)[(self$dimension + 1):length(self$records)]
+        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
         , "\n"))
       }
     }
@@ -1648,7 +1648,7 @@ Symbol <- R6Class(
   countNA = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1664,9 +1664,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
+        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
         , "\n"))
       }
     }
@@ -1703,7 +1703,7 @@ Symbol <- R6Class(
   countEps = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1719,9 +1719,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records[(self$dimension + 1):length(self$records)]
+        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
         , "\n")))
       }
     }
@@ -1762,7 +1762,7 @@ Symbol <- R6Class(
   countUndef = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1778,9 +1778,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records)[(self$dimension + 1):length(self$records)]
+        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
         , "\n"))
       }
     }
@@ -1818,7 +1818,7 @@ Symbol <- R6Class(
   countPosinf = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)) {
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1834,9 +1834,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension + 1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
+        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
         , "\n"))
       }
     }
@@ -1874,7 +1874,7 @@ Symbol <- R6Class(
   countNeginf = function(columns=NULL) {
     if (!is.null(columns)) {
       if (!is.character(columns)){
-        stop(paste0("User input ", columns, ", however it is only possible to",
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
         " select one column at a time (i.e. argument 'column' must be type",
         " character)\n"))
       }
@@ -1890,9 +1890,9 @@ Symbol <- R6Class(
       if (!setequal(intersect(columns, 
       colnames(self$records)[(self$dimension+1):length(self$records)]), 
       columns)) {
-        stop(paste0("User entered column ", columns, " must be a subset",
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
         " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
+        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
         , "\n"))
       }
     }
@@ -3118,7 +3118,7 @@ Variable <- R6Class(
           "columns not named ", toString(private$.attr()),
           " will be interpreted as domain columns, check that the data.frame conforms",
           "to the required notation.\n",
-          "User passed data.frame with columns: ", usr_colnames, "\n")))
+          "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
 
         # reorder columns
@@ -3507,7 +3507,7 @@ Equation <- R6Class(
           "columns not named ", toString(private$.attr()),
           " will be interpreted as domain columns, check that the data.frame conforms",
           "to the required notation.\n",
-          "User passed data.frame with columns: ", usr_colnames, "\n")))
+          "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
 
         # reorder columns
