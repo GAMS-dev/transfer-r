@@ -1021,14 +1021,14 @@ Container <- R6::R6Class (
 
       idx = 1
       while (length(symbolsToSort) != 0) {
-        sym = symbolsToSort[idx]
+        sym = symbolsToSort[[idx]]
         # special 1D sets (universe domain & relaxed sets)
         if (inherits(self$data[[sym]], "Set") &&
         self$data[[sym]]$dimension == 1 &&
-        is.character(self$data[[sym]]$domain[1])
+        is.character(self$data[[sym]]$domain[[1]])
         ) {
           orderedSymbols = append(orderedSymbols, sym)
-          symbolsToSort = symbolsToSort[-1]
+          symbolsToSort = symbolsToSort[-idx]
           idx = 1
         }
         else {
