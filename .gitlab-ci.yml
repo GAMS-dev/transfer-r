@@ -8,7 +8,7 @@ variables:
     PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/${CI_COMMIT_TAG}/"
 
 
-build_r_linux:
+build_r_linux_binary:
     stage: build
     tags:
         - linux
@@ -16,7 +16,7 @@ build_r_linux:
         - mkdir binary
         - cd binary
         - R CMD INSTALL gamstransfer --build
-        - mv gamstransfer_*.tar.gz gamstransfer_r.tar.gz
+        - mv gamstransfer_*.tar.gz gamstransfer_r_linux.tar.gz
         - cd ..
     only:
         - merge_requests
@@ -25,14 +25,10 @@ build_r_linux:
     artifacts:
         name: gamstransfer_r_linux.tar.gz
         paths:
-            - source
-        expire_in: 1 day
-        name: gamstransfer_r.tar.gz
-        paths:
             - binary
         expire_in: 1 day
 
-build_r_linux:
+build_r_source:
     stage: build
     tags:
         - linux
@@ -40,7 +36,7 @@ build_r_linux:
         - mkdir source
         - cd source
         - R CMD build gamstransfer
-        - mv gamstransfer_*.tar.gz gamstransfer_r_linux.tar.gz
+        - mv gamstransfer_*.tar.gz gamstransfer_r.tar.gz
         - cd ..
     only:
         - merge_requests
@@ -89,16 +85,11 @@ package:
     tags:
         - linux
     script:
-        # - cd r_macos
-        # - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gams_transfer_r_macos.zip ${PACKAGE_REGISTRY_URL}
-        # - cd ..
-        # - cd r_windows
-        # - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gams_transfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
-        # - cd ..
-        # - cd r_linux
-        - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
+        - | 
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
         
-        - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
+        - |
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
     only:
         - tags
 
@@ -107,9 +98,10 @@ release:
     tags:
         - linux
     script:
-        - > 
-            release-cli create --name "Release $CI_COMMIT_TAG" 
-            --tag-name $CI_COMMIT_TAG \
-            --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.zip\"}"
+        - | 
+            release-cli create \
+                --name "Release $CI_COMMIT_TAG" \
+                --tag-name $CI_COMMIT_TAG \
+                --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.zip\"}"
     only:
         - tags
