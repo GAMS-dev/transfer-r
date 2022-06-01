@@ -1,0 +1,104 @@
+stages:
+  - build
+  - package
+  - release
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/${CI_COMMIT_TAG}/"
+
+
+build_r_linux:
+    stage: build
+    tags:
+        - linux
+    script:
+        - mkdir binary
+        - cd binary
+        - R CMD INSTALL gamstransfer --build
+        - mv gamstransfer_*.tar.gz gamstransfer_r.tar.gz
+        - cd ..
+        - mkdir source
+        - cd source
+        - R CMD build gamstransfer
+        - mv gamstransfer_*.tar.gz gamstransfer_r_linux.tar.gz
+    only:
+        - merge_requests
+        - main
+        - tags
+    artifacts:
+        name: gamstransfer_r_linux.tar.gz
+        paths:
+            - source
+        expire_in: 1 day
+        name: gamstransfer_r.tar.gz
+        paths:
+            - binary
+        expire_in: 1 day
+
+# build_r_macos:
+#     stage: build
+#     tags:
+#         - macos
+#     script:
+#         - R CMD INSTALL gamstransfer --build
+#     only:
+#         - merge_requests
+#         - master
+#         - tags
+#     artifacts:
+#         name: gams_transfer_r_macos
+#         paths:
+#             - r_macos
+#         expire_in: 1 day
+
+# build_r_windows:
+#     stage: build
+#     tags:
+#         - windows-shell
+#     script:
+#         - R CMD INSTALL gamstransfer --build
+#     only:
+#         - merge_requests
+#         - master
+#         - tags
+#     artifacts:
+#         name: gams_transfer_r_windows
+#         paths:
+#             - r_windows
+#         expire_in: 1 day
+
+package:
+    stage: package
+    tags:
+        - linux
+    script:
+        # - cd r_macos
+        # - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gams_transfer_r_macos.zip ${PACKAGE_REGISTRY_URL}
+        # - cd ..
+        # - cd r_windows
+        # - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gams_transfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
+        # - cd ..
+        # - cd r_linux
+        - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
+        
+        - curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
+    only:
+        - tags
+
+release:
+    stage: release
+    tags:
+        - linux
+    script:
+        # - DESCR=$(grep -Pzo "(?s)GAMS Transfer Matlab $CI_COMMIT_TAG.*?((?=\nGAMS Transfer Matlab v)|$)" CHANGELOG | tr -d '\0')
+        - |
+            release-cli create \
+                --name "Release $CI_COMMIT_TAG" \
+                --tag-name $CI_COMMIT_TAG \
+#                --description "$DESCR" \
+                --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.zip\"}" \
+#                --assets-link "{\"name\":\"gams_transfer_matlab_macos.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gams_transfer_matlab_macos.zip\"}" \
+#                --assets-link "{\"name\":\"gams_transfer_matlab_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gams_transfer_matlab_windows.zip\"}"
+    only:
+        - tags
