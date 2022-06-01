@@ -108,7 +108,7 @@ release:
         - linux
     script:
         - | 
-        release-cli create \
+                release-cli create \
                 --name "Release $CI_COMMIT_TAG" \
                 --tag-name $CI_COMMIT_TAG \
                 --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.zip\"}"
