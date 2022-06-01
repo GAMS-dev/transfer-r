@@ -107,13 +107,10 @@ release:
     tags:
         - linux
     script:
-        # - DESCR=$(grep -Pzo "(?s)GAMS Transfer Matlab $CI_COMMIT_TAG.*?((?=\nGAMS Transfer Matlab v)|$)" CHANGELOG | tr -d '\0')
-        - release-cli create \
+        - | 
+        release-cli create \
                 --name "Release $CI_COMMIT_TAG" \
                 --tag-name $CI_COMMIT_TAG \
-#                --description "$DESCR" \
                 --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.zip\"}"
-#                --assets-link "{\"name\":\"gams_transfer_matlab_macos.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gams_transfer_matlab_macos.zip\"}" \
-#                --assets-link "{\"name\":\"gams_transfer_matlab_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gams_transfer_matlab_windows.zip\"}"
     only:
         - tags
