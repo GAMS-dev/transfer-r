@@ -32,49 +32,49 @@ variables:
 #           when: manual
 #           allow_failure: true
 
-build_r_linux_binary:
-    stage: build
-    tags:
-        - linux
-    # image:
-    #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
-    script:
-        - mkdir binary
-        - cd binary
-        - R CMD INSTALL gamstransfer --build
-        - mv gamstransfer_*.tar.gz gamstransfer_r_linux.tar.gz
-        - cd ..
-    only:
-        - merge_requests
-        - main
-        - tags
-    artifacts:
-        name: gamstransfer_r_linux.tar.gz
-        paths:
-            - binary
-        expire_in: 1 day
+# build_r_linux_binary:
+#     stage: build
+#     tags:
+#         - linux
+#     # image:
+#     #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
+#     script:
+#         - mkdir binary
+#         - cd binary
+#         - R CMD INSTALL gamstransfer --build
+#         - mv gamstransfer_*.tar.gz gamstransfer_r_linux.tar.gz
+#         - cd ..
+#     only:
+#         - merge_requests
+#         - main
+#         - tags
+#     artifacts:
+#         name: gamstransfer_r_linux.tar.gz
+#         paths:
+#             - binary
+#         expire_in: 1 day
 
-build_r_source:
-    stage: build
-    tags:
-        - linux
-    # image:
-    #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
-    script:
-        - mkdir source
-        - cd source
-        - R CMD build gamstransfer
-        - mv gamstransfer_*.tar.gz gamstransfer_r.tar.gz
-        - cd ..
-    only:
-        - merge_requests
-        - main
-        - tags
-    artifacts:
-        name: gamstransfer_r_linux.tar.gz
-        paths:
-            - source
-        expire_in: 1 day
+# build_r_source:
+#     stage: build
+#     tags:
+#         - linux
+#     # image:
+#     #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
+#     script:
+#         - mkdir source
+#         - cd source
+#         - R CMD build gamstransfer
+#         - mv gamstransfer_*.tar.gz gamstransfer_r.tar.gz
+#         - cd ..
+#     only:
+#         - merge_requests
+#         - main
+#         - tags
+#     artifacts:
+#         name: gamstransfer_r_linux.tar.gz
+#         paths:
+#             - source
+#         expire_in: 1 day
 
 # build_r_macos:
 #     stage: build
@@ -120,11 +120,11 @@ package:
     #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
 
-        - | 
-            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
+        # - | 
+        #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
         
-        - |
-            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
+        # - |
+        #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
         
         - |
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
@@ -142,8 +142,8 @@ release:
             release-cli create \
                 --name "Release $CI_COMMIT_TAG" \
                 --tag-name $CI_COMMIT_TAG \
-                --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}" \
+                # --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}" \
                 --assets-link "{\"name\":\"gamstransfer_r_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_windows.zip\"}" \
-                --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}"
+                # --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}"
     only:
         - tags
