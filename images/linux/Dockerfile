@@ -1,5 +1,5 @@
 # Build from the MATLAB base image
-FROM r-base
+FROM rocker/r-ver
 
 # install gitlab release-cli
 RUN sudo curl -L --output /usr/local/bin/release-cli \
