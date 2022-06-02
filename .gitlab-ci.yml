@@ -84,7 +84,7 @@ image_linux:
 #         - R CMD INSTALL gamstransfer --build
 #     only:
 #         - merge_requests
-#         - master
+#         - main
 #         - tags
 #     artifacts:
 #         name: gams_transfer_r_macos
@@ -104,7 +104,7 @@ build_r_windows:
         - cd ..
     only:
         - merge_requests
-        - master
+        - main
         - tags
     artifacts:
         name: gams_transfer_r_windows
