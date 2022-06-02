@@ -1,5 +1,5 @@
 stages:
-#   - images
+  - images
   - build
   - package
   - release
@@ -8,29 +8,29 @@ variables:
     GIT_SUBMODULE_STRATEGY: recursive
     PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/${CI_COMMIT_TAG}/"
 
-# image_linux:
-#     stage: images
-#     tags:
-#         - linux
-#     image:
-#         name: docker:20.10
-#     services:
-#         - docker:20.10-dind
-#     variables:
-#         DOCKER_TLS_CERTDIR: "/certs"
-#     before_script:
-#         - mkdir -p $HOME/.docker
-#         - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
-#     script:
-#         - docker build -t linux/builder images/linux
-#         - docker tag linux/builder registry.gams.com/devel/gams-transfer-r/linux/builder:latest
-#         - docker push registry.gams.com/devel/gams-transfer-r/linux/builder:latest
-#     rules:
-#         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-#           changes:
-#             - images/linux/Dockerfile
-#           when: manual
-#           allow_failure: true
+image_linux:
+    stage: images
+    tags:
+        - linux
+    image:
+        name: docker:20.10
+    services:
+        - docker:20.10-dind
+    variables:
+        DOCKER_TLS_CERTDIR: "/certs"
+    before_script:
+        - mkdir -p $HOME/.docker
+        - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+    script:
+        - docker build -t linux/builder images/linux
+        - docker tag linux/builder registry.gams.com/devel/gams-transfer-r/linux/builder:latest
+        - docker push registry.gams.com/devel/gams-transfer-r/linux/builder:latest
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+          changes:
+            - images/linux/Dockerfile
+          when: manual
+          allow_failure: true
 
 # build_r_linux_binary:
 #     stage: build
@@ -84,7 +84,7 @@ variables:
 #         - R CMD INSTALL gamstransfer --build
 #     only:
 #         - merge_requests
-#         - master
+#         - main
 #         - tags
 #     artifacts:
 #         name: gams_transfer_r_macos
@@ -104,7 +104,7 @@ build_r_windows:
         - cd ..
     only:
         - merge_requests
-        - master
+        - main
         - tags
     artifacts:
         name: gams_transfer_r_windows
@@ -116,8 +116,8 @@ package:
     stage: package
     tags:
         - linux
-    # image:
-    #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
+    image:
+        name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
 
         # - | 
@@ -135,15 +135,15 @@ release:
     stage: release
     tags:
         - linux
-    # image:
-    #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
+    image:
+        name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
         - | 
             release-cli create \
                 --name "Release $CI_COMMIT_TAG" \
                 --tag-name $CI_COMMIT_TAG \
                 # --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}" \
-                --assets-link "{\"name\":\"gamstransfer_r_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_windows.zip\"}" \
+                --assets-link "{\"name\":\"gamstransfer_r_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_windows.zip\"}"
                 # --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}"
     only:
         - tags
