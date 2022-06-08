@@ -2497,7 +2497,7 @@ Symbol <- R6Class(
 
           # drop duplicates
           if (self$dimension != 0) {
-            if (nrow(self$records) != nrow(unique(self$records))) {
+            if (nrow(self$records) != nrow(unique(self$records[unlist(self$domainLabels)]))) {
               stop(paste0("Symbol 'records' contain non-unique",
                " domain members; ensure that only unique members exist\n"))
             }
