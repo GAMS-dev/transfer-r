@@ -13,9 +13,9 @@ image_linux:
     tags:
         - linux
     image:
-        name: docker:20.10
+        name: docker:latest
     services:
-        - docker:20.10-dind
+        - docker:dind
     variables:
         DOCKER_TLS_CERTDIR: "/certs"
     before_script:
@@ -32,27 +32,25 @@ image_linux:
           when: manual
           allow_failure: true
 
-# build_r_linux_binary:
-#     stage: build
-#     tags:
-#         - linux
-#     # image:
-#     #     name: registry.gams.com/devel/gams-transfer-r/linux/builder
-#     script:
-#         - mkdir binary
-#         - cd binary
-#         - R CMD INSTALL gamstransfer --build
-#         - mv gamstransfer_*.tar.gz gamstransfer_r_linux.tar.gz
-#         - cd ..
-#     only:
-#         - merge_requests
-#         - main
-#         - tags
-#     artifacts:
-#         name: gamstransfer_r_linux.tar.gz
-#         paths:
-#             - binary
-#         expire_in: 1 day
+build_r_linux_binary:
+    stage: build
+    tags:
+        - linux
+    image: 
+        name: registry.gams.com/devel/gams-transfer-r/linux/builder
+    script:
+        - R CMD INSTALL gamstransfer --build
+        - mkdir binary
+        - mv gamstransfer_*.tar.gz binary/gamstransfer_r_linux.tar.gz
+    only:
+        - merge_requests
+        - main
+        - tags
+    artifacts:
+        name: gamstransfer_r_linux
+        paths:
+            - binary
+        expire_in: 1 day
 
 build_r_source:
     stage: build
@@ -69,7 +67,7 @@ build_r_source:
         - main
         - tags
     artifacts:
-        name: gamstransfer_r_linux.tar.gz
+        name: gamstransfer_r_linux
         paths:
             - source
         expire_in: 1 day
@@ -80,6 +78,8 @@ build_r_source:
 #         - macos
 #     script:
 #         - R CMD INSTALL gamstransfer --build
+#         - mkdir binary
+#         - mv gamstransfer_*.tgz binary/gamstransfer_r_macos.tgz
 #     only:
 #         - merge_requests
 #         - main
@@ -93,13 +93,14 @@ build_r_source:
 # build_r_windows:
 #     stage: build
 #     tags:
-#         - windows
+#         - windows-shell
 #     script:
-#         - mkdir windows_binary
-#         - cd windows_binary
-#         - R CMD INSTALL gamstransfer --build
-#         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
+#         - cd gamstransfer
+#         - Rscript -e "devtools::build(binary=TRUE)"
+#         - Rscript -e "devtools::build(binary=TRUE)"
 #         - cd ..
+#         - mkdir binary
+#         - mv gamstransfer_*.zip binary/gamstransfer_r_windows.zip
 #     only:
 #         - merge_requests
 #         - main
@@ -121,11 +122,14 @@ package:
         - | 
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
         
-        # - |
-        #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
+        - |
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
         
-        # - |
-        #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
+        - |
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
+        
+        - |
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos.tgz ${PACKAGE_REGISTRY_URL}
     only:
         - tags
 
@@ -136,13 +140,11 @@ release:
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
-        - | 
-            release-cli create \
-                --name "Release $CI_COMMIT_TAG" \
-                --tag-name $CI_COMMIT_TAG \
-                # --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}" \
-                # --assets-link "{\"name\":\"gamstransfer_r_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_windows.zip\"}"
-                --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}"
-                
+        - DESCR=$(grep -Pzo "(?s)GAMS Transfer R $CI_COMMIT_TAG.*?((?=\nGAMS Transfer R v)|$)" CHANGELOG | tr -d '\0')
+        - |
+            curl --header \
+            --data '{ "name": "Release $CI_COMMIT_TAG", "tag_name": $CI_COMMIT_TAG, "description": "$DESCR", "assets": { "links": [{ "name": "gamstransfer_r.tar.gz", "url": ${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz}] } }'\
+            --data '{ "name": "Release $CI_COMMIT_TAG", "tag_name": $CI_COMMIT_TAG, "description": "$DESCR", "assets": { "links": [{ "name": "gamstransfer_r_linux.tar.gz", "url": ${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz}] } }'\
+            "JOB-TOKEN: ${CI_JOB_TOKEN}" ${PACKAGE_REGISTRY_URL}              
     only:
         - tags
