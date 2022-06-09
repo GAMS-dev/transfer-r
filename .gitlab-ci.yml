@@ -151,9 +151,9 @@ release_job:
         assets:
             links:
                 - name: "gamstransfer_r.tar.gz"
-                - url: ${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz
+                - url: ${PACKAGE_REGISTRY_URL}
                 - name: "gamstransfer_r_linux.tar.gz"
-                - url: ${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz
+                - url: ${PACKAGE_REGISTRY_URL}
     script:
         - echo "release stage"
         - echo "${PACKAGE_REGISTRY_URL}"gamstransfer_r.tar.gz
