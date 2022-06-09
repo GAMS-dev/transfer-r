@@ -1,7 +1,7 @@
 # Build from the R base image
 FROM r-base
 
-RUN apt-get update && apt-get -y install curl && apt-get -y clean
+RUN apt-get update && apt-get -y install curl zip && apt-get -y clean
 
 RUN R -e "install.packages('devtools',dependencies=TRUE)"
 RUN R -e "install.packages('R6',dependencies=TRUE)"
