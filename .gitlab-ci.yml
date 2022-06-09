@@ -67,7 +67,7 @@ build_r_source:
         - main
         - tags
     artifacts:
-        name: gamstransfer_r_linux
+        name: gamstransfer_r
         paths:
             - source
         expire_in: 1 day
@@ -118,18 +118,23 @@ package:
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
-
+        - cd source
+        - unzip gamstransfer_r.zip
+        - cd gamstransfer_r
         - | 
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
-        
+        - cd ../..
+        - cd binary
+        - unzip gamstransfer_r_linux.zip
+        - cd gamstransfer_r_linux
         - |
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_linux.tar.gz ${PACKAGE_REGISTRY_URL}
+        - cd ../..
+        # - |
+        #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
         
-        - |
-            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_windows.zip ${PACKAGE_REGISTRY_URL}
-        
-        - |
-            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos.tgz ${PACKAGE_REGISTRY_URL}
+        # - |
+        #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos.tgz ${PACKAGE_REGISTRY_URL}
     only:
         - tags
 
