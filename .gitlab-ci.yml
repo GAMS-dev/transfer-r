@@ -63,6 +63,7 @@ build_r_source:
         - mkdir source
         - mv gamstransfer_*.tar.gz source/gamstransfer_r.tar.gz
         - ls
+        - ls source/
     only:
         - merge_requests
         - main
