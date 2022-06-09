@@ -2,7 +2,7 @@ stages:
   - images
   - build
   - package
-  - release_job
+  - release
 
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
