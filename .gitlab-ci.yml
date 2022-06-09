@@ -145,8 +145,8 @@ release_job:
     release:
         name: Release $CI_COMMIT_TAG
         description: "needs to be improved"
-        tag_name: '$CI_COMMIT_TAG'
-        ref: '$CI_COMMIT_TAG'
+        tag_name: "v0.1.0" #'$CI_COMMIT_TAG'
+        ref: "v0.1.0" #'$CI_COMMIT_TAG'
         assets:
             links:
                 - name: "gamstransfer_r.tar.gz"
