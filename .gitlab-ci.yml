@@ -62,6 +62,7 @@ build_r_source:
         - R CMD build gamstransfer
         - mkdir source
         - mv gamstransfer_*.tar.gz source/gamstransfer_r.tar.gz
+        - ls
     only:
         - merge_requests
         - main
@@ -119,8 +120,8 @@ package:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
         - cd source
-        - unzip gamstransfer_r.zip
-        - cd gamstransfer_r
+        # - unzip gamstransfer_r.zip
+        # - cd gamstransfer_r
         - | 
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
         - cd ../..
