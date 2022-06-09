@@ -156,6 +156,7 @@ release_job:
                 - url: ${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz
     script:
         - echo "release stage"
+        - echo "${PACKAGE_REGISTRY_URL}"
         # - DESCR=$(grep -Pzo "(?s)GAMS Transfer R $CI_COMMIT_TAG.*?((?=\nGAMS Transfer R v)|$)" CHANGELOG | tr -d '\0')
         # - |
         #     curl --header \
