@@ -9,6 +9,7 @@ RUN R -e "install.packages('Rcpp',dependencies=TRUE)"
 RUN R -e "install.packages('assertthat',dependencies=TRUE)"
 RUN R -e "install.packages('R.utils',dependencies=TRUE)"
 
-# RUN sudo apt-get update && \
-#     sudo apt-get -y install curl \
-#     sudo apt-get -y clean
+# install gitlab release-cli
+RUN curl -L --output /usr/local/bin/release-cli \
+    "https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-linux-amd64" && \
+    chmod +x /usr/local/bin/release-cli
