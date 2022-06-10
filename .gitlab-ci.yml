@@ -144,10 +144,11 @@ release_job:
 
         - DESCR=$(grep -Pzo "(?s)GAMS Transfer R $CI_COMMIT_TAG.*?((?=\nGAMS Transfer R v)|$)" CHANGELOG | tr -d '\0')
         - |
-            curl -v --header 'Content-Type: application/json' --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
-            --data '{ "name": "Release $CI_COMMIT_TAG", "tag_name": $CI_COMMIT_TAG, "description": "$DESCR", "assets": { "links": [ \
-            { "name": "gamstransfer_r.tar.gz", "url": ${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz}, \
-            { "name": "gamstransfer_r_linux.tar.gz", "url": ${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz}] } }' \
-            --request POST "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases"            
+            release-cli create \
+                --name "Release $CI_COMMIT_TAG" \
+                --tag-name $CI_COMMIT_TAG \
+                --description "$DESCR" \
+                --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}" \
+                --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}"      
     only:
         - tags
