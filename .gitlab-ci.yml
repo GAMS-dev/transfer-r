@@ -6,8 +6,8 @@ stages:
 
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/v0.1.0/"
-    # PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/${CI_COMMIT_TAG}/"
+    # PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/v0.1.0/"
+    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/${CI_COMMIT_TAG}/"
 
 image_linux:
     stage: images
@@ -133,7 +133,6 @@ package:
         # - |
         #     curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos.tgz ${PACKAGE_REGISTRY_URL}
     only:
-        - merge_requests
         - tags
 
 release_job:
@@ -143,20 +142,28 @@ release_job:
     image:
         name: registry.gitlab.com/gitlab-org/release-cli:latest 
         # registry.gams.com/devel/gams-transfer-r/linux/builder
-    release:
-        name: Release $CI_COMMIT_TAG
-        description: "needs to be improved"
-        tag_name: "v0.1.0" #'$CI_COMMIT_TAG'
-        ref: "v0.1.0" #'$CI_COMMIT_TAG'
-        assets:
-            links:
-                - name: "gamstransfer_r.tar.gz"
-                - url: ${PACKAGE_REGISTRY_URL}
-                - name: "gamstransfer_r_linux.tar.gz"
-                - url: ${PACKAGE_REGISTRY_URL}
+    # release:
+    #     name: Release $CI_COMMIT_TAG
+    #     description: "needs to be improved"
+    #     tag_name: "v0.1.0" #'$CI_COMMIT_TAG'
+    #     ref: "v0.1.0" #'$CI_COMMIT_TAG'
+    #     assets:
+    #         links:
+    #             - name: "gamstransfer_r.tar.gz"
+    #             - url: ${PACKAGE_REGISTRY_URL}
+    #             - name: "gamstransfer_r_linux.tar.gz"
+    #             - url: ${PACKAGE_REGISTRY_URL}
     script:
-        - echo "release stage"
-        - echo "${PACKAGE_REGISTRY_URL}"gamstransfer_r.tar.gz
+        - DESCR=$(grep -Pzo "(?s)GAMS Transfer R $CI_COMMIT_TAG.*?((?=\nGAMS Transfer R v)|$)" CHANGELOG | tr -d '\0')
+        - |
+            release-cli create \
+                --name "Release $CI_COMMIT_TAG" \
+                --tag-name $CI_COMMIT_TAG \
+                --description "$DESCR" \
+                --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}" \
+                --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}"
+        # - echo "release stage"
+        # - echo "${PACKAGE_REGISTRY_URL}"gamstransfer_r.tar.gz
         # - DESCR=$(grep -Pzo "(?s)GAMS Transfer R $CI_COMMIT_TAG.*?((?=\nGAMS Transfer R v)|$)" CHANGELOG | tr -d '\0')
         # - |
         #     curl --header \
@@ -164,5 +171,4 @@ release_job:
         #     --data '{ "name": "Release $CI_COMMIT_TAG", "tag_name": $CI_COMMIT_TAG, "description": "$DESCR", "assets": { "links": [{ "name": "gamstransfer_r_linux.tar.gz", "url": ${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz}] } }' \
         #     "JOB-TOKEN: ${CI_JOB_TOKEN}" ${PACKAGE_REGISTRY_URL}              
     only:
-        - merge_requests
         - tags
