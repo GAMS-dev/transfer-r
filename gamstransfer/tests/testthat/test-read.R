@@ -3880,3 +3880,24 @@ test_that("test_num_43", {
   expect_equal(e$records, recs)
 }
 )
+
+test_that("test_num_44", {
+  # gams syntax
+  gams_text = "
+    variable i(*);
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+  expect_true(m$data$i$type == "free")
+
+  m$write("out.gdx")
+
+  m2 = Container$new(testthat::test_path("out.gdx"))
+  expect_true(m2$data$i$type == "free")
+}
+)

@@ -194,7 +194,6 @@ Container <- R6::R6Class (
       aliasCount = 0
       for (m in metadata) {
          if (any(symbolsToRead == m$name)) {
-            # m1 = m[-1]
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
@@ -209,17 +208,26 @@ Container <- R6::R6Class (
                 domainForwarding=FALSE,
                 m$expltext)
                 }
-                else {
+                else if (m$subtype == 1) {
                 Set$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
                 domainForwarding=FALSE, 
                 m$expltext)
                 }
+                else {
+                  stop(paste0("Unknown set classification with 
+                  GAMS Subtype ", m$subtype, "cannot load set ", m$name))
+                }
             }
             else if (m$type == GMS_DT_VAR) {
-                type = names(VarTypeSubtype())[[which(VarTypeSubtype() 
-                == m$subtype)]]
+                type = which(VarTypeSubtype() == m$subtype)
+                if (is.integer0(type)) {
+                  type = "free"
+                }
+                else {
+                  type = names(VarTypeSubtype())[[type]]
+                }
                 Variable$new(
                 self, m$name, type, m$domain,
                 domainForwarding = FALSE,
@@ -228,6 +236,10 @@ Container <- R6::R6Class (
             else if (m$type == GMS_DT_EQU) {
                 type = names(EqTypeSubtype())[[which(EqTypeSubtype() 
                 == m$subtype)]]
+                if (is.integer0(type)) {
+                  stop(paste0("Unknown equation classification with 
+                  GAMS Subtype ", m$subtype, "cannot load equation ", m$name))
+                }
                 Equation$new(
                 self, m$name, type, m$domain,
                 domainForwarding = FALSE,
