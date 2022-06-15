@@ -854,10 +854,6 @@ Container <- R6::R6Class (
       }
     },
 
-    printSpecialValues = function() {
-      print(private$gdx_specVals_write)
-    },
-
     #' @description a write method to write to a gdxout GDX file
     #' @param gdxout name of the GDX file to write to
     #' @param compress write tge GDX file in compressed format by setting
