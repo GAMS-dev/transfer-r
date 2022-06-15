@@ -3302,7 +3302,7 @@ test_that("test_num_22", {
   stdout = TRUE, stderr = TRUE)
 
   m = Container$new()
-  m$read(testthat::test_path("data.gdx"), values = FALSE)
+  m$read(testthat::test_path("data.gdx"), records = FALSE)
 
   for (i in m$data) {
     expect_equal(m$data[[i$name]]$records, NULL)

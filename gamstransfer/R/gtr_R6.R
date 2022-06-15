@@ -111,21 +111,21 @@ Container <- R6::R6Class (
     },
 
     #' @description main method to read loadFrom, can be provided 
-    #' with a list of symbols to read in subsets, `values` controls 
+    #' with a list of symbols to read in subsets, `records` controls 
     #' if symbol records are loaded or just metadata
     #' @param loadFrom name of the file to load data from as a string
     #' @param symbols optional argument to specify the names of the 
     #' symbols to be read (string or a list of strings)
-    #' @param values optional logical argument to specify whether to 
+    #' @param records optional logical argument to specify whether to 
     #' read symbol records (logical)
-    read = function(loadFrom, symbols="all", values=TRUE) {
+    read = function(loadFrom, symbols="all", records=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
       # process it and populate various fields
 
-      # check if values is logical
-      if (!is.logical(values)) {
-        stop("values must be type logical\n")
+      # check if records is logical
+      if (!is.logical(records)) {
+        stop("records must be type logical\n")
       }
 
       if (!(is.character(symbols)) && !(is.list(symbols))) {
@@ -261,7 +261,7 @@ Container <- R6::R6Class (
         self, m$name, self$data[[m$aliasfor]])
       }
 
-      if (values == TRUE) {
+      if (records == TRUE) {
         symbolrecords = readSymbols(unlist(symbolsToRead),
         loadFrom, self$systemDirectory)
 
