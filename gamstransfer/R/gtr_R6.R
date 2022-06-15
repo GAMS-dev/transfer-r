@@ -405,6 +405,9 @@ Container <- R6::R6Class (
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listSets = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Set") |
@@ -426,6 +429,9 @@ Container <- R6::R6Class (
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listParameters = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Parameter")) {
@@ -446,6 +452,9 @@ Container <- R6::R6Class (
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listAliases = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Alias")) {
@@ -470,12 +479,12 @@ Container <- R6::R6Class (
     listVariables = function(isValid = NULL, types = NULL) {
 
       if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL")
+        stop("Argument `isValid` must be type logical or NULL \n")
       }
 
       if (!(is.character(types) || is.list(types) || 
       is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, list, vector, or NULL")
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
       }
 
 
@@ -489,7 +498,7 @@ Container <- R6::R6Class (
 
       for (t in types) {
         if (!any(.varTypes == t)) {
-          stop(paste0("User input unrecognized variable type: ", t))
+          stop(paste0("User input unrecognized variable type: ", t, " \n"))
         }
       }
 
@@ -517,12 +526,12 @@ Container <- R6::R6Class (
     #' @return a vector of symbols
     listEquations = function(isValid=NULL, types=NULL) {
       if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL")
+        stop("Argument `isValid` must be type logical or NULL \n")
       }
 
       if (!(is.character(types) || is.list(types) || 
       is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, list, vector, or NULL")
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
       }
 
 
@@ -536,7 +545,7 @@ Container <- R6::R6Class (
 
       for (t in types) {
         if (is.null(.EquationTypes[[t]])) {
-          stop(paste0("User input unrecognized equation type: ", t))
+          stop(paste0("User input unrecognized equation type: ", t, " \n"))
         }
       }
 
@@ -666,6 +675,20 @@ Container <- R6::R6Class (
       if (is.null(symbols)) {
         symbols = self$listSets()
       }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
       colNames = list("name",
             "isAlias",
             "isSingleton",
@@ -706,6 +729,68 @@ Container <- R6::R6Class (
       }
     },
 
+    #' @description create a summary table with descriptive 
+    #' statistics for Aliases
+    #' @param symbols an optional argument of type string or a list of aliases 
+    #' to describe. The default value is NULL which assumes all aliases.
+    describeAliases = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listAliases()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list("name",
+            "aliasWith",
+            "isSingleton",
+            "domain",
+            "domainType",
+            "dim",
+            "numberRecs",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+      for (i in symbols) {
+        if (any(self$listSets() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$aliasWith,
+            self$data[[i]]$isSingleton,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]), ])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
     #' @description create a summary table with descriptive statistics 
     #' for Parameters
     #' @param symbols an optional argument of type string or a 
@@ -715,6 +800,20 @@ Container <- R6::R6Class (
       if (is.null(symbols)) {
         symbols = self$listParameters()
       }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
       colNames = list(
             "name",
             "isScalar",
@@ -779,6 +878,19 @@ Container <- R6::R6Class (
     describeVariables = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listVariables()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
       }
       colNames = list(
             "name",
@@ -848,6 +960,19 @@ Container <- R6::R6Class (
     describeEquations = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listEquations()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
       }
       colNames = list(
             "name",
