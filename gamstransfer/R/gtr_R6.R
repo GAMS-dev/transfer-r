@@ -325,10 +325,27 @@ Container <- R6::R6Class (
         stop("Argument 'name' must contain only type character\n")
       }
 
+      setOrAlias = list()
       for (n in symbols) {
+        sym = self$data[[n]]
+        sym$refContainer <- NULL
+        sym$.requiresStateCheck <- TRUE
+
+        if (inherits(sym, "Set") || inherits(sym, "Alias")) {
+          setOrAlias = append(setOrAlias, sym)
+        }
         self$data[[n]] <- NULL
       }
 
+      # if there were any sets or aliases removed from the data list
+      # then reset check flag for all symbols
+      if (length(setOrAlias) != 0) {
+        for (i in self$listSymbols()) {
+          self$data[[i]]$.requiresStateCheck = TRUE
+        }
+      }
+
+      # reset the check flag for the container
       self$.requiresStateCheck = TRUE
     },
 
@@ -2259,6 +2276,12 @@ Symbol <- R6Class(
         return(private$.ref_container)
       }
       else {
+        if (is.null(ref_container_input)) {
+          private$.ref_container = NULL
+          self$.requiresStateCheck = TRUE
+          return()
+        }
+
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }

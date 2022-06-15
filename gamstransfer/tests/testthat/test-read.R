@@ -3901,3 +3901,16 @@ test_that("test_num_44", {
   expect_true(m2$data$i$type == "free")
 }
 )
+
+test_that("test_num_45", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", 1:5))
+  j = Set$new(m, "j", i, records = paste0("i", 1:5))
+
+  m$removeSymbols("i")
+
+  expect_true(is.null(i$refContainer))
+  expect_true(names(m$data) == c("j"))
+  expect_true(j$isValid() == FALSE)
+}
+)
