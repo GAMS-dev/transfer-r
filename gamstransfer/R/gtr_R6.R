@@ -464,11 +464,39 @@ Container <- R6::R6Class (
     #' list all valid variables in the container if  isValid = TRUE
     #' list all invalid variables in the container if isValid = FALSE
     #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
     #' @return a vector of symbols
-    listVariables = function(isValid = NULL) {
+    listVariables = function(isValid = NULL, types = NULL) {
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL")
+      }
+
+      if (!(is.character(types) || is.list(types) || 
+      is.vector(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL")
+      }
+
+
+      if (!all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = .varTypes
+      }
+
+      for (t in types) {
+        if (!any(.varTypes == t)) {
+          stop(paste0("User input unrecognized variable type: ", t))
+        }
+      }
+
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Variable")) {
+        if (inherits(self$data[[s]], "Variable")
+        && any(types == self$data[[s]]$type)) {
           if (is.null(variables)) {
             variables = s
           }
@@ -484,11 +512,38 @@ Container <- R6::R6Class (
     #' list all valid equations in the container if  isValid = TRUE
     #' list all invalid equations in the container if isValid = FALSE
     #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
     #' @return a vector of symbols
-    listEquations = function(isValid=NULL) {
+    listEquations = function(isValid=NULL, types=NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL")
+      }
+
+      if (!(is.character(types) || is.list(types) || 
+      is.vector(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL")
+      }
+
+
+      if (!all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = unlist(unique(.EquationTypes))
+      }
+
+      for (t in types) {
+        if (is.null(.EquationTypes[[t]])) {
+          stop(paste0("User input unrecognized equation type: ", t))
+        }
+      }
+
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Equation")) {
+        if (inherits(self$data[[s]], "Equation") 
+        && any(types == self$data[[s]]$type)) {
           if (is.null(equations)) {
             equations = s
           }
@@ -1184,6 +1239,43 @@ SetTypeSubtype = function() {
   "singleton_set" = 1
   ))
 }
+
+.EquationTypes = list(
+eq = "eq",
+E = "eq",
+e = "eq",
+geq = "geq",
+G = "geq",
+g = "geq",
+leq = "leq",
+L = "leq",
+l = "leq",
+nonbinding = "nonbinding",
+N = "nonbinding",
+n = "nonbinding",
+cone = "cone",
+C = "cone",
+c = "cone",
+external = "external",
+X = "external",
+x = "external",
+boolean = "boolean",
+B = "boolean",
+b = "boolean"
+)
+
+.varTypes = c(
+  "binary",
+  "integer",
+  "positive",
+  "negative",
+  "free",
+  "sos1",
+  "sos2",
+  "semicont",
+  "semiint"
+)
+
 
 #' @title Symbol Abstract Class
 #' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
@@ -3203,7 +3295,7 @@ Variable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(private$.var_types == type_input)) {
+        if (!any(.varTypes == type_input)) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
           " 1. 'binary' \n",
           " 2. 'integer' \n",
@@ -3237,17 +3329,6 @@ Variable <- R6Class(
 
   private = list(
     .type= NULL,
-    .var_types = c(
-      "binary",
-      "integer",
-      "positive",
-      "negative",
-      "free",
-      "sos1",
-      "sos2",
-      "semicont",
-      "semiint"
-    ),
 
     .default_values = list(
       "binary" = list(
@@ -3370,7 +3451,7 @@ Equation <- R6Class(
 
       self$type = type
       # call from outside
-      type = private$.equationTypes[[type]]
+      type = .EquationTypes[[type]]
 
       symtype = GMS_DT_EQU
       symsubtype = EqTypeSubtype()[[type]]
@@ -3590,7 +3671,7 @@ Equation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(private$.equationTypes == type_input)) {
+        if (!any(.EquationTypes == type_input)) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
               "1. 'eq', 'E', or 'e' -- equality\n",
               "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
@@ -3621,29 +3702,6 @@ Equation <- R6Class(
   ),
   private = list(
     .type = NULL,
-    .equationTypes = list(
-    eq = "eq",
-    E = "eq",
-    e = "eq",
-    geq = "geq",
-    G = "geq",
-    g = "geq",
-    leq = "leq",
-    L = "leq",
-    l = "leq",
-    nonbinding = "nonbinding",
-    N = "nonbinding",
-    n = "nonbinding",
-    cone = "cone",
-    C = "cone",
-    c = "cone",
-    external = "external",
-    X = "external",
-    x = "external",
-    boolean = "boolean",
-    B = "boolean",
-    b = "boolean"
-    ),
 
     .default_values = list(
       "eq" = list(

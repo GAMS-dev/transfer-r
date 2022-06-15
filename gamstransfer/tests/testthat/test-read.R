@@ -3914,3 +3914,81 @@ test_that("test_num_45", {
   expect_true(j$isValid() == FALSE)
 }
 )
+
+test_that("test_num_46", {
+  # gams syntax
+  gams_text = "
+Set
+    i 'canning plants' / seattle,  san-diego /
+    j 'markets'        / new-york, chicago, topeka /;
+
+Parameter
+    a(i) 'capacity of plant i in cases'
+        / seattle    350
+          san-diego  600 /
+
+    b(j) 'demand at market j in cases'
+        / new-york   325
+          chicago    300
+          topeka     275 /;
+
+Table d(i,j) 'distance in thousands of miles'
+              new-york  chicago  topeka
+    seattle         2.5      1.7     1.8
+    san-diego       2.5      1.8     1.4;
+
+Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+Parameter c(i,j) 'transport cost in thousands of dollars per case';
+c(i,j) = f*d(i,j)/1000;
+
+Variable
+    x(i,j) 'shipment quantities in cases'
+    z      'total transportation costs in thousands of dollars';
+
+Positive Variable x;
+
+Equation
+    cost      'define objective function'
+    supply(i) 'observe supply limit at plant i'
+    demand(j) 'satisfy demand at market j';
+
+cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+supply(i).. sum(j, x(i,j)) =l= a(i);
+
+demand(j).. sum(i, x(i,j)) =g= b(j);
+
+Model transport / all /;
+
+solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  for (i in names(m$data)) {
+    expect_true(is.list(m$data$i$summary))
+  }
+
+  expect_true(is.vector(m$listSymbols()))
+  expect_true(is.vector(m$listParameters()))
+  expect_true(is.vector(m$listSets()))
+  expect_true(is.null(m$listAliases()))
+  expect_true(is.vector(m$listVariables()))
+  expect_true(is.vector(m$listEquations()))
+
+  expect_true(length(m$listEquations(types = "geq")) == 1)
+  expect_true(length(m$listEquations(types = "eq")) == 1)
+  expect_true(length(m$listEquations(types = "leq")) == 1)
+  expect_true(length(m$listEquations(types = list("geq", "leq"))) == 2)
+  expect_true(length(m$listEquations(types = c("geq", "leq"))) == 2)
+
+  expect_true(length(m$listVariables(types = "free")) == 1)
+  expect_true(length(m$listVariables(types = "positive")) == 1)
+}
+)
