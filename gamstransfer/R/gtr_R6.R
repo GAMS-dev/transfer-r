@@ -765,10 +765,10 @@ Container <- R6::R6Class (
       length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
-        if (any(self$listSets() == i)) {
+        if (any(self$listAliases() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$aliasWith,
+            self$data[[i]]$aliasWith$name,
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
             self$data[[i]]$domainType,
