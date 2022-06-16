@@ -78,7 +78,7 @@ std::string elemText) {
 
 
 // [[Rcpp::export]]
-List getSpecialValues(CharacterVector gdxName, CharacterVector sysDir) {
+List CPP_getSpecialValues(CharacterVector gdxName, CharacterVector sysDir) {
 gdxHandle_t PGX = NULL;
 char Msg[GMS_SSSIZE];
 gdxSVals_t sVals;
@@ -99,7 +99,7 @@ return L;
 }
 
 // [[Rcpp::export]]
-List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
+List CPP_checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
   char Msg[GMS_SSSIZE], acrName[GMS_SSSIZE];
   std::string myname = Rcpp::as<std::string>(gdxName);
@@ -133,7 +133,7 @@ List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
 }
 
 // [[Rcpp::export]]
-List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
+List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
   std::vector<std::string> domain;
   int rc, errCode, symCount, UelCount, sym_dimension, sym_type, nrecs, dummy,
@@ -187,7 +187,7 @@ List getSymbols(CharacterVector gdxName, CharacterVector sysDir) {
 }
 
 // [[Rcpp::export]]
-void gdxWriteSuper(List data, CharacterVector sysDir, 
+void CPP_gdxWriteSuper(List data, CharacterVector sysDir, 
 CharacterVector fileName, CharacterVector uel_priority, 
 bool is_uel_priority, bool compress) {
 
@@ -325,7 +325,7 @@ bool is_uel_priority, bool compress) {
 }
 
 // [[Rcpp::export]]
-List readSymbols(CharacterVector symNames, CharacterVector gdxName,
+List CPP_readSymbols(CharacterVector symNames, CharacterVector gdxName,
                 CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE];

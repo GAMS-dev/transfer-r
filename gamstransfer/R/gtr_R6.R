@@ -153,7 +153,7 @@ Container <- R6::R6Class (
         }
       }
       # check acronyms
-      acrInfo = checkAcronyms(loadFrom, self$systemDirectory)
+      acrInfo = CPP_checkAcronyms(loadFrom, self$systemDirectory)
       nAcr = acrInfo[["nAcronyms"]]
       if (nAcr != 0) {
         warning("GDX file contains acronyms. 
@@ -162,7 +162,7 @@ Container <- R6::R6Class (
       }
 
       # get names for all symbols
-      metadata = getSymbols(loadFrom, self$systemDirectory)
+      metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
       syms = lapply(metadata, "[[", 1)
 
       if (is.character(symbols) && symbols == "all") {
@@ -262,7 +262,7 @@ Container <- R6::R6Class (
       }
 
       if (records == TRUE) {
-        symbolrecords = readSymbols(unlist(symbolsToRead),
+        symbolrecords = CPP_readSymbols(unlist(symbolsToRead),
         loadFrom, self$systemDirectory)
 
         for (s in symbolrecords) {
@@ -1080,7 +1080,7 @@ Container <- R6::R6Class (
       # private$validSymbolOrder()
 
       # remap special values
-      specialValsGDX = getSpecialValues(gdxout, self$systemDirectory)
+      specialValsGDX = CPP_getSpecialValues(gdxout, self$systemDirectory)
 
       for (s in self$data) {
         # no mapping required for alias
@@ -1112,7 +1112,7 @@ Container <- R6::R6Class (
       }
 
       if (is.null(uelPriority)) {
-        gdxWriteSuper(self$data, self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, NA, FALSE, compress)
       }
       else {
@@ -1128,7 +1128,7 @@ Container <- R6::R6Class (
         reorder = append(reorder, universe)
         reorder = unique(reorder)
 
-        gdxWriteSuper(self$data, self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, unlist(reorder), TRUE, compress)
       }
     },

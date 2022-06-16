@@ -10,45 +10,45 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// getSpecialValues
-List getSpecialValues(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gamstransfer_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+// CPP_getSpecialValues
+List CPP_getSpecialValues(CharacterVector gdxName, CharacterVector sysDir);
+RcppExport SEXP _gamstransfer_CPP_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    rcpp_result_gen = Rcpp::wrap(getSpecialValues(gdxName, sysDir));
+    rcpp_result_gen = Rcpp::wrap(CPP_getSpecialValues(gdxName, sysDir));
     return rcpp_result_gen;
 END_RCPP
 }
-// checkAcronyms
-List checkAcronyms(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gamstransfer_checkAcronyms(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+// CPP_checkAcronyms
+List CPP_checkAcronyms(CharacterVector gdxName, CharacterVector sysDir);
+RcppExport SEXP _gamstransfer_CPP_checkAcronyms(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    rcpp_result_gen = Rcpp::wrap(checkAcronyms(gdxName, sysDir));
+    rcpp_result_gen = Rcpp::wrap(CPP_checkAcronyms(gdxName, sysDir));
     return rcpp_result_gen;
 END_RCPP
 }
-// getSymbols
-List getSymbols(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gamstransfer_getSymbols(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+// CPP_getMetadata
+List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir);
+RcppExport SEXP _gamstransfer_CPP_getMetadata(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    rcpp_result_gen = Rcpp::wrap(getSymbols(gdxName, sysDir));
+    rcpp_result_gen = Rcpp::wrap(CPP_getMetadata(gdxName, sysDir));
     return rcpp_result_gen;
 END_RCPP
 }
-// gdxWriteSuper
-void gdxWriteSuper(List data, CharacterVector sysDir, CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority, bool compress);
-RcppExport SEXP _gamstransfer_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP, SEXP compressSEXP) {
+// CPP_gdxWriteSuper
+void CPP_gdxWriteSuper(List data, CharacterVector sysDir, CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority, bool compress);
+RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP dataSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP, SEXP compressSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type data(dataSEXP);
@@ -57,30 +57,30 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< CharacterVector >::type uel_priority(uel_prioritySEXP);
     Rcpp::traits::input_parameter< bool >::type is_uel_priority(is_uel_prioritySEXP);
     Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
-    gdxWriteSuper(data, sysDir, fileName, uel_priority, is_uel_priority, compress);
+    CPP_gdxWriteSuper(data, sysDir, fileName, uel_priority, is_uel_priority, compress);
     return R_NilValue;
 END_RCPP
 }
-// readSymbols
-List readSymbols(CharacterVector symNames, CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gamstransfer_readSymbols(SEXP symNamesSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP) {
+// CPP_readSymbols
+List CPP_readSymbols(CharacterVector symNames, CharacterVector gdxName, CharacterVector sysDir);
+RcppExport SEXP _gamstransfer_CPP_readSymbols(SEXP symNamesSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< CharacterVector >::type symNames(symNamesSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    rcpp_result_gen = Rcpp::wrap(readSymbols(symNames, gdxName, sysDir));
+    rcpp_result_gen = Rcpp::wrap(CPP_readSymbols(symNames, gdxName, sysDir));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gamstransfer_getSpecialValues", (DL_FUNC) &_gamstransfer_getSpecialValues, 2},
-    {"_gamstransfer_checkAcronyms", (DL_FUNC) &_gamstransfer_checkAcronyms, 2},
-    {"_gamstransfer_getSymbols", (DL_FUNC) &_gamstransfer_getSymbols, 2},
-    {"_gamstransfer_gdxWriteSuper", (DL_FUNC) &_gamstransfer_gdxWriteSuper, 6},
-    {"_gamstransfer_readSymbols", (DL_FUNC) &_gamstransfer_readSymbols, 3},
+    {"_gamstransfer_CPP_getSpecialValues", (DL_FUNC) &_gamstransfer_CPP_getSpecialValues, 2},
+    {"_gamstransfer_CPP_checkAcronyms", (DL_FUNC) &_gamstransfer_CPP_checkAcronyms, 2},
+    {"_gamstransfer_CPP_getMetadata", (DL_FUNC) &_gamstransfer_CPP_getMetadata, 2},
+    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 6},
+    {"_gamstransfer_CPP_readSymbols", (DL_FUNC) &_gamstransfer_CPP_readSymbols, 3},
     {NULL, NULL, 0}
 };
 
