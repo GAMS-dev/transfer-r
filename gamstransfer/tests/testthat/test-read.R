@@ -3992,3 +3992,21 @@ solve transport using lp minimizing z;
   expect_true(length(m$listVariables(types = "positive")) == 1)
 }
 )
+
+test_that("test_num_47", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", 1:5))
+  j = Set$new(m, "j", i, records = paste0("i", 1:5))
+
+  symlist = m$getSymbols("i")
+  expect_true(is.list(symlist))
+  expect_true(inherits(symlist[[1]], "Set"))
+
+  symlist = m$getSymbols(c("i", "j"))
+  expect_true(length(symlist) == 2)
+
+  symlist = m$getSymbols(list("i", "j"))
+  expect_true(length(symlist) == 2)
+
+}
+)

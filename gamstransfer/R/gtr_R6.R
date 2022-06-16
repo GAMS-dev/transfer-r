@@ -1034,6 +1034,27 @@ Container <- R6::R6Class (
       }
     },
 
+    #' @description returns a list of object references for `Symbols`
+    #' @param symbols character, string, or vector of Symbols for which 
+    #' the user wants object references
+    #' @returns a list of object references to symbols
+    getSymbols = function(symbols) {
+      if (!(is.character(symbols) || is.list(symbols) || is.vector(symbols))) {
+        stop("The argument symbols must be type character, list, or vector \n")
+      }
+
+      obj = list()
+      for (i in symbols) {
+        if (!is.null(self$data[[i]])) {
+          obj = append(obj, self$data[[i]])
+        }
+        else {
+          stop(paste0("Symbol ", i, "does not appear in the container \n"))
+        }
+      }
+      return(obj)
+    },
+
     #' @description a write method to write to a gdxout GDX file
     #' @param gdxout name of the GDX file to write to
     #' @param compress write tge GDX file in compressed format by setting
