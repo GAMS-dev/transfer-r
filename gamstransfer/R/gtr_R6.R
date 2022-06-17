@@ -51,6 +51,7 @@ GMS_EQUTYPE_B   =     6
 GMS_EQU_USERINFO_BASE = 53
 gams_description_max_length = 255
 
+GMS_MAX_INDEX_DIM = 20
 
 SpecialValues = list(
   "NA" = NA, # cannot be anything else
@@ -2419,6 +2420,9 @@ Symbol <- R6Class(
            msg = "Symbol 'dimension' must be type 
            int (greater than or equal to 0)")
 
+        assertthat::assert_that((dimension_input <= GMS_MAX_INDEX_DIM),
+        msg = paste0("Symbol `domain` length cannot be > ", GMS_MAX_INDEX_DIM))
+
         if (length(self$domain) > dimension_input) {
           if (dimension_input == 0) {
             self$domain = list()
@@ -2466,8 +2470,8 @@ Symbol <- R6Class(
           }
         }
 
-      assertthat::assert_that(length(domain_input) <= 20,
-      msg = "Argument 'domain' length cannot be > 20")
+      assertthat::assert_that(length(domain_input) <= GMS_MAX_INDEX_DIM,
+      msg = paste0("Argument 'domain' length cannot be > ", GMS_MAX_INDEX_DIM))
         domaintemp = list()
         for (d in domain_input) {
           if (is.character(d)) {
