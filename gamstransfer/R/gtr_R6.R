@@ -51,6 +51,7 @@ GMS_EQUTYPE_B   =     6
 GMS_EQU_USERINFO_BASE = 53
 gams_description_max_length = 255
 
+GMS_MAX_INDEX_DIM = 20
 
 SpecialValues = list(
   "NA" = NA, # cannot be anything else
@@ -111,21 +112,21 @@ Container <- R6::R6Class (
     },
 
     #' @description main method to read loadFrom, can be provided 
-    #' with a list of symbols to read in subsets, `values` controls 
+    #' with a list of symbols to read in subsets, `records` controls 
     #' if symbol records are loaded or just metadata
     #' @param loadFrom name of the file to load data from as a string
     #' @param symbols optional argument to specify the names of the 
     #' symbols to be read (string or a list of strings)
-    #' @param values optional logical argument to specify whether to 
+    #' @param records optional logical argument to specify whether to 
     #' read symbol records (logical)
-    read = function(loadFrom, symbols="all", values=TRUE) {
+    read = function(loadFrom, symbols="all", records=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
       # process it and populate various fields
 
-      # check if values is logical
-      if (!is.logical(values)) {
-        stop("values must be type logical\n")
+      # check if records is logical
+      if (!is.logical(records)) {
+        stop("records must be type logical\n")
       }
 
       if (!(is.character(symbols)) && !(is.list(symbols))) {
@@ -153,7 +154,7 @@ Container <- R6::R6Class (
         }
       }
       # check acronyms
-      acrInfo = checkAcronyms(loadFrom, self$systemDirectory)
+      acrInfo = CPP_checkAcronyms(loadFrom, self$systemDirectory)
       nAcr = acrInfo[["nAcronyms"]]
       if (nAcr != 0) {
         warning("GDX file contains acronyms. 
@@ -162,7 +163,7 @@ Container <- R6::R6Class (
       }
 
       # get names for all symbols
-      metadata = getSymbols(loadFrom, self$systemDirectory)
+      metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
       syms = lapply(metadata, "[[", 1)
 
       if (is.character(symbols) && symbols == "all") {
@@ -194,7 +195,6 @@ Container <- R6::R6Class (
       aliasCount = 0
       for (m in metadata) {
          if (any(symbolsToRead == m$name)) {
-            # m1 = m[-1]
             if (m$type == GMS_DT_PAR) {
               Parameter$new(
                 self, m$name, m$domain,
@@ -209,25 +209,40 @@ Container <- R6::R6Class (
                 domainForwarding=FALSE,
                 m$expltext)
                 }
-                else {
+                else if (m$subtype == 1) {
                 Set$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
                 domainForwarding=FALSE, 
                 m$expltext)
                 }
+                else {
+                  stop(paste0("Unknown set classification with 
+                  GAMS Subtype ", m$subtype, "cannot load set ", m$name))
+                }
             }
             else if (m$type == GMS_DT_VAR) {
-                type = names(VarTypeSubtype())[[which(VarTypeSubtype() 
-                == m$subtype)]]
+                type = which(VarTypeSubtype() == m$subtype)
+                if (is.integer0(type)) {
+                  type = "free"
+                }
+                else {
+                  type = names(VarTypeSubtype())[[type]]
+                }
                 Variable$new(
                 self, m$name, type, m$domain,
                 domainForwarding = FALSE,
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
-                type = names(EqTypeSubtype())[[which(EqTypeSubtype() 
-                == m$subtype)]]
+                type = which(EqTypeSubtype() == m$subtype)
+                if (is.integer0(type)) {
+                  type = "eq"
+                }
+                else {
+                  type = names(EqTypeSubtype())[[type]]
+                }
+
                 Equation$new(
                 self, m$name, type, m$domain,
                 domainForwarding = FALSE,
@@ -249,8 +264,8 @@ Container <- R6::R6Class (
         self, m$name, self$data[[m$aliasfor]])
       }
 
-      if (values == TRUE) {
-        symbolrecords = readSymbols(unlist(symbolsToRead),
+      if (records == TRUE) {
+        symbolrecords = CPP_readSymbols(unlist(symbolsToRead),
         loadFrom, self$systemDirectory)
 
         for (s in symbolrecords) {
@@ -313,10 +328,27 @@ Container <- R6::R6Class (
         stop("Argument 'name' must contain only type character\n")
       }
 
+      setOrAlias = list()
       for (n in symbols) {
+        sym = self$data[[n]]
+        sym$refContainer <- NULL
+        sym$.requiresStateCheck <- TRUE
+
+        if (inherits(sym, "Set") || inherits(sym, "Alias")) {
+          setOrAlias = append(setOrAlias, sym)
+        }
         self$data[[n]] <- NULL
       }
 
+      # if there were any sets or aliases removed from the data list
+      # then reset check flag for all symbols
+      if (length(setOrAlias) != 0) {
+        for (i in self$listSymbols()) {
+          self$data[[i]]$.requiresStateCheck = TRUE
+        }
+      }
+
+      # reset the check flag for the container
       self$.requiresStateCheck = TRUE
     },
 
@@ -376,6 +408,9 @@ Container <- R6::R6Class (
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listSets = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Set") |
@@ -397,6 +432,9 @@ Container <- R6::R6Class (
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listParameters = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Parameter")) {
@@ -417,6 +455,9 @@ Container <- R6::R6Class (
     #' @param isValid an optional logical argument
     #' @return a vector of symbols
     listAliases = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
         if (inherits(self$data[[s]], "Alias")) {
@@ -435,11 +476,39 @@ Container <- R6::R6Class (
     #' list all valid variables in the container if  isValid = TRUE
     #' list all invalid variables in the container if isValid = FALSE
     #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
     #' @return a vector of symbols
-    listVariables = function(isValid = NULL) {
+    listVariables = function(isValid = NULL, types = NULL) {
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+
+      if (!(is.character(types) || is.list(types) || 
+      is.vector(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
+      }
+
+
+      if (!all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = .varTypes
+      }
+
+      for (t in types) {
+        if (!any(.varTypes == t)) {
+          stop(paste0("User input unrecognized variable type: ", t, " \n"))
+        }
+      }
+
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Variable")) {
+        if (inherits(self$data[[s]], "Variable")
+        && any(types == self$data[[s]]$type)) {
           if (is.null(variables)) {
             variables = s
           }
@@ -455,11 +524,38 @@ Container <- R6::R6Class (
     #' list all valid equations in the container if  isValid = TRUE
     #' list all invalid equations in the container if isValid = FALSE
     #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
     #' @return a vector of symbols
-    listEquations = function(isValid=NULL) {
+    listEquations = function(isValid=NULL, types=NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+
+      if (!(is.character(types) || is.list(types) || 
+      is.vector(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
+      }
+
+
+      if (!all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = unlist(unique(.EquationTypes))
+      }
+
+      for (t in types) {
+        if (is.null(.EquationTypes[[t]])) {
+          stop(paste0("User input unrecognized equation type: ", t, " \n"))
+        }
+      }
+
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Equation")) {
+        if (inherits(self$data[[s]], "Equation") 
+        && any(types == self$data[[s]]$type)) {
           if (is.null(equations)) {
             equations = s
           }
@@ -582,6 +678,20 @@ Container <- R6::R6Class (
       if (is.null(symbols)) {
         symbols = self$listSets()
       }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
       colNames = list("name",
             "isAlias",
             "isSingleton",
@@ -622,6 +732,68 @@ Container <- R6::R6Class (
       }
     },
 
+    #' @description create a summary table with descriptive 
+    #' statistics for Aliases
+    #' @param symbols an optional argument of type string or a list of aliases 
+    #' to describe. The default value is NULL which assumes all aliases.
+    describeAliases = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listAliases()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list("name",
+            "aliasWith",
+            "isSingleton",
+            "domain",
+            "domainType",
+            "dim",
+            "numberRecs",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+      for (i in symbols) {
+        if (any(self$listAliases() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$aliasWith$name,
+            self$data[[i]]$isSingleton,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]), ])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
     #' @description create a summary table with descriptive statistics 
     #' for Parameters
     #' @param symbols an optional argument of type string or a 
@@ -631,6 +803,20 @@ Container <- R6::R6Class (
       if (is.null(symbols)) {
         symbols = self$listParameters()
       }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
       colNames = list(
             "name",
             "isScalar",
@@ -695,6 +881,19 @@ Container <- R6::R6Class (
     describeVariables = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listVariables()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
       }
       colNames = list(
             "name",
@@ -765,6 +964,19 @@ Container <- R6::R6Class (
       if (is.null(symbols)) {
         symbols = self$listEquations()
       }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
       colNames = list(
             "name",
             "type",
@@ -825,8 +1037,25 @@ Container <- R6::R6Class (
       }
     },
 
-    printSpecialValues = function() {
-      print(private$gdx_specVals_write)
+    #' @description returns a list of object references for `Symbols`
+    #' @param symbols character, string, or vector of Symbols for which 
+    #' the user wants object references
+    #' @returns a list of object references to symbols
+    getSymbols = function(symbols) {
+      if (!(is.character(symbols) || is.list(symbols) || is.vector(symbols))) {
+        stop("The argument symbols must be type character, list, or vector \n")
+      }
+
+      obj = list()
+      for (i in symbols) {
+        if (!is.null(self$data[[i]])) {
+          obj = append(obj, self$data[[i]])
+        }
+        else {
+          stop(paste0("Symbol ", i, "does not appear in the container \n"))
+        }
+      }
+      return(obj)
     },
 
     #' @description a write method to write to a gdxout GDX file
@@ -875,7 +1104,7 @@ Container <- R6::R6Class (
       # private$validSymbolOrder()
 
       # remap special values
-      specialValsGDX = getSpecialValues(gdxout, self$systemDirectory)
+      specialValsGDX = CPP_getSpecialValues(gdxout, self$systemDirectory)
 
       for (s in self$data) {
         # no mapping required for alias
@@ -907,7 +1136,7 @@ Container <- R6::R6Class (
       }
 
       if (is.null(uelPriority)) {
-        gdxWriteSuper(self$data, self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, NA, FALSE, compress)
       }
       else {
@@ -923,7 +1152,7 @@ Container <- R6::R6Class (
         reorder = append(reorder, universe)
         reorder = unique(reorder)
 
-        gdxWriteSuper(self$data, self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data, self$systemDirectory, 
         gdxout, unlist(reorder), TRUE, compress)
       }
     },
@@ -1159,6 +1388,43 @@ SetTypeSubtype = function() {
   "singleton_set" = 1
   ))
 }
+
+.EquationTypes = list(
+eq = "eq",
+E = "eq",
+e = "eq",
+geq = "geq",
+G = "geq",
+g = "geq",
+leq = "leq",
+L = "leq",
+l = "leq",
+nonbinding = "nonbinding",
+N = "nonbinding",
+n = "nonbinding",
+cone = "cone",
+C = "cone",
+c = "cone",
+external = "external",
+X = "external",
+x = "external",
+boolean = "boolean",
+B = "boolean",
+b = "boolean"
+)
+
+.varTypes = c(
+  "binary",
+  "integer",
+  "positive",
+  "negative",
+  "free",
+  "sos1",
+  "sos2",
+  "semicont",
+  "semiint"
+)
+
 
 #' @title Symbol Abstract Class
 #' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
@@ -2156,6 +2422,9 @@ Symbol <- R6Class(
            msg = "Symbol 'dimension' must be type 
            int (greater than or equal to 0)")
 
+        assertthat::assert_that((dimension_input <= GMS_MAX_INDEX_DIM),
+        msg = paste0("Symbol `domain` length cannot be > ", GMS_MAX_INDEX_DIM))
+
         if (length(self$domain) > dimension_input) {
           if (dimension_input == 0) {
             self$domain = list()
@@ -2203,8 +2472,8 @@ Symbol <- R6Class(
           }
         }
 
-      assertthat::assert_that(length(domain_input) <= 20,
-      msg = "Argument 'domain' length cannot be > 20")
+      assertthat::assert_that(length(domain_input) <= GMS_MAX_INDEX_DIM,
+      msg = paste0("Argument 'domain' length cannot be > ", GMS_MAX_INDEX_DIM))
         domaintemp = list()
         for (d in domain_input) {
           if (is.character(d)) {
@@ -2247,6 +2516,12 @@ Symbol <- R6Class(
         return(private$.ref_container)
       }
       else {
+        if (is.null(ref_container_input)) {
+          private$.ref_container = NULL
+          self$.requiresStateCheck = TRUE
+          return()
+        }
+
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }
@@ -3172,7 +3447,7 @@ Variable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(private$.var_types == type_input)) {
+        if (!any(.varTypes == type_input)) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
           " 1. 'binary' \n",
           " 2. 'integer' \n",
@@ -3206,17 +3481,6 @@ Variable <- R6Class(
 
   private = list(
     .type= NULL,
-    .var_types = c(
-      "binary",
-      "integer",
-      "positive",
-      "negative",
-      "free",
-      "sos1",
-      "sos2",
-      "semicont",
-      "semiint"
-    ),
 
     .default_values = list(
       "binary" = list(
@@ -3339,7 +3603,7 @@ Equation <- R6Class(
 
       self$type = type
       # call from outside
-      type = private$.equationTypes[[type]]
+      type = .EquationTypes[[type]]
 
       symtype = GMS_DT_EQU
       symsubtype = EqTypeSubtype()[[type]]
@@ -3559,7 +3823,7 @@ Equation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(private$.equationTypes == type_input)) {
+        if (!any(.EquationTypes == type_input)) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
               "1. 'eq', 'E', or 'e' -- equality\n",
               "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
@@ -3590,29 +3854,6 @@ Equation <- R6Class(
   ),
   private = list(
     .type = NULL,
-    .equationTypes = list(
-    eq = "eq",
-    E = "eq",
-    e = "eq",
-    geq = "geq",
-    G = "geq",
-    g = "geq",
-    leq = "leq",
-    L = "leq",
-    l = "leq",
-    nonbinding = "nonbinding",
-    N = "nonbinding",
-    n = "nonbinding",
-    cone = "cone",
-    C = "cone",
-    c = "cone",
-    external = "external",
-    X = "external",
-    x = "external",
-    boolean = "boolean",
-    B = "boolean",
-    b = "boolean"
-    ),
 
     .default_values = list(
       "eq" = list(
