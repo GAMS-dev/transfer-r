@@ -235,12 +235,14 @@ Container <- R6::R6Class (
                 description = m$expltext)
             }
             else if (m$type == GMS_DT_EQU) {
-                type = names(EqTypeSubtype())[[which(EqTypeSubtype() 
-                == m$subtype)]]
+                type = which(EqTypeSubtype() == m$subtype)
                 if (is.integer0(type)) {
-                  stop(paste0("Unknown equation classification with 
-                  GAMS Subtype ", m$subtype, "cannot load equation ", m$name))
+                  type = "eq"
                 }
+                else {
+                  type = names(EqTypeSubtype())[[type]]
+                }
+
                 Equation$new(
                 self, m$name, type, m$domain,
                 domainForwarding = FALSE,
