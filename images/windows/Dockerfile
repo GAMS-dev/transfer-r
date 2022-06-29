@@ -13,6 +13,7 @@ RUN choco install R ; \
     refreshenv ; \
     [System.Environment]::SetEnvironmentVariable('PATH', [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';C:\Program Files\R\R-4.2.1\bin;C:\rtools40\usr\bin;C:\rtools40\mingw64\bin', 'Machine')
 
+# install dependencies
 RUN Rscript -e \"install.packages('R6', repos='http://cran.us.r-project.org')\" ; \
     Rscript -e \"install.packages('Rcpp', repos='http://cran.us.r-project.org')\" ; \
     Rscript -e \"install.packages('assertthat', repos='http://cran.us.r-project.org')\" ; \
