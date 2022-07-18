@@ -265,7 +265,6 @@ bool is_uel_priority, bool compress) {
     Dim = symname["dimension"];
     StringVector names(Dim);
     df = symname["records"];
-    domain = symname["domainstr"];
 
     domain = symname["domain"];
     List domainstr;
@@ -282,7 +281,15 @@ bool is_uel_priority, bool compress) {
       strcpy(domains_ptr[D], domainstr[D]);
     }
 
-    gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
+    std::string domaintype = symname["domainType"];
+    if (domaintype == "regular") {
+      rc = gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
+      if (!rc) stop("gdxSymbolSetDomain failed");
+    }
+    else if (domaintype == "relaxed") {
+      rc = gdxSymbolSetDomainX(PGX, d + 1, (const char **)domains_ptr);
+      if (!rc) stop("gdxSymbolSetDomainX failed");
+    }
     int nrows = df.nrows();
     int ncols = df.size();
 

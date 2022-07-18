@@ -2645,7 +2645,7 @@ Symbol <- R6Class(
     domainType = function() {
       regularCheck = list()
       for (d in self$domain) {
-        if (inherits(d, "Set") | inherits(d, "Alias")) {
+        if (inherits(d, "Set") || inherits(d, "Alias")) {
           regularCheck = append(regularCheck, TRUE)
         }
         else {
@@ -2654,16 +2654,16 @@ Symbol <- R6Class(
       }
       if (all(regularCheck == TRUE) && self$dimension != 0) {
           return("regular")
-        }
-        else if (all(self$domain == "*")) {
-          return("none")
-        }
-        else if (self$dimension == 0) {
-          return("none")
-        }
-        else {
-          return("relaxed")
-        }
+      }
+      else if (all(self$domain == "*")) {
+        return("none")
+      }
+      else if (self$dimension == 0) {
+        return("none")
+      }
+      else {
+        return("relaxed")
+      }
     },
 
     domainNames = function() {
