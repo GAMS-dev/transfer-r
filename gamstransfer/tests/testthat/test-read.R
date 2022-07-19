@@ -6417,5 +6417,96 @@ test_that("test_num_48", {
   expect_true(m$data$j$domainType == "none")
   expect_true(m$data$k$domainType == "relaxed")
   expect_true(m$data$l$domainType == "regular")
+
+  expect_true(is.null(m$data$i$records))
+  expect_true(is.null(m$data$j$records))
+  expect_true(is.null(m$data$k$records))
+  expect_true(is.null(m$data$l$records))
+}
+)
+
+
+test_that("test_num_49", {
+  # gams syntax
+  gams_text = "
+set i(i) / i1, i2 /;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = ConstContainer$new(testthat::test_path("data.gdx"))
+  expect_equal(m$data$i$domainType, "relaxed")
+}
+)
+
+test_that("test_num_50", {
+  m = Container$new()
+  i = Set$new(m, "i", domain=c("k"), records = paste0("i", 1:5))
+  j = Set$new(m, "j", domain=c("*"), records = paste0("j", 1:5))  
+  k = Set$new(m, "k", domain = c("*", "l"), records = data.frame(paste0("k", 1:5), paste0("l", 1:5)))
+  l = Set$new(m, "l", i, records=paste0("i", 1:2))
+  m$write("data.gdx")
+
+
+  m = ConstContainer$new()
+  m$read(testthat::test_path("data.gdx"), symbols="i")
+  expect_true(!is.null(m$data$i))
+
+  m = ConstContainer$new()
+  m$read(testthat::test_path("data.gdx"), symbols= c("i", "j"))
+  expect_true(!is.null(m$data$i))
+  expect_true(!is.null(m$data$j))
+
+  m = ConstContainer$new()
+  m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy"))
+  expect_true(!is.null(m$data$i))
+  expect_true(!is.null(m$data$j))
+}
+)
+
+test_that("test_num_50", {
+  expect_error(ConstContainer$new("dummy.gdx"))
+  expect_error(Container$new("dummy.gdx"))
+
+  m = Container$new()
+  expect_error(m$read("dummy.gdx"))
+}
+)
+
+test_that("test_num_50", {
+  expect_error(ConstContainer$new(data.frame()))
+  expect_error(Container$new(data.frame()))
+
+  m = Container$new()
+  expect_error(m$read(data.frame()))
+}
+)
+
+test_that("test_num_51", {
+  # gams syntax
+  gams_text = "
+set i / i1 * i3 /;
+acronym
+  small 'baby bear'
+  medium 'mama bear'
+  large 'papa bear'
+  ;
+  parameter b(i) /
+  i1 1
+  i2 medium
+  i3 large
+  /;
+execute_unload '%system.fn%.gdx';
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  expect_warning(ConstContainer$new(testthat::test_path("data.gdx")))
 }
 )

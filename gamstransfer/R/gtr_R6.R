@@ -157,6 +157,11 @@ Container <- R6::R6Class (
       else if (inherits(loadFrom, "ConstContainer")) {
         private$.gdxRead(loadFrom$loadFrom, symbols, records)
       }
+      else {
+        stop("Argument `loadFrom` must be type character, 
+        an instance of another Container, or an instance of a 
+        ConstContainer. \n")
+      }
     },
 
     #' @description provides a universe for all symbols
@@ -4387,17 +4392,21 @@ ConstContainer <- R6::R6Class (
                 description = m$expltext, m$domaintype)
             }
             else if (m$type == GMS_DT_SET) {
+                dt = m$domaintype
+                if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
+                  dt = 2 # for relaxed domain type
+                }
                 if (m$subtype == 0) {
                 ConstSet$new(
                 self, m$name, m$domain, FALSE,
                 records = NULL,
-                m$expltext, m$domaintype)
+                m$expltext,dt)
                 }
                 else if (m$subtype == 1) {
                 ConstSet$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
-                m$expltext, m$domaintype)
+                m$expltext, dt)
                 }
                 else {
                   stop(paste0("Unknown set classification with 
