@@ -35,7 +35,7 @@ image_linux:
 image_windows:
   stage: images
   tags:
-    - pond-shell
+    - windows-shell
   before_script:
     # this is to be able to pull and push images
     - New-Item -ItemType Directory -Force -Path %USERPROFILE%/.docker
@@ -111,7 +111,7 @@ build_r_macos:
 
 build_r_windows:
     stage: build
-    tags: [pond-container]
+    tags: [windows]
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
