@@ -286,8 +286,7 @@ Container <- R6::R6Class (
       }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Set") |
-        inherits(self$data[[s]], "Alias") ) {
+        if (inherits(self$data[[s]], "Set")) {
           if (is.null(sets)) {
             sets = s
           }
@@ -581,10 +580,9 @@ Container <- R6::R6Class (
       length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
-        if (any(self$listSets() == i)) {
+        if (any(self$listSets() == i) || any(self$listAliases() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$isAlias,
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
             self$data[[i]]$domainType,
@@ -1263,8 +1261,13 @@ Container <- R6::R6Class (
 
         for (s in symbolsToRead) {
           self$data[[s]] = loadFrom$data[[s]]
-          self$data$domain = loadFrom$data[[s]]$domainNames
-          self$data$refContainer = self
+          if (any(is.na(loadFrom$data[[s]]$domainNames))) {
+            self$data[[s]]$domain = list()
+          }
+          else {
+            self$data[[s]]$domain = loadFrom$data[[s]]$domainNames
+          }
+          self$data[[s]]$refContainer = self
         }
 
         private$linkDomainObjects(symbolsToRead)
@@ -3199,7 +3202,6 @@ Parameter <- R6Class(
 
         columnNames = self$domainLabels
         columnNames = append(columnNames, "value")
-        # columnNames = self$getColLabelsForRecords()
         colnames(records) = columnNames
 
         #if records "value" is not numeric, stop.
@@ -4423,7 +4425,7 @@ ConstContainer <- R6::R6Class (
                 }
                 ConstVariable$new(
                 self, m$name, type, m$domain,
-                description = m$expltext, m$domaintype)
+                description = m$expltext, domaintype = m$domaintype)
             }
             else if (m$type == GMS_DT_EQU) {
                 type = which(EqTypeSubtype() == m$subtype)
@@ -4436,7 +4438,7 @@ ConstContainer <- R6::R6Class (
 
                 ConstEquation$new(
                 self, m$name, type, m$domain,
-                description = m$expltext, m$domaintype)
+                description = m$expltext, domaintype = m$domaintype)
             }
             else if (m$type == GMS_DT_ALIAS) {
               aliasCount = aliasCount + 1
@@ -4522,8 +4524,7 @@ ConstContainer <- R6::R6Class (
       }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Set") |
-        inherits(self$data[[s]], "Alias") ) {
+        if (inherits(self$data[[s]], "ConstSet") ) {
           if (is.null(sets)) {
             sets = s
           }
@@ -4549,7 +4550,7 @@ ConstContainer <- R6::R6Class (
       }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Parameter")) {
+        if (inherits(self$data[[s]], "ConstParameter")) {
           if (is.null(parameters)) {
             parameters = s
           }
@@ -4575,7 +4576,7 @@ ConstContainer <- R6::R6Class (
       }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Alias")) {
+        if (inherits(self$data[[s]], "ConstAlias")) {
           if (is.null(aliases)) {
             aliases = s
           }
@@ -4625,7 +4626,7 @@ ConstContainer <- R6::R6Class (
 
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Variable")
+        if (inherits(self$data[[s]], "ConstVariable")
         && any(types == self$data[[s]]$type)) {
           if (is.null(variables)) {
             variables = s
@@ -4676,7 +4677,7 @@ ConstContainer <- R6::R6Class (
 
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Equation") 
+        if (inherits(self$data[[s]], "ConstEquation") 
         && any(types == self$data[[s]]$type)) {
           if (is.null(equations)) {
             equations = s
@@ -4724,10 +4725,9 @@ ConstContainer <- R6::R6Class (
       length(symbols), ncol = length(colNames)))
       rowCount = 0
       for (i in symbols) {
-        if (any(self$listSets() == i)) {
+        if (any(self$listSets() == i)|| any(self$listAliases() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$isAlias,
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
             self$data[[i]]$domainType,
@@ -5070,6 +5070,7 @@ ConstSymbol <- R6Class(
                         type, subtype, 
                         domain,
                         description, domaintype) {
+
     self$.gams_type = type
     self$.gams_subtype = subtype
 
@@ -5102,10 +5103,10 @@ ConstSymbol <- R6Class(
               return(NA)
             }
           }
-
           card = 1
           for (n in self$domainNames) {
-            card = card * self$data[[n]]$numberRecords
+            domainSym = self$refContainer$data[[n]]
+            card = card * domainSym$numberRecords
           }
           return(card)
         }
@@ -5939,7 +5940,12 @@ ConstSymbol <- R6Class(
     },
 
     domainNames = function() {
-      return(self$domain)
+      if (is.null(self$domain) || (length(self$domain) == 0)) {
+        return(NA)
+      }
+      else {
+        return(self$domain)
+      }
     },
 
     domainLabels = function() {
@@ -6043,6 +6049,10 @@ ConstSet <- R6Class(
     #' main convenience method to set standard dataframe formatted records
     #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
+      records = data.frame(records)
+      columnNames = self$domainLabels
+      columnNames = append(columnNames, "element_text")
+      colnames(records) = columnNames
       self$records = records
     }
   ),
@@ -6140,6 +6150,10 @@ ConstParameter <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
+      records = data.frame(records)
+      columnNames = self$domainLabels
+      columnNames = append(columnNames, "value")
+      colnames(records) = columnNames
       self$records = records
     }
   ),
@@ -6238,7 +6252,11 @@ ConstVariable <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-          self$records = records
+        records = data.frame(records)
+        columnNames = self$domainLabels
+        columnNames = append(columnNames, private$.attr())
+        colnames(records) = columnNames
+        self$records = records
     }
 
   ),
@@ -6282,7 +6300,11 @@ ConstVariable <- R6Class(
   ),
 
   private = list(
-    .type= NULL
+    .type= NULL,
+
+    .attr = function() {
+      return(c("level", "marginal", "lower", "upper", "scale"))
+    }
   )
 )
 
@@ -6343,7 +6365,6 @@ ConstEquation <- R6Class(
       symtype = GMS_DT_EQU
       symsubtype = EqTypeSubtype()[[type]]
 
-
       super$initialize(container, name,
                       symtype, symsubtype, 
                       domain, description, domaintype)
@@ -6356,7 +6377,11 @@ ConstEquation <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      self$records = records
+        records = data.frame(records)
+        columnNames = self$domainLabels
+        columnNames = append(columnNames, private$.attr())
+        colnames(records) = columnNames
+        self$records = records
     }
   ),
 
@@ -6396,7 +6421,11 @@ ConstEquation <- R6Class(
     }
   ),
   private = list(
-    .type = NULL
+    .type = NULL,
+
+    .attr = function() {
+      return(c("level", "marginal", "lower", "upper", "scale"))
+    }
   )
 )
 

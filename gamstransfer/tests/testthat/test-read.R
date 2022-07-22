@@ -3904,6 +3904,11 @@ test_that("test_num_45", {
   expect_true(is.null(i$refContainer))
   expect_true(names(m$data) == c("j"))
   expect_true(j$isValid() == FALSE)
+
+  expect_error(Container$new(m))
+
+  m2 = Container$new()
+  expect_error(m2$read(m))
 }
 )
 
@@ -6508,5 +6513,449 @@ execute_unload '%system.fn%.gdx';
   stdout = TRUE, stderr = TRUE)
 
   expect_warning(ConstContainer$new(testthat::test_path("data.gdx")))
+}
+)
+
+test_that("test_num_52", {
+  # gams syntax
+  gams_text = "
+Set
+    i 'canning plants' / seattle,  san-diego /
+    j 'markets'        / new-york, chicago, topeka /;
+
+Parameter
+    a(i) 'capacity of plant i in cases'
+        / seattle    350
+          san-diego  600 /
+
+    b(j) 'demand at market j in cases'
+        / new-york   325
+          chicago    300
+          topeka     275 /;
+
+Table d(i,j) 'distance in thousands of miles'
+              new-york  chicago  topeka
+    seattle         2.5      1.7     1.8
+    san-diego       2.5      1.8     1.4;
+
+Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+Parameter c(i,j) 'transport cost in thousands of dollars per case';
+c(i,j) = f*d(i,j)/1000;
+
+Variable
+    x(i,j) 'shipment quantities in cases'
+    z      'total transportation costs in thousands of dollars';
+
+Positive Variable x;
+
+Equation
+    cost      'define objective function'
+    supply(i) 'observe supply limit at plant i'
+    demand(j) 'satisfy demand at market j';
+
+cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+supply(i).. sum(j, x(i,j)) =l= a(i);
+
+demand(j).. sum(i, x(i,j)) =g= b(j);
+
+Model transport / all /;
+
+solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  for (i in names(m$data)) {
+    expect_true(is.list(m$data[[i]]$summary))
+  }
+
+  expect_true(is.vector(m$listSymbols()))
+  expect_true(is.vector(m$listParameters()))
+  expect_true(is.vector(m$listSets()))
+  expect_true(is.null(m$listAliases()))
+  expect_true(is.vector(m$listVariables()))
+  expect_true(is.vector(m$listEquations()))
+
+  expect_equal(length(m$listVariables(types="free")), 1)
+  expect_equal(length(m$listVariables(types="positive")), 1)
+
+  expect_equal(length(m$listEquations(types="geq")), 1)
+  expect_equal(length(m$listEquations(types="eq")), 1)
+  expect_equal(length(m$listEquations(types="leq")), 1)
+  expect_equal(length(m$listEquations(types=c("geq", "leq"))), 2)
+
+  expect_true(is.data.frame(m$describeSets()))
+  expect_true(is.data.frame(m$describeParameters()))
+  expect_true(is.data.frame(m$describeVariables()))
+  expect_true(is.data.frame(m$describeEquations()))
+
+  expect_equal(nrow(m$describeEquations(m$listEquations(types = "geq"))), 1)
+  expect_equal(nrow(m$describeEquations(m$listEquations(types = "eq"))), 1)
+  expect_equal(nrow(m$describeEquations(m$listEquations(types = "leq"))), 1)
+  
+}
+)
+
+test_that("test_num_53", {
+  # gams syntax
+  gams_text = "
+Set
+    i 'canning plants' / seattle,  san-diego /
+    j 'markets'        / new-york, chicago, topeka /;
+
+Parameter
+    a(i) 'capacity of plant i in cases'
+        / seattle    350
+          san-diego  600 /
+
+    b(j) 'demand at market j in cases'
+        / new-york   325
+          chicago    300
+          topeka     275 /;
+
+Table d(i,j) 'distance in thousands of miles'
+              new-york  chicago  topeka
+    seattle         2.5      1.7     1.8
+    san-diego       2.5      1.8     1.4;
+
+Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+Parameter c(i,j) 'transport cost in thousands of dollars per case';
+c(i,j) = f*d(i,j)/1000;
+
+Variable
+    x(i,j) 'shipment quantities in cases'
+    z      'total transportation costs in thousands of dollars';
+
+Positive Variable x;
+
+Equation
+    cost      'define objective function'
+    supply(i) 'observe supply limit at plant i'
+    demand(j) 'satisfy demand at market j';
+
+cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+supply(i).. sum(j, x(i,j)) =l= a(i);
+
+demand(j).. sum(i, x(i,j)) =g= b(j);
+
+Model transport / all /;
+
+solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = ConstContainer$new("data.gdx")
+  old_names = names(m$data)
+  for (i in names(m$data)) {
+    expect_true(is.null(m$data[[i]]$records))
+  }
+
+  m = ConstContainer$new()
+  m$read("data.gdx")
+  for (i in names(m$data)) {
+    expect_true(is.data.frame(m$data[[i]]$records))
+  }
+
+   gams_text = "
+        Set
+           alloy 'products on the market' / a*i /
+           elem  'required elements'      / lead, zinc, tin /;
+
+        Table compdat(*,alloy) 'composition data (pct and price)'
+                    a    b    c    d    e    f    g    h    i
+           lead    10   10   40   60   30   30   30   50   20
+           zinc    10   30   50   30   30   40   20   40   30
+           tin     80   60   10   10   40   30   50   10   50
+           price  4.1  4.3  5.8  6.0  7.6  7.5  7.3  6.9  7.3;
+
+        Parameter
+           rb(elem)  'required blend' / lead 30, zinc 30, tin 40 /
+           ce(alloy) 'composition error (pct-100)';
+
+        ce(alloy) = sum(elem, compdat(elem,alloy)) - 100;
+        display ce;
+
+        Variable
+           v(alloy) 'purchase of alloy (pounds)'
+           phi      'total cost';
+
+        Positive Variable v;
+
+        Equation
+           pc(elem) 'purchase constraint'
+           mb       'material balance'
+           ac       'accounting: total cost';
+
+        pc(elem).. sum(alloy, compdat(elem,alloy)*v(alloy)) =e= rb(elem);
+
+        mb..       sum(alloy, v(alloy)) =e= 1;
+
+        ac..       phi =e= sum(alloy, compdat('price',alloy)*v(alloy));
+
+        Model
+           b1 'problem without mb' / pc,     ac /
+           b2 'problem with mb'    / pc, mb, ac /;
+
+        Parameter report(alloy,*) 'comparison of model 1 and 2';
+
+        solve b1 minimizing phi using lp;
+        report(alloy,'blend-1') = v.l(alloy);
+
+        solve b2 minimizing phi using lp;
+        report(alloy,'blend-2') = v.l(alloy);
+
+        display report;
+  "
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = ConstContainer$new("data.gdx")
+  new_names = names(m$data)
+  for (i in names(m$data)) {
+    expect_true(is.null(m$data[[i]]$records))
+  }
+
+  expect_true(!identical(old_names, new_names))
+}
+)
+
+test_that("test_num_54", {
+  # gams syntax
+  gams_text = "
+Set
+    i 'canning plants' / seattle,  san-diego /
+    j 'markets'        / new-york, chicago, topeka /;
+
+Parameter
+    a(i) 'capacity of plant i in cases'
+        / seattle    350
+          san-diego  600 /
+
+    b(j) 'demand at market j in cases'
+        / new-york   325
+          chicago    300
+          topeka     275 /;
+
+Table d(i,j) 'distance in thousands of miles'
+              new-york  chicago  topeka
+    seattle         2.5      1.7     1.8
+    san-diego       2.5      1.8     1.4;
+
+Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+Parameter c(i,j) 'transport cost in thousands of dollars per case';
+c(i,j) = f*d(i,j)/1000;
+
+Variable
+    x(i,j) 'shipment quantities in cases'
+    z      'total transportation costs in thousands of dollars';
+
+Positive Variable x;
+
+Equation
+    cost      'define objective function'
+    supply(i) 'observe supply limit at plant i'
+    demand(j) 'satisfy demand at market j';
+
+cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+supply(i).. sum(j, x(i,j)) =l= a(i);
+
+demand(j).. sum(i, x(i,j)) =g= b(j);
+
+Model transport / all /;
+
+solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = ConstContainer$new()
+  m$read("data.gdx")
+
+  for (i in names(m$data)) {
+    expect_true(is.data.frame(m$data$i$records))
+  }
+}
+)
+
+test_that("test_num_55", {
+df = data.frame(expand.grid(c("a1","a2"), 
+c("b1","b2"), c("c1","c2"), c("d1","d2")), 
+stringsAsFactors=TRUE)
+
+df$value = 1
+m = Container$new()
+t = Parameter$new(m, "t", domain=replicate(4, "*"))
+t$records = df
+
+expect_true(!t$isValid())
+}
+)
+
+test_that("test_num_56", {
+  # gams syntax
+  gams_text = "
+Set
+    i 'canning plants' / seattle,  san-diego /
+    j 'markets'        / new-york, chicago, topeka /;
+Alias(i,ip);
+Parameter
+    a(i) 'capacity of plant i in cases'
+        / seattle    350
+          san-diego  600 /
+
+    b(j) 'demand at market j in cases'
+        / new-york   325
+          chicago    300
+          topeka     275 /;
+
+Table d(i,j) 'distance in thousands of miles'
+              new-york  chicago  topeka
+    seattle         2.5      1.7     1.8
+    san-diego       2.5      1.8     1.4;
+
+Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+Parameter c(i,j) 'transport cost in thousands of dollars per case';
+c(i,j) = f*d(i,j)/1000;
+
+Variable
+    x(i,j) 'shipment quantities in cases'
+    z      'total transportation costs in thousands of dollars';
+
+Positive Variable x;
+
+Equation
+    cost      'define objective function'
+    supply(i) 'observe supply limit at plant i'
+    demand(j) 'satisfy demand at market j';
+
+cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+supply(i).. sum(j, x(i,j)) =l= a(i);
+
+demand(j).. sum(i, x(i,j)) =g= b(j);
+
+Model transport / all /;
+
+solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  m2 = ConstContainer$new()
+  m2$read(testthat::test_path("data.gdx"))
+
+  expect_true(identical(m2$describeSets(), m$describeSets()))
+  expect_true(identical(m2$describeSets(append(m2$listSets(), m2$listAliases())),
+  m$describeSets(append(m$listSets(), m$listAliases()))))
+
+  expect_equal(m2$describeParameters(), m$describeParameters())
+  expect_equal(m2$describeVariables(), m$describeVariables())
+  expect_equal(m2$describeEquations(), m$describeEquations())
+
+}
+)
+
+test_that("test_num_57", {
+  # gams syntax
+  gams_text = "
+Set
+    i 'canning plants' / seattle,  san-diego /
+    j 'markets'        / new-york, chicago, topeka /;
+Alias(i,ip);
+Parameter
+    a(i) 'capacity of plant i in cases'
+        / seattle    350
+          san-diego  600 /
+
+    b(j) 'demand at market j in cases'
+        / new-york   325
+          chicago    300
+          topeka     275 /;
+
+Table d(i,j) 'distance in thousands of miles'
+              new-york  chicago  topeka
+    seattle         2.5      1.7     1.8
+    san-diego       2.5      1.8     1.4;
+
+Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+Parameter c(i,j) 'transport cost in thousands of dollars per case';
+c(i,j) = f*d(i,j)/1000;
+
+Variable
+    x(i,j) 'shipment quantities in cases'
+    z      'total transportation costs in thousands of dollars';
+
+Positive Variable x;
+
+Equation
+    cost      'define objective function'
+    supply(i) 'observe supply limit at plant i'
+    demand(j) 'satisfy demand at market j';
+
+cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+supply(i).. sum(j, x(i,j)) =l= a(i);
+
+demand(j).. sum(i, x(i,j)) =g= b(j);
+
+Model transport / all /;
+
+solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+  expect_true(m$isValid())
+
+  m2 = Container$new(m)
+  expect_true(m2$isValid())
+}
+)
+
+test_that("test_num_58", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i",1:10))
+j = Set$new(m, "j", records = paste0("j",1:10))
+
+a = Parameter$new(m, "a", c(i, j))
+a$.__enclos_env__$private$.records = "ham"
+expect_true(!a$isValid())
+expect_error(Container$new(m))
+
+m2 = Container$new()
+m2$read(m, c("i", "j"))
+expect_equal(names(m2$data), c("i", "j"))
+expect_error(m2$read(m, "a"))
 }
 )
