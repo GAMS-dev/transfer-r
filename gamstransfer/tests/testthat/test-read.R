@@ -6959,3 +6959,20 @@ expect_equal(names(m2$data), c("i", "j"))
 expect_error(m2$read(m, "a"))
 }
 )
+
+test_that("test_num_59", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i",1:10))
+j = Set$new(m, "j", records = paste0("j",1:10))
+
+a = Parameter$new(m, "a", c(i, j))
+a$.__enclos_env__$private$.records = "ham"
+expect_true(!a$isValid())
+expect_error(Container$new(m))
+
+m2 = Container$new()
+m2$read(m, c("i", "j"))
+expect_equal(names(m2$data), c("i", "j"))
+expect_error(m2$read(m, "a"))
+}
+)
