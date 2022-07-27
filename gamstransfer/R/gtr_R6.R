@@ -3919,14 +3919,14 @@ Equation <- R6Class(
       "eq" = list(
           "level" = 0.0,
           "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = SpecialValues$POSINF,
+          "lower" = 0.0,
+          "upper" = 0.0,
           "scale" = 1.0
       ),
       "geq" = list(
           "level" = 0.0,
           "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
+          "lower" = 0.0,
           "upper" = SpecialValues$POSINF,
           "scale" = 1.0
       ),
@@ -3934,7 +3934,7 @@ Equation <- R6Class(
           "level" = 0.0,
           "marginal" = 0.0,
           "lower" = SpecialValues$NEGINF,
-          "upper" = SpecialValues$POSINF,
+          "upper" = 0.0,
           "scale" = 1.0
       ),
       "nonbinding" = list(
@@ -3947,22 +3947,22 @@ Equation <- R6Class(
       "cone" = list(
           "level" = 0.0,
           "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
+          "lower" = 0.0,
           "upper" = SpecialValues$POSINF,
           "scale" = 1.0
       ),
       "external" = list(
           "level" = 0.0,
           "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = SpecialValues$POSINF,
+          "lower" = 0.0,
+          "upper" = 0.0,
           "scale" = 1.0
       ),
       "boolean" = list(
           "level" = 0.0,
           "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = SpecialValues$POSINF,
+          "lower" = 0.0,
+          "upper" = 0.0,
           "scale" = 1.0
       )
     )

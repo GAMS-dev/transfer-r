@@ -3111,55 +3111,55 @@ test_that("test_num_18", {
 test_that("test_num_19", {
 
   default_values = list(
-    "eq" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "geq" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "leq" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "nonbinding" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "cone" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "external" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "boolean" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    )
+      "eq" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = 0.0,
+          "scale" = 1.0
+      ),
+      "geq" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "leq" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = 0.0,
+          "scale" = 1.0
+      ),
+      "nonbinding" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = SpecialValues$NEGINF,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "cone" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = SpecialValues$POSINF,
+          "scale" = 1.0
+      ),
+      "external" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = 0.0,
+          "scale" = 1.0
+      ),
+      "boolean" = list(
+          "level" = 0.0,
+          "marginal" = 0.0,
+          "lower" = 0.0,
+          "upper" = 0.0,
+          "scale" = 1.0
+      )
   )
 
   m  = Container$new()
@@ -3860,15 +3860,27 @@ test_that("test_num_43", {
   recs=data.frame("i_1"=c("i1","i2","i3","i4","i5"), 
   "j_2"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
   "marginal"=replicate(5, SpecialValues$EPS),
-  "lower" = replicate(5, -Inf),
-  "upper" = replicate(5, Inf),
+  "lower" = replicate(5, SpecialValues$NEGINF),
+  "upper" = replicate(5, SpecialValues$POSINF),
+  "scale" = replicate(5, 1))
+  recs[,1] = factor(recs[,1], ordered=TRUE)
+  recs[,2] = factor(recs[,2], ordered=TRUE)
+  recs[2,"level"] = 1
+  recs[4, "level"] = SpecialValues$EPS
+
+  expect_equal(v$records, recs)
+
+  recs=data.frame("i_1"=c("i1","i2","i3","i4","i5"), 
+  "j_2"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
+  "marginal"=replicate(5, SpecialValues$EPS),
+  "lower" = replicate(5, 0),
+  "upper" = replicate(5, 0),
   "scale" = replicate(5, 1))
   recs[,1] = factor(recs[,1], ordered=TRUE)
   recs[,2] = factor(recs[,2], ordered=TRUE)
   recs[2,"level"] = 1
   recs[4, "level"] = SpecialValues$EPS
   
-  expect_equal(v$records, recs)
   expect_equal(e$records, recs)
 }
 )
@@ -6974,5 +6986,52 @@ m2 = Container$new()
 m2$read(m, c("i", "j"))
 expect_equal(names(m2$data), c("i", "j"))
 expect_error(m2$read(m, "a"))
+}
+)
+
+test_that("test_num_60", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", c(1:5)))
+  j = Set$new(m, "j", records = paste0("j", c(1:5)))
+  recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "val"=c(0,1,0,SpecialValues$EPS,0))
+  recs <- recs[-c(1,3,5),]
+  a = Parameter$new(m, "a", domain=c(i, j), records = recs)
+
+  recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "val"=replicate(5,SpecialValues$EPS))
+
+  ap = Parameter$new(m, "ap", domain=c(i, j), records = recs)
+
+  v = Variable$new(m, "v", domain=c(i, j), records = 
+  list("level"=a$toDense(), "marginal"=ap$toDense()))
+
+  e = Equation$new(m, "e", "eq", domain=c(i, j),
+  records = list(
+    "level" = a$toDense(),
+    marginal = ap$toDense()
+  )
+  )
+
+  df = data.frame(i_1=i$records[,1], 
+  j_2=j$records[,1],
+  level= c(0,1,0,SpecialValues$EPS,0),
+  marginal=replicate(5, SpecialValues$EPS),
+  lower = replicate(5, -Inf),
+  upper = replicate(5, Inf),
+  scale = replicate(5, 1)
+  )
+
+  expect_equal(v$records, df)
+
+  df = data.frame(i_1=i$records[,1], 
+  j_2=j$records[,1],
+  level= c(0,1,0,SpecialValues$EPS,0),
+  marginal = replicate(5, SpecialValues$EPS),
+  lower = replicate(5, 0),
+  upper = replicate(5, 0),
+  scale = replicate(5, 1)
+  )
+  expect_equal(e$records, df)
 }
 )
