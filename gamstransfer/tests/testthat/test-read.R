@@ -7050,8 +7050,8 @@ expect_true(!a$isValid())
 
 # test symbol isValid if categories are set properly (directly)
 test_that("test_num_61", {
-df = data.frame(expand.grid(paste0("h", 1:10), 
-paste0("m", 1:10),paste0("s", 1:10)), stringsAsFactors = TRUE)
+df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
+paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
 colnames(df) = c("h_1", "m_2", "s_3")
 
