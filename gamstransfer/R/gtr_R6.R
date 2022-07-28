@@ -2617,6 +2617,16 @@ Symbol <- R6Class(
           " already exists in the container\n"))
         }
 
+        if (substr(name_input, 1, 1) == "_") {
+          stop("Valid GAMS names cannot begin with a `_`character.\n")
+        }
+
+        if (grepl("^[a-zA-Z0-9_]+$", name_input) == FALSE) {
+          stop("Detected an invalid GAMS symbol name. GAMS names can only 
+          contain alphanumeric characters (letters and numbers) and 
+          the `_` character.\n")
+        }
+
         if (is.null(private$.name)) {
           self$.requiresStateCheck = TRUE
           private$.name = name_input

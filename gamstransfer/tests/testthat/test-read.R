@@ -7101,3 +7101,11 @@ a$records = df
 expect_true(!a$isValid())
 }
 )
+
+# test Exception when attempting to set a symbol name with invalid characters
+test_that("test_num_63", {
+m = Container$new()
+expect_error(Set$new(m, "milk&meat"))
+expect_error(Set$new(m, "_milk&meat"))
+}
+)
