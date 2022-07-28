@@ -7073,3 +7073,31 @@ a$records = df
 expect_true(a$isValid())
 }
 )
+
+# test symbol isValid if categories are not linked to the proper set (directly)
+test_that("test_num_62", {
+df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
+paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
+
+colnames(df) = c("h_1", "m_2", "s_3")
+
+df[["value"]] = runif(nrow(df), 0, 100)
+
+m = Container$new()
+hrs = Set$new(m, "h", records = unique(df$h_1))
+mins = Set$new(m, "m", records = unique(df$m_2))
+secs = Set$new(m, "s", records = unique(df$s_3))
+
+a = Parameter$new(m, "a", c(hrs, mins, secs))
+
+dumb_set = append(levels(df$h_1), "new_element")
+
+df$h_1 = factor(df$h_1, levels=dumb_set, ordered = TRUE)
+df$m_2 = factor(df$m_2, levels=levels(mins$records$uni_1), ordered = TRUE)
+df$s_3 = factor(df$s_3, levels=levels(secs$records$uni_1), ordered = TRUE)
+# set records directly
+a$records = df
+
+expect_true(!a$isValid())
+}
+)

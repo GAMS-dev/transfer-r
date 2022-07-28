@@ -2381,7 +2381,7 @@ Symbol <- R6Class(
         if (((inherits(i, "Alias")) || (inherits(i, "Set"))) 
         && (!is.null(i$records))) {
           if (i$isValid()) {
-            private$.records[, n] = factor(private$.records[, n], levels = i$records[, 1], ordered = TRUE)
+            private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
           }
           else {
             private$.records[, n] = factor(private$.records[, n], 
@@ -2830,7 +2830,7 @@ Symbol <- R6Class(
               if (is.null(i$records)) {
                 stop(paste0("Referenced domain set ", i$name, " does 
                 not does not contain records; ",
-                "cannot properly establish domain information link."))
+                "cannot properly establish domain information link.\n"))
               }
             }
           }
@@ -2842,7 +2842,18 @@ Symbol <- R6Class(
               " must be an ORDERED factor\n"))
             }
           }
-          
+
+          # if there are linked domains, make sure their levels are equal
+          for (n in seq_len(self$dimension)) {
+            i = self$domain[[n]]
+            if (inherits(i, "Set") || inherits(i, "Alias")) {
+              if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
+                stop(paste0("Levels for domain column ", i$name, " do not match those 
+                of the referenced domain set. If setting records directly, the user is
+                responsible for creating factors for domain columns. \n"))
+              }
+            }
+          }
           # check for domain violations
           if (self$dimension != 0) {
             nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
