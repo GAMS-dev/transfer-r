@@ -7109,3 +7109,18 @@ expect_error(Set$new(m, "milk&meat"))
 expect_error(Set$new(m, "_milk&meat"))
 }
 )
+
+# test that name.setter (symbols and aliases) cannot set name if it already exists in container
+test_that("test_num_63", {
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+
+ip = Alias$new(m, "ip", i)
+jp = Alias$new(m, "jp", j)
+expr <- function() j$name = "i"
+expect_error(expr())
+expr <- function() jp$name = "ip"
+expect_error(expr())
+}
+)
