@@ -7124,3 +7124,24 @@ expr <- function() jp$name = "ip"
 expect_error(expr())
 }
 )
+
+# test utility functions
+test_that("test_num_63", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i", 1:10))
+a = Parameter$new(m, "a", i, records=data.frame(i$records[,1], 1:10))
+expect_equal(a$getMaxValue(), 10.0)
+expect_equal(a$getMinValue(), 1.0)
+expect_equal(a$getMeanValue(), 5.5)
+expect_equal(a$getMaxAbsValue(), 10.0)
+expect_equal(a$whereMax(), 10)
+expect_equal(a$whereMaxAbs(), 10)
+expect_equal(a$whereMin(), 1)
+expect_equal(a$countNA(), 0)
+expect_equal(a$countEps(), 0)
+expect_equal(a$countUndef(), 0)
+expect_equal(a$countPosInf(), 0)
+expect_equal(a$countNegInf(), 0)
+}
+)
+
