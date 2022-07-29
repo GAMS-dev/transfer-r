@@ -72,10 +72,8 @@ SpecialValues = list(
 #' @export
 Container <- R6::R6Class (
   "Container",
+  inherit = BaseContainer,
   public = list(
-    systemDirectory = NULL,
-    data = NULL,
-    acronyms = NULL,
     .requiresStateCheck = NULL,
     #' @description
     #' Create a new container simply by initializing an object.
@@ -87,22 +85,8 @@ Container <- R6::R6Class (
     #' Container$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
-      if (missing(systemDirectory)) {
-        self$systemDirectory = find_gams()
+      super$initialize(systemDirectory)
 
-      }
-      else {
-        if (R.utils::isAbsolutePath(systemDirectory)) {
-          self$systemDirectory = systemDirectory
-        }
-        else {
-          stop("must enter valid full (absolute) path to 
-          GAMS system directory\n")
-        }
-      }
-
-      self$acronyms = list()
-      self$data = list()
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
@@ -248,199 +232,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description list all symbols in the container if isValid = NULL
-    #' list all valid symbols in the container if  isValid = TRUE
-    #' list all invalid symbols in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listSymbols = function(isValid = NULL) {
-      if (!is.null(isValid)) {
-        assertthat::assert_that(is.logical(isValid),
-        msg = "argument 'isValid' must be type logical\n")
-        l = NULL
-        for (d in self$data) {
-          if (d$isValid() == isValid) {
-            if (is.null(l)) {
-              l = d$name
-            }
-            else {
-              l = append(l, d$name)
-            }
-          }
-        }
-        return(l)
-      }
-      else {
-        return(names(self$data))
-      }
-    },
-
-    #' @description list all sets in the container if isValid = NULL
-    #' list all valid sets in the container if  isValid = TRUE
-    #' list all invalid sets in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listSets = function(isValid = NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      sets = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Set")) {
-          if (is.null(sets)) {
-            sets = s
-          }
-          else {
-            sets = append(sets, s)
-          }
-        }
-      }
-      return(sets)
-    },
-
-    #' @description list all parameters in the container if isValid = NULL
-    #' list all valid parameters in the container if  isValid = TRUE
-    #' list all invalid parameters in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listParameters = function(isValid = NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      parameters = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Parameter")) {
-          if (is.null(parameters)) {
-            parameters = s
-          }
-          else {
-            parameters = append(parameters, s)
-          }
-        }
-      }
-      return(parameters)
-    },
-
-    #' @description list all aliases in the container if isValid = NULL
-    #' list all valid aliases in the container if  isValid = TRUE
-    #' list all invalid aliases in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listAliases = function(isValid = NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      aliases = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Alias")) {
-          if (is.null(aliases)) {
-            aliases = s
-          }
-          else {
-            aliases = append(aliases, s)
-          }
-        }
-      }
-      return(aliases)
-    },
-
-    #' @description list all variables in the container if isValid = NULL
-    #' list all valid variables in the container if  isValid = TRUE
-    #' list all invalid variables in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
-    listVariables = function(isValid = NULL, types = NULL) {
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, 
-        list, vector, or NULL \n")
-      }
-
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
-      if (is.null(types)) {
-        types = .varTypes
-      }
-
-      for (t in types) {
-        if (!any(.varTypes == t)) {
-          stop(paste0("User input unrecognized variable type: ", t, " \n"))
-        }
-      }
-
-      variables = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Variable")
-        && any(types == self$data[[s]]$type)) {
-          if (is.null(variables)) {
-            variables = s
-          }
-          else {
-          variables = append(variables, s)
-          }
-        }
-      }
-      return(variables)
-    },
-
-    #' @description list all equations in the container if isValid = NULL
-    #' list all valid equations in the container if  isValid = TRUE
-    #' list all invalid equations in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
-    listEquations = function(isValid=NULL, types=NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, 
-        list, vector, or NULL \n")
-      }
-
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
-      if (is.null(types)) {
-        types = unlist(unique(.EquationTypes))
-      }
-
-      for (t in types) {
-        if (is.null(.EquationTypes[[t]])) {
-          stop(paste0("User input unrecognized equation type: ", t, " \n"))
-        }
-      }
-
-      equations = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Equation") 
-        && any(types == self$data[[s]]$type)) {
-          if (is.null(equations)) {
-            equations = s
-          }
-          else {
-          equations = append(equations, s)
-          }
-        }
-      }
-      return(equations)
-    },
-
     #' @description There are two different ways to create a GAMS set and 
     #' add it to a Container. One is using the Set constructor and 
     #' the other is using addSet method which calls the Set constructor
@@ -543,371 +334,6 @@ Container <- R6::R6Class (
       Alias$new(
       self, name, aliasWith)
       return(self$data[[name]])
-    },
-
-    #' @description create a summary table with descriptive statistics for Sets
-    #' @param symbols an optional argument of type string or a list of sets 
-    #' to describe. The default value is NULL which assumes all sets.
-    describeSets = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listSets()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list("name",
-            "isAlias",
-            "isSingleton",
-            "domain",
-            "domainType",
-            "dim",
-            "numberRecs",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listSets() == i) || any(self$listAliases() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]), ])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive 
-    #' statistics for Aliases
-    #' @param symbols an optional argument of type string or a list of aliases 
-    #' to describe. The default value is NULL which assumes all aliases.
-    describeAliases = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listAliases()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list("name",
-            "aliasWith",
-            "isSingleton",
-            "domain",
-            "domainType",
-            "dim",
-            "numberRecs",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listAliases() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$aliasWith$name,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]), ])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive statistics 
-    #' for Parameters
-    #' @param symbols an optional argument of type string or a 
-    #' list of parameters to describe. The default value is 
-    #' NULL which assumes all parameters.
-    describeParameters = function(symbols = NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listParameters()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list(
-            "name",
-            "isScalar",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "minValue",
-            "meanValue",
-            "maxValue",
-            "whereMin",
-            "whereMax",
-            "countEps",
-            "countNa",
-            "countUndef",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listParameters() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getMinValue("value"),
-            self$data[[i]]$getMeanValue("value"),
-            self$data[[i]]$getMaxValue("value"),
-            self$data[[i]]$whereMin("value"),
-            self$data[[i]]$whereMax("value"),
-            self$data[[i]]$countEps("value"),
-            self$data[[i]]$countNA("value"),
-            self$data[[i]]$countUndef("value"),
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive 
-    #' statistics for Variables
-    #' @param symbols an optional argument of type string 
-    #' or a list of Variables to describe. The default value 
-    #' is NULL which assumes all variables.
-    describeVariables = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listVariables()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-      colNames = list(
-            "name",
-            "type",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "cardinality",
-            "sparsity",
-            "minLevel",
-            "meanLevel",
-            "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-
-      for (i in symbols) {
-        if (any(self$listVariables() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order( df[,1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-    #' @description create a summary table with descriptive 
-    #' statistics for Equations
-    #' @param symbols an optional argument of type string or 
-    #' a list of equations to describe. The default value is 
-    #' NULL which assumes all equations.
-    describeEquations = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listEquations()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-      colNames = list(
-            "name",
-            "type",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "cardinality",
-            "sparsity",
-            "minLevel",
-            "meanLevel",
-            "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-
-      for (i in symbols) {
-        if (any(self$listEquations() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]),])
-      }
-      else {
-        return(NULL)
-      }
     },
 
     #' @description returns a list of object references for `Symbols`
@@ -1488,13 +914,13 @@ b = "boolean"
 
 
 #' @title Symbol Abstract Class
-#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
+#' @description An abstract symbol class from 
+#' which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
 Symbol <- R6Class(
   "Symbol",
+  inherit = BaseSymbol,
   public = list(
-    .gams_type = NULL,
-    .gams_subtype = NULL,
   .requiresStateCheck = NULL,
 
   initialize = function(container, name,
@@ -1502,10 +928,12 @@ Symbol <- R6Class(
                         domain,
                         description,
                         domainForwarding) {
-    self$.gams_type = type
-    self$.gams_subtype = subtype
+
+    super$initialize(type, subtype)
+
 
     self$.requiresStateCheck = TRUE
+
     #' @field refContainer reference to the Container that the symbol 
     #' belongs to. Type Container.
     self$refContainer = container
@@ -1572,696 +1000,6 @@ Symbol <- R6Class(
         else {
           return(1 - self$numberRecords/self$getCardinality())
         }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMaxValue get the maximum value
-  #' @param columns columns over which one wants to get the maximum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMaxValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", toString(columns), "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(self$records[[columns]]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMinValue get the minimum value in value column
-  #' @param columns columns over which one wants to get the minimum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMinValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input '", toString(columns), 
-        "', however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", columns, "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-    tryCatch(
-      {
-        return(min(self$records[, columns]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #' @description getMeanValue get the mean value in value column
-  #' @param columns columns over which one wants to get the mean.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMeanValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        meanVal = mean(self$records[[columns]])
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMaxAbsValue get the maximum absolute value in value column
-  #' @param columns columns over which one wants to get the 
-  #' maximum absolute value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMaxAbsValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(abs(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMax find the row number in records data frame with a 
-  #' maximum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMax = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(self$records[[columns]])
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMaxAbs find the row number in records data frame 
-  #' with a maximum absolute value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' maximum absolute value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMaxAbs = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(abs(self$records[[columns]]))
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMin find the the row number in records data frame 
-  #' with a minimum value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' minimum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMin = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-          whereMinVal = which.min(self$records[[columns]])
-          if (is.integer0(whereMinVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMinVal)
-          }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #'@description countNA total number of SpecialValues[["NA"]] in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues[["NA"]].
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countNA = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.na(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description countEps total number of SpecialValues$EPS in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$EPS.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countEps = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
-        , "\n")))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &&
-          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
-          ))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #'@description countUndef total number of SpecialValues$UNDEF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$UNDEF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countUndef = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.nan(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #'@description countPosInf total number of 
-  #' SpecialValues$POSINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$POSINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
-  countPosInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$POSINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #'@description countNegInf total number of 
-  #' SpecialValues$NEGINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$NEGINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
-  countNegInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)){
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
       },
       error = function(cond) {
         return(NA)
@@ -4295,10 +3033,8 @@ Alias <- R6Class(
 #' @export
 ConstContainer <- R6::R6Class (
   "ConstContainer",
+  inherit = BaseContainer,
   public = list(
-    systemDirectory = NULL,
-    data = NULL,
-    acronyms = NULL,
     loadFrom = NULL,
     #' @description
     #' Create a new ConstContainer simply by initializing an object.
@@ -4310,22 +3046,7 @@ ConstContainer <- R6::R6Class (
     #' ConstContainer$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
-      if (missing(systemDirectory)) {
-        self$systemDirectory = find_gams()
-
-      }
-      else {
-        if (R.utils::isAbsolutePath(systemDirectory)) {
-          self$systemDirectory = systemDirectory
-        }
-        else {
-          stop("must enter valid full (absolute) path to 
-          GAMS system directory\n")
-        }
-      }
-
-      self$acronyms = list()
-      self$data = list()
+      super$initialize(systemDirectory)
 
       if (!missing(loadFrom)) {
       self$read(loadFrom, records = FALSE)
@@ -4499,581 +3220,6 @@ ConstContainer <- R6::R6Class (
           }
         }
       }
-    },
-
-    #' @description list all symbols in the container if isValid = NULL
-    #' list all valid symbols in the container if  isValid = TRUE
-    #' list all invalid symbols in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listSymbols = function(...) {
-      args = list(...)
-      isValid = args[["isValid"]]
-
-      if (!is.null(isValid)) {
-        assertthat::assert_that(is.logical(isValid),
-        msg = "argument 'isValid' must be type logical\n")
-        l = NULL
-        for (d in self$data) {
-          if (d$isValid() == isValid) {
-            if (is.null(l)) {
-              l = d$name
-            }
-            else {
-              l = append(l, d$name)
-            }
-          }
-        }
-        return(l)
-      }
-      else {
-        return(names(self$data))
-      }
-    },
-
-    #' @description list all sets in the container if isValid = NULL
-    #' list all valid sets in the container if  isValid = TRUE
-    #' list all invalid sets in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listSets = function(...) {
-      args = list(...)
-      isValid = args[["isValid"]]
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      sets = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstSet") ) {
-          if (is.null(sets)) {
-            sets = s
-          }
-          else {
-            sets = append(sets, s)
-          }
-        }
-      }
-      return(sets)
-    },
-
-    #' @description list all parameters in the container if isValid = NULL
-    #' list all valid parameters in the container if  isValid = TRUE
-    #' list all invalid parameters in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listParameters = function(...) {
-      args = list(...)
-      isValid = args[["isValid"]]
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      parameters = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstParameter")) {
-          if (is.null(parameters)) {
-            parameters = s
-          }
-          else {
-            parameters = append(parameters, s)
-          }
-        }
-      }
-      return(parameters)
-    },
-
-    #' @description list all aliases in the container if isValid = NULL
-    #' list all valid aliases in the container if  isValid = TRUE
-    #' list all invalid aliases in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listAliases = function(...) {
-      args = list(...)
-      isValid = args[["isValid"]]
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      aliases = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstAlias")) {
-          if (is.null(aliases)) {
-            aliases = s
-          }
-          else {
-            aliases = append(aliases, s)
-          }
-        }
-      }
-      return(aliases)
-    },
-
-    #' @description list all variables in the container if isValid = NULL
-    #' list all valid variables in the container if  isValid = TRUE
-    #' list all invalid variables in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
-    listVariables = function(...) {
-      args = list(...)
-      isValid = args[["isValid"]]
-      types = args[["types"]]
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, list, vector, or NULL \n")
-      }
-
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
-      if (is.null(types)) {
-        types = .varTypes
-      }
-
-      for (t in types) {
-        if (!any(.varTypes == t)) {
-          stop(paste0("User input unrecognized variable type: ", t, " \n"))
-        }
-      }
-
-      variables = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstVariable")
-        && any(types == self$data[[s]]$type)) {
-          if (is.null(variables)) {
-            variables = s
-          }
-          else {
-          variables = append(variables, s)
-          }
-        }
-      }
-      return(variables)
-    },
-
-    #' @description list all equations in the container if isValid = NULL
-    #' list all valid equations in the container if  isValid = TRUE
-    #' list all invalid equations in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
-    listEquations = function(...) {
-      args = list(...)
-      isValid = args[["isValid"]]
-      types = args[["types"]]
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, list, vector, or NULL \n")
-      }
-
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
-      if (is.null(types)) {
-        types = unlist(unique(.EquationTypes))
-      }
-
-      for (t in types) {
-        if (is.null(.EquationTypes[[t]])) {
-          stop(paste0("User input unrecognized equation type: ", t, " \n"))
-        }
-      }
-
-      equations = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstEquation") 
-        && any(types == self$data[[s]]$type)) {
-          if (is.null(equations)) {
-            equations = s
-          }
-          else {
-          equations = append(equations, s)
-          }
-        }
-      }
-      return(equations)
-    },
-
-    #' @description create a summary table with descriptive statistics for Sets
-    #' @param symbols an optional argument of type string or a list of sets 
-    #' to describe. The default value is NULL which assumes all sets.
-    describeSets = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listSets()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list("name",
-            "isAlias",
-            "isSingleton",
-            "domain",
-            "domainType",
-            "dim",
-            "numberRecs",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listSets() == i)|| any(self$listAliases() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]), ])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive 
-    #' statistics for Aliases
-    #' @param symbols an optional argument of type string or a list of aliases 
-    #' to describe. The default value is NULL which assumes all aliases.
-    describeAliases = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listAliases()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list("name",
-            "aliasWith",
-            "isSingleton",
-            "domain",
-            "domainType",
-            "dim",
-            "numberRecs",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listAliases() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$aliasWith$name,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]), ])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive statistics 
-    #' for Parameters
-    #' @param symbols an optional argument of type string or a 
-    #' list of parameters to describe. The default value is 
-    #' NULL which assumes all parameters.
-    describeParameters = function(symbols = NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listParameters()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list(
-            "name",
-            "isScalar",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "minValue",
-            "meanValue",
-            "maxValue",
-            "whereMin",
-            "whereMax",
-            "countEps",
-            "countNa",
-            "countUndef",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listParameters() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getMinValue("value"),
-            self$data[[i]]$getMeanValue("value"),
-            self$data[[i]]$getMaxValue("value"),
-            self$data[[i]]$whereMin("value"),
-            self$data[[i]]$whereMax("value"),
-            self$data[[i]]$countEps("value"),
-            self$data[[i]]$countNA("value"),
-            self$data[[i]]$countUndef("value"),
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive 
-    #' statistics for Variables
-    #' @param symbols an optional argument of type string 
-    #' or a list of Variables to describe. The default value 
-    #' is NULL which assumes all variables.
-    describeVariables = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listVariables()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-      colNames = list(
-            "name",
-            "type",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "cardinality",
-            "sparsity",
-            "minLevel",
-            "meanLevel",
-            "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-
-      for (i in symbols) {
-        if (any(self$listVariables() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order( df[,1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-    #' @description create a summary table with descriptive 
-    #' statistics for Equations
-    #' @param symbols an optional argument of type string or 
-    #' a list of equations to describe. The default value is 
-    #' NULL which assumes all equations.
-    describeEquations = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listEquations()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-      colNames = list(
-            "name",
-            "type",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "cardinality",
-            "sparsity",
-            "minLevel",
-            "meanLevel",
-            "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-
-      for (i in symbols) {
-        if (any(self$listEquations() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]),])
-      }
-      else {
-        return(NULL)
-      }
     }
   )
   )
@@ -5084,16 +3230,14 @@ ConstContainer <- R6::R6Class (
 #' and Equation are inherited.
 ConstSymbol <- R6Class(
   "ConstSymbol",
+  inherit = BaseSymbol,
   public = list(
-    .gams_type = NULL,
-    .gams_subtype = NULL,
   initialize = function(container, name,
                         type, subtype, 
                         domain,
                         description, domaintype) {
 
-    self$.gams_type = type
-    self$.gams_subtype = subtype
+    super$initialize(type, subtype)
 
     #' @field refContainer reference to the Container that the symbol 
     #' belongs to. Type Container.
@@ -5167,697 +3311,8 @@ ConstSymbol <- R6Class(
         return(NA)
       }
     )
-  },
-
-  #' @description getMaxValue get the maximum value
-  #' @param columns columns over which one wants to get the maximum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMaxValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", toString(columns), "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(self$records[[columns]]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMinValue get the minimum value in value column
-  #' @param columns columns over which one wants to get the minimum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMinValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input '", toString(columns), 
-        "', however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", columns, "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-    tryCatch(
-      {
-        return(min(self$records[, columns]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #' @description getMeanValue get the mean value in value column
-  #' @param columns columns over which one wants to get the mean.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMeanValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        meanVal = mean(self$records[[columns]])
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMaxAbsValue get the maximum absolute value in value column
-  #' @param columns columns over which one wants to get the 
-  #' maximum absolute value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMaxAbsValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(abs(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMax find the row number in records data frame with a 
-  #' maximum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMax = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(self$records[[columns]])
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMaxAbs find the row number in records data frame 
-  #' with a maximum absolute value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' maximum absolute value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMaxAbs = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(abs(self$records[[columns]]))
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMin find the the row number in records data frame 
-  #' with a minimum value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' minimum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMin = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-          whereMinVal = which.min(self$records[[columns]])
-          if (is.integer0(whereMinVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMinVal)
-          }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #'@description countNA total number of SpecialValues[["NA"]] in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues[["NA"]].
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countNA = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.na(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description countEps total number of SpecialValues$EPS in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$EPS.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countEps = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
-        , "\n")))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &&
-          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
-          ))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #'@description countUndef total number of SpecialValues$UNDEF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$UNDEF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countUndef = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.nan(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #'@description countPosInf total number of 
-  #' SpecialValues$POSINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$POSINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
-  countPosInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$POSINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #'@description countNegInf total number of 
-  #' SpecialValues$NEGINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$NEGINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
-  countNegInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)){
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
   }
+
   ),
 
   active = list(
@@ -6683,6 +4138,1335 @@ is.integer0 <- function(x)
   is.integer(x) && length(x) == 0L
 }
 
-#is.infinite function for dataframe
-# is.infinite.data.frame <- function(x)
-# do.call(cbind, lapply(x, is.infinite))
+#' @title ConstContainer Class
+#' @description ConstContainer class is a data-focused read-only object that 
+#' will provide a snapshot of the data target being read. The ConstContainer 
+#' can be created by reading a GDX file. This class is specially useful for 
+#' the users who are only interested in post-processing data from a GAMS model 
+#' run.
+#' @field data is a named list containing all symbol data
+#' @field systemDirectory is the path to GAMS System directory
+#' @export
+BaseContainer <- R6::R6Class (
+  "BaseContainer",
+  public = list(
+    systemDirectory = NULL,
+    data = NULL,
+    acronyms = NULL,
+    #' @description
+    #' Create a new ConstContainer simply by initializing an object.
+    #' @param loadFrom optional argument to point to the GDX file being 
+    #' read into the Container
+    #' @param systemDirectory optional argument for the absolute path to 
+    #' GAMS system directory
+    #' @examples
+    #' ConstContainer$new()
+    initialize = function(systemDirectory=NULL) {
+
+      if (is.null(systemDirectory)) {
+        self$systemDirectory = find_gams()
+
+      }
+      else {
+        if (R.utils::isAbsolutePath(systemDirectory)) {
+          self$systemDirectory = systemDirectory
+        }
+        else {
+          stop("must enter valid full (absolute) path to 
+          GAMS system directory\n")
+        }
+      }
+
+      self$acronyms = list()
+      self$data = list()
+    },
+
+    #' @description list all symbols in the container if isValid = NULL
+    #' list all valid symbols in the container if  isValid = TRUE
+    #' list all invalid symbols in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listSymbols = function(...) {
+      args = list(...)
+      isValid = args[["isValid"]]
+
+      if (!is.null(isValid)) {
+        assertthat::assert_that(is.logical(isValid),
+        msg = "argument 'isValid' must be type logical\n")
+        l = NULL
+        for (d in self$data) {
+          if (d$isValid() == isValid) {
+            if (is.null(l)) {
+              l = d$name
+            }
+            else {
+              l = append(l, d$name)
+            }
+          }
+        }
+        return(l)
+      }
+      else {
+        return(names(self$data))
+      }
+    },
+
+    #' @description list all sets in the container if isValid = NULL
+    #' list all valid sets in the container if  isValid = TRUE
+    #' list all invalid sets in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listSets = function(...) {
+      args = list(...)
+      isValid = args[["isValid"]]
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+      sets = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], c("Set", "ConstSet")) ) {
+          if (is.null(sets)) {
+            sets = s
+          }
+          else {
+            sets = append(sets, s)
+          }
+        }
+      }
+      return(sets)
+    },
+
+    #' @description list all parameters in the container if isValid = NULL
+    #' list all valid parameters in the container if  isValid = TRUE
+    #' list all invalid parameters in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listParameters = function(...) {
+      args = list(...)
+      isValid = args[["isValid"]]
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+      parameters = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], c("Parameter","ConstParameter"))) {
+          if (is.null(parameters)) {
+            parameters = s
+          }
+          else {
+            parameters = append(parameters, s)
+          }
+        }
+      }
+      return(parameters)
+    },
+
+    #' @description list all aliases in the container if isValid = NULL
+    #' list all valid aliases in the container if  isValid = TRUE
+    #' list all invalid aliases in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listAliases = function(...) {
+      args = list(...)
+      isValid = args[["isValid"]]
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+      aliases = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], c("Alias", "ConstAlias"))) {
+          if (is.null(aliases)) {
+            aliases = s
+          }
+          else {
+            aliases = append(aliases, s)
+          }
+        }
+      }
+      return(aliases)
+    },
+
+    #' @description list all variables in the container if isValid = NULL
+    #' list all valid variables in the container if  isValid = TRUE
+    #' list all invalid variables in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
+    #' @return a vector of symbols
+    listVariables = function(...) {
+      args = list(...)
+      isValid = args[["isValid"]]
+      types = args[["types"]]
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+
+      if (!(is.character(types) || is.list(types) || 
+      is.vector(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
+      }
+
+
+      if (!all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = .varTypes
+      }
+
+      for (t in types) {
+        if (!any(.varTypes == t)) {
+          stop(paste0("User input unrecognized variable type: ", t, " \n"))
+        }
+      }
+
+      variables = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], c("Variable", "ConstVariable"))
+        && any(types == self$data[[s]]$type)) {
+          if (is.null(variables)) {
+            variables = s
+          }
+          else {
+          variables = append(variables, s)
+          }
+        }
+      }
+      return(variables)
+    },
+
+    #' @description list all equations in the container if isValid = NULL
+    #' list all valid equations in the container if  isValid = TRUE
+    #' list all invalid equations in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
+    #' @return a vector of symbols
+    listEquations = function(...) {
+      args = list(...)
+      isValid = args[["isValid"]]
+      types = args[["types"]]
+
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+
+      if (!(is.character(types) || is.list(types) || 
+      is.vector(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
+      }
+
+
+      if (!all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = unlist(unique(.EquationTypes))
+      }
+
+      for (t in types) {
+        if (is.null(.EquationTypes[[t]])) {
+          stop(paste0("User input unrecognized equation type: ", t, " \n"))
+        }
+      }
+
+      equations = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self$data[[s]], c("Equation", "ConstEquation"))
+        && any(types == self$data[[s]]$type)) {
+          if (is.null(equations)) {
+            equations = s
+          }
+          else {
+          equations = append(equations, s)
+          }
+        }
+      }
+      return(equations)
+    },
+
+    #' @description create a summary table with descriptive statistics for Sets
+    #' @param symbols an optional argument of type string or a list of sets 
+    #' to describe. The default value is NULL which assumes all sets.
+    describeSets = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listSets()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list("name",
+            "isAlias",
+            "isSingleton",
+            "domain",
+            "domainType",
+            "dim",
+            "numberRecs",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+      for (i in symbols) {
+        if (any(self$listSets() == i)|| any(self$listAliases() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$isSingleton,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]), ])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive 
+    #' statistics for Aliases
+    #' @param symbols an optional argument of type string or a list of aliases 
+    #' to describe. The default value is NULL which assumes all aliases.
+    describeAliases = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listAliases()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list("name",
+            "aliasWith",
+            "isSingleton",
+            "domain",
+            "domainType",
+            "dim",
+            "numberRecs",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+      for (i in symbols) {
+        if (any(self$listAliases() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$aliasWith$name,
+            self$data[[i]]$isSingleton,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]), ])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive statistics 
+    #' for Parameters
+    #' @param symbols an optional argument of type string or a 
+    #' list of parameters to describe. The default value is 
+    #' NULL which assumes all parameters.
+    describeParameters = function(symbols = NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listParameters()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list(
+            "name",
+            "isScalar",
+            "domain",
+            "domainType",
+            "dim",
+            "numRecs",
+            "minValue",
+            "meanValue",
+            "maxValue",
+            "whereMin",
+            "whereMax",
+            "countEps",
+            "countNa",
+            "countUndef",
+            "cardinality",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+      for (i in symbols) {
+        if (any(self$listParameters() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$isScalar,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getMinValue("value"),
+            self$data[[i]]$getMeanValue("value"),
+            self$data[[i]]$getMaxValue("value"),
+            self$data[[i]]$whereMin("value"),
+            self$data[[i]]$whereMax("value"),
+            self$data[[i]]$countEps("value"),
+            self$data[[i]]$countNA("value"),
+            self$data[[i]]$countUndef("value"),
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]),])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive 
+    #' statistics for Variables
+    #' @param symbols an optional argument of type string 
+    #' or a list of Variables to describe. The default value 
+    #' is NULL which assumes all variables.
+    describeVariables = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listVariables()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+      colNames = list(
+            "name",
+            "type",
+            "domain",
+            "domainType",
+            "dim",
+            "numRecs",
+            "cardinality",
+            "sparsity",
+            "minLevel",
+            "meanLevel",
+            "maxLevel",
+            "whereMaxAbsLevel",
+            "countEpsLevel",
+            "minMarginal",
+            "meanMarginal",
+            "maxMarginal",
+            "whereMaxAbsMarginal",
+            "countEpsMarginal"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+
+      for (i in symbols) {
+        if (any(self$listVariables() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$type,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity(),
+            self$data[[i]]$getMinValue("level"),
+            self$data[[i]]$getMeanValue("level"),
+            self$data[[i]]$getMaxValue("level"),
+            self$data[[i]]$whereMaxAbs("level"),
+            self$data[[i]]$countEps("level"),
+            self$data[[i]]$getMinValue("marginal"),
+            self$data[[i]]$getMeanValue("marginal"),
+            self$data[[i]]$getMaxValue("marginal"),
+            self$data[[i]]$whereMaxAbs("marginal"),
+            self$data[[i]]$countEps("marginal")
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order( df[,1]),])
+      }
+      else {
+        return(NULL)
+      }
+    },
+    #' @description create a summary table with descriptive 
+    #' statistics for Equations
+    #' @param symbols an optional argument of type string or 
+    #' a list of equations to describe. The default value is 
+    #' NULL which assumes all equations.
+    describeEquations = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listEquations()
+      }
+      else {
+        if (!(is.list(symbols) || is.vector(symbols) 
+        || is.character(symbols))) {
+          stop("Argument `symbols` must be type character, 
+          list, vector, or NULL \n")
+        }
+      }
+
+      if (!is.character(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+      colNames = list(
+            "name",
+            "type",
+            "domain",
+            "domainType",
+            "dim",
+            "numRecs",
+            "cardinality",
+            "sparsity",
+            "minLevel",
+            "meanLevel",
+            "maxLevel",
+            "whereMaxAbsLevel",
+            "countEpsLevel",
+            "minMarginal",
+            "meanMarginal",
+            "maxMarginal",
+            "whereMaxAbsMarginal",
+            "countEpsMarginal"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+
+      for (i in symbols) {
+        if (any(self$listEquations() == i)) {
+          symDescription = list(
+            i,
+            self$data[[i]]$type,
+            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
+            self$data[[i]]$domainType,
+            self$data[[i]]$dimension,
+            self$data[[i]]$numberRecords,
+            self$data[[i]]$getCardinality(),
+            self$data[[i]]$getSparsity(),
+            self$data[[i]]$getMinValue("level"),
+            self$data[[i]]$getMeanValue("level"),
+            self$data[[i]]$getMaxValue("level"),
+            self$data[[i]]$whereMaxAbs("level"),
+            self$data[[i]]$countEps("level"),
+            self$data[[i]]$getMinValue("marginal"),
+            self$data[[i]]$getMeanValue("marginal"),
+            self$data[[i]]$getMaxValue("marginal"),
+            self$data[[i]]$whereMaxAbs("marginal"),
+            self$data[[i]]$countEps("marginal")
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]),])
+      }
+      else {
+        return(NULL)
+      }
+    }
+  )
+  )
+
+#' @title Symbol Abstract Class
+#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
+#' and Equation are inherited.
+BaseSymbol <- R6Class(
+  "BaseSymbol",
+  public = list(
+    .gams_type = NULL,
+    .gams_subtype = NULL,
+  initialize = function(type, subtype) {
+
+    self$.gams_type = type
+    self$.gams_subtype = subtype
+  },
+
+  #' @description getMaxValue get the maximum value
+  #' @param columns columns over which one wants to get the maximum.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMaxValue = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column '", toString(columns), "' must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records)[(self$dimension+1):length(self$records)]
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(max(self$records[[columns]]))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description getMinValue get the minimum value in value column
+  #' @param columns columns over which one wants to get the minimum.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMinValue = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input '", toString(columns), 
+        "', however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column '", columns, "' must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+    tryCatch(
+      {
+        return(min(self$records[, columns]))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+
+  },
+
+  #' @description getMeanValue get the mean value in value column
+  #' @param columns columns over which one wants to get the mean.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMeanValue = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records)[(self$dimension+1):length(self$records)]
+        ,"\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        meanVal = mean(self$records[[columns]])
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description getMaxAbsValue get the maximum absolute value in value column
+  #' @param columns columns over which one wants to get the 
+  #' maximum absolute value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMaxAbsValue = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records[,(self$dimension+1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(max(abs(self$records[[columns]])))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description whereMax find the row number in records data frame with a 
+  #' maximum value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  whereMax = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        colnames(self$records)[(self$dimension+1):length(self$records)]
+        ,"\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        whereMaxVal = which.max(self$records[[columns]])
+        if (is.integer0(whereMaxVal)) {
+          return(NA)
+        }
+        else {
+          return(whereMaxVal)
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description whereMaxAbs find the row number in records data frame 
+  #' with a maximum absolute value (return first instance only)
+  #' @description whereMax find the domain entry of records with a 
+  #' maximum absolute value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  whereMaxAbs = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        whereMaxVal = which.max(abs(self$records[[columns]]))
+        if (is.integer0(whereMaxVal)) {
+          return(NA)
+        }
+        else {
+          return(whereMaxVal)
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description whereMin find the the row number in records data frame 
+  #' with a minimum value (return first instance only)
+  #' @description whereMax find the domain entry of records with a 
+  #' minimum value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  whereMin = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+          whereMinVal = which.min(self$records[[columns]])
+          if (is.integer0(whereMinVal)) {
+            return(NA)
+          }
+          else {
+            return(whereMinVal)
+          }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+
+  },
+
+  #'@description countNA total number of SpecialValues[["NA"]] in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues[["NA"]].
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  countNA = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(sum(is.na(self$records[[columns]])))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description countEps total number of SpecialValues$EPS in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$EPS.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  countEps = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
+        , "\n")))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(sum(
+          (self$records[,columns] == SpecialValues$EPS) &&
+          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
+          ))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+
+  },
+
+  #'@description countUndef total number of SpecialValues$UNDEF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$UNDEF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  countUndef = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(sum(is.nan(self$records[[columns]])))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #'@description countPosInf total number of 
+  #' SpecialValues$POSINF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$POSINF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.  
+  countPosInf = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)) {
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(sum(self$records[[columns]] == SpecialValues$POSINF))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #'@description countNegInf total number of 
+  #' SpecialValues$NEGINF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$NEGINF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.  
+  countNegInf = function(columns=NULL) {
+    if (!is.null(columns)) {
+      if (!is.character(columns)){
+        stop(paste0("User input ", toString(columns), ", however it is only possible to",
+        " select one column at a time (i.e. argument 'column' must be type",
+        " character)\n"))
+      }
+
+      if (is.null(self$records)) {
+        return(NA)
+      }
+
+      if (inherits(self, c("Set", "ConstSet"))) {
+        return(NA)
+      }
+
+      if (!setequal(intersect(columns, 
+      colnames(self$records)[(self$dimension+1):length(self$records)]), 
+      columns)) {
+        stop(paste0("User entered column ", toString(columns), " must be a subset",
+        " of valid numeric columns", 
+        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
+        , "\n"))
+      }
+    }
+    else {
+      #columns argument is NULL
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
+          columns = "value"
+        }
+        else {
+          # variable or equation
+          columns = "level"
+        }
+    }
+
+    tryCatch(
+      {
+        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  }
+  ),
+
+  private = list(
+    .attr = function() {
+      return(c("level", "marginal", "lower", "upper", "scale"))
+    }
+  )
+)
+
