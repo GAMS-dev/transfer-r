@@ -72,10 +72,8 @@ SpecialValues = list(
 #' @export
 Container <- R6::R6Class (
   "Container",
+  inherit = BaseContainer,
   public = list(
-    systemDirectory = NULL,
-    data = NULL,
-    acronyms = NULL,
     .requiresStateCheck = NULL,
     #' @description
     #' Create a new container simply by initializing an object.
@@ -87,22 +85,8 @@ Container <- R6::R6Class (
     #' Container$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
-      if (missing(systemDirectory)) {
-        self$systemDirectory = find_gams()
+      super$initialize(systemDirectory)
 
-      }
-      else {
-        if (R.utils::isAbsolutePath(systemDirectory)) {
-          self$systemDirectory = systemDirectory
-        }
-        else {
-          stop("must enter valid full (absolute) path to 
-          GAMS system directory\n")
-        }
-      }
-
-      self$acronyms = list()
-      self$data = list()
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
@@ -207,7 +191,7 @@ Container <- R6::R6Class (
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
 
-        if (inherits(sym, "Set") || inherits(sym, "Alias")) {
+        if (inherits(sym, c("Set", "Alias"))) {
           setOrAlias = append(setOrAlias, sym)
         }
         self$data[[n]] <- NULL
@@ -246,199 +230,6 @@ Container <- R6::R6Class (
         sym$name = newName
         self$.requiresStateCheck = TRUE
       }
-    },
-
-    #' @description list all symbols in the container if isValid = NULL
-    #' list all valid symbols in the container if  isValid = TRUE
-    #' list all invalid symbols in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listSymbols = function(isValid = NULL) {
-      if (!is.null(isValid)) {
-        assertthat::assert_that(is.logical(isValid),
-        msg = "argument 'isValid' must be type logical\n")
-        l = NULL
-        for (d in self$data) {
-          if (d$isValid() == isValid) {
-            if (is.null(l)) {
-              l = d$name
-            }
-            else {
-              l = append(l, d$name)
-            }
-          }
-        }
-        return(l)
-      }
-      else {
-        return(names(self$data))
-      }
-    },
-
-    #' @description list all sets in the container if isValid = NULL
-    #' list all valid sets in the container if  isValid = TRUE
-    #' list all invalid sets in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listSets = function(isValid = NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      sets = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Set")) {
-          if (is.null(sets)) {
-            sets = s
-          }
-          else {
-            sets = append(sets, s)
-          }
-        }
-      }
-      return(sets)
-    },
-
-    #' @description list all parameters in the container if isValid = NULL
-    #' list all valid parameters in the container if  isValid = TRUE
-    #' list all invalid parameters in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listParameters = function(isValid = NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      parameters = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Parameter")) {
-          if (is.null(parameters)) {
-            parameters = s
-          }
-          else {
-            parameters = append(parameters, s)
-          }
-        }
-      }
-      return(parameters)
-    },
-
-    #' @description list all aliases in the container if isValid = NULL
-    #' list all valid aliases in the container if  isValid = TRUE
-    #' list all invalid aliases in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
-    listAliases = function(isValid = NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-      aliases = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Alias")) {
-          if (is.null(aliases)) {
-            aliases = s
-          }
-          else {
-            aliases = append(aliases, s)
-          }
-        }
-      }
-      return(aliases)
-    },
-
-    #' @description list all variables in the container if isValid = NULL
-    #' list all valid variables in the container if  isValid = TRUE
-    #' list all invalid variables in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
-    listVariables = function(isValid = NULL, types = NULL) {
-
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, 
-        list, vector, or NULL \n")
-      }
-
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
-      if (is.null(types)) {
-        types = .varTypes
-      }
-
-      for (t in types) {
-        if (!any(.varTypes == t)) {
-          stop(paste0("User input unrecognized variable type: ", t, " \n"))
-        }
-      }
-
-      variables = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Variable")
-        && any(types == self$data[[s]]$type)) {
-          if (is.null(variables)) {
-            variables = s
-          }
-          else {
-          variables = append(variables, s)
-          }
-        }
-      }
-      return(variables)
-    },
-
-    #' @description list all equations in the container if isValid = NULL
-    #' list all valid equations in the container if  isValid = TRUE
-    #' list all invalid equations in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
-    listEquations = function(isValid=NULL, types=NULL) {
-      if (!(is.logical(isValid) || is.null(isValid))) {
-        stop("Argument `isValid` must be type logical or NULL \n")
-      }
-
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, 
-        list, vector, or NULL \n")
-      }
-
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
-      if (is.null(types)) {
-        types = unlist(unique(.EquationTypes))
-      }
-
-      for (t in types) {
-        if (is.null(.EquationTypes[[t]])) {
-          stop(paste0("User input unrecognized equation type: ", t, " \n"))
-        }
-      }
-
-      equations = NULL
-      for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "Equation") 
-        && any(types == self$data[[s]]$type)) {
-          if (is.null(equations)) {
-            equations = s
-          }
-          else {
-          equations = append(equations, s)
-          }
-        }
-      }
-      return(equations)
     },
 
     #' @description There are two different ways to create a GAMS set and 
@@ -545,371 +336,6 @@ Container <- R6::R6Class (
       return(self$data[[name]])
     },
 
-    #' @description create a summary table with descriptive statistics for Sets
-    #' @param symbols an optional argument of type string or a list of sets 
-    #' to describe. The default value is NULL which assumes all sets.
-    describeSets = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listSets()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list("name",
-            "isAlias",
-            "isSingleton",
-            "domain",
-            "domainType",
-            "dim",
-            "numberRecs",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listSets() == i) || any(self$listAliases() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]), ])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive 
-    #' statistics for Aliases
-    #' @param symbols an optional argument of type string or a list of aliases 
-    #' to describe. The default value is NULL which assumes all aliases.
-    describeAliases = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listAliases()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list("name",
-            "aliasWith",
-            "isSingleton",
-            "domain",
-            "domainType",
-            "dim",
-            "numberRecs",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listAliases() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$aliasWith$name,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]), ])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive statistics 
-    #' for Parameters
-    #' @param symbols an optional argument of type string or a 
-    #' list of parameters to describe. The default value is 
-    #' NULL which assumes all parameters.
-    describeParameters = function(symbols = NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listParameters()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-
-      colNames = list(
-            "name",
-            "isScalar",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "minValue",
-            "meanValue",
-            "maxValue",
-            "whereMin",
-            "whereMax",
-            "countEps",
-            "countNa",
-            "countUndef",
-            "cardinality",
-            "sparsity"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-      for (i in symbols) {
-        if (any(self$listParameters() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getMinValue("value"),
-            self$data[[i]]$getMeanValue("value"),
-            self$data[[i]]$getMaxValue("value"),
-            self$data[[i]]$whereMin("value"),
-            self$data[[i]]$whereMax("value"),
-            self$data[[i]]$countEps("value"),
-            self$data[[i]]$countNA("value"),
-            self$data[[i]]$countUndef("value"),
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
-    #' @description create a summary table with descriptive 
-    #' statistics for Variables
-    #' @param symbols an optional argument of type string 
-    #' or a list of Variables to describe. The default value 
-    #' is NULL which assumes all variables.
-    describeVariables = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listVariables()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-      colNames = list(
-            "name",
-            "type",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "cardinality",
-            "sparsity",
-            "minLevel",
-            "meanLevel",
-            "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-
-      for (i in symbols) {
-        if (any(self$listVariables() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order( df[,1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-    #' @description create a summary table with descriptive 
-    #' statistics for Equations
-    #' @param symbols an optional argument of type string or 
-    #' a list of equations to describe. The default value is 
-    #' NULL which assumes all equations.
-    describeEquations = function(symbols=NULL) {
-      if (is.null(symbols)) {
-        symbols = self$listEquations()
-      }
-      else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
-        }
-      }
-
-      if (!is.character(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
-      colNames = list(
-            "name",
-            "type",
-            "domain",
-            "domainType",
-            "dim",
-            "numRecs",
-            "cardinality",
-            "sparsity",
-            "minLevel",
-            "meanLevel",
-            "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
-            )
-      df = data.frame(matrix(NA, nrow = 
-      length(symbols), ncol = length(colNames)))
-      rowCount = 0
-
-      for (i in symbols) {
-        if (any(self$listEquations() == i)) {
-          symDescription = list(
-            i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
-          )
-          rowCount = rowCount + 1
-          df[rowCount, ] = symDescription
-        }
-      }
-      colnames(df) = colNames
-      if (rowCount > 0) {
-        df = df[1:rowCount, ]
-        return(df[order(df[, 1]),])
-      }
-      else {
-        return(NULL)
-      }
-    },
-
     #' @description returns a list of object references for `Symbols`
     #' @param symbols character, string, or vector of Symbols for which 
     #' the user wants object references
@@ -981,7 +407,7 @@ Container <- R6::R6Class (
 
       for (s in self$data) {
         # no mapping required for alias
-        if (inherits(s, "Alias") || inherits(s, "Set")) next
+        if (inherits(s, c("Alias", "Set"))) next
         if (is.null(s$records)) next
         colrange = (s$dimension + 1):length(s$records)
         s$records[, colrange][is.nan(
@@ -1209,9 +635,8 @@ Container <- R6::R6Class (
             self$data[[s$names]]$setRecords(s$records)
 
             if (!is.null(self$acronyms)) {
-              if (inherits(self$data[[s$names]], "Parameter")
-              | inherits(self$data[[s$names]], "Variable")
-              | inherits(self$data[[s$names]], "Equation")) {
+              if (inherits(self$data[[s$names]], c("Parameter", 
+              "Variable", "Equation"))) {
                 for (a in self$acronyms) {
                   self$data[[s$names]]$records[(self$data[[s$names]]$records 
                   == a * 1e301)] = SpecialValues[["NA"]]
@@ -1352,7 +777,7 @@ Container <- R6::R6Class (
             if (is.character(i)) {
               doi = append(doi, TRUE)
             }
-            else if ((inherits(i, "Set") | inherits(i, "Alias")) &
+            else if ((inherits(i, c("Set", "Alias"))) &
             any(orderedSymbols == i$name)) {
                doi = append(doi, TRUE)
             }
@@ -1393,8 +818,7 @@ Container <- R6::R6Class (
       h = c()
       for (i in seq_along(self$data)) {
         symName = names(self$data)[i]
-        if ( inherits(self$data[[symName]], "Set") | 
-        inherits(self$data[[symName]], "Alias")) {
+        if ( inherits(self$data[[symName]], c("Set", "Alias"))) {
           if (i <= match(symName, validOrder)){
             h = append(h, TRUE)
           }
@@ -1450,7 +874,7 @@ SetTypeSubtype = function() {
   ))
 }
 
-.EquationTypes = list(
+.EquationTypes = c(
 eq = "eq",
 E = "eq",
 e = "eq",
@@ -1488,13 +912,13 @@ b = "boolean"
 
 
 #' @title Symbol Abstract Class
-#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
+#' @description An abstract symbol class from 
+#' which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
 Symbol <- R6Class(
   "Symbol",
+  inherit = BaseSymbol,
   public = list(
-    .gams_type = NULL,
-    .gams_subtype = NULL,
   .requiresStateCheck = NULL,
 
   initialize = function(container, name,
@@ -1502,10 +926,12 @@ Symbol <- R6Class(
                         domain,
                         description,
                         domainForwarding) {
-    self$.gams_type = type
-    self$.gams_subtype = subtype
+
+    super$initialize(type, subtype)
+
 
     self$.requiresStateCheck = TRUE
+
     #' @field refContainer reference to the Container that the symbol 
     #' belongs to. Type Container.
     self$refContainer = container
@@ -1572,696 +998,6 @@ Symbol <- R6Class(
         else {
           return(1 - self$numberRecords/self$getCardinality())
         }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMaxValue get the maximum value
-  #' @param columns columns over which one wants to get the maximum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMaxValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", toString(columns), "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(self$records[[columns]]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMinValue get the minimum value in value column
-  #' @param columns columns over which one wants to get the minimum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMinValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input '", toString(columns), 
-        "', however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", columns, "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-    tryCatch(
-      {
-        return(min(self$records[, columns]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #' @description getMeanValue get the mean value in value column
-  #' @param columns columns over which one wants to get the mean.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMeanValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        meanVal = mean(self$records[[columns]])
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getMaxAbsValue get the maximum absolute value in value column
-  #' @param columns columns over which one wants to get the 
-  #' maximum absolute value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  getMaxAbsValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(abs(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMax find the row number in records data frame with a 
-  #' maximum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMax = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(self$records[[columns]])
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMaxAbs find the row number in records data frame 
-  #' with a maximum absolute value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' maximum absolute value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMaxAbs = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(abs(self$records[[columns]]))
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description whereMin find the the row number in records data frame 
-  #' with a minimum value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' minimum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  whereMin = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-          whereMinVal = which.min(self$records[[columns]])
-          if (is.integer0(whereMinVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMinVal)
-          }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #'@description countNA total number of SpecialValues[["NA"]] in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues[["NA"]].
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countNA = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.na(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description countEps total number of SpecialValues$EPS in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$EPS.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countEps = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
-        , "\n")))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &&
-          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
-          ))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
-  },
-
-  #'@description countUndef total number of SpecialValues$UNDEF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$UNDEF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
-  countUndef = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.nan(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #'@description countPosInf total number of 
-  #' SpecialValues$POSINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$POSINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
-  countPosInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$POSINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #'@description countNegInf total number of 
-  #' SpecialValues$NEGINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$NEGINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
-  countNegInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)){
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, "Set")) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, "Parameter")) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
       },
       error = function(cond) {
         return(NA)
@@ -2378,7 +1114,7 @@ Symbol <- R6Class(
     if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
       for (n in seq_along(self$domain)) {
         i  = self$domain[[n]]
-        if (((inherits(i, "Alias")) || (inherits(i, "Set"))) 
+        if (((inherits(i, c("Alias", "Set"))) )
         && (!is.null(i$records))) {
           if (i$isValid()) {
             private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
@@ -2520,13 +1256,11 @@ Symbol <- R6Class(
         }
 
         for (d in domain_input) {
-          assertthat::assert_that((inherits(d, "Set") || 
-          inherits(d, "Alias") ||
+          assertthat::assert_that((inherits(d, c("Set", "Alias" )) ||
           is.character(d)),
           msg = "All 'domain' elements must be type Set, Alias, or Character"
           )
-          if ((inherits(d, "Set") || 
-          inherits(d, "Alias"))) {
+          if (inherits(d, c("Set", "Alias"))) {
             assertthat::assert_that( d$dimension == 1,
             msg = "All linked 'domain' elements must be one dimensional"
             )
@@ -2538,8 +1272,7 @@ Symbol <- R6Class(
         domaintemp = list()
         for (d in domain_input) {
           if (is.character(d)) {
-            if (inherits(self$refContainer$data[[d]], "Set") ||
-            inherits(self$refContainer$data[[d]], "Alias")) {
+            if (inherits(self$refContainer$data[[d]], c("Set", "Alias"))) {
               domaintemp = append(domaintemp, d)
               # domaintemp = append(domaintemp, 
               # self$refContainer$data[[d]])
@@ -2663,7 +1396,7 @@ Symbol <- R6Class(
     domainType = function() {
       regularCheck = list()
       for (d in self$domain) {
-        if (inherits(d, "Set") || inherits(d, "Alias")) {
+        if (inherits(d, c("Set", "Alias"))) {
           regularCheck = append(regularCheck, TRUE)
         }
         else {
@@ -2687,7 +1420,7 @@ Symbol <- R6Class(
     domainNames = function() {
       d = NA
       for (i in self$domain) {
-        if (inherits(i, "Set") | inherits(i, "Alias")) {
+        if (inherits(i, c("Set", "Alias"))) {
           if (any(is.na(d))) {
             d = i$name
           }
@@ -2739,9 +1472,9 @@ Symbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    },
+    # .attr = function() {
+    #   return(c("level", "marginal", "lower", "upper", "scale"))
+    # },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
@@ -2792,7 +1525,7 @@ Symbol <- R6Class(
             }
           }
 
-          if (inherits(self, "Variable") | inherits(self, "Equation")){
+          if (inherits(self, c("Variable", "Equation"))) {
             if (length(self$records) != 
             self$dimension + length(private$.attr())) {
               stop(paste0("Symbol 'records' does not have", 
@@ -2814,8 +1547,7 @@ Symbol <- R6Class(
           else if(inherits(self, "Parameter")) {
             cols = append(cols, "value")
           }
-          else if (inherits(self, "Variable") ||
-          inherits(self, "Equation")) {
+          else if (inherits(self, c("Variable", "Equation"))) {
             cols = append(cols, private$.attr())
           }
 
@@ -2836,7 +1568,7 @@ Symbol <- R6Class(
 
           # check if domain has records
           for (i in self$domain) {
-            if (inherits(i, "Set") || inherits(i, "Alias")) {
+            if (inherits(i, c("Set", "Alias"))) {
               if (is.null(i$records)) {
                 stop(paste0("Referenced domain set ", i$name, " does 
                 not does not contain records; ",
@@ -2856,7 +1588,7 @@ Symbol <- R6Class(
           # if there are linked domains, make sure their levels are equal
           for (n in seq_len(self$dimension)) {
             i = self$domain[[n]]
-            if (inherits(i, "Set") || inherits(i, "Alias")) {
+            if (inherits(i, c("Set", "Alias"))) {
               if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
                 stop(paste0("Levels for domain column ", i$name, " do not match those 
                 of the referenced domain set. If setting records directly, the user is
@@ -2886,9 +1618,7 @@ Symbol <- R6Class(
           }
 
           # check if all data columns are float
-          if (inherits(self, "Variable") | 
-          inherits(self, "Parameter") | 
-          inherits(self, "Equation")) {
+          if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
               if (!all(is.numeric(self$records[, i]))) {
                 stop("Data in column", i, " must be numeric\n")
@@ -4151,8 +2881,7 @@ Alias <- R6Class(
         return(private$.aliasWith)
       }
       else {
-        if (!((inherits(alias_with_input, "Set")) || 
-        (inherits(alias_with_input, "Alias") ))) {
+        if (!(inherits(alias_with_input, c("Set", "Alias")))) {
           stop("GAMS 'alias_with' must be type Set or Alias\n")
         }
 
@@ -4295,10 +3024,8 @@ Alias <- R6Class(
 #' @export
 ConstContainer <- R6::R6Class (
   "ConstContainer",
+  inherit = BaseContainer,
   public = list(
-    systemDirectory = NULL,
-    data = NULL,
-    acronyms = NULL,
     loadFrom = NULL,
     #' @description
     #' Create a new ConstContainer simply by initializing an object.
@@ -4310,22 +3037,7 @@ ConstContainer <- R6::R6Class (
     #' ConstContainer$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
-      if (missing(systemDirectory)) {
-        self$systemDirectory = find_gams()
-
-      }
-      else {
-        if (R.utils::isAbsolutePath(systemDirectory)) {
-          self$systemDirectory = systemDirectory
-        }
-        else {
-          stop("must enter valid full (absolute) path to 
-          GAMS system directory\n")
-        }
-      }
-
-      self$acronyms = list()
-      self$data = list()
+      super$initialize(systemDirectory)
 
       if (!missing(loadFrom)) {
       self$read(loadFrom, records = FALSE)
@@ -4488,9 +3200,8 @@ ConstContainer <- R6::R6Class (
           self$data[[s$names]]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
-            if (inherits(self$data[[s$names]], "ConstParameter")
-            | inherits(self$data[[s$names]], "ConstVariable")
-            | inherits(self$data[[s$names]], "ConstEquation")) {
+            if (inherits(self$data[[s$names]], c("ConstParameter", 
+            "ConstVariable", "ConstEquation"))) {
               for (a in self$acronyms) {
                 self$data[[s$names]]$records[(self$data[[s$names]]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
@@ -4499,6 +3210,957 @@ ConstContainer <- R6::R6Class (
           }
         }
       }
+    }
+  )
+  )
+
+
+#' @title Symbol Abstract Class
+#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
+#' and Equation are inherited.
+ConstSymbol <- R6Class(
+  "ConstSymbol",
+  inherit = BaseSymbol,
+  public = list(
+  initialize = function(container, name,
+                        type, subtype, 
+                        domain,
+                        description, domaintype) {
+
+    super$initialize(type, subtype)
+
+    #' @field refContainer reference to the Container that the symbol 
+    #' belongs to. Type Container.
+    self$refContainer = container
+    #' @field name name of the symbol
+    self$name <- name
+    self$refContainer$data[[name]] = self
+
+    self$records = NULL
+
+    self$domain = domain
+    private$.domainType = domaintype
+    self$dimension = length(self$domain)
+    self$description = description
+
+  },
+
+  #' @description getCardinality get the full cartesian product of the domain
+  getCardinality = function() {
+    tryCatch(
+      {
+        if (length(self$domainNames) == 0) {
+          return(NA)
+        }
+        else {
+          for (n in self$domainNames) {
+            if (is.null(self$refContainer$data[[n]])) {
+              return(NA)
+            }
+          }
+          card = 1
+          for (n in self$domainNames) {
+            domainSym = self$refContainer$data[[n]]
+            card = card * domainSym$numberRecords
+          }
+          return(card)
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
+  getSparsity = function() {
+    tryCatch(
+      {
+        if (length(self$domainNames) == 0) {
+          return(NA)
+        }
+        else {
+          for (n in self$domainNames) {
+            if (is.null(self$refContainer$data[[n]])) {
+              return(NA)
+            }
+          }
+
+          for (n in self$domainNames) {
+            return(1 - self$numberRecords/self$getCardinality())
+          }
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  }
+
+  ),
+
+  active = list(
+
+    records = function(records_input) {
+      if (missing(records_input)) {
+        return(private$.records)
+      }
+      else {
+        private$.records = records_input
+      }
+    },
+
+    description = function(description_input) {
+      if (missing(description_input)) {
+        return(private$.description)
+      }
+      else {
+        if (!is.character(description_input)) {
+          stop("Symbol 'description' must be type character\n")
+        }
+
+        if (length(description_input) >= gams_description_max_length) {
+          stop(paste0("Symbol 'description' must have length ",
+          gams_description_max_length, " or smaller\n"))
+        }
+        private$.description = description_input
+      }
+    },
+
+    dimension = function(dimension_input) {
+      if (missing(dimension_input)) {
+        return(length(self$domain))
+      }
+    },
+
+    domain = function(domain_input) {
+
+      if (missing(domain_input)) {
+        return(private$.domain)
+      }
+      else {
+        if (is.null(domain_input)) {
+          domain_input = list()
+        }
+
+        if (!(is.list(domain_input) || is.vector(domain_input))) {
+          domain_input = list(domain_input)
+        }
+
+        if (!all(unlist(lapply(domain_input, is.character)))) {
+          stop("All 'domain' elements must be type Character\n")
+        }
+
+        domaintemp = list()
+        for (d in domain_input) {
+              # attach as a plain string
+              domaintemp = append(domaintemp, d)
+        }
+        private$.domain = domaintemp
+      }
+    },
+
+    refContainer = function(ref_container_input) {
+      if (missing(ref_container_input)) {
+        return(private$.ref_container)
+      }
+      else {
+        if (is.null(ref_container_input)) {
+          private$.ref_container = NULL
+          return()
+        }
+
+        if (!inherits(ref_container_input, "ConstContainer")) {
+          stop("ConstSymbol 'container' must be type ConstContainer\n")
+        }
+        private$.ref_container = ref_container_input
+      }
+    },
+
+    name = function(name_input) {
+      if (missing(name_input)) {
+        return(private$.name)
+      }
+      else {
+        private$.name = name_input
+      }
+    },
+
+    numberRecords = function() {
+      if (!is.null(self$records)) {
+        return(nrow(self$records))
+      }
+      else {
+        return(0)
+      }
+    },
+
+    domainType = function() {
+      return(private$.domain_type_map[[private$.domainType]])
+    },
+
+    domainNames = function() {
+      if (is.null(self$domain) || (length(self$domain) == 0)) {
+        return(NA)
+      }
+      else {
+        return(self$domain)
+      }
+    },
+
+    domainLabels = function() {
+      column_names = list()
+      for (i in seq_along(self$domain)) {
+        if (is.character(self$domain[[i]])) {
+          d = self$domain[[i]]
+        }
+
+        if (d != "*") {
+          column_names = append(column_names, paste0(d, "_", i))
+        }
+        else {
+          column_names = append(column_names, paste0("uni_", i))
+        }
+      }
+      return(column_names)
+    }
+
+  ),
+
+  private = list(
+    .description = NULL,
+    .domain = NULL,
+    .ref_container = NULL,
+    .name = NULL,
+    .records = NULL,
+    symbolMaxLength = 63,
+    descriptionMaxLength = 255,
+    .domain_type_map = list("none", "relaxed", "regular"),
+    .domainType = NULL
+    # .attr = function() {
+    #   return(c("level", "marginal", "lower", "upper", "scale"))
+    # }
+  )
+)
+
+
+#' @title ConstSet Class
+#' @description A class for Set objects. This class inherits from an abstract symbol class.
+#' To access the documentation for the methods getCardnality, getSparsity, 
+#' and isValid, please use help(Symbol).
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of 
+#' domain links
+#' @field isSingleton logical if symbol is a singleton set
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field summary output a list of only the metadata
+ConstSet <- R6Class(
+  "ConstSet",
+  inherit = ConstSymbol,
+  public = list(
+    #' @description There are two different ways to create a GAMS set and 
+    #' add it to a Container. One is using the Set constructor and 
+    #' the other is using addSet method which calls the Set constructor
+    #' internally.
+    #' addSet is a Container method to add a Set.
+    #' @param container A reference to the Container object that the symbol 
+    #' is being added to
+    #' @param name string argument for name of the set
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is "*".
+    #' @param isSingleton an optional logical argument specifying if a set
+    #'  is singleton. Default value is FALSE.
+    #' @param records specify set records as a string vector or a dataframe.
+    #' @param description string specifying description for the set
+    #' @return a Set object
+    initialize = function(container=NULL, name=NULL,
+                          domain="*", isSingleton=FALSE,
+                          records = NULL,
+                          description="", domaintype=NULL) {
+      self$isSingleton <- isSingleton
+      if (!isSingleton) {
+        type = GMS_DT_SET
+        subtype = SetTypeSubtype()[["set"]]
+      }
+      else {
+        type = GMS_DT_SET
+        subtype = SetTypeSubtype()[["singleton_set"]]
+      }
+
+      super$initialize(container, name,
+                      type, subtype,
+                      domain, description, domaintype)
+
+      if (!is.null(records)) {
+        self$setRecords(records)
+      }
+      private$.is_alias = FALSE
+      invisible(self)
+    },
+
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a string vector or a dataframe.
+    setRecords = function(records) {
+      records = data.frame(records)
+      columnNames = self$domainLabels
+      columnNames = append(columnNames, "element_text")
+      colnames(records) = columnNames
+      self$records = records
+    }
+  ),
+
+  active = list(
+    isSingleton = function(is_singleton_input) {
+      if (missing(is_singleton_input)) {
+        return(private$.is_singleton)
+      }
+      else {
+        if (!is.logical(is_singleton_input)) {
+          stop("Argument 'is_singleton' must be type logical\n")
+        }
+        private$.is_singleton = is_singleton_input
+      }
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "isSingleton" = self$isSingleton,
+        "domain_objects" = self$domain,
+        "domainNames" = self$domainNames,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
+      ))
+    },
+
+    isAlias = function() {
+      return(private$.is_alias)
+    }
+  ),
+  private = list(
+    .is_singleton = NULL,
+    .is_alias = NULL
+  )
+  )
+
+
+#' @title ConstParameter Class
+#' @description A class for Parameter objects. This class inherits from an abstract 
+#' symbol class.To access the documentation for any of the following methods, 
+#' use help(Symbol).
+#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
+#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
+#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field shape a list describing the array dimensions if records were
+#'  converted with $toDense()
+#' @field summary output a list of only the metadata
+ConstParameter <- R6Class(
+  "ConstParameter",
+  inherit = ConstSymbol,
+  public = list(
+    #' @description There are two different ways to create a GAMS 
+    #' parameter and add it to a Container. One is using the 
+    #' Parameter constructor and the other is using addParameter 
+    #' method which calls the Parameter constructor internally.
+    #' addParameter is a Container method to add a Parameter.
+    #' @param container A reference to the Container object that the symbol is 
+    #' added to
+    #' @param name string argument for name of the Parameter
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is NULL.
+    #' @param records specify set records as a vector, matrix, array,
+    #'  or a dataframe.
+    #' @param description string specifying description for the set
+    #' @return a Parameter object
+    initialize = function(container=NULL, name=NULL,
+                          domain=NULL,records = NULL,
+                          description="", domaintype=NULL) {
+      type = GMS_DT_PAR
+      super$initialize(container, name,
+                      type, 0, 
+                      domain, description, domaintype)
+
+      if (!is.null(records)) {
+        self$setRecords(records)
+      }
+    },
+
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a vector, matrix, 
+    #' array or a dataframe.
+    setRecords = function(records) {
+      records = data.frame(records)
+      columnNames = self$domainLabels
+      columnNames = append(columnNames, "value")
+      colnames(records) = columnNames
+      self$records = records
+    }
+  ),
+
+  active = list(
+    isScalar = function(isScalar_input) {
+      if (missing(isScalar_input)) {
+        if (length(self$domain) == 0) {
+          return(TRUE)
+        }
+        else {
+          return(FALSE)
+        }
+      }
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "is_scalar" = self$isScalar,
+        "domain_objects" = self$domain,
+        "domainNames" = self$domainNames,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
+      ))
+    }
+  )
+)
+
+#' @title Variable Class
+#' @description A class for Variable objects. This class inherits from an abstract 
+#' symbol class.To access the documentation for any of the following methods, 
+#' use help(Symbol).
+#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
+#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
+#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field shape a list describing the array dimensions if records were
+#'  converted with $toDense()
+#' @field summary output a list of only the metadata
+#' @field type type of variable (string)
+ConstVariable <- R6Class(
+  "ConstVariable",
+  inherit = ConstSymbol,
+  public = list(
+
+    #' @description There are two different ways to create a GAMS Variable and 
+    #' add it to a Container. One is using the Variable constructor and 
+    #' the other is using addVariable method which calls the Parameter 
+    #' constructor internally.
+    #' addVariable is a Container method to add a Variable.
+    #' @param container A reference to the Container object that the 
+    #' symbol is being added to
+    #' @param name string argument for name of the Variable
+    #' @param type Type of variable being created [binary, integer, 
+    #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
+    #' is "free"
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is NULL.
+    #' @param records specify set records as a vector or a dataframe.
+    #' @param domainForwarding an optional logical argument to specify 
+    #' domain forwarding. Default value is FALSE.
+    #' @param description string specifying description for the set
+    #' @return a Variable object
+    initialize = function(container = NULL, name = NULL, 
+                          type = "free",
+                          domain = NULL, records = NULL,
+                          description="", domaintype=NULL) {
+
+      self$type = type
+
+      symtype = GMS_DT_VAR
+      symsubtype = VarTypeSubtype()[[type]]
+
+      super$initialize(container, name,
+                      symtype, symsubtype, 
+                      domain, description, domaintype)
+      if (!is.null(records)) {
+        self$setRecords(records)
+      }
+    },
+
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a vector, matrix, 
+    #' array or a dataframe.
+    setRecords = function(records) {
+        records = data.frame(records)
+        columnNames = self$domainLabels
+        columnNames = append(columnNames, private$.attr())
+        colnames(records) = columnNames
+        self$records = records
+    }
+
+  ),
+
+  active = list(
+    type = function(type_input) {
+      if (missing(type_input)) {
+        return(private$.type)
+      }
+      else {
+        if (!any(.varTypes == type_input)) {
+          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
+          " 1. 'binary' \n",
+          " 2. 'integer' \n",
+          " 3. 'positive' \n",
+          " 4. 'negative' \n",
+          " 5. 'free' \n",
+          " 6. 'sos1' \n",
+          " 7. 'sos2' \n",
+          " 8. 'semicont' \n",
+          " 9. 'semiint'\n"
+          )))
+        }
+
+        private$.type = type_input
+      }
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "type" = self$type,
+        "domain_objects" = self$domain,
+        "domainNames" = self$domainNames,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
+      ))
+    }
+  ),
+
+  private = list(
+    .type = NULL
+  )
+)
+
+#' @title Equation Class
+#' @description A class for Equation objects. This class inherits from an abstract 
+#' symbol class.To access the documentation for any of the following methods, 
+#' use help(Symbol).
+#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
+#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
+#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field shape a list describing the array dimensions if records were
+#'  converted with $toDense()
+#' @field summary output a list of only the metadata
+#' @field type type of variable (string)
+ConstEquation <- R6Class(
+  "ConstEquation",
+  inherit = ConstSymbol,
+  public = list(
+
+    #' @description There are two different ways to create a GAMS Equation and 
+    #' add it to a Container. One is using the Equation constructor and 
+    #' the other is using addEquation method which calls the Equation 
+    #' constructor internally.
+    #' addEquation is a Container method to add a Equation.
+    #' @param container A reference to the Container object that the symbol 
+    #' is being added to
+    #' @param name string argument for name of the Equation
+    #' @param type Type of equation being created [eq (or E/e), geq 
+    #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
+    #' @param domain an optional argument specifying a list of strings, 
+    #' a string. default value is NULL.
+    #' @param records specify set records as a vector or a dataframe.
+    #' @param domainForwarding an optional logical argument to specify 
+    #' domain forwarding. Default value is FALSE.
+    #' @param description string specifying description for the set
+    #' @return a Equation object
+    initialize = function(container=NULL, name=NULL, 
+                          type=NULL,
+                          domain=NULL,
+                          records = NULL,
+                          description="", domaintype=NULL) {
+
+      self$type = type
+      # call from outside
+      type = .EquationTypes[[type]]
+
+      symtype = GMS_DT_EQU
+      symsubtype = EqTypeSubtype()[[type]]
+
+      super$initialize(container, name,
+                      symtype, symsubtype, 
+                      domain, description, domaintype)
+      if (!is.null(records)) {
+        self$setRecords(records)
+      }
+    },
+
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a vector, matrix, 
+    #' array or a dataframe.
+    setRecords = function(records) {
+        records = data.frame(records)
+        columnNames = self$domainLabels
+        columnNames = append(columnNames, private$.attr())
+        colnames(records) = columnNames
+        self$records = records
+    }
+  ),
+
+  active = list(
+    type = function(type_input) {
+      if (missing(type_input)) {
+        return(private$.type)
+      }
+      else {
+        if (!any(.EquationTypes == type_input)) {
+          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
+              "1. 'eq', 'E', or 'e' -- equality\n",
+              "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
+              "3. 'leq', 'L', or 'l'  -- less than or equal to inequality\n",
+              "4. 'nonbinding', 'N', or 'n'  -- nonbinding relationship\n",
+              "5. 'cone', 'C', or 'c' -- cone equation\n",
+              "6. 'external', 'X', or 'x' -- external equation\n",
+              "7. 'boolean', 'B', or 'b' -- boolean equation\n"
+          )))
+        }
+
+        private$.type = type_input
+      }
+    },
+
+    summary = function() {
+      return(list(
+        "name" = self$name,
+        "type" = self$type,
+        "domain_objects" = self$domain,
+        "domainNames" = self$domainNames,
+        "dimension" = self$dimension,
+        "description" = self$description,
+        "numberRecords" = self$numberRecords,
+        "domainType" = self$domainType
+      ))
+    }
+  ),
+  private = list(
+    .type = NULL
+  )
+)
+
+#' @title Alias Class
+#' @description A class for Alias objects.
+#' @field aliasWith aliased object
+#' @field description description of symbol
+#' @field dimension of symbol
+#' @field domainForwarding flag that forces set elements to be recursively 
+#' included in all parent sets (i.e., implicit set growth)
+#' @field domainLabels column headings for the records dataframe
+#' @field domainNames string version of domain names
+#' @field domainType none, relaxed or regular depending on state of domain links
+#' @field isSingleton if symbol is a singleton set
+#' @field name name of symbol
+#' @field numberRecords 	number of symbol records
+#' @field records the main symbol records
+#' @field refContainer reference to the Container that the symbol belongs to
+#' @field summary output a list of only the metadata
+ConstAlias <- R6Class(
+  "ConstAlias",
+  public = list(
+    .gams_type = NULL,
+    .gams_subtype = NULL,
+
+    #' @description There are two different ways to create a GAMS Alias and 
+    #' add it to a Container. One is using the Alias constructor and 
+    #' the other is using addAlias method which calls the Alias 
+    #' constructor internally.
+    #' addAlias is a Container method to add a Alias.
+    #' @param container A reference to the Container object that the symbol 
+    #' is being added to
+    #' @param name string argument for name of the Alias
+    #' @param aliasFor string argument for the set/alias we want to add
+    #' an alias for
+    initialize = function(container=NULL, name=NULL, 
+                          aliasFor=NULL) {
+      self$refContainer = container
+      self$name = name
+      refcontainer = self$refContainer
+      refcontainer$data[[name]] = self
+      self$.gams_type = GMS_DT_ALIAS
+      self$.gams_subtype = 1
+      private$.is_alias = TRUE
+      self$aliasWith = aliasFor
+    },
+
+
+    #' @description getCardinality get the full cartesian product of the domain
+    getCardinality = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
+    },
+
+
+    #' @description getSparsity get the sparsity of the symbol 
+    #' w.r.t the cardinality
+    getSparsity = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
+    },
+
+
+    #' main convenience method to set standard dataframe formatted records
+    #' @param records specify set records as a string vector or a dataframe.
+    setRecords = function(records) {
+      return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
+    }
+  ),
+
+  active = list(
+    refContainer = function(ref_container_input) {
+      if (missing(ref_container_input)) {
+        return(private$.ref_container)
+      }
+      else {
+        if (!inherits(ref_container_input, "ConstContainer")) {
+          stop("ConstAlias 'container' must be type ConstContainer\n")
+        }
+        if (is.null(self$refContainer)){
+          if (!identical(self$refContainer, ref_container_input)) {
+          }
+          private$.ref_container = ref_container_input
+        }
+        else {
+          private$.ref_container = ref_container_input
+        }
+      }
+    },
+
+    name = function(name_input) {
+      if (missing(name_input)) {
+        return(private$.name)
+      }
+      else {
+        private$.name = name_input
+
+      }
+    },
+
+    aliasWith = function(alias_with_input) {
+      if (missing(alias_with_input)) {
+        return(private$.aliasWith)
+      }
+      else {
+        private$.aliasWith = alias_with_input
+      }
+    },
+
+    isSingleton = function(is_singleton) {
+      if (missing(is_singleton)) {
+        refcontainer = self$refContainer
+        sym = refcontainer$data[[self$aliasWith$name]]
+        return(sym$isSingleton)
+      }
+      else {
+        refcontainer = self$refContainer
+        sym = refcontainer$data[[self$aliasWith$name]]
+        sym$isSingleton = is_singleton
+      }
+    },
+
+    description = function(description_input) {
+      if (missing(description_input)) {
+        refcontainer = self$refContainer
+        aliaswithname = self$aliasWith$name
+        sym = refcontainer$data[[aliaswithname]]
+        return(sym$description)
+      }
+      else {
+        refcontainer = self$refContainer
+        aliaswithname = self$aliasWith$name
+        sym = refcontainer$data[[aliaswithname]]
+        sym$description = description_input
+      }
+    },
+
+    dimension = function(dimension_input) {
+      if (missing(dimension_input)) {
+        return(self$refContainer$data[[self$aliasWith$name]]$dimension)
+      }
+      else {
+        refcontainer = self$refContainer
+        sym = refcontainer$data[[self$aliasWith$name]]
+        sym$dimension = dimension_input
+      }
+    },
+
+    records = function(records_input) {
+      return(self$refContainer$data[[self$aliasWith$name]]$records)
+    },
+
+    domain = function(domain_input) {
+      if (missing(domain_input)) {
+        return(self$refContainer$data[[self$aliasWith$name]]$domain)
+      }
+      else {
+        refcontainer = self$refContainer
+        sym = refcontainer$data[[self$aliasWith$name]]
+        sym$domain = domain_input
+      }
+    },
+
+    numberRecords = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
+    },
+
+    domainType = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$domainType)
+    },
+
+    domainNames = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
+    },
+
+    domainLabels = function() {
+      return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
+    },
+
+    summary = function() {
+    return(list(
+      "name" = self$name,
+      "alias_with" = self$aliasWith,
+      "alias_with_name" = self$aliasWith$name,
+      "isSingleton" = self$isSingleton,
+      "domain_objects" = self$domain,
+      "domainNames" = self$domainNames,
+      "dimension" = self$dimension,
+      "description" = self$description,
+      "numberRecords" = self$numberRecords
+    ))
+    },
+
+    isAlias = function() {
+      return(private$.is_alias)
+    }
+  ),
+
+  private = list(
+    symbolMaxLength = 63,
+    .ref_container = NULL,
+    .name = NULL,
+    .aliasWith = NULL,
+    .is_alias = NULL
+  )
+)
+
+
+find_gams <- function() {
+  if (Sys.info()['sysname'] == "Windows") {
+    gams_exe = "gams.exe"
+  }
+  else {
+    gams_exe = "gams"
+  }
+  paths = Sys.getenv("PATH")
+  paths_split = unlist(strsplit(paths, .Platform$path.sep))
+  sysDirPath = NULL
+  for (p in paths_split) {
+    if (file.exists(paste0(p, .Platform$file.sep, gams_exe))) {
+      sysDirPath = p
+    }
+  }
+  if (is.null(sysDirPath)) {
+  stop("Could not find a GAMS installation, must manually specify system directory\n")
+  }
+  return(sysDirPath)
+}
+
+#is.nan function for dataframe
+is.nan.data.frame <- function(x)
+do.call(cbind, lapply(x, is.nan))
+
+is.integer0 <- function(x)
+{
+  is.integer(x) && length(x) == 0L
+}
+
+#' @title ConstContainer Class
+#' @description ConstContainer class is a data-focused read-only object that 
+#' will provide a snapshot of the data target being read. The ConstContainer 
+#' can be created by reading a GDX file. This class is specially useful for 
+#' the users who are only interested in post-processing data from a GAMS model 
+#' run.
+#' @field data is a named list containing all symbol data
+#' @field systemDirectory is the path to GAMS System directory
+#' @export
+BaseContainer <- R6::R6Class (
+  "BaseContainer",
+  public = list(
+    systemDirectory = NULL,
+    data = NULL,
+    acronyms = NULL,
+    #' @description
+    #' Create a new ConstContainer simply by initializing an object.
+    #' @param loadFrom optional argument to point to the GDX file being 
+    #' read into the Container
+    #' @param systemDirectory optional argument for the absolute path to 
+    #' GAMS system directory
+    #' @examples
+    #' ConstContainer$new()
+    initialize = function(systemDirectory=NULL) {
+
+      if (is.null(systemDirectory)) {
+        self$systemDirectory = find_gams()
+
+      }
+      else {
+        if (R.utils::isAbsolutePath(systemDirectory)) {
+          self$systemDirectory = systemDirectory
+        }
+        else {
+          stop("must enter valid full (absolute) path to 
+          GAMS system directory\n")
+        }
+      }
+
+      self$acronyms = list()
+      self$data = list()
     },
 
     #' @description list all symbols in the container if isValid = NULL
@@ -4545,7 +4207,7 @@ ConstContainer <- R6::R6Class (
       }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstSet") ) {
+        if (inherits(self$data[[s]], c("Set", "ConstSet")) ) {
           if (is.null(sets)) {
             sets = s
           }
@@ -4571,7 +4233,7 @@ ConstContainer <- R6::R6Class (
       }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstParameter")) {
+        if (inherits(self$data[[s]], c("Parameter","ConstParameter"))) {
           if (is.null(parameters)) {
             parameters = s
           }
@@ -4597,7 +4259,7 @@ ConstContainer <- R6::R6Class (
       }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstAlias")) {
+        if (inherits(self$data[[s]], c("Alias", "ConstAlias"))) {
           if (is.null(aliases)) {
             aliases = s
           }
@@ -4647,7 +4309,7 @@ ConstContainer <- R6::R6Class (
 
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstVariable")
+        if (inherits(self$data[[s]], c("Variable", "ConstVariable"))
         && any(types == self$data[[s]]$type)) {
           if (is.null(variables)) {
             variables = s
@@ -4698,7 +4360,7 @@ ConstContainer <- R6::R6Class (
 
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], "ConstEquation") 
+        if (inherits(self$data[[s]], c("Equation", "ConstEquation"))
         && any(types == self$data[[s]]$type)) {
           if (is.null(equations)) {
             equations = s
@@ -5078,95 +4740,18 @@ ConstContainer <- R6::R6Class (
   )
   )
 
-
 #' @title Symbol Abstract Class
 #' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
-ConstSymbol <- R6Class(
-  "ConstSymbol",
+BaseSymbol <- R6Class(
+  "BaseSymbol",
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
-  initialize = function(container, name,
-                        type, subtype, 
-                        domain,
-                        description, domaintype) {
+  initialize = function(type, subtype) {
 
     self$.gams_type = type
     self$.gams_subtype = subtype
-
-    #' @field refContainer reference to the Container that the symbol 
-    #' belongs to. Type Container.
-    self$refContainer = container
-    #' @field name name of the symbol
-    self$name <- name
-    self$refContainer$data[[name]] = self
-
-    self$records = NULL
-
-    self$domain = domain
-    private$.domainType = domaintype
-    self$dimension = length(self$domain)
-    self$description = description
-
-  },
-
-  #' @description getCardinality get the full cartesian product of the domain
-  getCardinality = function() {
-    tryCatch(
-      {
-        if (length(self$domainNames) == 0) {
-          return(NA)
-        }
-        else {
-          for (n in self$domainNames) {
-            if (is.null(self$refContainer$data[[n]])) {
-              return(NA)
-            }
-          }
-          card = 1
-          for (n in self$domainNames) {
-            domainSym = self$refContainer$data[[n]]
-            card = card * domainSym$numberRecords
-          }
-          return(card)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
-  #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
-  getSparsity = function() {
-    tryCatch(
-      {
-        if (length(self$domainNames) == 0) {
-          return(NA)
-        }
-        else {
-          for (n in self$domainNames) {
-            if (is.null(self$refContainer$data[[n]])) {
-              return(NA)
-            }
-          }
-
-          for (n in self$domainNames) {
-            return(1 - self$numberRecords/self$getCardinality())
-          }
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
   },
 
   #' @description getMaxValue get the maximum value
@@ -5186,7 +4771,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5201,7 +4786,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5241,7 +4826,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5256,7 +4841,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5295,7 +4880,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5310,7 +4895,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5350,7 +4935,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5365,7 +4950,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5406,7 +4991,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5421,7 +5006,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5470,7 +5055,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5485,7 +5070,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5534,7 +5119,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5549,7 +5134,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5596,7 +5181,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5611,7 +5196,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5651,7 +5236,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5666,7 +5251,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5710,7 +5295,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5725,7 +5310,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5766,7 +5351,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5781,7 +5366,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5822,7 +5407,7 @@ ConstSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, "Set")) {
+      if (inherits(self, c("Set", "ConstSet"))) {
         return(NA)
       }
 
@@ -5837,7 +5422,7 @@ ConstSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, "Parameter")) {
+        if (inherits(self, c("Parameter", "ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5860,829 +5445,10 @@ ConstSymbol <- R6Class(
   }
   ),
 
-  active = list(
-
-    records = function(records_input) {
-      if (missing(records_input)) {
-        return(private$.records)
-      }
-      else {
-        private$.records = records_input
-      }
-    },
-
-    description = function(description_input) {
-      if (missing(description_input)) {
-        return(private$.description)
-      }
-      else {
-        if (!is.character(description_input)) {
-          stop("Symbol 'description' must be type character\n")
-        }
-
-        if (length(description_input) >= gams_description_max_length) {
-          stop(paste0("Symbol 'description' must have length ",
-          gams_description_max_length, " or smaller\n"))
-        }
-        private$.description = description_input
-      }
-    },
-
-    dimension = function(dimension_input) {
-      if (missing(dimension_input)) {
-        return(length(self$domain))
-      }
-    },
-
-    domain = function(domain_input) {
-
-      if (missing(domain_input)) {
-        return(private$.domain)
-      }
-      else {
-        if (is.null(domain_input)) {
-          domain_input = list()
-        }
-
-        if (!(is.list(domain_input) || is.vector(domain_input))) {
-          domain_input = list(domain_input)
-        }
-
-        if (!all(unlist(lapply(domain_input, is.character)))) {
-          stop("All 'domain' elements must be type Character\n")
-        }
-
-        domaintemp = list()
-        for (d in domain_input) {
-              # attach as a plain string
-              domaintemp = append(domaintemp, d)
-        }
-        private$.domain = domaintemp
-      }
-    },
-
-    refContainer = function(ref_container_input) {
-      if (missing(ref_container_input)) {
-        return(private$.ref_container)
-      }
-      else {
-        if (is.null(ref_container_input)) {
-          private$.ref_container = NULL
-          return()
-        }
-
-        if (!inherits(ref_container_input, "ConstContainer")) {
-          stop("ConstSymbol 'container' must be type ConstContainer\n")
-        }
-        private$.ref_container = ref_container_input
-      }
-    },
-
-    name = function(name_input) {
-      if (missing(name_input)) {
-        return(private$.name)
-      }
-      else {
-        private$.name = name_input
-      }
-    },
-
-    numberRecords = function() {
-      if (!is.null(self$records)) {
-        return(nrow(self$records))
-      }
-      else {
-        return(0)
-      }
-    },
-
-    domainType = function() {
-      return(private$.domain_type_map[[private$.domainType]])
-    },
-
-    domainNames = function() {
-      if (is.null(self$domain) || (length(self$domain) == 0)) {
-        return(NA)
-      }
-      else {
-        return(self$domain)
-      }
-    },
-
-    domainLabels = function() {
-      column_names = list()
-      for (i in seq_along(self$domain)) {
-        if (is.character(self$domain[[i]])) {
-          d = self$domain[[i]]
-        }
-
-        if (d != "*") {
-          column_names = append(column_names, paste0(d, "_", i))
-        }
-        else {
-          column_names = append(column_names, paste0("uni_", i))
-        }
-      }
-      return(column_names)
-    }
-
-  ),
-
   private = list(
-    .description = NULL,
-    .domain = NULL,
-    .ref_container = NULL,
-    .name = NULL,
-    .records = NULL,
-    symbolMaxLength = 63,
-    descriptionMaxLength = 255,
-    .domain_type_map = list("none", "relaxed", "regular"),
-    .domainType = NULL,
     .attr = function() {
       return(c("level", "marginal", "lower", "upper", "scale"))
     }
   )
 )
 
-
-#' @title ConstSet Class
-#' @description A class for Set objects. This class inherits from an abstract symbol class.
-#' To access the documentation for the methods getCardnality, getSparsity, 
-#' and isValid, please use help(Symbol).
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of 
-#' domain links
-#' @field isSingleton logical if symbol is a singleton set
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field summary output a list of only the metadata
-ConstSet <- R6Class(
-  "ConstSet",
-  inherit = ConstSymbol,
-  public = list(
-    #' @description There are two different ways to create a GAMS set and 
-    #' add it to a Container. One is using the Set constructor and 
-    #' the other is using addSet method which calls the Set constructor
-    #' internally.
-    #' addSet is a Container method to add a Set.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the set
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
-    #' @param isSingleton an optional logical argument specifying if a set
-    #'  is singleton. Default value is FALSE.
-    #' @param records specify set records as a string vector or a dataframe.
-    #' @param description string specifying description for the set
-    #' @return a Set object
-    initialize = function(container=NULL, name=NULL,
-                          domain="*", isSingleton=FALSE,
-                          records = NULL,
-                          description="", domaintype=NULL) {
-      self$isSingleton <- isSingleton
-      if (!isSingleton) {
-        type = GMS_DT_SET
-        subtype = SetTypeSubtype()[["set"]]
-      }
-      else {
-        type = GMS_DT_SET
-        subtype = SetTypeSubtype()[["singleton_set"]]
-      }
-
-      super$initialize(container, name,
-                      type, subtype,
-                      domain, description, domaintype)
-
-      if (!is.null(records)) {
-        self$setRecords(records)
-      }
-      private$.is_alias = FALSE
-      invisible(self)
-    },
-
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a string vector or a dataframe.
-    setRecords = function(records) {
-      records = data.frame(records)
-      columnNames = self$domainLabels
-      columnNames = append(columnNames, "element_text")
-      colnames(records) = columnNames
-      self$records = records
-    }
-  ),
-
-  active = list(
-    isSingleton = function(is_singleton_input) {
-      if (missing(is_singleton_input)) {
-        return(private$.is_singleton)
-      }
-      else {
-        if (!is.logical(is_singleton_input)) {
-          stop("Argument 'is_singleton' must be type logical\n")
-        }
-        private$.is_singleton = is_singleton_input
-      }
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "isSingleton" = self$isSingleton,
-        "domain_objects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
-      ))
-    },
-
-    isAlias = function() {
-      return(private$.is_alias)
-    }
-  ),
-  private = list(
-    .is_singleton = NULL,
-    .is_alias = NULL
-  )
-  )
-
-
-#' @title ConstParameter Class
-#' @description A class for Parameter objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-ConstParameter <- R6Class(
-  "ConstParameter",
-  inherit = ConstSymbol,
-  public = list(
-    #' @description There are two different ways to create a GAMS 
-    #' parameter and add it to a Container. One is using the 
-    #' Parameter constructor and the other is using addParameter 
-    #' method which calls the Parameter constructor internally.
-    #' addParameter is a Container method to add a Parameter.
-    #' @param container A reference to the Container object that the symbol is 
-    #' added to
-    #' @param name string argument for name of the Parameter
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector, matrix, array,
-    #'  or a dataframe.
-    #' @param description string specifying description for the set
-    #' @return a Parameter object
-    initialize = function(container=NULL, name=NULL,
-                          domain=NULL,records = NULL,
-                          description="", domaintype=NULL) {
-      type = GMS_DT_PAR
-      super$initialize(container, name,
-                      type, 0, 
-                      domain, description, domaintype)
-
-      if (!is.null(records)) {
-        self$setRecords(records)
-      }
-    },
-
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
-    setRecords = function(records) {
-      records = data.frame(records)
-      columnNames = self$domainLabels
-      columnNames = append(columnNames, "value")
-      colnames(records) = columnNames
-      self$records = records
-    }
-  ),
-
-  active = list(
-    isScalar = function(isScalar_input) {
-      if (missing(isScalar_input)) {
-        if (length(self$domain) == 0) {
-          return(TRUE)
-        }
-        else {
-          return(FALSE)
-        }
-      }
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "is_scalar" = self$isScalar,
-        "domain_objects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
-      ))
-    }
-  )
-)
-
-#' @title Variable Class
-#' @description A class for Variable objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-#' @field type type of variable (string)
-ConstVariable <- R6Class(
-  "ConstVariable",
-  inherit = ConstSymbol,
-  public = list(
-
-    #' @description There are two different ways to create a GAMS Variable and 
-    #' add it to a Container. One is using the Variable constructor and 
-    #' the other is using addVariable method which calls the Parameter 
-    #' constructor internally.
-    #' addVariable is a Container method to add a Variable.
-    #' @param container A reference to the Container object that the 
-    #' symbol is being added to
-    #' @param name string argument for name of the Variable
-    #' @param type Type of variable being created [binary, integer, 
-    #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
-    #' is "free"
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Variable object
-    initialize = function(container = NULL, name = NULL, 
-                          type = "free",
-                          domain = NULL, records = NULL,
-                          description="", domaintype=NULL) {
-
-      self$type = type
-
-      symtype = GMS_DT_VAR
-      symsubtype = VarTypeSubtype()[[type]]
-
-      super$initialize(container, name,
-                      symtype, symsubtype, 
-                      domain, description, domaintype)
-      if (!is.null(records)) {
-        self$setRecords(records)
-      }
-    },
-
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
-    setRecords = function(records) {
-        records = data.frame(records)
-        columnNames = self$domainLabels
-        columnNames = append(columnNames, private$.attr())
-        colnames(records) = columnNames
-        self$records = records
-    }
-
-  ),
-
-  active = list(
-    type = function(type_input) {
-      if (missing(type_input)) {
-        return(private$.type)
-      }
-      else {
-        if (!any(.varTypes == type_input)) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
-          " 1. 'binary' \n",
-          " 2. 'integer' \n",
-          " 3. 'positive' \n",
-          " 4. 'negative' \n",
-          " 5. 'free' \n",
-          " 6. 'sos1' \n",
-          " 7. 'sos2' \n",
-          " 8. 'semicont' \n",
-          " 9. 'semiint'\n"
-          )))
-        }
-
-        private$.type = type_input
-      }
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "type" = self$type,
-        "domain_objects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
-      ))
-    }
-  ),
-
-  private = list(
-    .type= NULL,
-
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    }
-  )
-)
-
-#' @title Equation Class
-#' @description A class for Equation objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-#' @field type type of variable (string)
-ConstEquation <- R6Class(
-  "ConstEquation",
-  inherit = ConstSymbol,
-  public = list(
-
-    #' @description There are two different ways to create a GAMS Equation and 
-    #' add it to a Container. One is using the Equation constructor and 
-    #' the other is using addEquation method which calls the Equation 
-    #' constructor internally.
-    #' addEquation is a Container method to add a Equation.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Equation
-    #' @param type Type of equation being created [eq (or E/e), geq 
-    #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Equation object
-    initialize = function(container=NULL, name=NULL, 
-                          type=NULL,
-                          domain=NULL,
-                          records = NULL,
-                          description="", domaintype=NULL) {
-
-      self$type = type
-      # call from outside
-      type = .EquationTypes[[type]]
-
-      symtype = GMS_DT_EQU
-      symsubtype = EqTypeSubtype()[[type]]
-
-      super$initialize(container, name,
-                      symtype, symsubtype, 
-                      domain, description, domaintype)
-      if (!is.null(records)) {
-        self$setRecords(records)
-      }
-    },
-
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
-    setRecords = function(records) {
-        records = data.frame(records)
-        columnNames = self$domainLabels
-        columnNames = append(columnNames, private$.attr())
-        colnames(records) = columnNames
-        self$records = records
-    }
-  ),
-
-  active = list(
-    type = function(type_input) {
-      if (missing(type_input)) {
-        return(private$.type)
-      }
-      else {
-        if (!any(.EquationTypes == type_input)) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
-              "1. 'eq', 'E', or 'e' -- equality\n",
-              "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
-              "3. 'leq', 'L', or 'l'  -- less than or equal to inequality\n",
-              "4. 'nonbinding', 'N', or 'n'  -- nonbinding relationship\n",
-              "5. 'cone', 'C', or 'c' -- cone equation\n",
-              "6. 'external', 'X', or 'x' -- external equation\n",
-              "7. 'boolean', 'B', or 'b' -- boolean equation\n"
-          )))
-        }
-
-        private$.type = type_input
-      }
-    },
-
-    summary = function() {
-      return(list(
-        "name" = self$name,
-        "type" = self$type,
-        "domain_objects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
-        "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
-      ))
-    }
-  ),
-  private = list(
-    .type = NULL,
-
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    }
-  )
-)
-
-#' @title Alias Class
-#' @description A class for Alias objects.
-#' @field aliasWith aliased object
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field isSingleton if symbol is a singleton set
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field summary output a list of only the metadata
-ConstAlias <- R6Class(
-  "ConstAlias",
-  public = list(
-    .gams_type = NULL,
-    .gams_subtype = NULL,
-
-    #' @description There are two different ways to create a GAMS Alias and 
-    #' add it to a Container. One is using the Alias constructor and 
-    #' the other is using addAlias method which calls the Alias 
-    #' constructor internally.
-    #' addAlias is a Container method to add a Alias.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Alias
-    #' @param aliasFor string argument for the set/alias we want to add
-    #' an alias for
-    initialize = function(container=NULL, name=NULL, 
-                          aliasFor=NULL) {
-      self$refContainer = container
-      self$name = name
-      refcontainer = self$refContainer
-      refcontainer$data[[name]] = self
-      self$.gams_type = GMS_DT_ALIAS
-      self$.gams_subtype = 1
-      private$.is_alias = TRUE
-      self$aliasWith = aliasFor
-    },
-
-
-    #' @description getCardinality get the full cartesian product of the domain
-    getCardinality = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
-    },
-
-
-    #' @description getSparsity get the sparsity of the symbol 
-    #' w.r.t the cardinality
-    getSparsity = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
-    },
-
-
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a string vector or a dataframe.
-    setRecords = function(records) {
-      return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
-    }
-  ),
-
-  active = list(
-    refContainer = function(ref_container_input) {
-      if (missing(ref_container_input)) {
-        return(private$.ref_container)
-      }
-      else {
-        if (!inherits(ref_container_input, "ConstContainer")) {
-          stop("ConstAlias 'container' must be type ConstContainer\n")
-        }
-        if (is.null(self$refContainer)){
-          if (!identical(self$refContainer, ref_container_input)) {
-          }
-          private$.ref_container = ref_container_input
-        }
-        else {
-          private$.ref_container = ref_container_input
-        }
-      }
-    },
-
-    name = function(name_input) {
-      if (missing(name_input)) {
-        return(private$.name)
-      }
-      else {
-        private$.name = name_input
-
-      }
-    },
-
-    aliasWith = function(alias_with_input) {
-      if (missing(alias_with_input)) {
-        return(private$.aliasWith)
-      }
-      else {
-        private$.aliasWith = alias_with_input
-      }
-    },
-
-    isSingleton = function(is_singleton) {
-      if (missing(is_singleton)) {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        return(sym$isSingleton)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$isSingleton = is_singleton
-      }
-    },
-
-    description = function(description_input) {
-      if (missing(description_input)) {
-        refcontainer = self$refContainer
-        aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
-        return(sym$description)
-      }
-      else {
-        refcontainer = self$refContainer
-        aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
-        sym$description = description_input
-      }
-    },
-
-    dimension = function(dimension_input) {
-      if (missing(dimension_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$dimension)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$dimension = dimension_input
-      }
-    },
-
-    records = function(records_input) {
-      return(self$refContainer$data[[self$aliasWith$name]]$records)
-    },
-
-    domain = function(domain_input) {
-      if (missing(domain_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$domain)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$domain = domain_input
-      }
-    },
-
-    numberRecords = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
-    },
-
-    domainType = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainType)
-    },
-
-    domainNames = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
-    },
-
-    domainLabels = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
-    },
-
-    summary = function() {
-    return(list(
-      "name" = self$name,
-      "alias_with" = self$aliasWith,
-      "alias_with_name" = self$aliasWith$name,
-      "isSingleton" = self$isSingleton,
-      "domain_objects" = self$domain,
-      "domainNames" = self$domainNames,
-      "dimension" = self$dimension,
-      "description" = self$description,
-      "numberRecords" = self$numberRecords
-    ))
-    },
-
-    isAlias = function() {
-      return(private$.is_alias)
-    }
-  ),
-
-  private = list(
-    symbolMaxLength = 63,
-    .ref_container = NULL,
-    .name = NULL,
-    .aliasWith = NULL,
-    .is_alias = NULL
-  )
-)
-
-
-find_gams <- function() {
-  if (Sys.info()['sysname'] == "Windows") {
-    gams_exe = "gams.exe"
-  }
-  else {
-    gams_exe = "gams"
-  }
-  paths = Sys.getenv("PATH")
-  paths_split = unlist(strsplit(paths, .Platform$path.sep))
-  sysDirPath = NULL
-  for (p in paths_split) {
-    if (file.exists(paste0(p, .Platform$file.sep, gams_exe))) {
-      sysDirPath = p
-    }
-  }
-  if (is.null(sysDirPath)) {
-  stop("Could not find a GAMS installation, must manually specify system directory\n")
-  }
-  return(sysDirPath)
-}
-
-#is.nan function for dataframe
-is.nan.data.frame <- function(x)
-do.call(cbind, lapply(x, is.nan))
-
-is.integer0 <- function(x)
-{
-  is.integer(x) && length(x) == 0L
-}
-
-#is.infinite function for dataframe
-# is.infinite.data.frame <- function(x)
-# do.call(cbind, lapply(x, is.infinite))
