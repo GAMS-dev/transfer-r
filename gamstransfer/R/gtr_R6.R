@@ -191,7 +191,7 @@ Container <- R6::R6Class (
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
 
-        if (inherits(sym, "Set") || inherits(sym, "Alias")) {
+        if (inherits(sym, c("Set", "Alias"))) {
           setOrAlias = append(setOrAlias, sym)
         }
         self$data[[n]] <- NULL
@@ -407,7 +407,7 @@ Container <- R6::R6Class (
 
       for (s in self$data) {
         # no mapping required for alias
-        if (inherits(s, "Alias") || inherits(s, "Set")) next
+        if (inherits(s, c("Alias", "Set"))) next
         if (is.null(s$records)) next
         colrange = (s$dimension + 1):length(s$records)
         s$records[, colrange][is.nan(
@@ -635,9 +635,8 @@ Container <- R6::R6Class (
             self$data[[s$names]]$setRecords(s$records)
 
             if (!is.null(self$acronyms)) {
-              if (inherits(self$data[[s$names]], "Parameter")
-              | inherits(self$data[[s$names]], "Variable")
-              | inherits(self$data[[s$names]], "Equation")) {
+              if (inherits(self$data[[s$names]], c("Parameter", 
+              "Variable", "Equation"))) {
                 for (a in self$acronyms) {
                   self$data[[s$names]]$records[(self$data[[s$names]]$records 
                   == a * 1e301)] = SpecialValues[["NA"]]
@@ -778,7 +777,7 @@ Container <- R6::R6Class (
             if (is.character(i)) {
               doi = append(doi, TRUE)
             }
-            else if ((inherits(i, "Set") | inherits(i, "Alias")) &
+            else if ((inherits(i, c("Set", "Alias"))) &
             any(orderedSymbols == i$name)) {
                doi = append(doi, TRUE)
             }
@@ -819,8 +818,7 @@ Container <- R6::R6Class (
       h = c()
       for (i in seq_along(self$data)) {
         symName = names(self$data)[i]
-        if ( inherits(self$data[[symName]], "Set") | 
-        inherits(self$data[[symName]], "Alias")) {
+        if ( inherits(self$data[[symName]], c("Set", "Alias"))) {
           if (i <= match(symName, validOrder)){
             h = append(h, TRUE)
           }
@@ -876,7 +874,7 @@ SetTypeSubtype = function() {
   ))
 }
 
-.EquationTypes = list(
+.EquationTypes = c(
 eq = "eq",
 E = "eq",
 e = "eq",
@@ -1116,7 +1114,7 @@ Symbol <- R6Class(
     if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
       for (n in seq_along(self$domain)) {
         i  = self$domain[[n]]
-        if (((inherits(i, "Alias")) || (inherits(i, "Set"))) 
+        if (((inherits(i, c("Alias", "Set"))) )
         && (!is.null(i$records))) {
           if (i$isValid()) {
             private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
@@ -1258,13 +1256,11 @@ Symbol <- R6Class(
         }
 
         for (d in domain_input) {
-          assertthat::assert_that((inherits(d, "Set") || 
-          inherits(d, "Alias") ||
+          assertthat::assert_that((inherits(d, c("Set", "Alias" )) ||
           is.character(d)),
           msg = "All 'domain' elements must be type Set, Alias, or Character"
           )
-          if ((inherits(d, "Set") || 
-          inherits(d, "Alias"))) {
+          if (inherits(d, c("Set", "Alias"))) {
             assertthat::assert_that( d$dimension == 1,
             msg = "All linked 'domain' elements must be one dimensional"
             )
@@ -1276,8 +1272,7 @@ Symbol <- R6Class(
         domaintemp = list()
         for (d in domain_input) {
           if (is.character(d)) {
-            if (inherits(self$refContainer$data[[d]], "Set") ||
-            inherits(self$refContainer$data[[d]], "Alias")) {
+            if (inherits(self$refContainer$data[[d]], c("Set", "Alias"))) {
               domaintemp = append(domaintemp, d)
               # domaintemp = append(domaintemp, 
               # self$refContainer$data[[d]])
@@ -1401,7 +1396,7 @@ Symbol <- R6Class(
     domainType = function() {
       regularCheck = list()
       for (d in self$domain) {
-        if (inherits(d, "Set") || inherits(d, "Alias")) {
+        if (inherits(d, c("Set", "Alias"))) {
           regularCheck = append(regularCheck, TRUE)
         }
         else {
@@ -1425,7 +1420,7 @@ Symbol <- R6Class(
     domainNames = function() {
       d = NA
       for (i in self$domain) {
-        if (inherits(i, "Set") | inherits(i, "Alias")) {
+        if (inherits(i, c("Set", "Alias"))) {
           if (any(is.na(d))) {
             d = i$name
           }
@@ -1477,9 +1472,9 @@ Symbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    },
+    # .attr = function() {
+    #   return(c("level", "marginal", "lower", "upper", "scale"))
+    # },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
@@ -1530,7 +1525,7 @@ Symbol <- R6Class(
             }
           }
 
-          if (inherits(self, "Variable") | inherits(self, "Equation")){
+          if (inherits(self, c("Variable", "Equation"))) {
             if (length(self$records) != 
             self$dimension + length(private$.attr())) {
               stop(paste0("Symbol 'records' does not have", 
@@ -1552,8 +1547,7 @@ Symbol <- R6Class(
           else if(inherits(self, "Parameter")) {
             cols = append(cols, "value")
           }
-          else if (inherits(self, "Variable") ||
-          inherits(self, "Equation")) {
+          else if (inherits(self, c("Variable", "Equation"))) {
             cols = append(cols, private$.attr())
           }
 
@@ -1574,7 +1568,7 @@ Symbol <- R6Class(
 
           # check if domain has records
           for (i in self$domain) {
-            if (inherits(i, "Set") || inherits(i, "Alias")) {
+            if (inherits(i, c("Set", "Alias"))) {
               if (is.null(i$records)) {
                 stop(paste0("Referenced domain set ", i$name, " does 
                 not does not contain records; ",
@@ -1594,7 +1588,7 @@ Symbol <- R6Class(
           # if there are linked domains, make sure their levels are equal
           for (n in seq_len(self$dimension)) {
             i = self$domain[[n]]
-            if (inherits(i, "Set") || inherits(i, "Alias")) {
+            if (inherits(i, c("Set", "Alias"))) {
               if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
                 stop(paste0("Levels for domain column ", i$name, " do not match those 
                 of the referenced domain set. If setting records directly, the user is
@@ -1624,9 +1618,7 @@ Symbol <- R6Class(
           }
 
           # check if all data columns are float
-          if (inherits(self, "Variable") | 
-          inherits(self, "Parameter") | 
-          inherits(self, "Equation")) {
+          if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
               if (!all(is.numeric(self$records[, i]))) {
                 stop("Data in column", i, " must be numeric\n")
@@ -2889,8 +2881,7 @@ Alias <- R6Class(
         return(private$.aliasWith)
       }
       else {
-        if (!((inherits(alias_with_input, "Set")) || 
-        (inherits(alias_with_input, "Alias") ))) {
+        if (!(inherits(alias_with_input, c("Set", "Alias")))) {
           stop("GAMS 'alias_with' must be type Set or Alias\n")
         }
 
@@ -3209,9 +3200,8 @@ ConstContainer <- R6::R6Class (
           self$data[[s$names]]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
-            if (inherits(self$data[[s$names]], "ConstParameter")
-            | inherits(self$data[[s$names]], "ConstVariable")
-            | inherits(self$data[[s$names]], "ConstEquation")) {
+            if (inherits(self$data[[s$names]], c("ConstParameter", 
+            "ConstVariable", "ConstEquation"))) {
               for (a in self$acronyms) {
                 self$data[[s$names]]$records[(self$data[[s$names]]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
@@ -3452,10 +3442,10 @@ ConstSymbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
     .domain_type_map = list("none", "relaxed", "regular"),
-    .domainType = NULL,
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    }
+    .domainType = NULL
+    # .attr = function() {
+    #   return(c("level", "marginal", "lower", "upper", "scale"))
+    # }
   )
 )
 
@@ -3776,11 +3766,7 @@ ConstVariable <- R6Class(
   ),
 
   private = list(
-    .type= NULL,
-
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    }
+    .type = NULL
   )
 )
 
@@ -3897,11 +3883,7 @@ ConstEquation <- R6Class(
     }
   ),
   private = list(
-    .type = NULL,
-
-    .attr = function() {
-      return(c("level", "marginal", "lower", "upper", "scale"))
-    }
+    .type = NULL
   )
 )
 
