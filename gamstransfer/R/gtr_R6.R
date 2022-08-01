@@ -66,7 +66,9 @@ SpecialValues = list(
 #' linked together (through their domain definitions), it enables 
 #' implicit set definitions, it enables structural manipulations of the 
 #' data (matrix generation), and it allows the user to perform different 
-#' read/write operations.
+#' read/write operations.The Container class inherits from an abstract
+#' BaseContainer class. To access the functions common to Container and
+#' ConstContainer, please use help(BaseContainer)
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export
@@ -1673,9 +1675,9 @@ Symbol <- R6Class(
 )
 
 #' @title Set Class
-#' @description A class for Set objects. This class inherits from an abstract symbol class.
-#' To access the documentation for the methods getCardnality, getSparsity, 
-#' and isValid, please use help(Symbol).
+#' @description A class for Set objects. This class inherits from an abstract Symbol class.
+#' The documentation for methods common to all symbols can be accessed via help(Symbol)
+#'  or help(BaseSymbol).
 #' @field description description of symbol
 #' @field dimension of symbol
 #' @field domainForwarding flag that forces set elements to be recursively 
@@ -1802,8 +1804,8 @@ Set <- R6Class(
 
 #' @title Parameter Class
 #' @description A class for Parameter objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
+#' Symbol class.The documentation for methods common to all symbols can be accessed 
+#' via help(Symbol) or help(BaseSymbol).
 #' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
@@ -1994,8 +1996,8 @@ Parameter <- R6Class(
 
 #' @title Variable Class
 #' @description A class for Variable objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
+#' Symbol class.The documentation for methods common to all symbols can be
+#' accessed via help(Symbol) or help(BaseSymbol).
 #' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
@@ -2363,8 +2365,8 @@ Variable <- R6Class(
 
 #' @title Equation Class
 #' @description A class for Equation objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
+#' symbol class.The documentation for methods common to all symbols can be
+#' accessed via help(Symbol) or help(BaseSymbol).
 #' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
@@ -3018,7 +3020,9 @@ Alias <- R6Class(
 #' will provide a snapshot of the data target being read. The ConstContainer 
 #' can be created by reading a GDX file. This class is specially useful for 
 #' the users who are only interested in post-processing data from a GAMS model 
-#' run.
+#' run. The ConstContainer class inherits from an abstract
+#' BaseContainer class. To access the functions common to Container and
+#' ConstContainer, please use help(BaseContainer).
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export
@@ -3215,9 +3219,6 @@ ConstContainer <- R6::R6Class (
   )
 
 
-#' @title Symbol Abstract Class
-#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
-#' and Equation are inherited.
 ConstSymbol <- R6Class(
   "ConstSymbol",
   inherit = BaseSymbol,
@@ -3229,10 +3230,7 @@ ConstSymbol <- R6Class(
 
     super$initialize(type, subtype)
 
-    #' @field refContainer reference to the Container that the symbol 
-    #' belongs to. Type Container.
     self$refContainer = container
-    #' @field name name of the symbol
     self$name <- name
     self$refContainer$data[[name]] = self
 
@@ -3245,7 +3243,6 @@ ConstSymbol <- R6Class(
 
   },
 
-  #' @description getCardinality get the full cartesian product of the domain
   getCardinality = function() {
     tryCatch(
       {
@@ -3275,7 +3272,6 @@ ConstSymbol <- R6Class(
     )
   },
 
-  #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
   getSparsity = function() {
     tryCatch(
       {
@@ -3443,50 +3439,13 @@ ConstSymbol <- R6Class(
     descriptionMaxLength = 255,
     .domain_type_map = list("none", "relaxed", "regular"),
     .domainType = NULL
-    # .attr = function() {
-    #   return(c("level", "marginal", "lower", "upper", "scale"))
-    # }
   )
 )
 
-
-#' @title ConstSet Class
-#' @description A class for Set objects. This class inherits from an abstract symbol class.
-#' To access the documentation for the methods getCardnality, getSparsity, 
-#' and isValid, please use help(Symbol).
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of 
-#' domain links
-#' @field isSingleton logical if symbol is a singleton set
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field summary output a list of only the metadata
 ConstSet <- R6Class(
   "ConstSet",
   inherit = ConstSymbol,
   public = list(
-    #' @description There are two different ways to create a GAMS set and 
-    #' add it to a Container. One is using the Set constructor and 
-    #' the other is using addSet method which calls the Set constructor
-    #' internally.
-    #' addSet is a Container method to add a Set.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the set
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
-    #' @param isSingleton an optional logical argument specifying if a set
-    #'  is singleton. Default value is FALSE.
-    #' @param records specify set records as a string vector or a dataframe.
-    #' @param description string specifying description for the set
-    #' @return a Set object
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
                           records = NULL,
@@ -3512,8 +3471,6 @@ ConstSet <- R6Class(
       invisible(self)
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
       records = data.frame(records)
       columnNames = self$domainLabels
@@ -3559,46 +3516,10 @@ ConstSet <- R6Class(
   )
   )
 
-
-#' @title ConstParameter Class
-#' @description A class for Parameter objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
 ConstParameter <- R6Class(
   "ConstParameter",
   inherit = ConstSymbol,
   public = list(
-    #' @description There are two different ways to create a GAMS 
-    #' parameter and add it to a Container. One is using the 
-    #' Parameter constructor and the other is using addParameter 
-    #' method which calls the Parameter constructor internally.
-    #' addParameter is a Container method to add a Parameter.
-    #' @param container A reference to the Container object that the symbol is 
-    #' added to
-    #' @param name string argument for name of the Parameter
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector, matrix, array,
-    #'  or a dataframe.
-    #' @param description string specifying description for the set
-    #' @return a Parameter object
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
                           description="", domaintype=NULL) {
@@ -3612,9 +3533,6 @@ ConstParameter <- R6Class(
       }
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
     setRecords = function(records) {
       records = data.frame(records)
       columnNames = self$domainLabels
@@ -3651,51 +3569,11 @@ ConstParameter <- R6Class(
   )
 )
 
-#' @title Variable Class
-#' @description A class for Variable objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-#' @field type type of variable (string)
 ConstVariable <- R6Class(
   "ConstVariable",
   inherit = ConstSymbol,
   public = list(
 
-    #' @description There are two different ways to create a GAMS Variable and 
-    #' add it to a Container. One is using the Variable constructor and 
-    #' the other is using addVariable method which calls the Parameter 
-    #' constructor internally.
-    #' addVariable is a Container method to add a Variable.
-    #' @param container A reference to the Container object that the 
-    #' symbol is being added to
-    #' @param name string argument for name of the Variable
-    #' @param type Type of variable being created [binary, integer, 
-    #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
-    #' is "free"
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Variable object
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = NULL, records = NULL,
@@ -3714,9 +3592,6 @@ ConstVariable <- R6Class(
       }
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
     setRecords = function(records) {
         records = data.frame(records)
         columnNames = self$domainLabels
@@ -3770,50 +3645,11 @@ ConstVariable <- R6Class(
   )
 )
 
-#' @title Equation Class
-#' @description A class for Equation objects. This class inherits from an abstract 
-#' symbol class.To access the documentation for any of the following methods, 
-#' use help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-#' @field type type of variable (string)
 ConstEquation <- R6Class(
   "ConstEquation",
   inherit = ConstSymbol,
   public = list(
 
-    #' @description There are two different ways to create a GAMS Equation and 
-    #' add it to a Container. One is using the Equation constructor and 
-    #' the other is using addEquation method which calls the Equation 
-    #' constructor internally.
-    #' addEquation is a Container method to add a Equation.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Equation
-    #' @param type Type of equation being created [eq (or E/e), geq 
-    #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Equation object
     initialize = function(container=NULL, name=NULL, 
                           type=NULL,
                           domain=NULL,
@@ -3835,9 +3671,6 @@ ConstEquation <- R6Class(
       }
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
     setRecords = function(records) {
         records = data.frame(records)
         columnNames = self$domainLabels
@@ -3887,38 +3720,12 @@ ConstEquation <- R6Class(
   )
 )
 
-#' @title Alias Class
-#' @description A class for Alias objects.
-#' @field aliasWith aliased object
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field isSingleton if symbol is a singleton set
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
-#' @field summary output a list of only the metadata
 ConstAlias <- R6Class(
   "ConstAlias",
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
 
-    #' @description There are two different ways to create a GAMS Alias and 
-    #' add it to a Container. One is using the Alias constructor and 
-    #' the other is using addAlias method which calls the Alias 
-    #' constructor internally.
-    #' addAlias is a Container method to add a Alias.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Alias
-    #' @param aliasFor string argument for the set/alias we want to add
-    #' an alias for
     initialize = function(container=NULL, name=NULL, 
                           aliasFor=NULL) {
       self$refContainer = container
@@ -3932,21 +3739,14 @@ ConstAlias <- R6Class(
     },
 
 
-    #' @description getCardinality get the full cartesian product of the domain
     getCardinality = function() {
       return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
     },
 
-
-    #' @description getSparsity get the sparsity of the symbol 
-    #' w.r.t the cardinality
     getSparsity = function() {
       return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
     },
 
-
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
       return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
