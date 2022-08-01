@@ -3,13 +3,18 @@
 \name{Container}
 \alias{Container}
 \title{Container Class}
+\value{
+a list of object references to symbols
+}
 \description{
 The main object class within GAMS Transfer is called 
 Container. The Container is the vessel that allows symbols to be 
 linked together (through their domain definitions), it enables 
 implicit set definitions, it enables structural manipulations of the 
 data (matrix generation), and it allows the user to perform different 
-read/write operations.
+read/write operations.The Container class inherits from an abstract
+BaseContainer class. To access the functions common to Container and
+ConstContainer, please use help(BaseContainer)
 }
 \examples{
 
@@ -19,8 +24,20 @@ read/write operations.
 
 Container$new()
 }
+\section{Super class}{
+\code{\link[gamstransfer:BaseContainer]{gamstransfer::BaseContainer}} -> \code{Container}
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{data}}{is a named list containing all symbol data}
+
+\item{\code{systemDirectory}}{is the path to GAMS System directory}
+}
+\if{html}{\out{</div>}}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
 \item{\code{data}}{is a named list containing all symbol data}
 
@@ -36,28 +53,35 @@ Container$new()
 \item \href{#method-getUniverseSet}{\code{Container$getUniverseSet()}}
 \item \href{#method-removeSymbols}{\code{Container$removeSymbols()}}
 \item \href{#method-renameSymbol}{\code{Container$renameSymbol()}}
-\item \href{#method-listSymbols}{\code{Container$listSymbols()}}
-\item \href{#method-listSets}{\code{Container$listSets()}}
-\item \href{#method-listParameters}{\code{Container$listParameters()}}
-\item \href{#method-listAliases}{\code{Container$listAliases()}}
-\item \href{#method-listVariables}{\code{Container$listVariables()}}
-\item \href{#method-listEquations}{\code{Container$listEquations()}}
 \item \href{#method-addSet}{\code{Container$addSet()}}
 \item \href{#method-addParameter}{\code{Container$addParameter()}}
 \item \href{#method-addVariable}{\code{Container$addVariable()}}
 \item \href{#method-addEquation}{\code{Container$addEquation()}}
 \item \href{#method-addAlias}{\code{Container$addAlias()}}
-\item \href{#method-describeSets}{\code{Container$describeSets()}}
-\item \href{#method-describeParameters}{\code{Container$describeParameters()}}
-\item \href{#method-describeVariables}{\code{Container$describeVariables()}}
-\item \href{#method-describeEquations}{\code{Container$describeEquations()}}
-\item \href{#method-printSpecialValues}{\code{Container$printSpecialValues()}}
+\item \href{#method-getSymbols}{\code{Container$getSymbols()}}
 \item \href{#method-write}{\code{Container$write()}}
-\item \href{#method-reOrderSymbols}{\code{Container$reOrderSymbols()}}
+\item \href{#method-reorderSymbols}{\code{Container$reorderSymbols()}}
 \item \href{#method-isValid}{\code{Container$isValid()}}
 \item \href{#method-.linkDomainCategories}{\code{Container$.linkDomainCategories()}}
 \item \href{#method-clone}{\code{Container$clone()}}
 }
+}
+\if{html}{
+\out{<details ><summary>Inherited methods</summary>}
+\itemize{
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="describeAliases">}\href{../../gamstransfer/html/BaseContainer.html#method-describeAliases}{\code{gamstransfer::BaseContainer$describeAliases()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="describeEquations">}\href{../../gamstransfer/html/BaseContainer.html#method-describeEquations}{\code{gamstransfer::BaseContainer$describeEquations()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="describeParameters">}\href{../../gamstransfer/html/BaseContainer.html#method-describeParameters}{\code{gamstransfer::BaseContainer$describeParameters()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="describeSets">}\href{../../gamstransfer/html/BaseContainer.html#method-describeSets}{\code{gamstransfer::BaseContainer$describeSets()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="describeVariables">}\href{../../gamstransfer/html/BaseContainer.html#method-describeVariables}{\code{gamstransfer::BaseContainer$describeVariables()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="listAliases">}\href{../../gamstransfer/html/BaseContainer.html#method-listAliases}{\code{gamstransfer::BaseContainer$listAliases()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="listEquations">}\href{../../gamstransfer/html/BaseContainer.html#method-listEquations}{\code{gamstransfer::BaseContainer$listEquations()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="listParameters">}\href{../../gamstransfer/html/BaseContainer.html#method-listParameters}{\code{gamstransfer::BaseContainer$listParameters()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="listSets">}\href{../../gamstransfer/html/BaseContainer.html#method-listSets}{\code{gamstransfer::BaseContainer$listSets()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="listSymbols">}\href{../../gamstransfer/html/BaseContainer.html#method-listSymbols}{\code{gamstransfer::BaseContainer$listSymbols()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseContainer" data-id="listVariables">}\href{../../gamstransfer/html/BaseContainer.html#method-listVariables}{\code{gamstransfer::BaseContainer$listVariables()}}\out{</span>}
+}
+\out{</details>}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
@@ -93,10 +117,10 @@ GAMS system directory}
 \if{latex}{\out{\hypertarget{method-read}{}}}
 \subsection{Method \code{read()}}{
 main method to read loadFrom, can be provided 
-with a list of symbols to read in subsets, records controls 
+with a list of symbols to read in subsets, `records` controls 
 if symbol records are loaded or just metadata
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$read(loadFrom, symbols = "all", values = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$read(loadFrom, symbols = "all", records = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -107,7 +131,7 @@ if symbol records are loaded or just metadata
 \item{\code{symbols}}{optional argument to specify the names of the 
 symbols to be read (string or a list of strings)}
 
-\item{\code{values}}{optional logical argument to specify whether to 
+\item{\code{records}}{optional logical argument to specify whether to 
 read symbol records (logical)}
 }
 \if{html}{\out{</div>}}
@@ -161,138 +185,6 @@ rename a symbol in the Container
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-listSymbols"></a>}}
-\if{latex}{\out{\hypertarget{method-listSymbols}{}}}
-\subsection{Method \code{listSymbols()}}{
-list all symbols in the container if isValid = NULL
-list all valid symbols in the container if  isValid = TRUE
-list all invalid symbols in the container if isValid = FALSE
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$listSymbols(isValid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{isValid}}{an optional logical argument}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a vector of symbols
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-listSets"></a>}}
-\if{latex}{\out{\hypertarget{method-listSets}{}}}
-\subsection{Method \code{listSets()}}{
-list all sets in the container if isValid = NULL
-list all valid sets in the container if  isValid = TRUE
-list all invalid sets in the container if isValid = FALSE
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$listSets(isValid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{isValid}}{an optional logical argument}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a vector of symbols
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-listParameters"></a>}}
-\if{latex}{\out{\hypertarget{method-listParameters}{}}}
-\subsection{Method \code{listParameters()}}{
-list all parameters in the container if isValid = NULL
-list all valid parameters in the container if  isValid = TRUE
-list all invalid parameters in the container if isValid = FALSE
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$listParameters(isValid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{isValid}}{an optional logical argument}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a vector of symbols
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-listAliases"></a>}}
-\if{latex}{\out{\hypertarget{method-listAliases}{}}}
-\subsection{Method \code{listAliases()}}{
-list all aliases in the container if isValid = NULL
-list all valid aliases in the container if  isValid = TRUE
-list all invalid aliases in the container if isValid = FALSE
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$listAliases(isValid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{isValid}}{an optional logical argument}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a vector of symbols
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-listVariables"></a>}}
-\if{latex}{\out{\hypertarget{method-listVariables}{}}}
-\subsection{Method \code{listVariables()}}{
-list all variables in the container if isValid = NULL
-list all valid variables in the container if  isValid = TRUE
-list all invalid variables in the container if isValid = FALSE
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$listVariables(isValid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{isValid}}{an optional logical argument}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a vector of symbols
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-listEquations"></a>}}
-\if{latex}{\out{\hypertarget{method-listEquations}{}}}
-\subsection{Method \code{listEquations()}}{
-list all equations in the container if isValid = NULL
-list all valid equations in the container if  isValid = TRUE
-list all invalid equations in the container if isValid = FALSE
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$listEquations(isValid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{isValid}}{an optional logical argument}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a vector of symbols
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-addSet"></a>}}
 \if{latex}{\out{\hypertarget{method-addSet}{}}}
 \subsection{Method \code{addSet()}}{
@@ -342,13 +234,13 @@ a Set object
 \subsection{Method \code{addParameter()}}{
 There are two different ways to create a GAMS parameter and 
 add it to a Container. One is using the Parameter constructor and 
-the other is using addParameter method which calls the Parameter constructor
-internally.
+the other is using addParameter method which calls the 
+Parameter constructor internally.
 addParameter is a Container method to add a Parameter.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Container$addParameter(
   name,
-  domain = list(),
+  domain = NULL,
   records = NULL,
   domainForwarding = FALSE,
   description = ""
@@ -361,9 +253,9 @@ addParameter is a Container method to add a Parameter.
 \item{\code{name}}{string argument for name of the Parameter}
 
 \item{\code{domain}}{an optional argument specifying a list of strings, 
-a string. default value is "*".}
+a string. default value is NULL.}
 
-\item{\code{records}}{specify set records as a string vector or a dataframe.}
+\item{\code{records}}{specify set records as a vector or a dataframe.}
 
 \item{\code{domainForwarding}}{an optional logical argument to specify 
 domain forwarding. Default value is FALSE.}
@@ -389,7 +281,7 @@ addVariable is a Container method to add a Variable.
 \if{html}{\out{<div class="r">}}\preformatted{Container$addVariable(
   name,
   type = "free",
-  domain = list(),
+  domain = NULL,
   records = NULL,
   domainForwarding = FALSE,
   description = ""
@@ -406,9 +298,9 @@ positive, negative, free, sos1, sos2, semicont, semiint]. The default
 is "free"}
 
 \item{\code{domain}}{an optional argument specifying a list of strings, 
-a string. default value is "*".}
+a string. default value is NULL.}
 
-\item{\code{records}}{specify set records as a string vector or a dataframe.}
+\item{\code{records}}{specify set records as a vector or a dataframe.}
 
 \item{\code{domainForwarding}}{an optional logical argument to specify 
 domain forwarding. Default value is FALSE.}
@@ -434,7 +326,7 @@ addEquation is a Container method to add a Equation.
 \if{html}{\out{<div class="r">}}\preformatted{Container$addEquation(
   name,
   type,
-  domain = list(),
+  domain = NULL,
   records = NULL,
   domainForwarding = FALSE,
   description = ""
@@ -452,7 +344,7 @@ addEquation is a Container method to add a Equation.
 \item{\code{domain}}{an optional argument specifying a list of strings, 
 a string. default value is "*".}
 
-\item{\code{records}}{specify set records as a string vector or a dataframe.}
+\item{\code{records}}{specify set records as a vector or a dataframe.}
 
 \item{\code{domainForwarding}}{an optional logical argument to specify 
 domain forwarding. Default value is FALSE.}
@@ -490,91 +382,22 @@ an alias for}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-describeSets"></a>}}
-\if{latex}{\out{\hypertarget{method-describeSets}{}}}
-\subsection{Method \code{describeSets()}}{
-create a summary table with descriptive statistics for Sets
+\if{html}{\out{<a id="method-getSymbols"></a>}}
+\if{latex}{\out{\hypertarget{method-getSymbols}{}}}
+\subsection{Method \code{getSymbols()}}{
+returns a list of object references for `Symbols`
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeSets(symbols = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$getSymbols(symbols)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{symbols}}{an optional argument of type string or a list of sets 
-to describe. The default value is NULL which assumes all sets.}
+\item{\code{symbols}}{character, string, or vector of Symbols for which 
+the user wants object references}
 }
 \if{html}{\out{</div>}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-describeParameters"></a>}}
-\if{latex}{\out{\hypertarget{method-describeParameters}{}}}
-\subsection{Method \code{describeParameters()}}{
-create a summary table with descriptive statistics 
-for Parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeParameters(symbols = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{symbols}}{an optional argument of type string or a 
-list of parameters to describe. The default value is 
-NULL which assumes all parameters.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-describeVariables"></a>}}
-\if{latex}{\out{\hypertarget{method-describeVariables}{}}}
-\subsection{Method \code{describeVariables()}}{
-create a summary table with descriptive 
-statistics for Variables
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeVariables(symbols = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{symbols}}{an optional argument of type string 
-or a list of Variables to describe. The default value 
-is NULL which assumes all variables.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-describeEquations"></a>}}
-\if{latex}{\out{\hypertarget{method-describeEquations}{}}}
-\subsection{Method \code{describeEquations()}}{
-create a summary table with descriptive 
-statistics for Equations
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$describeEquations(symbols = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{symbols}}{an optional argument of type string or 
-a list of equations to describe. The default value is 
-NULL which assumes all equations.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-printSpecialValues"></a>}}
-\if{latex}{\out{\hypertarget{method-printSpecialValues}{}}}
-\subsection{Method \code{printSpecialValues()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$printSpecialValues()}\if{html}{\out{</div>}}
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-write"></a>}}
@@ -603,12 +426,12 @@ using the uel_priority argument.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-reOrderSymbols"></a>}}
-\if{latex}{\out{\hypertarget{method-reOrderSymbols}{}}}
-\subsection{Method \code{reOrderSymbols()}}{
+\if{html}{\out{<a id="method-reorderSymbols"></a>}}
+\if{latex}{\out{\hypertarget{method-reorderSymbols}{}}}
+\subsection{Method \code{reorderSymbols()}}{
 reorder symbols in order to avoid domain violations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Container$reOrderSymbols()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Container$reorderSymbols()}\if{html}{\out{</div>}}
 }
 
 }

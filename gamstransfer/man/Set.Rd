@@ -4,12 +4,12 @@
 \alias{Set}
 \title{Set Class}
 \description{
-A class for Set objects. This class inherits from an abstract symbol class.
-To access the documentation for the methods getCardnality, getSparsity, 
-and isValid, please use help(Symbol).
+A class for Set objects. This class inherits from an abstract Symbol class.
+The documentation for methods common to all symbols can be accessed via help(Symbol)
+ or help(BaseSymbol).
 }
-\section{Super class}{
-\code{\link[gamstransfer:Symbol]{gamstransfer::Symbol}} -> \code{Set}
+\section{Super classes}{
+\code{\link[gamstransfer:BaseSymbol]{gamstransfer::BaseSymbol}} -> \code{\link[gamstransfer:Symbol]{gamstransfer::Symbol}} -> \code{Set}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -80,25 +80,25 @@ domain links}
 \if{html}{
 \out{<details ><summary>Inherited methods</summary>}
 \itemize{
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countEps">}\href{../../gamstransfer/html/BaseSymbol.html#method-countEps}{\code{gamstransfer::BaseSymbol$countEps()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countNA">}\href{../../gamstransfer/html/BaseSymbol.html#method-countNA}{\code{gamstransfer::BaseSymbol$countNA()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countNegInf">}\href{../../gamstransfer/html/BaseSymbol.html#method-countNegInf}{\code{gamstransfer::BaseSymbol$countNegInf()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countPosInf">}\href{../../gamstransfer/html/BaseSymbol.html#method-countPosInf}{\code{gamstransfer::BaseSymbol$countPosInf()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countUndef">}\href{../../gamstransfer/html/BaseSymbol.html#method-countUndef}{\code{gamstransfer::BaseSymbol$countUndef()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMaxAbsValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMaxAbsValue}{\code{gamstransfer::BaseSymbol$getMaxAbsValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMaxValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMaxValue}{\code{gamstransfer::BaseSymbol$getMaxValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMeanValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMeanValue}{\code{gamstransfer::BaseSymbol$getMeanValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMinValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMinValue}{\code{gamstransfer::BaseSymbol$getMinValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="whereMax">}\href{../../gamstransfer/html/BaseSymbol.html#method-whereMax}{\code{gamstransfer::BaseSymbol$whereMax()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="whereMaxAbs">}\href{../../gamstransfer/html/BaseSymbol.html#method-whereMaxAbs}{\code{gamstransfer::BaseSymbol$whereMaxAbs()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="whereMin">}\href{../../gamstransfer/html/BaseSymbol.html#method-whereMin}{\code{gamstransfer::BaseSymbol$whereMin()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id=".linkDomainCategories">}\href{../../gamstransfer/html/Symbol.html#method-.linkDomainCategories}{\code{gamstransfer::Symbol$.linkDomainCategories()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="countEps">}\href{../../gamstransfer/html/Symbol.html#method-countEps}{\code{gamstransfer::Symbol$countEps()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="countNA">}\href{../../gamstransfer/html/Symbol.html#method-countNA}{\code{gamstransfer::Symbol$countNA()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="countNeginf">}\href{../../gamstransfer/html/Symbol.html#method-countNeginf}{\code{gamstransfer::Symbol$countNeginf()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="countPosinf">}\href{../../gamstransfer/html/Symbol.html#method-countPosinf}{\code{gamstransfer::Symbol$countPosinf()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="countUndef">}\href{../../gamstransfer/html/Symbol.html#method-countUndef}{\code{gamstransfer::Symbol$countUndef()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="findDomainViolations">}\href{../../gamstransfer/html/Symbol.html#method-findDomainViolations}{\code{gamstransfer::Symbol$findDomainViolations()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="getCardinality">}\href{../../gamstransfer/html/Symbol.html#method-getCardinality}{\code{gamstransfer::Symbol$getCardinality()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="getMaxAbsValue">}\href{../../gamstransfer/html/Symbol.html#method-getMaxAbsValue}{\code{gamstransfer::Symbol$getMaxAbsValue()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="getMaxValue">}\href{../../gamstransfer/html/Symbol.html#method-getMaxValue}{\code{gamstransfer::Symbol$getMaxValue()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="getMeanValue">}\href{../../gamstransfer/html/Symbol.html#method-getMeanValue}{\code{gamstransfer::Symbol$getMeanValue()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="getMinValue">}\href{../../gamstransfer/html/Symbol.html#method-getMinValue}{\code{gamstransfer::Symbol$getMinValue()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="getSparsity">}\href{../../gamstransfer/html/Symbol.html#method-getSparsity}{\code{gamstransfer::Symbol$getSparsity()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="isValid">}\href{../../gamstransfer/html/Symbol.html#method-isValid}{\code{gamstransfer::Symbol$isValid()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="shape">}\href{../../gamstransfer/html/Symbol.html#method-shape}{\code{gamstransfer::Symbol$shape()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="toDense">}\href{../../gamstransfer/html/Symbol.html#method-toDense}{\code{gamstransfer::Symbol$toDense()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="whereMax">}\href{../../gamstransfer/html/Symbol.html#method-whereMax}{\code{gamstransfer::Symbol$whereMax()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="whereMaxAbs">}\href{../../gamstransfer/html/Symbol.html#method-whereMaxAbs}{\code{gamstransfer::Symbol$whereMaxAbs()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="Symbol" data-id="whereMin">}\href{../../gamstransfer/html/Symbol.html#method-whereMin}{\code{gamstransfer::Symbol$whereMin()}}\out{</span>}
 }
 \out{</details>}
 }
