@@ -3920,12 +3920,9 @@ is.integer0 <- function(x)
   is.integer(x) && length(x) == 0L
 }
 
-#' @title ConstContainer Class
-#' @description ConstContainer class is a data-focused read-only object that 
-#' will provide a snapshot of the data target being read. The ConstContainer 
-#' can be created by reading a GDX file. This class is specially useful for 
-#' the users who are only interested in post-processing data from a GAMS model 
-#' run.
+#' @title BaseContainer Class
+#' @description BaseContainer class is an abstract class that is inherited by 
+#' the Container class and ConstContainer class.
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export
@@ -3937,8 +3934,6 @@ BaseContainer <- R6::R6Class (
     acronyms = NULL,
     #' @description
     #' Create a new ConstContainer simply by initializing an object.
-    #' @param loadFrom optional argument to point to the GDX file being 
-    #' read into the Container
     #' @param systemDirectory optional argument for the absolute path to 
     #' GAMS system directory
     #' @examples
@@ -4540,9 +4535,8 @@ BaseContainer <- R6::R6Class (
   )
   )
 
-#' @title Symbol Abstract Class
-#' @description An abstract symbol class from which the classes Set, Parameter, Variable, 
-#' and Equation are inherited.
+#' @title BaseSymbol Abstract Class
+#' @description An abstract BaseSymbol class from which the Symbol class is inherited.
 BaseSymbol <- R6Class(
   "BaseSymbol",
   public = list(

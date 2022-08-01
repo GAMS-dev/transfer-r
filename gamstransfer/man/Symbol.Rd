@@ -4,8 +4,12 @@
 \alias{Symbol}
 \title{Symbol Abstract Class}
 \description{
-An abstract symbol class from which the classes Set, Parameter, Variable, 
+An abstract symbol class from 
+which the classes Set, Parameter, Variable, 
 and Equation are inherited.
+}
+\section{Super class}{
+\code{\link[gamstransfer:BaseSymbol]{gamstransfer::BaseSymbol}} -> \code{Symbol}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
@@ -24,24 +28,30 @@ belongs to. Type Container.}
 \item \href{#method-findDomainViolations}{\code{Symbol$findDomainViolations()}}
 \item \href{#method-getCardinality}{\code{Symbol$getCardinality()}}
 \item \href{#method-getSparsity}{\code{Symbol$getSparsity()}}
-\item \href{#method-getMaxValue}{\code{Symbol$getMaxValue()}}
-\item \href{#method-getMinValue}{\code{Symbol$getMinValue()}}
-\item \href{#method-getMeanValue}{\code{Symbol$getMeanValue()}}
-\item \href{#method-getMaxAbsValue}{\code{Symbol$getMaxAbsValue()}}
-\item \href{#method-whereMax}{\code{Symbol$whereMax()}}
-\item \href{#method-whereMaxAbs}{\code{Symbol$whereMaxAbs()}}
-\item \href{#method-whereMin}{\code{Symbol$whereMin()}}
-\item \href{#method-countNA}{\code{Symbol$countNA()}}
-\item \href{#method-countEps}{\code{Symbol$countEps()}}
-\item \href{#method-countUndef}{\code{Symbol$countUndef()}}
-\item \href{#method-countPosinf}{\code{Symbol$countPosinf()}}
-\item \href{#method-countNeginf}{\code{Symbol$countNeginf()}}
 \item \href{#method-isValid}{\code{Symbol$isValid()}}
 \item \href{#method-shape}{\code{Symbol$shape()}}
 \item \href{#method-toDense}{\code{Symbol$toDense()}}
 \item \href{#method-.linkDomainCategories}{\code{Symbol$.linkDomainCategories()}}
 \item \href{#method-clone}{\code{Symbol$clone()}}
 }
+}
+\if{html}{
+\out{<details ><summary>Inherited methods</summary>}
+\itemize{
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countEps">}\href{../../gamstransfer/html/BaseSymbol.html#method-countEps}{\code{gamstransfer::BaseSymbol$countEps()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countNA">}\href{../../gamstransfer/html/BaseSymbol.html#method-countNA}{\code{gamstransfer::BaseSymbol$countNA()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countNegInf">}\href{../../gamstransfer/html/BaseSymbol.html#method-countNegInf}{\code{gamstransfer::BaseSymbol$countNegInf()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countPosInf">}\href{../../gamstransfer/html/BaseSymbol.html#method-countPosInf}{\code{gamstransfer::BaseSymbol$countPosInf()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="countUndef">}\href{../../gamstransfer/html/BaseSymbol.html#method-countUndef}{\code{gamstransfer::BaseSymbol$countUndef()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMaxAbsValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMaxAbsValue}{\code{gamstransfer::BaseSymbol$getMaxAbsValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMaxValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMaxValue}{\code{gamstransfer::BaseSymbol$getMaxValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMeanValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMeanValue}{\code{gamstransfer::BaseSymbol$getMeanValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="getMinValue">}\href{../../gamstransfer/html/BaseSymbol.html#method-getMinValue}{\code{gamstransfer::BaseSymbol$getMinValue()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="whereMax">}\href{../../gamstransfer/html/BaseSymbol.html#method-whereMax}{\code{gamstransfer::BaseSymbol$whereMax()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="whereMaxAbs">}\href{../../gamstransfer/html/BaseSymbol.html#method-whereMaxAbs}{\code{gamstransfer::BaseSymbol$whereMaxAbs()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="gamstransfer" data-topic="BaseSymbol" data-id="whereMin">}\href{../../gamstransfer/html/BaseSymbol.html#method-whereMin}{\code{gamstransfer::BaseSymbol$whereMin()}}\out{</span>}
+}
+\out{</details>}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
@@ -88,268 +98,6 @@ getSparsity get the sparsity of the symbol w.r.t the cardinality
 \if{html}{\out{<div class="r">}}\preformatted{Symbol$getSparsity()}\if{html}{\out{</div>}}
 }
 
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getMaxValue"></a>}}
-\if{latex}{\out{\hypertarget{method-getMaxValue}{}}}
-\subsection{Method \code{getMaxValue()}}{
-getMaxValue get the maximum value
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$getMaxValue(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to get the maximum.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getMinValue"></a>}}
-\if{latex}{\out{\hypertarget{method-getMinValue}{}}}
-\subsection{Method \code{getMinValue()}}{
-getMinValue get the minimum value in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$getMinValue(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to get the minimum.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getMeanValue"></a>}}
-\if{latex}{\out{\hypertarget{method-getMeanValue}{}}}
-\subsection{Method \code{getMeanValue()}}{
-getMeanValue get the mean value in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$getMeanValue(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to get the mean.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getMaxAbsValue"></a>}}
-\if{latex}{\out{\hypertarget{method-getMaxAbsValue}{}}}
-\subsection{Method \code{getMaxAbsValue()}}{
-getMaxAbsValue get the maximum absolute value in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$getMaxAbsValue(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to get the 
-maximum absolute value.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-whereMax"></a>}}
-\if{latex}{\out{\hypertarget{method-whereMax}{}}}
-\subsection{Method \code{whereMax()}}{
-whereMax find the domain entry of records with a 
-maximum value (return first instance only)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$whereMax(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to find the 
-domain entry of records with a maximum value.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-whereMaxAbs"></a>}}
-\if{latex}{\out{\hypertarget{method-whereMaxAbs}{}}}
-\subsection{Method \code{whereMaxAbs()}}{
-whereMaxAbs find the domain entry of records with a maximum 
-absolute value (return first instance only)
-
-
-whereMax find the domain entry of records with a 
-maximum absolute value (return first instance only)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$whereMaxAbs(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to find the 
-domain entry of records with a maximum value.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-whereMin"></a>}}
-\if{latex}{\out{\hypertarget{method-whereMin}{}}}
-\subsection{Method \code{whereMin()}}{
-whereMin 	find the domain entry of records with a 
-minimum value (return first instance only)
-
-
-whereMax find the domain entry of records with a 
-minimum value (return first instance only)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$whereMin(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns over which one wants to find the 
-domain entry of records with a maximum value.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-countNA"></a>}}
-\if{latex}{\out{\hypertarget{method-countNA}{}}}
-\subsection{Method \code{countNA()}}{
-countNA total number of SpecialValues$NA in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$countNA(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns in which one wants to count the number of 
-SpecialValues$NA.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-countEps"></a>}}
-\if{latex}{\out{\hypertarget{method-countEps}{}}}
-\subsection{Method \code{countEps()}}{
-countEps total number of SpecialValues$EPS in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$countEps(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns in which one wants to count the number of 
-SpecialValues$EPS.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-countUndef"></a>}}
-\if{latex}{\out{\hypertarget{method-countUndef}{}}}
-\subsection{Method \code{countUndef()}}{
-countUndef total number of SpecialValues$UNDEF in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$countUndef(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns in which one wants to count the number of 
-SpecialValues$UNDEF.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-countPosinf"></a>}}
-\if{latex}{\out{\hypertarget{method-countPosinf}{}}}
-\subsection{Method \code{countPosinf()}}{
-countPosinf total number of 
-SpecialValues$POSINF in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$countPosinf(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns in which one wants to count the number of 
-SpecialValues$POSINF.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-countNeginf"></a>}}
-\if{latex}{\out{\hypertarget{method-countNeginf}{}}}
-\subsection{Method \code{countNeginf()}}{
-countNeginf total number of 
-SpecialValues$NEGINF in value column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Symbol$countNeginf(columns = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{columns}}{columns in which one wants to count the number of 
-SpecialValues$NEGINF.
-This is an optional argument which defaults to `value` for parameter
- and `level` for variable and equation. For variables and equations, 
-alternate column/columns can be provided using the columns argument.}
-}
-\if{html}{\out{</div>}}
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-isValid"></a>}}
