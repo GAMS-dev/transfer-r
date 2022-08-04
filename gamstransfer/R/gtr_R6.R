@@ -115,15 +115,19 @@ Container <- R6::R6Class (
         stop("records must be type logical\n")
       }
 
+      # is.character will also check vector of strings
       if (!(is.character(symbols)) && !(is.list(symbols))) {
         stop("argument symbols must be of the type list or string\n")
       }
 
-      for (s in symbols) {
-        if (!is.character(s)) {
-          stop("argument symbols must contain only type string\n")
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("argument `symbols`` must contain only type string\n")
         }
       }
+
+      # convert symbols argument to a vector
+      symbols = unlist(symbols)
 
       if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
@@ -179,12 +183,17 @@ Container <- R6::R6Class (
     #' @param symbols a string specifying the symbol name or a list of symbols 
     #' to be removed from the container
     removeSymbols = function(symbols = NULL) {
-      if (!(is.character(symbols) || is.vector(symbols) || is.list(symbols))) {
-        stop("Argument 'name' must be of type string, list, or vector\n")
+      # is.character also checks vector of strings
+      if (!(is.character(symbols) || is.list(symbols))) {
+        stop("Argument 'symbols' must be of type string, list, or vector\n")
       }
 
-      if (!all(unlist(lapply(symbols, is.character)))) {
-        stop("Argument 'name' must contain only type character\n")
+      # if only one element is character in a vector, entire vector is character
+      # so the following check is needed only for lists
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("Argument 'symbols' must contain only type character\n")
+        }
       }
 
       setOrAlias = list()
@@ -343,8 +352,14 @@ Container <- R6::R6Class (
     #' the user wants object references
     #' @returns a list of object references to symbols
     getSymbols = function(symbols) {
-      if (!(is.character(symbols) || is.list(symbols) || is.vector(symbols))) {
+      if (!(is.character(symbols) || is.list(symbols))) {
         stop("The argument symbols must be type character, list, or vector \n")
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("Argument 'symbols' must contain only type character\n")
+        }
       }
 
       obj = list()
@@ -390,6 +405,12 @@ Container <- R6::R6Class (
       if (!is.null(uelPriority)) {
         if (!(is.character(uelPriority) || is.list(uelPriority))) {
           stop("'uelPriority' must be type list or str\n")
+        }
+
+        if (is.list(uelPriority)) {
+          if (!all(unlist(lapply(uelPriority, is.character)))) {
+            stop("Argument `uelPriority` must contain only type character\n")
+          }
         }
       }
 
@@ -528,7 +549,9 @@ Container <- R6::R6Class (
         metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
         syms = lapply(metadata, "[[", 1)
 
-        if (is.character(symbols) && symbols == "all") {
+        # symbols argument is always a character vector otherwise would throw an
+        # error earlier
+        if (length(symbols) == 1 && symbols == "all") {
           symbolsToRead = syms
         }
         else {
@@ -656,7 +679,7 @@ Container <- R6::R6Class (
     .containerRead = function(loadFrom, symbols, records) {
 
       syms = names(loadFrom$data)
-      if (is.character(symbols) && symbols == "all") {
+      if (length(symbols) == 1 && symbols == "all") {
           symbolsToRead = syms
         }
         else {
@@ -1443,7 +1466,7 @@ Symbol <- R6Class(
     },
 
     domainLabels = function() {
-      column_names = list()
+      column_names = c()
       for (i in seq_along(self$domain)) {
         if (is.character(self$domain[[i]])) {
           d = self$domain[[i]]
@@ -1473,10 +1496,6 @@ Symbol <- R6Class(
     .records = NULL,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
-
-    # .attr = function() {
-    #   return(c("level", "marginal", "lower", "upper", "scale"))
-    # },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
@@ -1553,12 +1572,14 @@ Symbol <- R6Class(
             cols = append(cols, private$.attr())
           }
 
-          if (!identical(unlist(cols), colnames(self$records))) {
-            stop(paste0("Records columns must be named and ordered as: ", toString(cols),"\n"))
+          if (!identical(cols, colnames(self$records))) {
+            stop(paste0("Records columns must be named 
+            and ordered as: ", toString(cols),"\n"))
           }
 
-          if (!all(unlist(lapply(cols, is.character) ))) {
-            stop("Domain columns in symbol 'records' must be of type character\n")
+          if (!is.character(cols)) {
+            stop("Domain columns in symbol 
+            'records' must be of type character\n")
           }
 
           # check if columns are factors
@@ -1613,7 +1634,8 @@ Symbol <- R6Class(
 
           # drop duplicates
           if (self$dimension != 0) {
-            if (nrow(self$records) != nrow(unique(self$records[unlist(self$domainLabels)]))) {
+            if (nrow(self$records) != 
+            nrow(unique(self$records[self$domainLabels]))) {
               stop(paste0("Symbol 'records' contain non-unique",
                " domain members; ensure that only unique members exist\n"))
             }
@@ -1637,7 +1659,7 @@ Symbol <- R6Class(
     # find symbols to grow
     for (diter in seq_len(self$dimension)) {
       d = self$domain[[diter]]
-      dl = self$domainLabels[[diter]]
+      dl = self$domainLabels[diter]
       to_grow = list()
       while (inherits(d, "Set")) {
         to_grow = append(to_grow, d$name)
@@ -1650,7 +1672,7 @@ Symbol <- R6Class(
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$refContainer$data[[i]]$domainLabels)[[1]]
+        dim = (self$refContainer$data[[i]]$domainLabels)[1]
         if (!is.null(self$refContainer$data[[i]]$records)) {
           recs = self$refContainer$data[[i]]$records
           assert_that((self$refContainer$data[[i]]$dimension == 1),
@@ -3071,9 +3093,14 @@ ConstContainer <- R6::R6Class (
         stop("argument symbols must be of the type list or string\n")
       }
 
-      if (!all(unlist(lapply(symbols, is.character)))) {
-        stop("argument symbols must contain only type string\n")
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("argument symbols must contain only type string\n")
+        }
       }
+
+      # convert symbols to a vector
+      symbols = unlist(symbols)
 
       if (!is.character(loadFrom)) {
         stop("The argument loadFrom must be of type string\n")
@@ -3103,7 +3130,7 @@ ConstContainer <- R6::R6Class (
       metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
       syms = lapply(metadata, "[[", 1)
 
-      if (is.character(symbols) && symbols == "all") {
+      if (length(symbols) == 1 && symbols == "all") {
         symbolsToRead = syms
       }
       else {
@@ -3345,12 +3372,18 @@ ConstSymbol <- R6Class(
           domain_input = list()
         }
 
-        if (!(is.list(domain_input) || is.vector(domain_input))) {
-          domain_input = list(domain_input)
+        if (!(is.character(domain_input) || is.list(domain_input))) {
+          stop("All `domain` elements must be type character or list.\n")
         }
 
-        if (!all(unlist(lapply(domain_input, is.character)))) {
-          stop("All 'domain' elements must be type Character\n")
+        # if (!(is.list(domain_input) || is.vector(domain_input))) {
+        #   domain_input = list(domain_input)
+        # }
+
+        if (is.list(domain_input)) {
+          if (!all(unlist(lapply(domain_input, is.character)))) {
+            stop("All 'domain' elements must be type Character\n")
+          }
         }
 
         domaintemp = list()
@@ -3411,7 +3444,7 @@ ConstSymbol <- R6Class(
     },
 
     domainLabels = function() {
-      column_names = list()
+      column_names = c()
       for (i in seq_along(self$domain)) {
         if (is.character(self$domain[[i]])) {
           d = self$domain[[i]]
@@ -4082,14 +4115,14 @@ BaseContainer <- R6::R6Class (
         stop("Argument `isValid` must be type logical or NULL \n")
       }
 
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
+      if (!(is.character(types) || is.list(types)|| is.null(types))) {
         stop("Argument `types` myst be type character, list, vector, or NULL \n")
       }
 
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
+      if (is.list(types)) {
+        if (!all(unlist(lapply(types, is.character)))) {
+          stop("Argument 'types' must contain only type character\n")
+        }
       }
 
       if (is.null(types)) {
@@ -4133,13 +4166,12 @@ BaseContainer <- R6::R6Class (
         stop("Argument `isValid` must be type logical or NULL \n")
       }
 
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
+      if (!(is.character(types) || is.list(types) || is.null(types))) {
         stop("Argument `types` myst be type character, list, vector, or NULL \n")
       }
 
 
-      if (!all(unlist(lapply(types, is.character)))) {
+      if ( is.list(types) && !all(unlist(lapply(types, is.character)))) {
         stop("Argument 'types' must contain only type character\n")
       }
 
@@ -4176,14 +4208,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listSets()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4237,14 +4268,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listAliases()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4300,14 +4330,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listParameters()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4379,14 +4408,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listVariables()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4461,14 +4489,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listEquations()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) ||is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -5057,8 +5084,8 @@ BaseSymbol <- R6Class(
     tryCatch(
       {
         return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &&
-          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
+          (self$records[,columns] == SpecialValues$EPS) &
+          (sign(self$records[,columns]) == sign(1/SpecialValues$EPS))
           ))
       },
       error = function(cond) {

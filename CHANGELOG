@@ -6,6 +6,7 @@ GAMS Transfer R
 - updated default_values in the Equation class
 - updated Symbol isValid() method to check for levels of the linked domain set and symbol records
 - bug fix in setting factor levels for subsets of subsets
+- bug fix in countEPS method
 
 GAMS Transfer R v0.2.0
 ==================
