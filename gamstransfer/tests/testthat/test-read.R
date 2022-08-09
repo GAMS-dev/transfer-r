@@ -7111,7 +7111,7 @@ expect_error(Set$new(m, "_milk&meat"))
 )
 
 # test that name.setter (symbols and aliases) cannot set name if it already exists in container
-test_that("test_num_63", {
+test_that("test_num_64", {
 m = Container$new()
 i = Set$new(m, "i")
 j = Set$new(m, "j")
@@ -7126,7 +7126,7 @@ expect_error(expr())
 )
 
 # test utility functions
-test_that("test_num_63", {
+test_that("test_num_65", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i", 1:10))
 a = Parameter$new(m, "a", i, records=data.frame(i$records[,1], 1:10))
@@ -7142,6 +7142,59 @@ expect_equal(a$countEps(), 0)
 expect_equal(a$countUndef(), 0)
 expect_equal(a$countPosInf(), 0)
 expect_equal(a$countNegInf(), 0)
+}
+)
+
+test_that("test_num_66", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i", 1:10))
+j = Set$new(m, "j", records = paste0("j", 1:10))
+
+a0 = Parameter$new(m, "a0", records=10)
+a1 = Parameter$new(m, "a1", i, records=data.frame(paste0("i", 1:10), 1:10))
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5))))), stringsAsFactors = TRUE)
+values = replicate(50, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    values[count] = i1 + j1
+    count = count + 1
+  }
+}
+df$values = values
+a2 = Parameter$new(m, "a2", c(i, j), records=df)
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5), paste0("i", 1:10))))), stringsAsFactors = TRUE)
+
+values = replicate(500, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    for (ip1 in 1:10) {
+    values[count] = i1 + j1 + ip1
+    count = count + 1
+    }
+  }
+}
+df$values = values
+
+a3 = Parameter$new(m, "a3", c(i, j, i), records=df)
+
+a0p = Parameter$new(m, "a0p", records=a0$toDense())
+a1p = Parameter$new(m, "a1p", i, records = a1$toDense())
+a2p = Parameter$new(m, "a2p", c(i, j), records = a2$toDense())
+a3p = Parameter$new(m, "a3p", c(i, j, i), records = a3$toDense())
+
+v0 = Variable$new(m, "v0", records = a0$toDense())
+v1 = Variable$new(m, "v1", domain=i, records=a1$toDense())
+v2 = Variable$new(m, "v2", domain=c(i, j), records= a2$toDense())
+v3 = Variable$new(m, "v3", domain=c(i, j, i), records=a3$toDense())
+
 }
 )
 

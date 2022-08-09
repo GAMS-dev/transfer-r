@@ -657,7 +657,8 @@ Container <- R6::R6Class (
             if (is.null(s$records)) {
               next
             }
-            self$data[[s$names]]$setRecords(s$records)
+
+            self$data[[s$names]]$setRecords(data.frame(s$records))
 
             if (!is.null(self$acronyms)) {
               if (inherits(self$data[[s$names]], c("Parameter", 
@@ -2075,6 +2076,7 @@ Variable <- R6Class(
       super$initialize(container, name,
                       symtype, symsubtype, 
                       domain, description, domainForwarding)
+
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -2084,18 +2086,39 @@ Variable <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
-
+      # if list containing array or just an array
+      # exclude data frame accept everything else
+      if (inherits(records, c("list", "array", "numeric"))) {
+      # if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
         if (is.array(records)){
           records= list(level = records) # default to level
         }
 
-        #check if user attributes are valid
-        if (length(intersect(private$.attr(), names(records))) == 0) {
-          stop(paste0("Unrecognized user attribute detected in `records`. 
-          The attributes must be one of the following", toString(private$.attr()),
-          "and must be passed as names of a named list.\n"))
+        if (inherits(records, "list")) {
+          #check if user attributes are valid
+          if (length(intersect(private$.attr(), names(records))) == 0) {
+            stop(paste0("Unrecognized user attribute detected in `records`. 
+            The attributes must be one of the following", toString(private$.attr()),
+            "and must be passed as names of a named list.\n"))
+          }
+          # check if elements of the list are arrays or numerics
+          for (i in length(records)) {
+            if (!(is.numeric(records[[i]]))) {
+              stop("All elements of the named list `records` must 
+              be type numeric.\n")
+            }
+          }
         }
+
+        # here everything is a named list
+        # convert lists with numeric entries to array
+        # if vectors, convert them to arrays
+        for (i in length(records)) {
+          if (inherits(records[[i]], "numeric")) {
+            records[[i]] = array(records[[i]])
+          }
+        }
+
         # check if all records have equal size
         size1 = dim(records[[1]])
         size = lapply(records, dim)
@@ -2247,11 +2270,11 @@ Variable <- R6Class(
         #check dimensionality
         if (length(records) != self$dimension + length(private$.attr())) {
           stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
-          " is inconsistent with equation domain specification ", 
+          " is inconsistent with the variable domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
           "NOTE:",
           "columns not named ", toString(private$.attr()),
-          " will be interpreted as domain columns, check that the data.frame conforms",
+          " will be interpreted as domain columns, check that the data.frame conforms ",
           "to the required notation.\n",
           "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
@@ -2456,18 +2479,38 @@ Equation <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
+      if (inherits(records, c("list", "array", "numeric"))) {
+      # if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
 
         if (is.array(records)){
           records= list(level = records) # default to level
         }
 
-        #check if user attributes are valid
-        if (length(intersect(private$.attr(), names(records))) == 0) {
-          stop(paste0("Unrecognized user attribute detected in `records`. 
-          The attributes must be one of the following", toString(private$.attr()),
-          "and must be passed as names of a named list.\n"))
+        if (inherits(records, "list")) {
+          #check if user attributes are valid
+          if (length(intersect(private$.attr(), names(records))) == 0) {
+            stop(paste0("Unrecognized user attribute detected in `records`. 
+            The attributes must be one of the following", toString(private$.attr()),
+            "and must be passed as names of a named list.\n"))
+          }
+          # check if elements of the list are arrays or numerics
+          for (i in length(records)) {
+            if (!(is.numeric(records[[i]]))) {
+              stop("All elements of the named list `records` must 
+              be type numeric.\n")
+            }
+          }
         }
+
+        # here everything is a named list
+        # convert lists with numeric entries to array
+        # if vectors, convert them to arrays
+        for (i in length(records)) {
+          if (inherits(records[[i]], "numeric")) {
+            records[[i]] = array(records[[i]])
+          }
+        }
+
         # check if all records have equal size
         size1 = dim(records[[1]])
         size = lapply(records, dim)
@@ -2629,7 +2672,7 @@ Equation <- R6Class(
           self$dimension, " must resolve before records can be added\n\n",
           "NOTE:",
           "columns not named ", toString(private$.attr()),
-          " will be interpreted as domain columns, check that the data.frame conforms",
+          " will be interpreted as domain columns, check that the data.frame conforms ",
           "to the required notation.\n",
           "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
