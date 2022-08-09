@@ -111,7 +111,7 @@ Container <- R6::R6Class (
       # process it and populate various fields
 
       # check if records is logical
-      if (!is.logical(records)) {
+      if (!is.logical(records) && length(records) != 1) {
         stop("records must be type logical\n")
       }
 
@@ -970,7 +970,6 @@ Symbol <- R6Class(
 
     self$domain = domain
 
-    self$dimension = length(self$domain)
     self$description = description
     self$domainForwarding = domainForwarding
 
@@ -1240,7 +1239,7 @@ Symbol <- R6Class(
       }
       else {
         assertthat::assert_that(
-           (is.numeric(dimension_input)) && 
+           (inherits(dimension_input, c("numeric", "integer"))) && 
            (dimension_input %% 1 == 0) && (dimension_input >= 0),
            msg = "Symbol 'dimension' must be type 
            int (greater than or equal to 0)")
@@ -1645,8 +1644,9 @@ Symbol <- R6Class(
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
-              if (!all(is.numeric(self$records[, i]))) {
-                stop("Data in column", i, " must be numeric\n")
+              if (!is.numeric(self$records[, i])) {
+              # if (!all(inherits(self$records[, i], "numeric"))) {
+                stop("Data in column ", i, " must be numeric\n")
               }
             }
           }
@@ -2088,8 +2088,7 @@ Variable <- R6Class(
     setRecords = function(records) {
       # if list containing array or just an array
       # exclude data frame accept everything else
-      if (inherits(records, c("list", "array", "numeric"))) {
-      # if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
+      if (inherits(records, c("list", "array", "numeric", "integer"))) {
         if (is.array(records)){
           records= list(level = records) # default to level
         }
@@ -2114,7 +2113,7 @@ Variable <- R6Class(
         # convert lists with numeric entries to array
         # if vectors, convert them to arrays
         for (i in length(records)) {
-          if (inherits(records[[i]], "numeric")) {
+          if (inherits(records[[i]], c("numeric", "integer"))) {
             records[[i]] = array(records[[i]])
           }
         }
@@ -2479,8 +2478,7 @@ Equation <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if (inherits(records, c("list", "array", "numeric"))) {
-      # if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
+      if (inherits(records, c("list", "array", "numeric", "integer"))) {
 
         if (is.array(records)){
           records= list(level = records) # default to level
@@ -2506,7 +2504,7 @@ Equation <- R6Class(
         # convert lists with numeric entries to array
         # if vectors, convert them to arrays
         for (i in length(records)) {
-          if (inherits(records[[i]], "numeric")) {
+          if (inherits(records[[i]], c("numeric", "integer"))) {
             records[[i]] = array(records[[i]])
           }
         }
@@ -3418,10 +3416,6 @@ ConstSymbol <- R6Class(
         if (!(is.character(domain_input) || is.list(domain_input))) {
           stop("All `domain` elements must be type character or list.\n")
         }
-
-        # if (!(is.list(domain_input) || is.vector(domain_input))) {
-        #   domain_input = list(domain_input)
-        # }
 
         if (is.list(domain_input)) {
           if (!all(unlist(lapply(domain_input, is.character)))) {
