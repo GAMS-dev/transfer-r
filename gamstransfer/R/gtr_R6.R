@@ -1885,14 +1885,14 @@ Parameter <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if (is.array(records)) { # checks for matrix + arrays
+      if (inherits(records, c("array", "numeric", "integer"))) { # checks for matrix + arrays + vectors + numbers
         if ((length(records) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
             records is only possible for symbols where 
-            self.domain_type = 'regular'. 
+            self$domainType = 'regular'. 
             Must define symbol with specific domain set objects, 
-            symbol domain_type is currently ",self$domainType,".\n" ))
+            symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
@@ -1903,10 +1903,14 @@ Parameter <- R6Class(
             ))
           }
         }
+        # convert vector and numeric input to an array
+        if (inherits(records, c("numeric", "integer"))) {
+          records = array(records)
+        }
 
-        if (self$dimension >= 2) {
+        if (self$dimension >= 1) {
           if (!all(dim(records) == self$shape())) {
-            stop(paste0("User passed array/matrix with shape ", toString(dim(records)), " but anticipated 
+            stop(paste0("User passed array/matrix/numeric with shape ", toString(dim(records)), " but anticipated 
             shape was ", toString(self$shape()), " based on domain set information -- 
             must reconcile before array-to-records conversion is possible.\n"))
           }
@@ -2120,7 +2124,7 @@ Variable <- R6Class(
 
         # check if all records have equal size
         size1 = dim(records[[1]])
-        size = lapply(records, dim)
+        # size = lapply(records, dim)
 
         for (i in seq_along(records)) {
           if(!all(dim(records[[i]]) == size1)) {
@@ -2128,13 +2132,13 @@ Variable <- R6Class(
           }
         }
 
-        if ((length(records) > 1) && (self$domainType != "regular")) {
+        if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
             records is only possible for symbols where 
-            self.domain_type = 'regular'. 
+            self$domainType = 'regular'. 
             Must define symbol with specific domain set objects, 
-            symbol domain_type is currently ",self$domainType,".\n" ))
+            symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
@@ -2511,7 +2515,7 @@ Equation <- R6Class(
 
         # check if all records have equal size
         size1 = dim(records[[1]])
-        size = lapply(records, dim)
+        # size = lapply(records, dim)
 
         for (i in seq_along(records)) {
           if(!all(dim(records[[i]]) == size1)) {
@@ -2519,13 +2523,13 @@ Equation <- R6Class(
           }
         }
 
-        if ((length(records) > 1) && (self$domainType != "regular")) {
+        if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
             records is only possible for symbols where 
-            self.domain_type = 'regular'. 
+            self$domainType = 'regular'. 
             Must define symbol with specific domain set objects, 
-            symbol domain_type is currently ",self$domainType,".\n" ))
+            symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {

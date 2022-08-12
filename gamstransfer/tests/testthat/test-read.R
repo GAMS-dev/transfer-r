@@ -7145,6 +7145,7 @@ expect_equal(a$countNegInf(), 0)
 }
 )
 
+# test passing .toDense() of multiple dimensions to setRecords
 test_that("test_num_66", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i", 1:10))
@@ -7195,6 +7196,182 @@ v1 = Variable$new(m, "v1", domain=i, records=a1$toDense())
 v2 = Variable$new(m, "v2", domain=c(i, j), records= a2$toDense())
 v3 = Variable$new(m, "v3", domain=c(i, j, i), records=a3$toDense())
 
+v0p = Variable$new(m, "v0p", records = v0$toDense())
+v1p = Variable$new(m, "v1p", domain=i, records=v1$toDense())
+v2p = Variable$new(m, "v2p", domain=c(i, j), records= v2$toDense())
+v3p = Variable$new(m, "v3p", domain=c(i, j, i), records=v3$toDense())
+
+e0 = Equation$new(m, "e0", "eq", records = a0$toDense())
+e1 = Equation$new(m, "e1", "eq", domain=i, records=a1$toDense())
+e2 = Equation$new(m, "e2", "eq", domain=c(i, j), records= a2$toDense())
+e3 = Equation$new(m, "e3", "eq", domain=c(i, j, i), records=a3$toDense())
+
+e0p = Equation$new(m, "e0p", "eq", records = e0$toDense())
+e1p = Equation$new(m, "e1p", "eq", domain=i, records=e1$toDense())
+e2p = Equation$new(m, "e2p", "eq", domain=c(i, j), records= e2$toDense())
+e3p = Equation$new(m, "e3p", "eq", domain=c(i, j, i), records=e3$toDense())
+
+expect_equal(a0$records, a0p$records)
+expect_equal(a1$records, a1p$records)
+expect_equal(a2$records, a2p$records)
+expect_equal(a3$records, a3p$records)
+
+expect_equal(v0$records, v0p$records)
+expect_equal(v1$records, v1p$records)
+expect_equal(v2$records, v2p$records)
+expect_equal(v3$records, v3p$records)
+
+expect_equal(e0$records, e0p$records)
+expect_equal(e1$records, e1p$records)
+expect_equal(e2$records, e2p$records)
+expect_equal(e3$records, e3p$records)}
+)
+
+# test passing .toDense() of multiple dimensions to setRecords (named list structure)
+test_that("test_num_67", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i", 1:10))
+j = Set$new(m, "j", records = paste0("j", 1:10))
+
+a0 = Parameter$new(m, "a0", records=10)
+a1 = Parameter$new(m, "a1", i, records=data.frame(paste0("i", 1:10), 1:10))
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5))))), stringsAsFactors = TRUE)
+values = replicate(50, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    values[count] = i1 + j1
+    count = count + 1
+  }
+}
+df$values = values
+a2 = Parameter$new(m, "a2", c(i, j), records=df)
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5), paste0("i", 1:10))))), stringsAsFactors = TRUE)
+
+values = replicate(500, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    for (ip1 in 1:10) {
+    values[count] = i1 + j1 + ip1
+    count = count + 1
+    }
+  }
+}
+df$values = values
+
+a3 = Parameter$new(m, "a3", c(i, j, i), records=df)
+
+a0dict = list(
+  level = a0$toDense(),
+  marginal = a0$toDense(),
+  lower = a0$toDense(),
+  upper = a0$toDense(),
+  scale = a0$toDense()
+)
+
+a1dict = list(
+  level = a1$toDense(),
+  marginal = a1$toDense(),
+  lower = a1$toDense(),
+  upper = a1$toDense(),
+  scale = a1$toDense()
+)
+
+a2dict = list(
+  level = a2$toDense(),
+  marginal = a2$toDense(),
+  lower = a2$toDense(),
+  upper = a2$toDense(),
+  scale = a2$toDense()
+)
+
+a3dict = list(
+  level = a3$toDense(),
+  marginal = a3$toDense(),
+  lower = a3$toDense(),
+  upper = a3$toDense(),
+  scale = a3$toDense()
+)
+
+a0p = Parameter$new(m, "a0p", records=a0$toDense())
+a1p = Parameter$new(m, "a1p", i, records = a1$toDense())
+a2p = Parameter$new(m, "a2p", c(i, j), records = a2$toDense())
+a3p = Parameter$new(m, "a3p", c(i, j, i), records = a3$toDense())
+
+v0 = Variable$new(m, "v0", records = a0dict)
+v1 = Variable$new(m, "v1", domain=i, records=a1dict)
+v2 = Variable$new(m, "v2", domain=c(i, j), records= a2dict)
+v3 = Variable$new(m, "v3", domain=c(i, j, i), records=a3dict)
+
+v0p = Variable$new(m, "v0p", records = a0dict)
+v1p = Variable$new(m, "v1p", domain=i, records=a1dict)
+v2p = Variable$new(m, "v2p", domain=c(i, j), records= a2dict)
+v3p = Variable$new(m, "v3p", domain=c(i, j, i), records=a3dict)
+
+e0 = Equation$new(m, "e0", "eq", records = a0dict)
+e1 = Equation$new(m, "e1", "eq", domain=i, records=a1dict)
+e2 = Equation$new(m, "e2", "eq", domain=c(i, j), records= a2dict)
+e3 = Equation$new(m, "e3", "eq", domain=c(i, j, i), records=a3dict)
+
+e0p = Equation$new(m, "e0p", "eq", records = a0dict)
+e1p = Equation$new(m, "e1p", "eq", domain=i, records=a1dict)
+e2p = Equation$new(m, "e2p", "eq", domain=c(i, j), records= a2dict)
+e3p = Equation$new(m, "e3p", "eq", domain=c(i, j, i), records=a3dict)
+
+expect_equal(a0$records, a0p$records)
+expect_equal(a1$records, a1p$records)
+expect_equal(a2$records, a2p$records)
+expect_equal(a3$records, a3p$records)
+
+expect_equal(v0$records, v0p$records)
+expect_equal(v1$records, v1p$records)
+expect_equal(v2$records, v2p$records)
+expect_equal(v3$records, v3p$records)
+
+expect_equal(e0$records, e0p$records)
+expect_equal(e1$records, e1p$records)
+expect_equal(e2$records, e2p$records)
+expect_equal(e3$records, e3p$records)}
+)
+
+# shape test by passing eigen values and eigen vectors
+test_that("test_num_68", {
+  # gams syntax
+  gams_text = "
+  Set i / i1*i5 /;
+
+  Alias (i,j);
+
+  Table a(i,j)
+            i1   i2   i3   i4   i5
+      i1    1    2    4    7   11
+      i2    2    3    5    8   12
+      i3    4    5    6    9   13
+      i4    7    8    9   10   14
+      i5   11   12   13   14   15;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  e = eigen(m$data$a$toDense())
+  val = e$values
+  vec = e$vectors
+  eval = Parameter$new(m, "eval", m$data$i, records = val)
+  evec = Parameter$new(m, "evec", c(m$data$i, m$data$j), records = vec)
+
+  expect_true(m$isValid())
 }
 )
 
