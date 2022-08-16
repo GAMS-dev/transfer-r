@@ -6485,7 +6485,7 @@ test_that("test_num_50", {
 }
 )
 
-test_that("test_num_50", {
+test_that("test_num_51", {
   expect_error(ConstContainer$new("dummy.gdx"))
   expect_error(Container$new("dummy.gdx"))
 
@@ -6494,7 +6494,7 @@ test_that("test_num_50", {
 }
 )
 
-test_that("test_num_50", {
+test_that("test_num_52", {
   expect_error(ConstContainer$new(data.frame()))
   expect_error(Container$new(data.frame()))
 
@@ -6503,7 +6503,7 @@ test_that("test_num_50", {
 }
 )
 
-test_that("test_num_51", {
+test_that("test_num_53", {
   # gams syntax
   gams_text = "
 set i / i1 * i3 /;
@@ -6529,7 +6529,7 @@ execute_unload '%system.fn%.gdx';
 }
 )
 
-test_that("test_num_52", {
+test_that("test_num_54", {
   # gams syntax
   gams_text = "
 Set
@@ -6616,7 +6616,7 @@ solve transport using lp minimizing z;
 }
 )
 
-test_that("test_num_53", {
+test_that("test_num_55", {
   # gams syntax
   gams_text = "
 Set
@@ -6747,7 +6747,7 @@ solve transport using lp minimizing z;
 }
 )
 
-test_that("test_num_54", {
+test_that("test_num_56", {
   # gams syntax
   gams_text = "
 Set
@@ -6810,7 +6810,7 @@ solve transport using lp minimizing z;
 }
 )
 
-test_that("test_num_55", {
+test_that("test_num_57", {
 df = data.frame(expand.grid(c("a1","a2"), 
 c("b1","b2"), c("c1","c2"), c("d1","d2")), 
 stringsAsFactors=TRUE)
@@ -6825,7 +6825,7 @@ expect_true(!t$isValid())
 )
 
 # test make sure describe* are consistent between Container and ConstContainer
-test_that("test_num_56", {
+test_that("test_num_58", {
   # gams syntax
   gams_text = "
 Set
@@ -6896,7 +6896,7 @@ solve transport using lp minimizing z;
 )
 
 # test read from another Container
-test_that("test_num_57", {
+test_that("test_num_59", {
   # gams syntax
   gams_text = "
 Set
@@ -6959,7 +6959,7 @@ solve transport using lp minimizing z;
 )
 
 # test read from another Container with invalid symbols
-test_that("test_num_58", {
+test_that("test_num_60", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i",1:10))
 j = Set$new(m, "j", records = paste0("j",1:10))
@@ -6978,7 +6978,7 @@ expect_error(m2$read(m, "a"))
 
 
 # test converting arrays with EPS (across several columns) values for Parameters, Variables, Equations
-test_that("test_num_59", {
+test_that("test_num_61", {
   m = Container$new()
   i = Set$new(m, "i", records = paste0("i", c(1:5)))
   j = Set$new(m, "j", records = paste0("j", c(1:5)))
@@ -7026,7 +7026,7 @@ test_that("test_num_59", {
 )
 
 # test symbol isValid if categories are not set properly (directly)
-test_that("test_num_60", {
+test_that("test_num_62", {
 df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
 paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
@@ -7049,7 +7049,7 @@ expect_true(!a$isValid())
 )
 
 # test symbol isValid if categories are set properly (directly)
-test_that("test_num_61", {
+test_that("test_num_63", {
 df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
 paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
@@ -7075,7 +7075,7 @@ expect_true(a$isValid())
 )
 
 # test symbol isValid if categories are not linked to the proper set (directly)
-test_that("test_num_62", {
+test_that("test_num_64", {
 df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
 paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
@@ -7103,7 +7103,7 @@ expect_true(!a$isValid())
 )
 
 # test Exception when attempting to set a symbol name with invalid characters
-test_that("test_num_63", {
+test_that("test_num_65", {
 m = Container$new()
 expect_error(Set$new(m, "milk&meat"))
 expect_error(Set$new(m, "_milk&meat"))
@@ -7111,7 +7111,7 @@ expect_error(Set$new(m, "_milk&meat"))
 )
 
 # test that name.setter (symbols and aliases) cannot set name if it already exists in container
-test_that("test_num_64", {
+test_that("test_num_66", {
 m = Container$new()
 i = Set$new(m, "i")
 j = Set$new(m, "j")
@@ -7126,7 +7126,7 @@ expect_error(expr())
 )
 
 # test utility functions
-test_that("test_num_65", {
+test_that("test_num_67", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i", 1:10))
 a = Parameter$new(m, "a", i, records=data.frame(i$records[,1], 1:10))
@@ -7146,7 +7146,7 @@ expect_equal(a$countNegInf(), 0)
 )
 
 # test passing .toDense() of multiple dimensions to setRecords
-test_that("test_num_66", {
+test_that("test_num_68", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i", 1:10))
 j = Set$new(m, "j", records = paste0("j", 1:10))
@@ -7228,7 +7228,7 @@ expect_equal(e3$records, e3p$records)}
 )
 
 # test passing .toDense() of multiple dimensions to setRecords (named list structure)
-test_that("test_num_67", {
+test_that("test_num_69", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i", 1:10))
 j = Set$new(m, "j", records = paste0("j", 1:10))
@@ -7342,7 +7342,7 @@ expect_equal(e3$records, e3p$records)}
 )
 
 # shape test by passing eigen values and eigen vectors
-test_that("test_num_68", {
+test_that("test_num_70", {
   # gams syntax
   gams_text = "
   Set i / i1*i5 /;
@@ -7375,3 +7375,93 @@ test_that("test_num_68", {
 }
 )
 
+test_that("test_num_71", {
+arr0 = array(c(1:270), dim=c(5,6,9))
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+j = Set$new(m, "j", records=paste0("j",1:6))
+k = Set$new(m, "k", records=paste0("i",1:9))
+
+h = Parameter$new(m, "h", c(i, j, k), records = arr0)
+hp = Parameter$new(m, "hp", c(i, j, k), records = h$toDense())
+
+expect_equal(h$shape(), c(5,6,9))
+expect_equal(hp$shape(), c(5,6,9))
+expect_equal(dim(h$toDense()), c(5, 6, 9))
+expect_equal(dim(hp$toDense()), c(5, 6, 9))
+
+expect_equal(h$records, hp$records)
+expect_equal(arr0, h$toDense())
+expect_equal(arr0, hp$toDense())
+
+v = Variable$new(m, "v", "free", c(i, j, k), records=arr0)
+vp = Variable$new(m, "vp", "free", c(i, j, k), records=v$toDense())
+
+
+expect_equal(v$shape(), c(5,6, 9))
+expect_equal(vp$shape(), c(5,6, 9))
+expect_equal(dim(v$toDense()), c(5,6, 9))
+expect_equal(dim(vp$toDense()), c(5,6, 9))
+expect_equal(v$records, vp$records)
+expect_equal(arr0, v$toDense())
+expect_equal(arr0, vp$toDense())
+
+e = Equation$new(m, "e", "eq", c(i, j, k), records = arr0)
+ep = Equation$new(m, "ep", "eq", c(i, j, k), records = e$toDense())
+
+expect_equal(e$shape(), c(5,6, 9))
+expect_equal(ep$shape(), c(5,6, 9))
+expect_equal(dim(e$toDense()), c(5,6, 9))
+expect_equal(dim(ep$toDense()), c(5,6, 9))
+expect_equal(e$records, ep$records)
+expect_equal(arr0, e$toDense())
+expect_equal(arr0, ep$toDense())
+
+}
+)
+
+test_that("test_num_72", {
+  # gams syntax
+  gams_text = "
+    set i /i1*i3/, j /j1*j3/, k /k1*k3/;
+    parameter
+    dim0 / 1 /
+    dim1(i) / i1 1, i2 2, i3 3 /
+    dim2(i,j) / i1.j1 1, i2.j2 2, i3.j3 3 /
+    dim3(i,j,k) / i1.j1.k1 1, i2.j2.k2 2, i3.j3.k3 3 /;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  expect_equal(m$data$dim0$shape(), dim(m$data$dim0$toDense()))
+  expect_equal(m$data$dim1$shape(), dim(m$data$dim1$toDense()))
+  expect_equal(m$data$dim2$shape(), dim(m$data$dim2$toDense()))
+  expect_equal(m$data$dim3$shape(), dim(m$data$dim3$toDense()))
+}
+)
+
+test_that("test_num_73", {
+  # gams syntax
+  gams_text = "
+set t /t1*t139776/;
+parameter ProfitM(t), ProfitA(t);
+ProfitM(t) = uniformInt(1,10);
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+  m$data$ProfitA$setRecords(cumsum(m$data$ProfitM$toDense()))
+
+  expect_equal(m$data$ProfitA$numberRecords, m$data$t$numberRecords)
+
+}
+)
