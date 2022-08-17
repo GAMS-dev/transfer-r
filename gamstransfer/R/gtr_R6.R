@@ -3200,7 +3200,8 @@ ConstContainer <- R6::R6Class (
             if (m$type == GMS_DT_PAR) {
               ConstParameter$new(
                 self, m$name, m$domain, records = NULL,
-                description = m$expltext, m$domaintype)
+                description = m$expltext, domaintype= m$domaintype,
+                numberRecords=m$numRecs)
             }
             else if (m$type == GMS_DT_SET) {
                 dt = m$domaintype
@@ -3211,13 +3212,13 @@ ConstContainer <- R6::R6Class (
                 ConstSet$new(
                 self, m$name, m$domain, FALSE,
                 records = NULL,
-                m$expltext,dt)
+                m$expltext,dt, m$numRecs)
                 }
                 else if (m$subtype == 1) {
                 ConstSet$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
-                m$expltext, dt)
+                m$expltext, dt, m$numRecs)
                 }
                 else {
                   stop(paste0("Unknown set classification with 
@@ -3234,7 +3235,8 @@ ConstContainer <- R6::R6Class (
                 }
                 ConstVariable$new(
                 self, m$name, type, m$domain,
-                description = m$expltext, domaintype = m$domaintype)
+                description = m$expltext, domaintype = m$domaintype,
+                numberRecords=m$numRecs)
             }
             else if (m$type == GMS_DT_EQU) {
                 type = which(EqTypeSubtype() == m$subtype)
@@ -3247,11 +3249,25 @@ ConstContainer <- R6::R6Class (
 
                 ConstEquation$new(
                 self, m$name, type, m$domain,
-                description = m$expltext, domaintype = m$domaintype)
+                description = m$expltext, domaintype = m$domaintype,
+                numberRecords=m$numRecs)
             }
             else if (m$type == GMS_DT_ALIAS) {
-              aliasCount = aliasCount + 1
-              aliasList = append(aliasList, list(m))
+                dt = m$domaintype
+                if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
+                  dt = 2 # for relaxed domain type
+                }
+
+                if (m$subtype == 0) {
+                  ConstAlias$new(self, m$name, m$aliasfor, m$domain, FALSE,
+                  m$expltext, dt, m$numRecs)
+                }
+                else if (m$subtype == 1) {
+                  ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
+                  m$expltext, dt, m$numRecs)
+                }
+              # aliasCount = aliasCount + 1
+              # aliasList = append(aliasList, list(m))
             }
             else {
                 stop("incorrect data type.\n")
@@ -3260,10 +3276,10 @@ ConstContainer <- R6::R6Class (
       }
 
       # do alias last
-      for (m in aliasList) {
-      ConstAlias$new(
-        self, m$name, self$data[[m$aliasfor]])
-      }
+      # for (m in aliasList) {
+      # ConstAlias$new(
+      #   self, m$name, self$data[[m$aliasfor]])
+      # }
 
       if (records == TRUE) {
         symbolrecords = CPP_readSymbols(unlist(symbolsToRead),
@@ -3298,20 +3314,20 @@ ConstSymbol <- R6Class(
   initialize = function(container, name,
                         type, subtype, 
                         domain,
-                        description, domaintype) {
+                        description, domaintype,
+                        numberRecords) {
 
     super$initialize(type, subtype)
 
-    self$refContainer = container
-    self$name <- name
-    self$refContainer$data[[name]] = self
+    private$.ref_container = container
+    container$data[[name]] = self
 
-    self$records = NULL
-
-    self$domain = domain
+    private$.name <- name
+    private$.domain = domain
+    private$.dimension = length(domain)
     private$.domainType = domaintype
-    self$dimension = length(self$domain)
-    self$description = description
+    private$.description = description
+    private$.number_records = numberRecords
 
   },
 
@@ -3380,7 +3396,7 @@ ConstSymbol <- R6Class(
         return(private$.records)
       }
       else {
-        private$.records = records_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3389,21 +3405,16 @@ ConstSymbol <- R6Class(
         return(private$.description)
       }
       else {
-        if (!is.character(description_input)) {
-          stop("Symbol 'description' must be type character\n")
-        }
-
-        if (length(description_input) >= gams_description_max_length) {
-          stop(paste0("Symbol 'description' must have length ",
-          gams_description_max_length, " or smaller\n"))
-        }
-        private$.description = description_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
     dimension = function(dimension_input) {
       if (missing(dimension_input)) {
-        return(length(self$domain))
+        return(private$.dimension)
+      }
+      else {
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3413,26 +3424,7 @@ ConstSymbol <- R6Class(
         return(private$.domain)
       }
       else {
-        if (is.null(domain_input)) {
-          domain_input = list()
-        }
-
-        if (!(is.character(domain_input) || is.list(domain_input))) {
-          stop("All `domain` elements must be type character or list.\n")
-        }
-
-        if (is.list(domain_input)) {
-          if (!all(unlist(lapply(domain_input, is.character)))) {
-            stop("All 'domain' elements must be type Character\n")
-          }
-        }
-
-        domaintemp = list()
-        for (d in domain_input) {
-              # attach as a plain string
-              domaintemp = append(domaintemp, d)
-        }
-        private$.domain = domaintemp
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3441,15 +3433,7 @@ ConstSymbol <- R6Class(
         return(private$.ref_container)
       }
       else {
-        if (is.null(ref_container_input)) {
-          private$.ref_container = NULL
-          return()
-        }
-
-        if (!inherits(ref_container_input, "ConstContainer")) {
-          stop("ConstSymbol 'container' must be type ConstContainer\n")
-        }
-        private$.ref_container = ref_container_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3458,17 +3442,18 @@ ConstSymbol <- R6Class(
         return(private$.name)
       }
       else {
-        private$.name = name_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
     numberRecords = function() {
-      if (!is.null(self$records)) {
-        return(nrow(self$records))
-      }
-      else {
-        return(0)
-      }
+      return(private$.number_records)
+      # if (!is.null(self$records)) {
+      #   return(nrow(self$records))
+      # }
+      # else {
+      #   return(0)
+      # }
     },
 
     domainType = function() {
@@ -3512,7 +3497,12 @@ ConstSymbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
     .domain_type_map = list("none", "relaxed", "regular"),
-    .domainType = NULL
+    .domainType = NULL,
+    .number_records = NULL,
+    .dimension = NULL,
+    .set_records = function(records) {
+      private$.records = records
+    }
   )
 )
 
@@ -3523,8 +3513,9 @@ ConstSet <- R6Class(
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
                           records = NULL,
-                          description="", domaintype=NULL) {
-      self$isSingleton <- isSingleton
+                          description="", domaintype=NULL,
+                          numberRecords=NULL) {
+      private$.is_singleton <- isSingleton
       if (!isSingleton) {
         type = GMS_DT_SET
         subtype = SetTypeSubtype()[["set"]]
@@ -3536,7 +3527,8 @@ ConstSet <- R6Class(
 
       super$initialize(container, name,
                       type, subtype,
-                      domain, description, domaintype)
+                      domain, description, domaintype,
+                      numberRecords)
 
       if (!is.null(records)) {
         self$setRecords(records)
@@ -3550,7 +3542,7 @@ ConstSet <- R6Class(
       columnNames = self$domainLabels
       columnNames = append(columnNames, "element_text")
       colnames(records) = columnNames
-      self$records = records
+      super$.set_records(records)
     }
   ),
 
@@ -3560,10 +3552,7 @@ ConstSet <- R6Class(
         return(private$.is_singleton)
       }
       else {
-        if (!is.logical(is_singleton_input)) {
-          stop("Argument 'is_singleton' must be type logical\n")
-        }
-        private$.is_singleton = is_singleton_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3596,11 +3585,13 @@ ConstParameter <- R6Class(
   public = list(
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
-                          description="", domaintype=NULL) {
+                          description="", domaintype=NULL,
+                          numberRecords = NULL) {
       type = GMS_DT_PAR
       super$initialize(container, name,
                       type, 0, 
-                      domain, description, domaintype)
+                      domain, description, domaintype,
+                      numberRecords)
 
       if (!is.null(records)) {
         self$setRecords(records)
@@ -3612,7 +3603,7 @@ ConstParameter <- R6Class(
       columnNames = self$domainLabels
       columnNames = append(columnNames, "value")
       colnames(records) = columnNames
-      self$records = records
+      super$.set_records(records)
     }
   ),
 
@@ -3651,16 +3642,18 @@ ConstVariable <- R6Class(
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = NULL, records = NULL,
-                          description="", domaintype=NULL) {
+                          description="", domaintype=NULL,
+                          numberRecords=NULL) {
 
-      self$type = type
+      private$.type = type
 
       symtype = GMS_DT_VAR
       symsubtype = VarTypeSubtype()[[type]]
 
       super$initialize(container, name,
                       symtype, symsubtype, 
-                      domain, description, domaintype)
+                      domain, description, domaintype,
+                      numberRecords)
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -3671,7 +3664,7 @@ ConstVariable <- R6Class(
         columnNames = self$domainLabels
         columnNames = append(columnNames, private$.attr())
         colnames(records) = columnNames
-        self$records = records
+        super$.set_records(records)
     }
 
   ),
@@ -3682,21 +3675,7 @@ ConstVariable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.varTypes == type_input)) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
-          " 1. 'binary' \n",
-          " 2. 'integer' \n",
-          " 3. 'positive' \n",
-          " 4. 'negative' \n",
-          " 5. 'free' \n",
-          " 6. 'sos1' \n",
-          " 7. 'sos2' \n",
-          " 8. 'semicont' \n",
-          " 9. 'semiint'\n"
-          )))
-        }
-
-        private$.type = type_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3728,9 +3707,10 @@ ConstEquation <- R6Class(
                           type=NULL,
                           domain=NULL,
                           records = NULL,
-                          description="", domaintype=NULL) {
+                          description="", domaintype=NULL,
+                          numberRecords = NULL) {
 
-      self$type = type
+      private$.type = type
       # call from outside
       type = .EquationTypes[[type]]
 
@@ -3739,7 +3719,7 @@ ConstEquation <- R6Class(
 
       super$initialize(container, name,
                       symtype, symsubtype, 
-                      domain, description, domaintype)
+                      domain, description, domaintype, numberRecords)
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -3750,7 +3730,7 @@ ConstEquation <- R6Class(
         columnNames = self$domainLabels
         columnNames = append(columnNames, private$.attr())
         colnames(records) = columnNames
-        self$records = records
+        super$.set_records(records)
     }
   ),
 
@@ -3760,19 +3740,7 @@ ConstEquation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.EquationTypes == type_input)) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
-              "1. 'eq', 'E', or 'e' -- equality\n",
-              "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
-              "3. 'leq', 'L', or 'l'  -- less than or equal to inequality\n",
-              "4. 'nonbinding', 'N', or 'n'  -- nonbinding relationship\n",
-              "5. 'cone', 'C', or 'c' -- cone equation\n",
-              "6. 'external', 'X', or 'x' -- external equation\n",
-              "7. 'boolean', 'B', or 'b' -- boolean equation\n"
-          )))
-        }
-
-        private$.type = type_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3796,161 +3764,76 @@ ConstEquation <- R6Class(
 
 ConstAlias <- R6Class(
   "ConstAlias",
+  inherit = ConstSymbol,
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
 
-    initialize = function(container=NULL, name=NULL, 
-                          aliasFor=NULL) {
-      self$refContainer = container
-      self$name = name
-      refcontainer = self$refContainer
-      refcontainer$data[[name]] = self
-      self$.gams_type = GMS_DT_ALIAS
-      self$.gams_subtype = 1
-      private$.is_alias = TRUE
-      self$aliasWith = aliasFor
+    initialize = function(container=NULL, name=NULL, aliasFor=NULL, 
+                          domain, isSingleton, 
+                          description, domainType, numberRecords
+                          ) {
+      super$initialize(container, name, GMS_DT_ALIAS, 
+      isSingleton, domain, description, domainType, numberRecords)
+
+      # self$refContainer = container
+      # self$name = name
+      # refcontainer = self$refContainer
+      # refcontainer$data[[name]] = self
+      # self$.gams_type = GMS_DT_ALIAS
+      # self$.gams_subtype = 1
+      private$.aliasWith = aliasFor
+      private$.is_singleton = isSingleton
+      # self$aliasWith = aliasFor
     },
 
 
     getCardinality = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
+      return(self$refContainer$data[[self$aliasWith]]$getCardinality())
     },
 
     getSparsity = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
+      return(self$refContainer$data[[self$aliasWith]]$getSparsity())
     },
 
     setRecords = function(records) {
-      return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
+      return(super$.set_records(records))
+      # return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
   ),
 
   active = list(
-    refContainer = function(ref_container_input) {
-      if (missing(ref_container_input)) {
-        return(private$.ref_container)
-      }
-      else {
-        if (!inherits(ref_container_input, "ConstContainer")) {
-          stop("ConstAlias 'container' must be type ConstContainer\n")
-        }
-        if (is.null(self$refContainer)){
-          if (!identical(self$refContainer, ref_container_input)) {
-          }
-          private$.ref_container = ref_container_input
-        }
-        else {
-          private$.ref_container = ref_container_input
-        }
-      }
-    },
-
-    name = function(name_input) {
-      if (missing(name_input)) {
-        return(private$.name)
-      }
-      else {
-        private$.name = name_input
-
-      }
-    },
 
     aliasWith = function(alias_with_input) {
       if (missing(alias_with_input)) {
         return(private$.aliasWith)
       }
       else {
-        private$.aliasWith = alias_with_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
     isSingleton = function(is_singleton) {
       if (missing(is_singleton)) {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        return(sym$isSingleton)
+        return(private$.is_singleton)
       }
       else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$isSingleton = is_singleton
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
-    },
-
-    description = function(description_input) {
-      if (missing(description_input)) {
-        refcontainer = self$refContainer
-        aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
-        return(sym$description)
-      }
-      else {
-        refcontainer = self$refContainer
-        aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
-        sym$description = description_input
-      }
-    },
-
-    dimension = function(dimension_input) {
-      if (missing(dimension_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$dimension)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$dimension = dimension_input
-      }
-    },
-
-    records = function(records_input) {
-      return(self$refContainer$data[[self$aliasWith$name]]$records)
-    },
-
-    domain = function(domain_input) {
-      if (missing(domain_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$domain)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$domain = domain_input
-      }
-    },
-
-    numberRecords = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
-    },
-
-    domainType = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainType)
-    },
-
-    domainNames = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
-    },
-
-    domainLabels = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
     },
 
     summary = function() {
     return(list(
       "name" = self$name,
       "alias_with" = self$aliasWith,
-      "alias_with_name" = self$aliasWith$name,
+      "alias_with_name" = self$aliasWith,
       "isSingleton" = self$isSingleton,
-      "domain_objects" = self$domain,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords
+      "numberRecords" = self$numberRecords,
+      "domainType" = self$domainType
     ))
-    },
-
-    isAlias = function() {
-      return(private$.is_alias)
     }
   ),
 
@@ -3959,7 +3842,7 @@ ConstAlias <- R6Class(
     .ref_container = NULL,
     .name = NULL,
     .aliasWith = NULL,
-    .is_alias = NULL
+    .is_singleton = NULL
   )
 )
 
@@ -4262,7 +4145,6 @@ BaseContainer <- R6::R6Class (
       }
 
       colNames = list("name",
-            "isAlias",
             "isSingleton",
             "domain",
             "domainType",
@@ -4336,9 +4218,15 @@ BaseContainer <- R6::R6Class (
       rowCount = 0
       for (i in symbols) {
         if (any(self$listAliases() == i)) {
+          if(inherits(self, "Container")) {
+            aliasName = self$data[[i]]$aliasWith$name
+          }
+          else if (inherits(self, "ConstContainer")) {
+            aliasName = self$data[[i]]$aliasWith
+          }
           symDescription = list(
             i,
-            self$data[[i]]$aliasWith$name,
+            aliasName,
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
             self$data[[i]]$domainType,

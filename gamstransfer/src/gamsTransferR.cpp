@@ -137,7 +137,7 @@ List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir) {
   gdxHandle_t PGX = NULL;
   std::vector<std::string> domain;
   int rc, errCode, symCount, UelCount, sym_dimension, sym_type, nrecs, dummy,
-  subtype, domain_type;
+  subtype, domain_type, NrRecs;
   char symbolID[GMS_SSSIZE],aliasForID[GMS_SSSIZE],
    explText[GMS_SSSIZE], Msg[GMS_SSSIZE];
   std::string myname = Rcpp::as<std::string>(gdxName);
@@ -168,14 +168,21 @@ List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir) {
 		  }
 
       if (sym_type == GMS_DT_ALIAS) {
+        int parent_set_subtype;
         gdxSymbolInfo(PGX, subtype, aliasForID, &sym_dimension, &dummy);
+        gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText);
+        domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
+        gdxDataReadStrStart(PGX, subtype, &NrRecs);
+
         templist = List::create(_["name"] = symbolID, _["type"] = sym_type,
-         _["aliasfor"] = aliasForID);
+         _["aliasfor"] = aliasForID, _["domain"]=domain, _["subtype"] = 
+         parent_set_subtype, _["expltext"]=explText, _["domaintype"]=domain_type,
+         _["numRecs"] = NrRecs);
       }
       else {
         templist = List::create(_["name"] = symbolID, _["type"] = sym_type, 
         _["dimensions"]=sym_dimension, _["domain"]=domain, _["subtype"] = subtype,
-        _["expltext"]=explText, _["domaintype"]=domain_type);
+        _["expltext"]=explText, _["domaintype"]=domain_type, _["numRecs"] = nrecs);
       }
 
     domain.clear();
