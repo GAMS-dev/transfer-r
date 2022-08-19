@@ -6389,7 +6389,8 @@ execute_unload "data.gdx";
   paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
   stdout = TRUE, stderr = TRUE)
 
-  h = ConstContainer$new("data.gdx")
+  h = ConstContainer$new()
+  h$read("data.gdx")
 
   m = Container$new(h)
   # write everything

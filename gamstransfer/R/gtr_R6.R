@@ -74,7 +74,7 @@ SpecialValues = list(
 #' @export
 Container <- R6::R6Class (
   "Container",
-  inherit = BaseContainer,
+  inherit = .BaseContainer,
   public = list(
     .requiresStateCheck = NULL,
     #' @description
@@ -92,7 +92,12 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
-      self$read(loadFrom, symbols="all")
+        if (inherits(self, "Container")) {
+          self$read(loadFrom, symbols="all")
+        }
+        else if (inherits(self, "ConstContainer")) {
+          self$read(loadFrom, symbols="all", records=FALSE)
+        }
 
       }
     },
@@ -128,7 +133,6 @@ Container <- R6::R6Class (
 
       # convert symbols argument to a vector
       symbols = unlist(symbols)
-
       if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
         ext = tail(unlist(namesplit), 1)
@@ -141,12 +145,12 @@ Container <- R6::R6Class (
         }
         private$.gdxRead(loadFrom, symbols, records)
       }
-      else if (inherits(loadFrom, "Container")) {
+      else if (inherits(loadFrom, c("Container", "ConstContainer"))) {
         private$.containerRead(loadFrom, symbols, records)
       }
-      else if (inherits(loadFrom, "ConstContainer")) {
-        private$.gdxRead(loadFrom$loadFrom, symbols, records)
-      }
+      # else if (inherits(loadFrom, "ConstContainer")) {
+      #   private$.gdxRead(loadFrom$loadFrom, symbols, records)
+      # }
       else {
         stop("Argument `loadFrom` must be type character, 
         an instance of another Container, or an instance of a 
@@ -560,6 +564,10 @@ Container <- R6::R6Class (
             if (any(syms == s)) {
               symbolsToRead = append(symbolsToRead, s)
             }
+            else {
+              stop(paste0("User specified to read symbol ", s, "but it does 
+              not exist in the source container\n"))
+            }
           }
         }
         if (length(symbolsToRead) == 0){
@@ -645,8 +653,17 @@ Container <- R6::R6Class (
 
         # do alias last
         for (m in aliasList) {
-        Alias$new(
-          self, m$name, self$data[[m$aliasfor]])
+          if (!any(symbolsToRead == self$data[[m$aliasfor]]$name)) {
+            stop(paste0("Cannot create the Alias symbol ", m, " because 
+            the parent set (", self$data[[m$aliasfor]], ") is not 
+            being read into the in the Container. Alias symbols 
+            require the parent set object to exist in the Container. Add ",
+            self$data[[m$aliasfor]], " to the list of symbols to read."))
+          }
+          else {
+            Alias$new(
+            self, m$name, self$data[[m$aliasfor]])
+          }
         }
 
         if (records == TRUE) {
@@ -678,24 +695,27 @@ Container <- R6::R6Class (
     },
 
     .containerRead = function(loadFrom, symbols, records) {
-
       syms = names(loadFrom$data)
+
       if (length(symbols) == 1 && symbols == "all") {
           symbolsToRead = syms
-        }
-        else {
-          symbolsToRead = list()
-          for (s in symbols) {
-            if (any(syms == s)) {
-              symbolsToRead = append(symbolsToRead, s)
-            }
+      }
+      else {
+        symbolsToRead = list()
+        for (s in symbols) {
+          if (any(syms == s)) {
+            symbolsToRead = append(symbolsToRead, s)
+          }
+          else {
+            stop(paste0("User specified to read symbol ", s, "but it does 
+            not exist in the source container\n"))
           }
         }
-        if (length(symbolsToRead) == 0){
-          return()
-        }
+      }
+      # sort the symbols argument to preserve the order from original container
+      symbolsToRead = intersect(syms, symbolsToRead)
 
-        # check if container exists any of the symbols already
+      # check if container exists any of the symbols already
         for (s in symbolsToRead) {
           if (!is.null(self$data[[s]])) {
             stop(paste0("Attempting to add symbol ", s, ", however,",
@@ -703,22 +723,88 @@ Container <- R6::R6Class (
             " is only possible if the symbol is first removed from the", 
             "Container with the removeSymbol() method.\n"))
           }
+          s_loadfrom = loadFrom$data[[s]]
 
-          if (loadFrom$data[[s]]$isValid() == FALSE) {
-            stop(paste0("Cannot read symbol ", s, " because it is invalid, 
-            use $isValid(verbose=TRUE) method to debug symbol state"))
+          if (inherits(loadFrom, "Container")) {
+            if (s_loadfrom$isValid() == FALSE) {
+              stop(paste0("Cannot read symbol ", s, " because it is invalid, 
+              use $isValid(verbose=TRUE) method to debug symbol state\n"))
+            }
           }
         }
 
         for (s in symbolsToRead) {
-          self$data[[s]] = loadFrom$data[[s]]
-          if (any(is.na(loadFrom$data[[s]]$domainNames))) {
-            self$data[[s]]$domain = list()
+          s_loadfrom = loadFrom$data[[s]]
+          if (length(s_loadfrom$domainNames) == 1 && is.na(s_loadfrom$domainNames)) {
+            dnames = NULL
           }
           else {
-            self$data[[s]]$domain = loadFrom$data[[s]]$domainNames
+            dnames = s_loadfrom$domainNames
           }
-          self$data[[s]]$refContainer = self
+          if (inherits(s_loadfrom, c("Set", ".ConstSet"))) {
+            Set$new(
+            self, s_loadfrom$name, dnames, 
+            s_loadfrom$isSingleton,
+            records = s_loadfrom$records,
+            domainForwarding=FALSE,
+            s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, c("Parameter", ".ConstParameter"))) {
+            Parameter$new(
+            self, s_loadfrom$name, dnames,
+            domainForwarding=FALSE,
+            records = s_loadfrom$records,
+            description = s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, c("Variable", ".ConstVariable"))) {
+            Variable$new(
+            self, s_loadfrom$name, s_loadfrom$type, 
+            dnames,
+            domainForwarding = FALSE,
+            records = s_loadfrom$records,
+            description = s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, c("Equation", ".ConstEquation"))) {
+            Equation$new(
+            self, s_loadfrom$name, s_loadfrom$type, dnames,
+            domainForwarding = FALSE,
+            records = s_loadfrom$records,
+            description = s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, ".ConstAlias")) {
+            if (!any(symbolsToRead == s_loadfrom$aliasWith)) {
+              stop(paste0("Cannot create the Alias symbol ", s, " because 
+              the parent set (", s_loadfrom$aliasWith, ") is not 
+              being read into the in the Container. Alias symbols 
+              require the parent set object to exist in the Container. Add ",
+              s_loadfrom$aliasWith, " to the list of symbols to read."))
+            }
+            else {
+              Alias$new(
+                self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith]])
+            }
+          }
+          else if (inherits(s_loadfrom, "Alias")) {
+            if (!any(symbolsToRead == s_loadfrom$aliasWith$name)) {
+              stop(paste0("Cannot create the Alias symbol ", s, " because 
+              the parent set (", s_loadfrom$aliasWith, ") is not 
+              being read into the in the Container. Alias symbols 
+              require the parent set object to exist in the Container. Add ",
+              s_loadfrom$aliasWith, " to the list of symbols to read."))
+            }
+            else {
+              Alias$new(
+                self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith$name]])
+            }
+          }
+          # self$data[[s]] = loadFrom$data[[s]]
+          # if (any(is.na(loadFrom$data[[s]]$domainNames))) {
+          #   self$data[[s]]$domain = list()
+          # }
+          # else {
+          #   self$data[[s]]$domain = loadFrom$data[[s]]$domainNames
+          # }
+          # self$data[[s]]$refContainer = self
         }
 
         private$linkDomainObjects(symbolsToRead)
@@ -943,7 +1029,7 @@ b = "boolean"
 #' and Equation are inherited.
 Symbol <- R6Class(
   "Symbol",
-  inherit = BaseSymbol,
+  inherit = .BaseSymbol,
   public = list(
   .requiresStateCheck = NULL,
 
@@ -3095,13 +3181,10 @@ Alias <- R6Class(
 #' @export
 ConstContainer <- R6::R6Class (
   "ConstContainer",
-  inherit = BaseContainer,
+  inherit = .BaseContainer,
   public = list(
-    loadFrom = NULL,
     #' @description
     #' Create a new ConstContainer simply by initializing an object.
-    #' @param loadFrom optional argument to point to the GDX file being 
-    #' read into the Container
     #' @param systemDirectory optional argument for the absolute path to 
     #' GAMS system directory
     #' @examples
@@ -3160,7 +3243,6 @@ ConstContainer <- R6::R6Class (
         if (!file.exists(loadFrom)) {
           stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
-        self$loadFrom = loadFrom
       }
       # check acronyms
       acrInfo = CPP_checkAcronyms(loadFrom, self$systemDirectory)
@@ -3198,7 +3280,7 @@ ConstContainer <- R6::R6Class (
       for (m in metadata) {
          if (any(symbolsToRead == m$name)) {
             if (m$type == GMS_DT_PAR) {
-              ConstParameter$new(
+              .ConstParameter$new(
                 self, m$name, m$domain, records = NULL,
                 description = m$expltext, domaintype= m$domaintype,
                 numberRecords=m$numRecs)
@@ -3209,13 +3291,13 @@ ConstContainer <- R6::R6Class (
                   dt = 2 # for relaxed domain type
                 }
                 if (m$subtype == 0) {
-                ConstSet$new(
+                .ConstSet$new(
                 self, m$name, m$domain, FALSE,
                 records = NULL,
                 m$expltext,dt, m$numRecs)
                 }
                 else if (m$subtype == 1) {
-                ConstSet$new(
+                .ConstSet$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
                 m$expltext, dt, m$numRecs)
@@ -3233,7 +3315,7 @@ ConstContainer <- R6::R6Class (
                 else {
                   type = names(VarTypeSubtype())[[type]]
                 }
-                ConstVariable$new(
+                .ConstVariable$new(
                 self, m$name, type, m$domain,
                 description = m$expltext, domaintype = m$domaintype,
                 numberRecords=m$numRecs)
@@ -3247,7 +3329,7 @@ ConstContainer <- R6::R6Class (
                   type = names(EqTypeSubtype())[[type]]
                 }
 
-                ConstEquation$new(
+                .ConstEquation$new(
                 self, m$name, type, m$domain,
                 description = m$expltext, domaintype = m$domaintype,
                 numberRecords=m$numRecs)
@@ -3259,11 +3341,11 @@ ConstContainer <- R6::R6Class (
                 }
 
                 if (m$subtype == 0) {
-                  ConstAlias$new(self, m$name, m$aliasfor, m$domain, FALSE,
+                  .ConstAlias$new(self, m$name, m$aliasfor, m$domain, FALSE,
                   m$expltext, dt, m$numRecs)
                 }
                 else if (m$subtype == 1) {
-                  ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
+                  .ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
                   m$expltext, dt, m$numRecs)
                 }
               # aliasCount = aliasCount + 1
@@ -3292,8 +3374,8 @@ ConstContainer <- R6::R6Class (
           self$data[[s$names]]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
-            if (inherits(self$data[[s$names]], c("ConstParameter", 
-            "ConstVariable", "ConstEquation"))) {
+            if (inherits(self$data[[s$names]], c(".ConstParameter", 
+            ".ConstVariable", ".ConstEquation"))) {
               for (a in self$acronyms) {
                 self$data[[s$names]]$records[(self$data[[s$names]]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
@@ -3307,9 +3389,9 @@ ConstContainer <- R6::R6Class (
   )
 
 
-ConstSymbol <- R6Class(
-  "ConstSymbol",
-  inherit = BaseSymbol,
+.ConstSymbol <- R6Class(
+  ".ConstSymbol",
+  inherit = .BaseSymbol,
   public = list(
   initialize = function(container, name,
                         type, subtype, 
@@ -3506,9 +3588,9 @@ ConstSymbol <- R6Class(
   )
 )
 
-ConstSet <- R6Class(
-  "ConstSet",
-  inherit = ConstSymbol,
+.ConstSet <- R6Class(
+  ".ConstSet",
+  inherit = .ConstSymbol,
   public = list(
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
@@ -3579,9 +3661,9 @@ ConstSet <- R6Class(
   )
   )
 
-ConstParameter <- R6Class(
-  "ConstParameter",
-  inherit = ConstSymbol,
+.ConstParameter <- R6Class(
+  ".ConstParameter",
+  inherit = .ConstSymbol,
   public = list(
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
@@ -3634,9 +3716,9 @@ ConstParameter <- R6Class(
   )
 )
 
-ConstVariable <- R6Class(
-  "ConstVariable",
-  inherit = ConstSymbol,
+.ConstVariable <- R6Class(
+  ".ConstVariable",
+  inherit = .ConstSymbol,
   public = list(
 
     initialize = function(container = NULL, name = NULL, 
@@ -3698,9 +3780,9 @@ ConstVariable <- R6Class(
   )
 )
 
-ConstEquation <- R6Class(
-  "ConstEquation",
-  inherit = ConstSymbol,
+.ConstEquation <- R6Class(
+  ".ConstEquation",
+  inherit = .ConstSymbol,
   public = list(
 
     initialize = function(container=NULL, name=NULL, 
@@ -3762,9 +3844,9 @@ ConstEquation <- R6Class(
   )
 )
 
-ConstAlias <- R6Class(
-  "ConstAlias",
-  inherit = ConstSymbol,
+.ConstAlias <- R6Class(
+  ".ConstAlias",
+  inherit = .ConstSymbol,
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
@@ -3883,8 +3965,8 @@ is.integer0 <- function(x)
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export
-BaseContainer <- R6::R6Class (
-  "BaseContainer",
+.BaseContainer <- R6::R6Class (
+  ".BaseContainer",
   public = list(
     systemDirectory = NULL,
     data = NULL,
@@ -3959,7 +4041,7 @@ BaseContainer <- R6::R6Class (
       }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Set", "ConstSet")) ) {
+        if (inherits(self$data[[s]], c("Set", ".ConstSet")) ) {
           if (is.null(sets)) {
             sets = s
           }
@@ -3985,7 +4067,7 @@ BaseContainer <- R6::R6Class (
       }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Parameter","ConstParameter"))) {
+        if (inherits(self$data[[s]], c("Parameter",".ConstParameter"))) {
           if (is.null(parameters)) {
             parameters = s
           }
@@ -4011,7 +4093,7 @@ BaseContainer <- R6::R6Class (
       }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Alias", "ConstAlias"))) {
+        if (inherits(self$data[[s]], c("Alias", ".ConstAlias"))) {
           if (is.null(aliases)) {
             aliases = s
           }
@@ -4061,7 +4143,7 @@ BaseContainer <- R6::R6Class (
 
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Variable", "ConstVariable"))
+        if (inherits(self$data[[s]], c("Variable", ".ConstVariable"))
         && any(types == self$data[[s]]$type)) {
           if (is.null(variables)) {
             variables = s
@@ -4111,7 +4193,7 @@ BaseContainer <- R6::R6Class (
 
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Equation", "ConstEquation"))
+        if (inherits(self$data[[s]], c("Equation", ".ConstEquation"))
         && any(types == self$data[[s]]$type)) {
           if (is.null(equations)) {
             equations = s
@@ -4493,8 +4575,8 @@ BaseContainer <- R6::R6Class (
 
 #' @title BaseSymbol Abstract Class
 #' @description An abstract BaseSymbol class from which the Symbol class is inherited.
-BaseSymbol <- R6Class(
-  "BaseSymbol",
+.BaseSymbol <- R6Class(
+  ".BaseSymbol",
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
@@ -4521,7 +4603,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4536,7 +4618,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4576,7 +4658,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4591,7 +4673,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4630,7 +4712,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4645,7 +4727,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4685,7 +4767,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4700,7 +4782,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4741,7 +4823,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4756,7 +4838,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4805,7 +4887,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4820,7 +4902,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4869,7 +4951,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4884,7 +4966,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4931,7 +5013,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4946,7 +5028,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4986,7 +5068,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5001,7 +5083,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5045,7 +5127,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5060,7 +5142,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5101,7 +5183,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5116,7 +5198,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5157,7 +5239,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5172,7 +5254,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
