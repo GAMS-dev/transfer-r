@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.2.0
 ==================
 - added a new class ConstContainer for efficient data transfer
 - allow read from Container/ConstContainer into another Container
@@ -7,6 +7,7 @@ GAMS Transfer R
 - updated Symbol isValid() method to check for levels of the linked domain set and symbol records
 - bug fix in setting factor levels for subsets of subsets
 - bug fix in countEPS method
+- fixed record setter using non-dataframe object types for variables, equations, and parameters
 
 GAMS Transfer R v0.2.0
 ==================
