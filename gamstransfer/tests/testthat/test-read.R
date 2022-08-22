@@ -6389,7 +6389,8 @@ execute_unload "data.gdx";
   paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
   stdout = TRUE, stderr = TRUE)
 
-  h = ConstContainer$new("data.gdx")
+  h = ConstContainer$new()
+  h$read("data.gdx")
 
   m = Container$new(h)
   # write everything
@@ -6485,7 +6486,7 @@ test_that("test_num_50", {
 }
 )
 
-test_that("test_num_50", {
+test_that("test_num_51", {
   expect_error(ConstContainer$new("dummy.gdx"))
   expect_error(Container$new("dummy.gdx"))
 
@@ -6494,7 +6495,7 @@ test_that("test_num_50", {
 }
 )
 
-test_that("test_num_50", {
+test_that("test_num_52", {
   expect_error(ConstContainer$new(data.frame()))
   expect_error(Container$new(data.frame()))
 
@@ -6503,7 +6504,7 @@ test_that("test_num_50", {
 }
 )
 
-test_that("test_num_51", {
+test_that("test_num_53", {
   # gams syntax
   gams_text = "
 set i / i1 * i3 /;
@@ -6529,7 +6530,7 @@ execute_unload '%system.fn%.gdx';
 }
 )
 
-test_that("test_num_52", {
+test_that("test_num_54", {
   # gams syntax
   gams_text = "
 Set
@@ -6616,7 +6617,7 @@ solve transport using lp minimizing z;
 }
 )
 
-test_that("test_num_53", {
+test_that("test_num_55", {
   # gams syntax
   gams_text = "
 Set
@@ -6747,7 +6748,7 @@ solve transport using lp minimizing z;
 }
 )
 
-test_that("test_num_54", {
+test_that("test_num_56", {
   # gams syntax
   gams_text = "
 Set
@@ -6810,7 +6811,7 @@ solve transport using lp minimizing z;
 }
 )
 
-test_that("test_num_55", {
+test_that("test_num_57", {
 df = data.frame(expand.grid(c("a1","a2"), 
 c("b1","b2"), c("c1","c2"), c("d1","d2")), 
 stringsAsFactors=TRUE)
@@ -6825,7 +6826,7 @@ expect_true(!t$isValid())
 )
 
 # test make sure describe* are consistent between Container and ConstContainer
-test_that("test_num_56", {
+test_that("test_num_58", {
   # gams syntax
   gams_text = "
 Set
@@ -6896,7 +6897,7 @@ solve transport using lp minimizing z;
 )
 
 # test read from another Container
-test_that("test_num_57", {
+test_that("test_num_59", {
   # gams syntax
   gams_text = "
 Set
@@ -6959,7 +6960,7 @@ solve transport using lp minimizing z;
 )
 
 # test read from another Container with invalid symbols
-test_that("test_num_58", {
+test_that("test_num_60", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i",1:10))
 j = Set$new(m, "j", records = paste0("j",1:10))
@@ -6978,7 +6979,7 @@ expect_error(m2$read(m, "a"))
 
 
 # test converting arrays with EPS (across several columns) values for Parameters, Variables, Equations
-test_that("test_num_59", {
+test_that("test_num_61", {
   m = Container$new()
   i = Set$new(m, "i", records = paste0("i", c(1:5)))
   j = Set$new(m, "j", records = paste0("j", c(1:5)))
@@ -7026,7 +7027,7 @@ test_that("test_num_59", {
 )
 
 # test symbol isValid if categories are not set properly (directly)
-test_that("test_num_60", {
+test_that("test_num_62", {
 df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
 paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
@@ -7049,7 +7050,7 @@ expect_true(!a$isValid())
 )
 
 # test symbol isValid if categories are set properly (directly)
-test_that("test_num_61", {
+test_that("test_num_63", {
 df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
 paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
@@ -7075,7 +7076,7 @@ expect_true(a$isValid())
 )
 
 # test symbol isValid if categories are not linked to the proper set (directly)
-test_that("test_num_62", {
+test_that("test_num_64", {
 df = data.frame(rev(expand.grid(rev(list(paste0("h", 1:10), 
 paste0("m", 1:10),paste0("s", 1:10))))), stringsAsFactors = TRUE)
 
@@ -7103,7 +7104,7 @@ expect_true(!a$isValid())
 )
 
 # test Exception when attempting to set a symbol name with invalid characters
-test_that("test_num_63", {
+test_that("test_num_65", {
 m = Container$new()
 expect_error(Set$new(m, "milk&meat"))
 expect_error(Set$new(m, "_milk&meat"))
@@ -7111,7 +7112,7 @@ expect_error(Set$new(m, "_milk&meat"))
 )
 
 # test that name.setter (symbols and aliases) cannot set name if it already exists in container
-test_that("test_num_63", {
+test_that("test_num_66", {
 m = Container$new()
 i = Set$new(m, "i")
 j = Set$new(m, "j")
@@ -7126,7 +7127,7 @@ expect_error(expr())
 )
 
 # test utility functions
-test_that("test_num_63", {
+test_that("test_num_67", {
 m = Container$new()
 i = Set$new(m, "i", records = paste0("i", 1:10))
 a = Parameter$new(m, "a", i, records=data.frame(i$records[,1], 1:10))
@@ -7145,3 +7146,323 @@ expect_equal(a$countNegInf(), 0)
 }
 )
 
+# test passing .toDense() of multiple dimensions to setRecords
+test_that("test_num_68", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i", 1:10))
+j = Set$new(m, "j", records = paste0("j", 1:10))
+
+a0 = Parameter$new(m, "a0", records=10)
+a1 = Parameter$new(m, "a1", i, records=data.frame(paste0("i", 1:10), 1:10))
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5))))), stringsAsFactors = TRUE)
+values = replicate(50, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    values[count] = i1 + j1
+    count = count + 1
+  }
+}
+df$values = values
+a2 = Parameter$new(m, "a2", c(i, j), records=df)
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5), paste0("i", 1:10))))), stringsAsFactors = TRUE)
+
+values = replicate(500, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    for (ip1 in 1:10) {
+    values[count] = i1 + j1 + ip1
+    count = count + 1
+    }
+  }
+}
+df$values = values
+
+a3 = Parameter$new(m, "a3", c(i, j, i), records=df)
+
+a0p = Parameter$new(m, "a0p", records=a0$toDense())
+a1p = Parameter$new(m, "a1p", i, records = a1$toDense())
+a2p = Parameter$new(m, "a2p", c(i, j), records = a2$toDense())
+a3p = Parameter$new(m, "a3p", c(i, j, i), records = a3$toDense())
+
+v0 = Variable$new(m, "v0", records = a0$toDense())
+v1 = Variable$new(m, "v1", domain=i, records=a1$toDense())
+v2 = Variable$new(m, "v2", domain=c(i, j), records= a2$toDense())
+v3 = Variable$new(m, "v3", domain=c(i, j, i), records=a3$toDense())
+
+v0p = Variable$new(m, "v0p", records = v0$toDense())
+v1p = Variable$new(m, "v1p", domain=i, records=v1$toDense())
+v2p = Variable$new(m, "v2p", domain=c(i, j), records= v2$toDense())
+v3p = Variable$new(m, "v3p", domain=c(i, j, i), records=v3$toDense())
+
+e0 = Equation$new(m, "e0", "eq", records = a0$toDense())
+e1 = Equation$new(m, "e1", "eq", domain=i, records=a1$toDense())
+e2 = Equation$new(m, "e2", "eq", domain=c(i, j), records= a2$toDense())
+e3 = Equation$new(m, "e3", "eq", domain=c(i, j, i), records=a3$toDense())
+
+e0p = Equation$new(m, "e0p", "eq", records = e0$toDense())
+e1p = Equation$new(m, "e1p", "eq", domain=i, records=e1$toDense())
+e2p = Equation$new(m, "e2p", "eq", domain=c(i, j), records= e2$toDense())
+e3p = Equation$new(m, "e3p", "eq", domain=c(i, j, i), records=e3$toDense())
+
+expect_equal(a0$records, a0p$records)
+expect_equal(a1$records, a1p$records)
+expect_equal(a2$records, a2p$records)
+expect_equal(a3$records, a3p$records)
+
+expect_equal(v0$records, v0p$records)
+expect_equal(v1$records, v1p$records)
+expect_equal(v2$records, v2p$records)
+expect_equal(v3$records, v3p$records)
+
+expect_equal(e0$records, e0p$records)
+expect_equal(e1$records, e1p$records)
+expect_equal(e2$records, e2p$records)
+expect_equal(e3$records, e3p$records)}
+)
+
+# test passing .toDense() of multiple dimensions to setRecords (named list structure)
+test_that("test_num_69", {
+m = Container$new()
+i = Set$new(m, "i", records = paste0("i", 1:10))
+j = Set$new(m, "j", records = paste0("j", 1:10))
+
+a0 = Parameter$new(m, "a0", records=10)
+a1 = Parameter$new(m, "a1", i, records=data.frame(paste0("i", 1:10), 1:10))
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5))))), stringsAsFactors = TRUE)
+values = replicate(50, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    values[count] = i1 + j1
+    count = count + 1
+  }
+}
+df$values = values
+a2 = Parameter$new(m, "a2", c(i, j), records=df)
+
+
+df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
+paste0("j", 1:5), paste0("i", 1:10))))), stringsAsFactors = TRUE)
+
+values = replicate(500, 0)
+count = 1
+for (i1 in 1:10) {
+  for (j1 in 1:5) {
+    for (ip1 in 1:10) {
+    values[count] = i1 + j1 + ip1
+    count = count + 1
+    }
+  }
+}
+df$values = values
+
+a3 = Parameter$new(m, "a3", c(i, j, i), records=df)
+
+a0dict = list(
+  level = a0$toDense(),
+  marginal = a0$toDense(),
+  lower = a0$toDense(),
+  upper = a0$toDense(),
+  scale = a0$toDense()
+)
+
+a1dict = list(
+  level = a1$toDense(),
+  marginal = a1$toDense(),
+  lower = a1$toDense(),
+  upper = a1$toDense(),
+  scale = a1$toDense()
+)
+
+a2dict = list(
+  level = a2$toDense(),
+  marginal = a2$toDense(),
+  lower = a2$toDense(),
+  upper = a2$toDense(),
+  scale = a2$toDense()
+)
+
+a3dict = list(
+  level = a3$toDense(),
+  marginal = a3$toDense(),
+  lower = a3$toDense(),
+  upper = a3$toDense(),
+  scale = a3$toDense()
+)
+
+a0p = Parameter$new(m, "a0p", records=a0$toDense())
+a1p = Parameter$new(m, "a1p", i, records = a1$toDense())
+a2p = Parameter$new(m, "a2p", c(i, j), records = a2$toDense())
+a3p = Parameter$new(m, "a3p", c(i, j, i), records = a3$toDense())
+
+v0 = Variable$new(m, "v0", records = a0dict)
+v1 = Variable$new(m, "v1", domain=i, records=a1dict)
+v2 = Variable$new(m, "v2", domain=c(i, j), records= a2dict)
+v3 = Variable$new(m, "v3", domain=c(i, j, i), records=a3dict)
+
+v0p = Variable$new(m, "v0p", records = a0dict)
+v1p = Variable$new(m, "v1p", domain=i, records=a1dict)
+v2p = Variable$new(m, "v2p", domain=c(i, j), records= a2dict)
+v3p = Variable$new(m, "v3p", domain=c(i, j, i), records=a3dict)
+
+e0 = Equation$new(m, "e0", "eq", records = a0dict)
+e1 = Equation$new(m, "e1", "eq", domain=i, records=a1dict)
+e2 = Equation$new(m, "e2", "eq", domain=c(i, j), records= a2dict)
+e3 = Equation$new(m, "e3", "eq", domain=c(i, j, i), records=a3dict)
+
+e0p = Equation$new(m, "e0p", "eq", records = a0dict)
+e1p = Equation$new(m, "e1p", "eq", domain=i, records=a1dict)
+e2p = Equation$new(m, "e2p", "eq", domain=c(i, j), records= a2dict)
+e3p = Equation$new(m, "e3p", "eq", domain=c(i, j, i), records=a3dict)
+
+expect_equal(a0$records, a0p$records)
+expect_equal(a1$records, a1p$records)
+expect_equal(a2$records, a2p$records)
+expect_equal(a3$records, a3p$records)
+
+expect_equal(v0$records, v0p$records)
+expect_equal(v1$records, v1p$records)
+expect_equal(v2$records, v2p$records)
+expect_equal(v3$records, v3p$records)
+
+expect_equal(e0$records, e0p$records)
+expect_equal(e1$records, e1p$records)
+expect_equal(e2$records, e2p$records)
+expect_equal(e3$records, e3p$records)}
+)
+
+# shape test by passing eigen values and eigen vectors
+test_that("test_num_70", {
+  # gams syntax
+  gams_text = "
+  Set i / i1*i5 /;
+
+  Alias (i,j);
+
+  Table a(i,j)
+            i1   i2   i3   i4   i5
+      i1    1    2    4    7   11
+      i2    2    3    5    8   12
+      i3    4    5    6    9   13
+      i4    7    8    9   10   14
+      i5   11   12   13   14   15;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  e = eigen(m$data$a$toDense())
+  val = e$values
+  vec = e$vectors
+  eval = Parameter$new(m, "eval", m$data$i, records = val)
+  evec = Parameter$new(m, "evec", c(m$data$i, m$data$j), records = vec)
+
+  expect_true(m$isValid())
+}
+)
+
+test_that("test_num_71", {
+arr0 = array(c(1:270), dim=c(5,6,9))
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+j = Set$new(m, "j", records=paste0("j",1:6))
+k = Set$new(m, "k", records=paste0("i",1:9))
+
+h = Parameter$new(m, "h", c(i, j, k), records = arr0)
+hp = Parameter$new(m, "hp", c(i, j, k), records = h$toDense())
+
+expect_equal(h$shape(), c(5,6,9))
+expect_equal(hp$shape(), c(5,6,9))
+expect_equal(dim(h$toDense()), c(5, 6, 9))
+expect_equal(dim(hp$toDense()), c(5, 6, 9))
+
+expect_equal(h$records, hp$records)
+expect_equal(arr0, h$toDense())
+expect_equal(arr0, hp$toDense())
+
+v = Variable$new(m, "v", "free", c(i, j, k), records=arr0)
+vp = Variable$new(m, "vp", "free", c(i, j, k), records=v$toDense())
+
+
+expect_equal(v$shape(), c(5,6, 9))
+expect_equal(vp$shape(), c(5,6, 9))
+expect_equal(dim(v$toDense()), c(5,6, 9))
+expect_equal(dim(vp$toDense()), c(5,6, 9))
+expect_equal(v$records, vp$records)
+expect_equal(arr0, v$toDense())
+expect_equal(arr0, vp$toDense())
+
+e = Equation$new(m, "e", "eq", c(i, j, k), records = arr0)
+ep = Equation$new(m, "ep", "eq", c(i, j, k), records = e$toDense())
+
+expect_equal(e$shape(), c(5,6, 9))
+expect_equal(ep$shape(), c(5,6, 9))
+expect_equal(dim(e$toDense()), c(5,6, 9))
+expect_equal(dim(ep$toDense()), c(5,6, 9))
+expect_equal(e$records, ep$records)
+expect_equal(arr0, e$toDense())
+expect_equal(arr0, ep$toDense())
+
+}
+)
+
+test_that("test_num_72", {
+  # gams syntax
+  gams_text = "
+    set i /i1*i3/, j /j1*j3/, k /k1*k3/;
+    parameter
+    dim0 / 1 /
+    dim1(i) / i1 1, i2 2, i3 3 /
+    dim2(i,j) / i1.j1 1, i2.j2 2, i3.j3 3 /
+    dim3(i,j,k) / i1.j1.k1 1, i2.j2.k2 2, i3.j3.k3 3 /;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+
+  expect_equal(m$data$dim0$shape(), dim(m$data$dim0$toDense()))
+  expect_equal(m$data$dim1$shape(), dim(m$data$dim1$toDense()))
+  expect_equal(m$data$dim2$shape(), dim(m$data$dim2$toDense()))
+  expect_equal(m$data$dim3$shape(), dim(m$data$dim3$toDense()))
+}
+)
+
+test_that("test_num_73", {
+  # gams syntax
+  gams_text = "
+set t /t1*t139776/;
+parameter ProfitM(t), ProfitA(t);
+ProfitM(t) = uniformInt(1,10);
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new(testthat::test_path("data.gdx"))
+  m$data$ProfitA$setRecords(cumsum(m$data$ProfitM$toDense()))
+
+  expect_equal(m$data$ProfitA$numberRecords, m$data$t$numberRecords)
+
+}
+)

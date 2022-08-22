@@ -74,7 +74,7 @@ SpecialValues = list(
 #' @export
 Container <- R6::R6Class (
   "Container",
-  inherit = BaseContainer,
+  inherit = .BaseContainer,
   public = list(
     .requiresStateCheck = NULL,
     #' @description
@@ -92,7 +92,12 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
-      self$read(loadFrom, symbols="all")
+        if (inherits(self, "Container")) {
+          self$read(loadFrom, symbols="all")
+        }
+        else if (inherits(self, "ConstContainer")) {
+          self$read(loadFrom, symbols="all", records=FALSE)
+        }
 
       }
     },
@@ -111,20 +116,23 @@ Container <- R6::R6Class (
       # process it and populate various fields
 
       # check if records is logical
-      if (!is.logical(records)) {
+      if (!is.logical(records) && length(records) != 1) {
         stop("records must be type logical\n")
       }
 
+      # is.character will also check vector of strings
       if (!(is.character(symbols)) && !(is.list(symbols))) {
         stop("argument symbols must be of the type list or string\n")
       }
 
-      for (s in symbols) {
-        if (!is.character(s)) {
-          stop("argument symbols must contain only type string\n")
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("argument `symbols`` must contain only type string\n")
         }
       }
 
+      # convert symbols argument to a vector
+      symbols = unlist(symbols)
       if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
         ext = tail(unlist(namesplit), 1)
@@ -137,12 +145,12 @@ Container <- R6::R6Class (
         }
         private$.gdxRead(loadFrom, symbols, records)
       }
-      else if (inherits(loadFrom, "Container")) {
+      else if (inherits(loadFrom, c("Container", "ConstContainer"))) {
         private$.containerRead(loadFrom, symbols, records)
       }
-      else if (inherits(loadFrom, "ConstContainer")) {
-        private$.gdxRead(loadFrom$loadFrom, symbols, records)
-      }
+      # else if (inherits(loadFrom, "ConstContainer")) {
+      #   private$.gdxRead(loadFrom$loadFrom, symbols, records)
+      # }
       else {
         stop("Argument `loadFrom` must be type character, 
         an instance of another Container, or an instance of a 
@@ -179,12 +187,17 @@ Container <- R6::R6Class (
     #' @param symbols a string specifying the symbol name or a list of symbols 
     #' to be removed from the container
     removeSymbols = function(symbols = NULL) {
-      if (!(is.character(symbols) || is.vector(symbols) || is.list(symbols))) {
-        stop("Argument 'name' must be of type string, list, or vector\n")
+      # is.character also checks vector of strings
+      if (!(is.character(symbols) || is.list(symbols))) {
+        stop("Argument 'symbols' must be of type string, list, or vector\n")
       }
 
-      if (!all(unlist(lapply(symbols, is.character)))) {
-        stop("Argument 'name' must contain only type character\n")
+      # if only one element is character in a vector, entire vector is character
+      # so the following check is needed only for lists
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("Argument 'symbols' must contain only type character\n")
+        }
       }
 
       setOrAlias = list()
@@ -343,8 +356,14 @@ Container <- R6::R6Class (
     #' the user wants object references
     #' @returns a list of object references to symbols
     getSymbols = function(symbols) {
-      if (!(is.character(symbols) || is.list(symbols) || is.vector(symbols))) {
+      if (!(is.character(symbols) || is.list(symbols))) {
         stop("The argument symbols must be type character, list, or vector \n")
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("Argument 'symbols' must contain only type character\n")
+        }
       }
 
       obj = list()
@@ -390,6 +409,12 @@ Container <- R6::R6Class (
       if (!is.null(uelPriority)) {
         if (!(is.character(uelPriority) || is.list(uelPriority))) {
           stop("'uelPriority' must be type list or str\n")
+        }
+
+        if (is.list(uelPriority)) {
+          if (!all(unlist(lapply(uelPriority, is.character)))) {
+            stop("Argument `uelPriority` must contain only type character\n")
+          }
         }
       }
 
@@ -528,7 +553,9 @@ Container <- R6::R6Class (
         metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
         syms = lapply(metadata, "[[", 1)
 
-        if (is.character(symbols) && symbols == "all") {
+        # symbols argument is always a character vector otherwise would throw an
+        # error earlier
+        if (length(symbols) == 1 && symbols == "all") {
           symbolsToRead = syms
         }
         else {
@@ -536,6 +563,10 @@ Container <- R6::R6Class (
           for (s in symbols) {
             if (any(syms == s)) {
               symbolsToRead = append(symbolsToRead, s)
+            }
+            else {
+              stop(paste0("User specified to read symbol ", s, "but it does 
+              not exist in the source container\n"))
             }
           }
         }
@@ -622,8 +653,17 @@ Container <- R6::R6Class (
 
         # do alias last
         for (m in aliasList) {
-        Alias$new(
-          self, m$name, self$data[[m$aliasfor]])
+          if (!any(symbolsToRead == self$data[[m$aliasfor]]$name)) {
+            stop(paste0("Cannot create the Alias symbol ", m, " because 
+            the parent set (", self$data[[m$aliasfor]], ") is not 
+            being read into the in the Container. Alias symbols 
+            require the parent set object to exist in the Container. Add ",
+            self$data[[m$aliasfor]], " to the list of symbols to read."))
+          }
+          else {
+            Alias$new(
+            self, m$name, self$data[[m$aliasfor]])
+          }
         }
 
         if (records == TRUE) {
@@ -634,7 +674,8 @@ Container <- R6::R6Class (
             if (is.null(s$records)) {
               next
             }
-            self$data[[s$names]]$setRecords(s$records)
+
+            self$data[[s$names]]$setRecords(data.frame(s$records))
 
             if (!is.null(self$acronyms)) {
               if (inherits(self$data[[s$names]], c("Parameter", 
@@ -654,24 +695,27 @@ Container <- R6::R6Class (
     },
 
     .containerRead = function(loadFrom, symbols, records) {
-
       syms = names(loadFrom$data)
-      if (is.character(symbols) && symbols == "all") {
+
+      if (length(symbols) == 1 && symbols == "all") {
           symbolsToRead = syms
-        }
-        else {
-          symbolsToRead = list()
-          for (s in symbols) {
-            if (any(syms == s)) {
-              symbolsToRead = append(symbolsToRead, s)
-            }
+      }
+      else {
+        symbolsToRead = list()
+        for (s in symbols) {
+          if (any(syms == s)) {
+            symbolsToRead = append(symbolsToRead, s)
+          }
+          else {
+            stop(paste0("User specified to read symbol ", s, "but it does 
+            not exist in the source container\n"))
           }
         }
-        if (length(symbolsToRead) == 0){
-          return()
-        }
+      }
+      # sort the symbols argument to preserve the order from original container
+      symbolsToRead = intersect(syms, symbolsToRead)
 
-        # check if container exists any of the symbols already
+      # check if container exists any of the symbols already
         for (s in symbolsToRead) {
           if (!is.null(self$data[[s]])) {
             stop(paste0("Attempting to add symbol ", s, ", however,",
@@ -679,22 +723,88 @@ Container <- R6::R6Class (
             " is only possible if the symbol is first removed from the", 
             "Container with the removeSymbol() method.\n"))
           }
+          s_loadfrom = loadFrom$data[[s]]
 
-          if (loadFrom$data[[s]]$isValid() == FALSE) {
-            stop(paste0("Cannot read symbol ", s, " because it is invalid, 
-            use $isValid(verbose=TRUE) method to debug symbol state"))
+          if (inherits(loadFrom, "Container")) {
+            if (s_loadfrom$isValid() == FALSE) {
+              stop(paste0("Cannot read symbol ", s, " because it is invalid, 
+              use $isValid(verbose=TRUE) method to debug symbol state\n"))
+            }
           }
         }
 
         for (s in symbolsToRead) {
-          self$data[[s]] = loadFrom$data[[s]]
-          if (any(is.na(loadFrom$data[[s]]$domainNames))) {
-            self$data[[s]]$domain = list()
+          s_loadfrom = loadFrom$data[[s]]
+          if (length(s_loadfrom$domainNames) == 1 && is.na(s_loadfrom$domainNames)) {
+            dnames = NULL
           }
           else {
-            self$data[[s]]$domain = loadFrom$data[[s]]$domainNames
+            dnames = s_loadfrom$domainNames
           }
-          self$data[[s]]$refContainer = self
+          if (inherits(s_loadfrom, c("Set", ".ConstSet"))) {
+            Set$new(
+            self, s_loadfrom$name, dnames, 
+            s_loadfrom$isSingleton,
+            records = s_loadfrom$records,
+            domainForwarding=FALSE,
+            s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, c("Parameter", ".ConstParameter"))) {
+            Parameter$new(
+            self, s_loadfrom$name, dnames,
+            domainForwarding=FALSE,
+            records = s_loadfrom$records,
+            description = s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, c("Variable", ".ConstVariable"))) {
+            Variable$new(
+            self, s_loadfrom$name, s_loadfrom$type, 
+            dnames,
+            domainForwarding = FALSE,
+            records = s_loadfrom$records,
+            description = s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, c("Equation", ".ConstEquation"))) {
+            Equation$new(
+            self, s_loadfrom$name, s_loadfrom$type, dnames,
+            domainForwarding = FALSE,
+            records = s_loadfrom$records,
+            description = s_loadfrom$description)
+          }
+          else if (inherits(s_loadfrom, ".ConstAlias")) {
+            if (!any(symbolsToRead == s_loadfrom$aliasWith)) {
+              stop(paste0("Cannot create the Alias symbol ", s, " because 
+              the parent set (", s_loadfrom$aliasWith, ") is not 
+              being read into the in the Container. Alias symbols 
+              require the parent set object to exist in the Container. Add ",
+              s_loadfrom$aliasWith, " to the list of symbols to read."))
+            }
+            else {
+              Alias$new(
+                self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith]])
+            }
+          }
+          else if (inherits(s_loadfrom, "Alias")) {
+            if (!any(symbolsToRead == s_loadfrom$aliasWith$name)) {
+              stop(paste0("Cannot create the Alias symbol ", s, " because 
+              the parent set (", s_loadfrom$aliasWith, ") is not 
+              being read into the in the Container. Alias symbols 
+              require the parent set object to exist in the Container. Add ",
+              s_loadfrom$aliasWith, " to the list of symbols to read."))
+            }
+            else {
+              Alias$new(
+                self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith$name]])
+            }
+          }
+          # self$data[[s]] = loadFrom$data[[s]]
+          # if (any(is.na(loadFrom$data[[s]]$domainNames))) {
+          #   self$data[[s]]$domain = list()
+          # }
+          # else {
+          #   self$data[[s]]$domain = loadFrom$data[[s]]$domainNames
+          # }
+          # self$data[[s]]$refContainer = self
         }
 
         private$linkDomainObjects(symbolsToRead)
@@ -919,7 +1029,7 @@ b = "boolean"
 #' and Equation are inherited.
 Symbol <- R6Class(
   "Symbol",
-  inherit = BaseSymbol,
+  inherit = .BaseSymbol,
   public = list(
   .requiresStateCheck = NULL,
 
@@ -946,7 +1056,6 @@ Symbol <- R6Class(
 
     self$domain = domain
 
-    self$dimension = length(self$domain)
     self$description = description
     self$domainForwarding = domainForwarding
 
@@ -1216,7 +1325,7 @@ Symbol <- R6Class(
       }
       else {
         assertthat::assert_that(
-           (is.numeric(dimension_input)) && 
+           (inherits(dimension_input, c("numeric", "integer"))) && 
            (dimension_input %% 1 == 0) && (dimension_input >= 0),
            msg = "Symbol 'dimension' must be type 
            int (greater than or equal to 0)")
@@ -1443,7 +1552,7 @@ Symbol <- R6Class(
     },
 
     domainLabels = function() {
-      column_names = list()
+      column_names = c()
       for (i in seq_along(self$domain)) {
         if (is.character(self$domain[[i]])) {
           d = self$domain[[i]]
@@ -1473,10 +1582,6 @@ Symbol <- R6Class(
     .records = NULL,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
-
-    # .attr = function() {
-    #   return(c("level", "marginal", "lower", "upper", "scale"))
-    # },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
@@ -1553,12 +1658,14 @@ Symbol <- R6Class(
             cols = append(cols, private$.attr())
           }
 
-          if (!identical(unlist(cols), colnames(self$records))) {
-            stop(paste0("Records columns must be named and ordered as: ", toString(cols),"\n"))
+          if (!identical(cols, colnames(self$records))) {
+            stop(paste0("Records columns must be named 
+            and ordered as: ", toString(cols),"\n"))
           }
 
-          if (!all(unlist(lapply(cols, is.character) ))) {
-            stop("Domain columns in symbol 'records' must be of type character\n")
+          if (!is.character(cols)) {
+            stop("Domain columns in symbol 
+            'records' must be of type character\n")
           }
 
           # check if columns are factors
@@ -1613,7 +1720,8 @@ Symbol <- R6Class(
 
           # drop duplicates
           if (self$dimension != 0) {
-            if (nrow(self$records) != nrow(unique(self$records[unlist(self$domainLabels)]))) {
+            if (nrow(self$records) != 
+            nrow(unique(self$records[self$domainLabels]))) {
               stop(paste0("Symbol 'records' contain non-unique",
                " domain members; ensure that only unique members exist\n"))
             }
@@ -1622,8 +1730,9 @@ Symbol <- R6Class(
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
-              if (!all(is.numeric(self$records[, i]))) {
-                stop("Data in column", i, " must be numeric\n")
+              if (!is.numeric(self$records[, i])) {
+              # if (!all(inherits(self$records[, i], "numeric"))) {
+                stop("Data in column ", i, " must be numeric\n")
               }
             }
           }
@@ -1637,7 +1746,7 @@ Symbol <- R6Class(
     # find symbols to grow
     for (diter in seq_len(self$dimension)) {
       d = self$domain[[diter]]
-      dl = self$domainLabels[[diter]]
+      dl = self$domainLabels[diter]
       to_grow = list()
       while (inherits(d, "Set")) {
         to_grow = append(to_grow, d$name)
@@ -1650,7 +1759,7 @@ Symbol <- R6Class(
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$refContainer$data[[i]]$domainLabels)[[1]]
+        dim = (self$refContainer$data[[i]]$domainLabels)[1]
         if (!is.null(self$refContainer$data[[i]]$records)) {
           recs = self$refContainer$data[[i]]$records
           assert_that((self$refContainer$data[[i]]$dimension == 1),
@@ -1862,14 +1971,14 @@ Parameter <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if (is.array(records)) { # checks for matrix + arrays
+      if (inherits(records, c("array", "numeric", "integer"))) { # checks for matrix + arrays + vectors + numbers
         if ((length(records) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
             records is only possible for symbols where 
-            self.domain_type = 'regular'. 
+            self$domainType = 'regular'. 
             Must define symbol with specific domain set objects, 
-            symbol domain_type is currently ",self$domainType,".\n" ))
+            symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
@@ -1880,10 +1989,14 @@ Parameter <- R6Class(
             ))
           }
         }
+        # convert vector and numeric input to an array
+        if (inherits(records, c("numeric", "integer"))) {
+          records = array(records)
+        }
 
-        if (self$dimension >= 2) {
+        if (self$dimension >= 1) {
           if (!all(dim(records) == self$shape())) {
-            stop(paste0("User passed array/matrix with shape ", toString(dim(records)), " but anticipated 
+            stop(paste0("User passed array/matrix/numeric with shape ", toString(dim(records)), " but anticipated 
             shape was ", toString(self$shape()), " based on domain set information -- 
             must reconcile before array-to-records conversion is possible.\n"))
           }
@@ -2053,6 +2166,7 @@ Variable <- R6Class(
       super$initialize(container, name,
                       symtype, symsubtype, 
                       domain, description, domainForwarding)
+
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -2062,21 +2176,41 @@ Variable <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
-
+      # if list containing array or just an array
+      # exclude data frame accept everything else
+      if (inherits(records, c("list", "array", "numeric", "integer"))) {
         if (is.array(records)){
           records= list(level = records) # default to level
         }
 
-        #check if user attributes are valid
-        if (length(intersect(private$.attr(), names(records))) == 0) {
-          stop(paste0("Unrecognized user attribute detected in `records`. 
-          The attributes must be one of the following", toString(private$.attr()),
-          "and must be passed as names of a named list.\n"))
+        if (inherits(records, "list")) {
+          #check if user attributes are valid
+          if (length(intersect(private$.attr(), names(records))) == 0) {
+            stop(paste0("Unrecognized user attribute detected in `records`. 
+            The attributes must be one of the following", toString(private$.attr()),
+            "and must be passed as names of a named list.\n"))
+          }
+          # check if elements of the list are arrays or numerics
+          for (i in length(records)) {
+            if (!(is.numeric(records[[i]]))) {
+              stop("All elements of the named list `records` must 
+              be type numeric.\n")
+            }
+          }
         }
+
+        # here everything is a named list
+        # convert lists with numeric entries to array
+        # if vectors, convert them to arrays
+        for (i in length(records)) {
+          if (inherits(records[[i]], c("numeric", "integer"))) {
+            records[[i]] = array(records[[i]])
+          }
+        }
+
         # check if all records have equal size
         size1 = dim(records[[1]])
-        size = lapply(records, dim)
+        # size = lapply(records, dim)
 
         for (i in seq_along(records)) {
           if(!all(dim(records[[i]]) == size1)) {
@@ -2084,13 +2218,13 @@ Variable <- R6Class(
           }
         }
 
-        if ((length(records) > 1) && (self$domainType != "regular")) {
+        if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
             records is only possible for symbols where 
-            self.domain_type = 'regular'. 
+            self$domainType = 'regular'. 
             Must define symbol with specific domain set objects, 
-            symbol domain_type is currently ",self$domainType,".\n" ))
+            symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
@@ -2225,11 +2359,11 @@ Variable <- R6Class(
         #check dimensionality
         if (length(records) != self$dimension + length(private$.attr())) {
           stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
-          " is inconsistent with equation domain specification ", 
+          " is inconsistent with the variable domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
           "NOTE:",
           "columns not named ", toString(private$.attr()),
-          " will be interpreted as domain columns, check that the data.frame conforms",
+          " will be interpreted as domain columns, check that the data.frame conforms ",
           "to the required notation.\n",
           "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
@@ -2434,21 +2568,40 @@ Equation <- R6Class(
     #' @param records specify set records as a vector, matrix, 
     #' array or a dataframe.
     setRecords = function(records) {
-      if ( (is.list(records) && is.array(records[[1]])) || is.array(records)) {
+      if (inherits(records, c("list", "array", "numeric", "integer"))) {
 
         if (is.array(records)){
           records= list(level = records) # default to level
         }
 
-        #check if user attributes are valid
-        if (length(intersect(private$.attr(), names(records))) == 0) {
-          stop(paste0("Unrecognized user attribute detected in `records`. 
-          The attributes must be one of the following", toString(private$.attr()),
-          "and must be passed as names of a named list.\n"))
+        if (inherits(records, "list")) {
+          #check if user attributes are valid
+          if (length(intersect(private$.attr(), names(records))) == 0) {
+            stop(paste0("Unrecognized user attribute detected in `records`. 
+            The attributes must be one of the following", toString(private$.attr()),
+            "and must be passed as names of a named list.\n"))
+          }
+          # check if elements of the list are arrays or numerics
+          for (i in length(records)) {
+            if (!(is.numeric(records[[i]]))) {
+              stop("All elements of the named list `records` must 
+              be type numeric.\n")
+            }
+          }
         }
+
+        # here everything is a named list
+        # convert lists with numeric entries to array
+        # if vectors, convert them to arrays
+        for (i in length(records)) {
+          if (inherits(records[[i]], c("numeric", "integer"))) {
+            records[[i]] = array(records[[i]])
+          }
+        }
+
         # check if all records have equal size
         size1 = dim(records[[1]])
-        size = lapply(records, dim)
+        # size = lapply(records, dim)
 
         for (i in seq_along(records)) {
           if(!all(dim(records[[i]]) == size1)) {
@@ -2456,13 +2609,13 @@ Equation <- R6Class(
           }
         }
 
-        if ((length(records) > 1) && (self$domainType != "regular")) {
+        if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into 
             records is only possible for symbols where 
-            self.domain_type = 'regular'. 
+            self$domainType = 'regular'. 
             Must define symbol with specific domain set objects, 
-            symbol domain_type is currently ",self$domainType,".\n" ))
+            symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
@@ -2607,7 +2760,7 @@ Equation <- R6Class(
           self$dimension, " must resolve before records can be added\n\n",
           "NOTE:",
           "columns not named ", toString(private$.attr()),
-          " will be interpreted as domain columns, check that the data.frame conforms",
+          " will be interpreted as domain columns, check that the data.frame conforms ",
           "to the required notation.\n",
           "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
@@ -3028,13 +3181,10 @@ Alias <- R6Class(
 #' @export
 ConstContainer <- R6::R6Class (
   "ConstContainer",
-  inherit = BaseContainer,
+  inherit = .BaseContainer,
   public = list(
-    loadFrom = NULL,
     #' @description
     #' Create a new ConstContainer simply by initializing an object.
-    #' @param loadFrom optional argument to point to the GDX file being 
-    #' read into the Container
     #' @param systemDirectory optional argument for the absolute path to 
     #' GAMS system directory
     #' @examples
@@ -3071,9 +3221,14 @@ ConstContainer <- R6::R6Class (
         stop("argument symbols must be of the type list or string\n")
       }
 
-      if (!all(unlist(lapply(symbols, is.character)))) {
-        stop("argument symbols must contain only type string\n")
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character)))) {
+          stop("argument symbols must contain only type string\n")
+        }
       }
+
+      # convert symbols to a vector
+      symbols = unlist(symbols)
 
       if (!is.character(loadFrom)) {
         stop("The argument loadFrom must be of type string\n")
@@ -3088,7 +3243,6 @@ ConstContainer <- R6::R6Class (
         if (!file.exists(loadFrom)) {
           stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
-        self$loadFrom = loadFrom
       }
       # check acronyms
       acrInfo = CPP_checkAcronyms(loadFrom, self$systemDirectory)
@@ -3103,7 +3257,7 @@ ConstContainer <- R6::R6Class (
       metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
       syms = lapply(metadata, "[[", 1)
 
-      if (is.character(symbols) && symbols == "all") {
+      if (length(symbols) == 1 && symbols == "all") {
         symbolsToRead = syms
       }
       else {
@@ -3126,9 +3280,10 @@ ConstContainer <- R6::R6Class (
       for (m in metadata) {
          if (any(symbolsToRead == m$name)) {
             if (m$type == GMS_DT_PAR) {
-              ConstParameter$new(
+              .ConstParameter$new(
                 self, m$name, m$domain, records = NULL,
-                description = m$expltext, m$domaintype)
+                description = m$expltext, domaintype= m$domaintype,
+                numberRecords=m$numRecs)
             }
             else if (m$type == GMS_DT_SET) {
                 dt = m$domaintype
@@ -3136,16 +3291,16 @@ ConstContainer <- R6::R6Class (
                   dt = 2 # for relaxed domain type
                 }
                 if (m$subtype == 0) {
-                ConstSet$new(
+                .ConstSet$new(
                 self, m$name, m$domain, FALSE,
                 records = NULL,
-                m$expltext,dt)
+                m$expltext,dt, m$numRecs)
                 }
                 else if (m$subtype == 1) {
-                ConstSet$new(
+                .ConstSet$new(
                 self, m$name, m$domain, TRUE,
                 records = NULL,
-                m$expltext, dt)
+                m$expltext, dt, m$numRecs)
                 }
                 else {
                   stop(paste0("Unknown set classification with 
@@ -3160,9 +3315,10 @@ ConstContainer <- R6::R6Class (
                 else {
                   type = names(VarTypeSubtype())[[type]]
                 }
-                ConstVariable$new(
+                .ConstVariable$new(
                 self, m$name, type, m$domain,
-                description = m$expltext, domaintype = m$domaintype)
+                description = m$expltext, domaintype = m$domaintype,
+                numberRecords=m$numRecs)
             }
             else if (m$type == GMS_DT_EQU) {
                 type = which(EqTypeSubtype() == m$subtype)
@@ -3173,13 +3329,27 @@ ConstContainer <- R6::R6Class (
                   type = names(EqTypeSubtype())[[type]]
                 }
 
-                ConstEquation$new(
+                .ConstEquation$new(
                 self, m$name, type, m$domain,
-                description = m$expltext, domaintype = m$domaintype)
+                description = m$expltext, domaintype = m$domaintype,
+                numberRecords=m$numRecs)
             }
             else if (m$type == GMS_DT_ALIAS) {
-              aliasCount = aliasCount + 1
-              aliasList = append(aliasList, list(m))
+                dt = m$domaintype
+                if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
+                  dt = 2 # for relaxed domain type
+                }
+
+                if (m$subtype == 0) {
+                  .ConstAlias$new(self, m$name, m$aliasfor, m$domain, FALSE,
+                  m$expltext, dt, m$numRecs)
+                }
+                else if (m$subtype == 1) {
+                  .ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
+                  m$expltext, dt, m$numRecs)
+                }
+              # aliasCount = aliasCount + 1
+              # aliasList = append(aliasList, list(m))
             }
             else {
                 stop("incorrect data type.\n")
@@ -3188,10 +3358,10 @@ ConstContainer <- R6::R6Class (
       }
 
       # do alias last
-      for (m in aliasList) {
-      ConstAlias$new(
-        self, m$name, self$data[[m$aliasfor]])
-      }
+      # for (m in aliasList) {
+      # ConstAlias$new(
+      #   self, m$name, self$data[[m$aliasfor]])
+      # }
 
       if (records == TRUE) {
         symbolrecords = CPP_readSymbols(unlist(symbolsToRead),
@@ -3204,8 +3374,8 @@ ConstContainer <- R6::R6Class (
           self$data[[s$names]]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
-            if (inherits(self$data[[s$names]], c("ConstParameter", 
-            "ConstVariable", "ConstEquation"))) {
+            if (inherits(self$data[[s$names]], c(".ConstParameter", 
+            ".ConstVariable", ".ConstEquation"))) {
               for (a in self$acronyms) {
                 self$data[[s$names]]$records[(self$data[[s$names]]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
@@ -3219,27 +3389,27 @@ ConstContainer <- R6::R6Class (
   )
 
 
-ConstSymbol <- R6Class(
-  "ConstSymbol",
-  inherit = BaseSymbol,
+.ConstSymbol <- R6Class(
+  ".ConstSymbol",
+  inherit = .BaseSymbol,
   public = list(
   initialize = function(container, name,
                         type, subtype, 
                         domain,
-                        description, domaintype) {
+                        description, domaintype,
+                        numberRecords) {
 
     super$initialize(type, subtype)
 
-    self$refContainer = container
-    self$name <- name
-    self$refContainer$data[[name]] = self
+    private$.ref_container = container
+    container$data[[name]] = self
 
-    self$records = NULL
-
-    self$domain = domain
+    private$.name <- name
+    private$.domain = domain
+    private$.dimension = length(domain)
     private$.domainType = domaintype
-    self$dimension = length(self$domain)
-    self$description = description
+    private$.description = description
+    private$.number_records = numberRecords
 
   },
 
@@ -3308,7 +3478,7 @@ ConstSymbol <- R6Class(
         return(private$.records)
       }
       else {
-        private$.records = records_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3317,21 +3487,16 @@ ConstSymbol <- R6Class(
         return(private$.description)
       }
       else {
-        if (!is.character(description_input)) {
-          stop("Symbol 'description' must be type character\n")
-        }
-
-        if (length(description_input) >= gams_description_max_length) {
-          stop(paste0("Symbol 'description' must have length ",
-          gams_description_max_length, " or smaller\n"))
-        }
-        private$.description = description_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
     dimension = function(dimension_input) {
       if (missing(dimension_input)) {
-        return(length(self$domain))
+        return(private$.dimension)
+      }
+      else {
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3341,24 +3506,7 @@ ConstSymbol <- R6Class(
         return(private$.domain)
       }
       else {
-        if (is.null(domain_input)) {
-          domain_input = list()
-        }
-
-        if (!(is.list(domain_input) || is.vector(domain_input))) {
-          domain_input = list(domain_input)
-        }
-
-        if (!all(unlist(lapply(domain_input, is.character)))) {
-          stop("All 'domain' elements must be type Character\n")
-        }
-
-        domaintemp = list()
-        for (d in domain_input) {
-              # attach as a plain string
-              domaintemp = append(domaintemp, d)
-        }
-        private$.domain = domaintemp
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3367,15 +3515,7 @@ ConstSymbol <- R6Class(
         return(private$.ref_container)
       }
       else {
-        if (is.null(ref_container_input)) {
-          private$.ref_container = NULL
-          return()
-        }
-
-        if (!inherits(ref_container_input, "ConstContainer")) {
-          stop("ConstSymbol 'container' must be type ConstContainer\n")
-        }
-        private$.ref_container = ref_container_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3384,17 +3524,18 @@ ConstSymbol <- R6Class(
         return(private$.name)
       }
       else {
-        private$.name = name_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
     numberRecords = function() {
-      if (!is.null(self$records)) {
-        return(nrow(self$records))
-      }
-      else {
-        return(0)
-      }
+      return(private$.number_records)
+      # if (!is.null(self$records)) {
+      #   return(nrow(self$records))
+      # }
+      # else {
+      #   return(0)
+      # }
     },
 
     domainType = function() {
@@ -3411,7 +3552,7 @@ ConstSymbol <- R6Class(
     },
 
     domainLabels = function() {
-      column_names = list()
+      column_names = c()
       for (i in seq_along(self$domain)) {
         if (is.character(self$domain[[i]])) {
           d = self$domain[[i]]
@@ -3438,19 +3579,25 @@ ConstSymbol <- R6Class(
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
     .domain_type_map = list("none", "relaxed", "regular"),
-    .domainType = NULL
+    .domainType = NULL,
+    .number_records = NULL,
+    .dimension = NULL,
+    .set_records = function(records) {
+      private$.records = records
+    }
   )
 )
 
-ConstSet <- R6Class(
-  "ConstSet",
-  inherit = ConstSymbol,
+.ConstSet <- R6Class(
+  ".ConstSet",
+  inherit = .ConstSymbol,
   public = list(
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
                           records = NULL,
-                          description="", domaintype=NULL) {
-      self$isSingleton <- isSingleton
+                          description="", domaintype=NULL,
+                          numberRecords=NULL) {
+      private$.is_singleton <- isSingleton
       if (!isSingleton) {
         type = GMS_DT_SET
         subtype = SetTypeSubtype()[["set"]]
@@ -3462,7 +3609,8 @@ ConstSet <- R6Class(
 
       super$initialize(container, name,
                       type, subtype,
-                      domain, description, domaintype)
+                      domain, description, domaintype,
+                      numberRecords)
 
       if (!is.null(records)) {
         self$setRecords(records)
@@ -3476,7 +3624,7 @@ ConstSet <- R6Class(
       columnNames = self$domainLabels
       columnNames = append(columnNames, "element_text")
       colnames(records) = columnNames
-      self$records = records
+      super$.set_records(records)
     }
   ),
 
@@ -3486,10 +3634,7 @@ ConstSet <- R6Class(
         return(private$.is_singleton)
       }
       else {
-        if (!is.logical(is_singleton_input)) {
-          stop("Argument 'is_singleton' must be type logical\n")
-        }
-        private$.is_singleton = is_singleton_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3516,17 +3661,19 @@ ConstSet <- R6Class(
   )
   )
 
-ConstParameter <- R6Class(
-  "ConstParameter",
-  inherit = ConstSymbol,
+.ConstParameter <- R6Class(
+  ".ConstParameter",
+  inherit = .ConstSymbol,
   public = list(
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
-                          description="", domaintype=NULL) {
+                          description="", domaintype=NULL,
+                          numberRecords = NULL) {
       type = GMS_DT_PAR
       super$initialize(container, name,
                       type, 0, 
-                      domain, description, domaintype)
+                      domain, description, domaintype,
+                      numberRecords)
 
       if (!is.null(records)) {
         self$setRecords(records)
@@ -3538,7 +3685,7 @@ ConstParameter <- R6Class(
       columnNames = self$domainLabels
       columnNames = append(columnNames, "value")
       colnames(records) = columnNames
-      self$records = records
+      super$.set_records(records)
     }
   ),
 
@@ -3569,24 +3716,26 @@ ConstParameter <- R6Class(
   )
 )
 
-ConstVariable <- R6Class(
-  "ConstVariable",
-  inherit = ConstSymbol,
+.ConstVariable <- R6Class(
+  ".ConstVariable",
+  inherit = .ConstSymbol,
   public = list(
 
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = NULL, records = NULL,
-                          description="", domaintype=NULL) {
+                          description="", domaintype=NULL,
+                          numberRecords=NULL) {
 
-      self$type = type
+      private$.type = type
 
       symtype = GMS_DT_VAR
       symsubtype = VarTypeSubtype()[[type]]
 
       super$initialize(container, name,
                       symtype, symsubtype, 
-                      domain, description, domaintype)
+                      domain, description, domaintype,
+                      numberRecords)
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -3597,7 +3746,7 @@ ConstVariable <- R6Class(
         columnNames = self$domainLabels
         columnNames = append(columnNames, private$.attr())
         colnames(records) = columnNames
-        self$records = records
+        super$.set_records(records)
     }
 
   ),
@@ -3608,21 +3757,7 @@ ConstVariable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.varTypes == type_input)) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
-          " 1. 'binary' \n",
-          " 2. 'integer' \n",
-          " 3. 'positive' \n",
-          " 4. 'negative' \n",
-          " 5. 'free' \n",
-          " 6. 'sos1' \n",
-          " 7. 'sos2' \n",
-          " 8. 'semicont' \n",
-          " 9. 'semiint'\n"
-          )))
-        }
-
-        private$.type = type_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3645,18 +3780,19 @@ ConstVariable <- R6Class(
   )
 )
 
-ConstEquation <- R6Class(
-  "ConstEquation",
-  inherit = ConstSymbol,
+.ConstEquation <- R6Class(
+  ".ConstEquation",
+  inherit = .ConstSymbol,
   public = list(
 
     initialize = function(container=NULL, name=NULL, 
                           type=NULL,
                           domain=NULL,
                           records = NULL,
-                          description="", domaintype=NULL) {
+                          description="", domaintype=NULL,
+                          numberRecords = NULL) {
 
-      self$type = type
+      private$.type = type
       # call from outside
       type = .EquationTypes[[type]]
 
@@ -3665,7 +3801,7 @@ ConstEquation <- R6Class(
 
       super$initialize(container, name,
                       symtype, symsubtype, 
-                      domain, description, domaintype)
+                      domain, description, domaintype, numberRecords)
       if (!is.null(records)) {
         self$setRecords(records)
       }
@@ -3676,7 +3812,7 @@ ConstEquation <- R6Class(
         columnNames = self$domainLabels
         columnNames = append(columnNames, private$.attr())
         colnames(records) = columnNames
-        self$records = records
+        super$.set_records(records)
     }
   ),
 
@@ -3686,19 +3822,7 @@ ConstEquation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.EquationTypes == type_input)) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
-              "1. 'eq', 'E', or 'e' -- equality\n",
-              "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
-              "3. 'leq', 'L', or 'l'  -- less than or equal to inequality\n",
-              "4. 'nonbinding', 'N', or 'n'  -- nonbinding relationship\n",
-              "5. 'cone', 'C', or 'c' -- cone equation\n",
-              "6. 'external', 'X', or 'x' -- external equation\n",
-              "7. 'boolean', 'B', or 'b' -- boolean equation\n"
-          )))
-        }
-
-        private$.type = type_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
@@ -3720,163 +3844,78 @@ ConstEquation <- R6Class(
   )
 )
 
-ConstAlias <- R6Class(
-  "ConstAlias",
+.ConstAlias <- R6Class(
+  ".ConstAlias",
+  inherit = .ConstSymbol,
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
 
-    initialize = function(container=NULL, name=NULL, 
-                          aliasFor=NULL) {
-      self$refContainer = container
-      self$name = name
-      refcontainer = self$refContainer
-      refcontainer$data[[name]] = self
-      self$.gams_type = GMS_DT_ALIAS
-      self$.gams_subtype = 1
-      private$.is_alias = TRUE
-      self$aliasWith = aliasFor
+    initialize = function(container=NULL, name=NULL, aliasFor=NULL, 
+                          domain, isSingleton, 
+                          description, domainType, numberRecords
+                          ) {
+      super$initialize(container, name, GMS_DT_ALIAS, 
+      isSingleton, domain, description, domainType, numberRecords)
+
+      # self$refContainer = container
+      # self$name = name
+      # refcontainer = self$refContainer
+      # refcontainer$data[[name]] = self
+      # self$.gams_type = GMS_DT_ALIAS
+      # self$.gams_subtype = 1
+      private$.aliasWith = aliasFor
+      private$.is_singleton = isSingleton
+      # self$aliasWith = aliasFor
     },
 
 
     getCardinality = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
+      return(self$refContainer$data[[self$aliasWith]]$getCardinality())
     },
 
     getSparsity = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
+      return(self$refContainer$data[[self$aliasWith]]$getSparsity())
     },
 
     setRecords = function(records) {
-      return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
+      return(super$.set_records(records))
+      # return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
   ),
 
   active = list(
-    refContainer = function(ref_container_input) {
-      if (missing(ref_container_input)) {
-        return(private$.ref_container)
-      }
-      else {
-        if (!inherits(ref_container_input, "ConstContainer")) {
-          stop("ConstAlias 'container' must be type ConstContainer\n")
-        }
-        if (is.null(self$refContainer)){
-          if (!identical(self$refContainer, ref_container_input)) {
-          }
-          private$.ref_container = ref_container_input
-        }
-        else {
-          private$.ref_container = ref_container_input
-        }
-      }
-    },
-
-    name = function(name_input) {
-      if (missing(name_input)) {
-        return(private$.name)
-      }
-      else {
-        private$.name = name_input
-
-      }
-    },
 
     aliasWith = function(alias_with_input) {
       if (missing(alias_with_input)) {
         return(private$.aliasWith)
       }
       else {
-        private$.aliasWith = alias_with_input
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
     },
 
     isSingleton = function(is_singleton) {
       if (missing(is_singleton)) {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        return(sym$isSingleton)
+        return(private$.is_singleton)
       }
       else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$isSingleton = is_singleton
+        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
       }
-    },
-
-    description = function(description_input) {
-      if (missing(description_input)) {
-        refcontainer = self$refContainer
-        aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
-        return(sym$description)
-      }
-      else {
-        refcontainer = self$refContainer
-        aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
-        sym$description = description_input
-      }
-    },
-
-    dimension = function(dimension_input) {
-      if (missing(dimension_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$dimension)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$dimension = dimension_input
-      }
-    },
-
-    records = function(records_input) {
-      return(self$refContainer$data[[self$aliasWith$name]]$records)
-    },
-
-    domain = function(domain_input) {
-      if (missing(domain_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$domain)
-      }
-      else {
-        refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
-        sym$domain = domain_input
-      }
-    },
-
-    numberRecords = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
-    },
-
-    domainType = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainType)
-    },
-
-    domainNames = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
-    },
-
-    domainLabels = function() {
-      return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
     },
 
     summary = function() {
     return(list(
       "name" = self$name,
       "alias_with" = self$aliasWith,
-      "alias_with_name" = self$aliasWith$name,
+      "alias_with_name" = self$aliasWith,
       "isSingleton" = self$isSingleton,
-      "domain_objects" = self$domain,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords
+      "numberRecords" = self$numberRecords,
+      "domainType" = self$domainType
     ))
-    },
-
-    isAlias = function() {
-      return(private$.is_alias)
     }
   ),
 
@@ -3885,7 +3924,7 @@ ConstAlias <- R6Class(
     .ref_container = NULL,
     .name = NULL,
     .aliasWith = NULL,
-    .is_alias = NULL
+    .is_singleton = NULL
   )
 )
 
@@ -3926,8 +3965,8 @@ is.integer0 <- function(x)
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export
-BaseContainer <- R6::R6Class (
-  "BaseContainer",
+.BaseContainer <- R6::R6Class (
+  ".BaseContainer",
   public = list(
     systemDirectory = NULL,
     data = NULL,
@@ -4002,7 +4041,7 @@ BaseContainer <- R6::R6Class (
       }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Set", "ConstSet")) ) {
+        if (inherits(self$data[[s]], c("Set", ".ConstSet")) ) {
           if (is.null(sets)) {
             sets = s
           }
@@ -4028,7 +4067,7 @@ BaseContainer <- R6::R6Class (
       }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Parameter","ConstParameter"))) {
+        if (inherits(self$data[[s]], c("Parameter",".ConstParameter"))) {
           if (is.null(parameters)) {
             parameters = s
           }
@@ -4054,7 +4093,7 @@ BaseContainer <- R6::R6Class (
       }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Alias", "ConstAlias"))) {
+        if (inherits(self$data[[s]], c("Alias", ".ConstAlias"))) {
           if (is.null(aliases)) {
             aliases = s
           }
@@ -4082,14 +4121,14 @@ BaseContainer <- R6::R6Class (
         stop("Argument `isValid` must be type logical or NULL \n")
       }
 
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
+      if (!(is.character(types) || is.list(types)|| is.null(types))) {
         stop("Argument `types` myst be type character, list, vector, or NULL \n")
       }
 
-
-      if (!all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
+      if (is.list(types)) {
+        if (!all(unlist(lapply(types, is.character)))) {
+          stop("Argument 'types' must contain only type character\n")
+        }
       }
 
       if (is.null(types)) {
@@ -4104,7 +4143,7 @@ BaseContainer <- R6::R6Class (
 
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Variable", "ConstVariable"))
+        if (inherits(self$data[[s]], c("Variable", ".ConstVariable"))
         && any(types == self$data[[s]]$type)) {
           if (is.null(variables)) {
             variables = s
@@ -4133,13 +4172,12 @@ BaseContainer <- R6::R6Class (
         stop("Argument `isValid` must be type logical or NULL \n")
       }
 
-      if (!(is.character(types) || is.list(types) || 
-      is.vector(types) || is.null(types))) {
+      if (!(is.character(types) || is.list(types) || is.null(types))) {
         stop("Argument `types` myst be type character, list, vector, or NULL \n")
       }
 
 
-      if (!all(unlist(lapply(types, is.character)))) {
+      if ( is.list(types) && !all(unlist(lapply(types, is.character)))) {
         stop("Argument 'types' must contain only type character\n")
       }
 
@@ -4155,7 +4193,7 @@ BaseContainer <- R6::R6Class (
 
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Equation", "ConstEquation"))
+        if (inherits(self$data[[s]], c("Equation", ".ConstEquation"))
         && any(types == self$data[[s]]$type)) {
           if (is.null(equations)) {
             equations = s
@@ -4176,21 +4214,19 @@ BaseContainer <- R6::R6Class (
         symbols = self$listSets()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
       }
 
       colNames = list("name",
-            "isAlias",
             "isSingleton",
             "domain",
             "domainType",
@@ -4237,14 +4273,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listAliases()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4265,9 +4300,15 @@ BaseContainer <- R6::R6Class (
       rowCount = 0
       for (i in symbols) {
         if (any(self$listAliases() == i)) {
+          if(inherits(self, "Container")) {
+            aliasName = self$data[[i]]$aliasWith$name
+          }
+          else if (inherits(self, "ConstContainer")) {
+            aliasName = self$data[[i]]$aliasWith
+          }
           symDescription = list(
             i,
-            self$data[[i]]$aliasWith$name,
+            aliasName,
             self$data[[i]]$isSingleton,
             paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
             self$data[[i]]$domainType,
@@ -4300,14 +4341,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listParameters()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4379,14 +4419,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listVariables()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) || is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4461,14 +4500,13 @@ BaseContainer <- R6::R6Class (
         symbols = self$listEquations()
       }
       else {
-        if (!(is.list(symbols) || is.vector(symbols) 
-        || is.character(symbols))) {
+        if (!(is.list(symbols) ||is.character(symbols))) {
           stop("Argument `symbols` must be type character, 
           list, vector, or NULL \n")
         }
       }
 
-      if (!is.character(symbols)) {
+      if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character) ))) {
           stop("Argument `symbols` must contain elements of type character\n")
         }
@@ -4537,8 +4575,8 @@ BaseContainer <- R6::R6Class (
 
 #' @title BaseSymbol Abstract Class
 #' @description An abstract BaseSymbol class from which the Symbol class is inherited.
-BaseSymbol <- R6Class(
-  "BaseSymbol",
+.BaseSymbol <- R6Class(
+  ".BaseSymbol",
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
@@ -4565,7 +4603,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4580,7 +4618,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4620,7 +4658,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4635,7 +4673,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4674,7 +4712,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4689,7 +4727,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4729,7 +4767,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4744,7 +4782,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4785,7 +4823,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4800,7 +4838,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4849,7 +4887,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4864,7 +4902,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4913,7 +4951,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4928,7 +4966,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -4975,7 +5013,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -4990,7 +5028,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5030,7 +5068,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5045,7 +5083,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5057,8 +5095,8 @@ BaseSymbol <- R6Class(
     tryCatch(
       {
         return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &&
-          (sign(self$records[,columns]) == sign(SpecialValues$EPS))
+          (self$records[,columns] == SpecialValues$EPS) &
+          (sign(self$records[,columns]) == sign(1/SpecialValues$EPS))
           ))
       },
       error = function(cond) {
@@ -5089,7 +5127,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5104,7 +5142,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5145,7 +5183,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5160,7 +5198,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
@@ -5201,7 +5239,7 @@ BaseSymbol <- R6Class(
         return(NA)
       }
 
-      if (inherits(self, c("Set", "ConstSet"))) {
+      if (inherits(self, c("Set", ".ConstSet"))) {
         return(NA)
       }
 
@@ -5216,7 +5254,7 @@ BaseSymbol <- R6Class(
     }
     else {
       #columns argument is NULL
-        if (inherits(self, c("Parameter", "ConstParameter"))) {
+        if (inherits(self, c("Parameter", ".ConstParameter"))) {
           columns = "value"
         }
         else {
