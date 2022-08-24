@@ -4226,7 +4226,7 @@ is.integer0 <- function(x)
         }
       }
 
-      colNames = list("name",
+      colNames = c("name",
             "isSingleton",
             "domain",
             "domainType",
@@ -4254,7 +4254,30 @@ is.integer0 <- function(x)
           df[rowCount, ] = symDescription
         }
       }
+
+
       colnames(df) = colNames
+
+      if (length(intersect(symbols, self$listAliases())) != 0) {
+        alias_with = c()
+        is_alias = c()
+        for (i in nrow(df)) {
+          name =df[i, 1]
+          is_alias = append(is_alias, 
+          inherits(self$data[[name]], c("Alias", ".ConstAlias")))
+          if (inherits(self, "Container")) {
+          alias_with = append(alias_with, self$data[[name]]$aliasWith$name)
+          }
+          else if (inherits(self, "ConstContainer")) {
+            alias_with = append(alias_with, self$data[[name]]$aliasWith)
+          }
+        }
+        df$isAlias = is_alias
+        df$aliasWith = alias_with
+        append(colNames, "isAlias", 3)
+        append(colNames, "aliasWith", 4)
+        df <- df[, colNames]
+      }
       if (rowCount > 0) {
         df = df[1:rowCount, ]
         return(df[order(df[, 1]), ])
