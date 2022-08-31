@@ -549,6 +549,18 @@ Container <- R6::R6Class (
           self$acronyms = acrInfo[["acronyms"]]
         }
 
+        # check if container exists any of the symbols already
+        if (length(symbols) == 1 && symbols != "all") {
+          for (s in symbols) {
+            if (!is.null(self$data[[s]])) {
+              stop(paste0("Attempting to add symbol ", s, ", however,",
+              " one already exists in the Container. Symbol replacement",
+              " is only possible if the symbol is first removed from the", 
+              "Container with the removeSymbols() method.\n"))
+            }
+          }
+        }
+
         # get names for all symbols
         metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
         syms = lapply(metadata, "[[", 1)
@@ -566,22 +578,12 @@ Container <- R6::R6Class (
             }
             else {
               stop(paste0("User specified to read symbol ", s, "but it does 
-              not exist in the source container\n"))
+              not exist in the source file\n"))
             }
           }
         }
         if (length(symbolsToRead) == 0){
           return()
-        }
-
-        # check if container exists any of the symbols already
-        for (s in symbolsToRead) {
-          if (!is.null(self$data[[s]])) {
-            stop(paste0("Attempting to add symbol ", s, ", however,",
-            " one already exists in the Container. Symbol replacement",
-            " is only possible if the symbol is first removed from the", 
-            "Container with the removeSymbol() method.\n"))
-          }
         }
 
         aliasList = list()
@@ -721,7 +723,7 @@ Container <- R6::R6Class (
             stop(paste0("Attempting to add symbol ", s, ", however,",
             " one already exists in the Container. Symbol replacement",
             " is only possible if the symbol is first removed from the", 
-            "Container with the removeSymbol() method.\n"))
+            "Container with the removeSymbols() method.\n"))
           }
           s_loadfrom = loadFrom$data[[s]]
 

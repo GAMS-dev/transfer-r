@@ -153,12 +153,18 @@ List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir) {
 
   gdxSystemInfo(PGX, &symCount, &UelCount);
 
-  List templist, L1;
-	for (int i=0; i <= symCount; i++) {
+  List templist, templistAlias;
+  templistAlias =List::create(_["name"] = "", _["type"] = -1,
+         _["aliasfor"] = "", _["domain"]="", _["subtype"] = 
+         -1, _["expltext"]="", _["domaintype"]=-1,
+         _["numRecs"] = -1);
+  templist = List::create(_["name"] = "", _["type"] = -1, 
+  _["dimensions"]=-1, _["domain"]="", _["subtype"] = -1,
+  _["expltext"]="", _["domaintype"]=-1, _["numRecs"] = -1);
+  List L1(symCount);
+	for (int i=1; i <= symCount; i++) {
 		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
-    if (strcmp(symbolID, "*") == 0) {
-      continue;
-    }
+
     gdxSymbolInfoX(PGX, i, &nrecs, &subtype, explText);
 
       domain_type = gdxSymbolGetDomainX(PGX, i, domains_ptr);
@@ -174,22 +180,34 @@ List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir) {
         domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
         gdxDataReadStrStart(PGX, subtype, &NrRecs);
 
-        templist = List::create(_["name"] = symbolID, _["type"] = sym_type,
-         _["aliasfor"] = aliasForID, _["domain"]=domain, _["subtype"] = 
-         parent_set_subtype, _["expltext"]=explText, _["domaintype"]=domain_type,
-         _["numRecs"] = NrRecs);
+        templistAlias["name"] = symbolID;
+        templistAlias["type"] = sym_type;
+        templistAlias["aliasfor"] = aliasForID;
+        templistAlias["domain"] = domain;
+        templistAlias["subtype"] = parent_set_subtype;
+        templistAlias["expltext"] = explText;
+        templistAlias["domaintype"] = domain_type;
+        templistAlias["numRecs"] = NrRecs;
+
+        L1[i-1] = clone(templistAlias);
       }
       else {
-        templist = List::create(_["name"] = symbolID, _["type"] = sym_type, 
-        _["dimensions"]=sym_dimension, _["domain"]=domain, _["subtype"] = subtype,
-        _["expltext"]=explText, _["domaintype"]=domain_type, _["numRecs"] = nrecs);
+        templist["name"] = symbolID;
+        templist["type"] = sym_type;
+        templist["dimensions"] = sym_dimension;
+        templist["domain"] = domain;
+        templist["subtype"] = subtype;
+        templist["expltext"] = explText;
+        templist["domaintype"] = domain_type;
+        templist["numRecs"] = nrecs;
+
+        L1[i-1] = clone(templist);
       }
 
     domain.clear();
-
-    L1.push_back(templist);
   }
 
+  if (gdxClose(PGX)) stop("Error in closing GDX file");
   return L1;
 }
 
