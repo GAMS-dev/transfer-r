@@ -6480,9 +6480,7 @@ test_that("test_num_50", {
   expect_true(!is.null(m$data$j))
 
   m = ConstContainer$new()
-  m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy"))
-  expect_true(!is.null(m$data$i))
-  expect_true(!is.null(m$data$j))
+  expect_error(m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy")))
 }
 )
 

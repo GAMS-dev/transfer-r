@@ -93,10 +93,10 @@ Container <- R6::R6Class (
 
       if (!missing(loadFrom)) {
         if (inherits(self, "Container")) {
-          self$read(loadFrom, symbols="all")
+          self$read(loadFrom)
         }
         else if (inherits(self, "ConstContainer")) {
-          self$read(loadFrom, symbols="all", records=FALSE)
+          self$read(loadFrom, records=FALSE)
         }
 
       }
@@ -110,7 +110,7 @@ Container <- R6::R6Class (
     #' symbols to be read (string or a list of strings)
     #' @param records optional logical argument to specify whether to 
     #' read symbol records (logical)
-    read = function(loadFrom, symbols="all", records=TRUE) {
+    read = function(loadFrom, symbols=NULL, records=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
       # process it and populate various fields
@@ -121,18 +121,19 @@ Container <- R6::R6Class (
       }
 
       # is.character will also check vector of strings
-      if (!(is.character(symbols)) && !(is.list(symbols))) {
-        stop("argument symbols must be of the type list or string\n")
+      if (!(is.character(symbols)) && !(is.list(symbols)) 
+      && !(is.null(symbols))) {
+        stop("argument symbols must be of the type list, string, or NULL\n")
       }
 
       if (is.list(symbols)) {
         if (!all(unlist(lapply(symbols, is.character)))) {
           stop("argument `symbols`` must contain only type string\n")
         }
+        # convert symbols argument to a vector
+        symbols = unlist(symbols)
       }
 
-      # convert symbols argument to a vector
-      symbols = unlist(symbols)
       if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
         ext = tail(unlist(namesplit), 1)
@@ -540,17 +541,8 @@ Container <- R6::R6Class (
     gdx_specVals_write = list(),
 
     .gdxRead = function(loadFrom, symbols, records) {
-        # check acronyms
-        acrInfo = CPP_checkAcronyms(loadFrom, self$systemDirectory)
-        nAcr = acrInfo[["nAcronyms"]]
-        if (nAcr != 0) {
-          warning("GDX file contains acronyms. 
-          Acronyms are not supported and are set to GAMS NA.\n")
-          self$acronyms = acrInfo[["acronyms"]]
-        }
-
-        # check if container exists any of the symbols already
-        if (length(symbols) == 1 && symbols != "all") {
+        # check if container contains any of the symbols already
+        if (!is.null(symbols)) {
           for (s in symbols) {
             if (!is.null(self$data[[s]])) {
               stop(paste0("Attempting to add symbol ", s, ", however,",
@@ -561,34 +553,28 @@ Container <- R6::R6Class (
           }
         }
 
-        # get names for all symbols
-        metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
-        syms = lapply(metadata, "[[", 1)
-
-        # symbols argument is always a character vector otherwise would throw an
-        # error earlier
-        if (length(symbols) == 1 && symbols == "all") {
-          symbolsToRead = syms
+        if (is.null(symbols)) {
+          cpp_syminput = ""
         }
         else {
-          symbolsToRead = list()
-          for (s in symbols) {
-            if (any(syms == s)) {
-              symbolsToRead = append(symbolsToRead, s)
-            }
-            else {
-              stop(paste0("User specified to read symbol ", s, "but it does 
-              not exist in the source file\n"))
-            }
-          }
+          cpp_syminput = symbols
         }
-        if (length(symbolsToRead) == 0){
-          return()
+        readlist = CPP_readSuper(cpp_syminput, loadFrom, 
+        self$systemDirectory, records, is.null(symbols))
+
+        acronyms = readlist[[1]]
+        if (acronyms$nAcronyms != 0) {
+          self$acronyms = acronyms[["acronyms"]]
         }
+
+        readData = readlist[-1]
 
         aliasList = list()
         aliasCount = 0
-        for (m in metadata) {
+
+        symbolsToRead = unlist(lapply(readData, "[[", 1))
+
+        for (m in readData) {
           if (any(symbolsToRead == m$name)) {
               if (m$type == GMS_DT_PAR) {
                 Parameter$new(
@@ -647,9 +633,6 @@ Container <- R6::R6Class (
                 aliasCount = aliasCount + 1
                 aliasList = append(aliasList, list(m))
               }
-              else {
-                  stop("incorrect data type.\n")
-              }
           }
         }
 
@@ -669,21 +652,19 @@ Container <- R6::R6Class (
         }
 
         if (records == TRUE) {
-          symbolrecords = CPP_readSymbols(unlist(symbolsToRead),
-          loadFrom, self$systemDirectory)
-
-          for (s in symbolrecords) {
+          for (s in readData) {
             if (is.null(s$records)) {
               next
             }
 
-            self$data[[s$names]]$setRecords(data.frame(s$records))
+            self$data[[s$name]]$setRecords(data.frame(s$records))
 
+            # map acronyms to NA
             if (!is.null(self$acronyms)) {
-              if (inherits(self$data[[s$names]], c("Parameter", 
+              if (inherits(self$data[[s$name]], c("Parameter", 
               "Variable", "Equation"))) {
                 for (a in self$acronyms) {
-                  self$data[[s$names]]$records[(self$data[[s$names]]$records 
+                  self$data[[s$name]]$records[(self$data[[s$name]]$records 
                   == a * 1e301)] = SpecialValues[["NA"]]
                 }
               }
@@ -699,7 +680,7 @@ Container <- R6::R6Class (
     .containerRead = function(loadFrom, symbols, records) {
       syms = names(loadFrom$data)
 
-      if (length(symbols) == 1 && symbols == "all") {
+      if (is.null(symbols)) {
           symbolsToRead = syms
       }
       else {
@@ -799,14 +780,6 @@ Container <- R6::R6Class (
                 self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith$name]])
             }
           }
-          # self$data[[s]] = loadFrom$data[[s]]
-          # if (any(is.na(loadFrom$data[[s]]$domainNames))) {
-          #   self$data[[s]]$domain = list()
-          # }
-          # else {
-          #   self$data[[s]]$domain = loadFrom$data[[s]]$domainNames
-          # }
-          # self$data[[s]]$refContainer = self
         }
 
         private$linkDomainObjects(symbolsToRead)
@@ -3209,7 +3182,7 @@ ConstContainer <- R6::R6Class (
     #' symbols to be read (string or a list of strings)
     #' @param records optional logical argument to specify whether to 
     #' read symbol records (logical)
-    read = function(loadFrom, symbols="all", records=TRUE) {
+    read = function(loadFrom, symbols=NULL, records=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
       # process it and populate various fields
@@ -3219,7 +3192,7 @@ ConstContainer <- R6::R6Class (
         stop("records must be type logical\n")
       }
 
-      if (!(is.character(symbols)) && !(is.list(symbols))) {
+      if (!(is.character(symbols)) && !(is.list(symbols)) && !(is.null(symbols))) {
         stop("argument symbols must be of the type list or string\n")
       }
 
@@ -3227,10 +3200,9 @@ ConstContainer <- R6::R6Class (
         if (!all(unlist(lapply(symbols, is.character)))) {
           stop("argument symbols must contain only type string\n")
         }
+        # convert symbols to a vector
+        symbols = unlist(symbols)
       }
-
-      # convert symbols to a vector
-      symbols = unlist(symbols)
 
       if (!is.character(loadFrom)) {
         stop("The argument loadFrom must be of type string\n")
@@ -3246,40 +3218,30 @@ ConstContainer <- R6::R6Class (
           stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
       }
-      # check acronyms
-      acrInfo = CPP_checkAcronyms(loadFrom, self$systemDirectory)
-      nAcr = acrInfo[["nAcronyms"]]
-      if (nAcr != 0) {
-        warning("GDX file contains acronyms. 
-        Acronyms are not supported and are set to GAMS NA.\n")
-        self$acronyms = acrInfo[["acronyms"]]
-      }
 
-      # get names for all symbols
-      metadata = CPP_getMetadata(loadFrom, self$systemDirectory)
-      syms = lapply(metadata, "[[", 1)
-
-      if (length(symbols) == 1 && symbols == "all") {
-        symbolsToRead = syms
+      if (is.null(symbols)) {
+        cpp_syminput = ""
       }
       else {
-        symbolsToRead = list()
-        for (s in symbols) {
-          if (any(syms == s)) {
-            symbolsToRead = append(symbolsToRead, s)
-          }
-        }
-      }
-      if (length(symbolsToRead) == 0){
-        return()
+        cpp_syminput = symbols
       }
 
+      readlist = CPP_readSuper(cpp_syminput, loadFrom, 
+      self$systemDirectory, records, is.null(symbols))
+
+      acronyms = readlist[[1]]
+      if (acronyms$nAcronyms != 0) {
+        self$acronyms = acronyms[["acronyms"]]
+      }
+
+      readData = readlist[-1]
+      symbolsToRead = unlist(lapply(readData, "[[", 1))
       # reset data
       self$data = list()
 
       aliasList = list()
       aliasCount = 0
-      for (m in metadata) {
+      for (m in readData) {
          if (any(symbolsToRead == m$name)) {
             if (m$type == GMS_DT_PAR) {
               .ConstParameter$new(
@@ -3350,36 +3312,23 @@ ConstContainer <- R6::R6Class (
                   .ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
                   m$expltext, dt, m$numRecs)
                 }
-              # aliasCount = aliasCount + 1
-              # aliasList = append(aliasList, list(m))
-            }
-            else {
-                stop("incorrect data type.\n")
             }
          }
       }
 
-      # do alias last
-      # for (m in aliasList) {
-      # ConstAlias$new(
-      #   self, m$name, self$data[[m$aliasfor]])
-      # }
-
       if (records == TRUE) {
-        symbolrecords = CPP_readSymbols(unlist(symbolsToRead),
-        loadFrom, self$systemDirectory)
 
-        for (s in symbolrecords) {
+        for (s in readData) {
           if (is.null(s$records)) {
             next
           }
-          self$data[[s$names]]$setRecords(s$records)
+          self$data[[s$name]]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
-            if (inherits(self$data[[s$names]], c(".ConstParameter", 
+            if (inherits(self$data[[s$name]], c(".ConstParameter", 
             ".ConstVariable", ".ConstEquation"))) {
               for (a in self$acronyms) {
-                self$data[[s$names]]$records[(self$data[[s$names]]$records 
+                self$data[[s$name]]$records[(self$data[[s$name]]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
               }
             }
