@@ -543,13 +543,15 @@ Container <- R6::R6Class (
     .gdxRead = function(loadFrom, symbols, records) {
         # check if container contains any of the symbols already
         if (!is.null(symbols)) {
-          for (s in symbols) {
-            if (!is.null(self$data[[s]])) {
-              stop(paste0("Attempting to add symbol ", s, ", however,",
-              " one already exists in the Container. Symbol replacement",
-              " is only possible if the symbol is first removed from the", 
-              "Container with the removeSymbols() method.\n"))
-            }
+          sym_already_exists = lapply(symbols, 
+          function(x) !is.null(self$data[[x]]))
+          if (any(sym_already_exists == TRUE)) {
+            s = which(sym_already_exists == TRUE)
+            stop(paste0("Attempting to add symbol ", 
+            symbols[s[1]], ", however,",
+            " one already exists in the Container. Symbol replacement",
+            " is only possible if the symbol is first removed from the", 
+            "Container with the removeSymbols() method.\n"))
           }
         }
 
@@ -568,72 +570,72 @@ Container <- R6::R6Class (
         }
 
         readData = readlist[-1]
-
+        rm("readlist")
         aliasList = list()
         aliasCount = 0
 
         symbolsToRead = unlist(lapply(readData, "[[", 1))
 
+        # readData only contains symbols to be read
         for (m in readData) {
-          if (any(symbolsToRead == m$name)) {
-              if (m$type == GMS_DT_PAR) {
-                Parameter$new(
-                  self, m$name, m$domain,
-                  domainForwarding=FALSE,
-                  description = m$expltext)
-              }
-              else if (m$type == GMS_DT_SET) {
-                  if (m$subtype == 0) {
-                  Set$new(
-                  self, m$name, m$domain, FALSE,
-                  records = NULL,
-                  domainForwarding=FALSE,
-                  m$expltext)
-                  }
-                  else if (m$subtype == 1) {
-                  Set$new(
-                  self, m$name, m$domain, TRUE,
-                  records = NULL,
-                  domainForwarding=FALSE, 
-                  m$expltext)
-                  }
-                  else {
-                    stop(paste0("Unknown set classification with 
-                    GAMS Subtype ", m$subtype, "cannot load set ", m$name))
-                  }
-              }
-              else if (m$type == GMS_DT_VAR) {
-                  type = which(VarTypeSubtype() == m$subtype)
-                  if (is.integer0(type)) {
-                    type = "free"
-                  }
-                  else {
-                    type = names(VarTypeSubtype())[[type]]
-                  }
-                  Variable$new(
-                  self, m$name, type, m$domain,
-                  domainForwarding = FALSE,
-                  description = m$expltext)
-              }
-              else if (m$type == GMS_DT_EQU) {
-                  type = which(EqTypeSubtype() == m$subtype)
-                  if (is.integer0(type)) {
-                    type = "eq"
-                  }
-                  else {
-                    type = names(EqTypeSubtype())[[type]]
-                  }
+            if (m$type == GMS_DT_PAR) {
+              Parameter$new(
+                self, m$name, m$domain,
+                domainForwarding=FALSE,
+                description = m$expltext)
+            }
+            else if (m$type == GMS_DT_SET) {
+                if (m$subtype == 0) {
+                Set$new(
+                self, m$name, m$domain, FALSE,
+                records = NULL,
+                domainForwarding=FALSE,
+                m$expltext)
+                }
+                else if (m$subtype == 1) {
+                Set$new(
+                self, m$name, m$domain, TRUE,
+                records = NULL,
+                domainForwarding=FALSE, 
+                m$expltext)
+                }
+                else {
+                  stop(paste0("Unknown set classification with 
+                  GAMS Subtype ", m$subtype, "cannot load set ", m$name))
+                }
+            }
+            else if (m$type == GMS_DT_VAR) {
+                type = which(VarTypeSubtype() == m$subtype)
+                if (is.integer0(type)) {
+                  type = "free"
+                }
+                else {
+                  type = names(VarTypeSubtype())[[type]]
+                }
+                Variable$new(
+                self, m$name, type, m$domain,
+                domainForwarding = FALSE,
+                description = m$expltext)
+            }
+            else if (m$type == GMS_DT_EQU) {
+                type = which(EqTypeSubtype() == m$subtype)
+                if (is.integer0(type)) {
+                  type = "eq"
+                }
+                else {
+                  type = names(EqTypeSubtype())[[type]]
+                }
 
-                  Equation$new(
-                  self, m$name, type, m$domain,
-                  domainForwarding = FALSE,
-                  description = m$expltext)
-              }
-              else if (m$type == GMS_DT_ALIAS) {
-                aliasCount = aliasCount + 1
-                aliasList = append(aliasList, list(m))
-              }
-          }
+                Equation$new(
+                self, m$name, type, m$domain,
+                domainForwarding = FALSE,
+                description = m$expltext)
+            }
+            else if (m$type == GMS_DT_ALIAS) {
+              aliasCount = aliasCount + 1
+              aliasList = append(aliasList, list(m))
+            }
+
         }
 
         # do alias last
@@ -685,36 +687,45 @@ Container <- R6::R6Class (
       }
       else {
         symbolsToRead = list()
-        for (s in symbols) {
-          if (any(syms == s)) {
-            symbolsToRead = append(symbolsToRead, s)
-          }
-          else {
-            stop(paste0("User specified to read symbol ", s, "but it does 
-            not exist in the source container\n"))
-          }
+        symbol_already_exists = lapply(symbols, 
+        function(x) is.null(loadFrom$data[[x]]))
+
+        if (any(symbol_already_exists == TRUE)) {
+          s = which(symbol_already_exists == TRUE)
+          stop(paste0("User specified to read symbol ", 
+          symbols[s], " but it does 
+          not exist in the source container\n"))
+        }
+        else {
+          symbolsToRead = symbols
         }
       }
       # sort the symbols argument to preserve the order from original container
       symbolsToRead = intersect(syms, symbolsToRead)
 
-      # check if container exists any of the symbols already
-        for (s in symbolsToRead) {
-          if (!is.null(self$data[[s]])) {
-            stop(paste0("Attempting to add symbol ", s, ", however,",
-            " one already exists in the Container. Symbol replacement",
-            " is only possible if the symbol is first removed from the", 
-            "Container with the removeSymbols() method.\n"))
-          }
-          s_loadfrom = loadFrom$data[[s]]
 
-          if (inherits(loadFrom, "Container")) {
-            if (s_loadfrom$isValid() == FALSE) {
-              stop(paste0("Cannot read symbol ", s, " because it is invalid, 
-              use $isValid(verbose=TRUE) method to debug symbol state\n"))
-            }
-          }
+      sym_already_exists = lapply(symbolsToRead, 
+      function(x) !is.null(self$data[[x]]))
+      if (any(sym_already_exists == TRUE)) {
+        s = which(sym_already_exists == TRUE)
+        stop(paste0("Attempting to add symbol ", 
+        symbols[s[1]], ", however,",
+        " one already exists in the Container. Symbol replacement",
+        " is only possible if the symbol is first removed from the", 
+        "Container with the removeSymbols() method.\n"))
+      }
+      if (inherits(loadFrom, "Container")) {
+        sym_is_valid = lapply(symbolsToRead, 
+        function(x) {
+          s_loadfrom = loadFrom$data[[x]]
+          return(s_loadfrom$isValid())
+        })
+        if (any(sym_is_valid == FALSE)) {
+          s = which(sym_is_valid == FALSE)
+          stop(paste0("Cannot read symbol ", s, " because it is invalid, 
+          use $isValid(verbose=TRUE) method to debug symbol state\n"))
         }
+      }
 
         for (s in symbolsToRead) {
           s_loadfrom = loadFrom$data[[s]]
@@ -3242,80 +3253,79 @@ ConstContainer <- R6::R6Class (
       aliasList = list()
       aliasCount = 0
       for (m in readData) {
-         if (any(symbolsToRead == m$name)) {
-            if (m$type == GMS_DT_PAR) {
-              .ConstParameter$new(
-                self, m$name, m$domain, records = NULL,
-                description = m$expltext, domaintype= m$domaintype,
-                numberRecords=m$numRecs)
+        if (m$type == GMS_DT_PAR) {
+          .ConstParameter$new(
+            self, m$name, m$domain, records = NULL,
+            description = m$expltext, domaintype= m$domaintype,
+            numberRecords=m$numRecs)
+        }
+        else if (m$type == GMS_DT_SET) {
+            dt = m$domaintype
+            if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
+              dt = 2 # for relaxed domain type
             }
-            else if (m$type == GMS_DT_SET) {
-                dt = m$domaintype
-                if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
-                  dt = 2 # for relaxed domain type
-                }
-                if (m$subtype == 0) {
-                .ConstSet$new(
-                self, m$name, m$domain, FALSE,
-                records = NULL,
-                m$expltext,dt, m$numRecs)
-                }
-                else if (m$subtype == 1) {
-                .ConstSet$new(
-                self, m$name, m$domain, TRUE,
-                records = NULL,
-                m$expltext, dt, m$numRecs)
-                }
-                else {
-                  stop(paste0("Unknown set classification with 
-                  GAMS Subtype ", m$subtype, "cannot load set ", m$name))
-                }
+            if (m$subtype == 0) {
+            .ConstSet$new(
+            self, m$name, m$domain, FALSE,
+            records = NULL,
+            m$expltext,dt, m$numRecs)
             }
-            else if (m$type == GMS_DT_VAR) {
-                type = which(VarTypeSubtype() == m$subtype)
-                if (is.integer0(type)) {
-                  type = "free"
-                }
-                else {
-                  type = names(VarTypeSubtype())[[type]]
-                }
-                .ConstVariable$new(
-                self, m$name, type, m$domain,
-                description = m$expltext, domaintype = m$domaintype,
-                numberRecords=m$numRecs)
+            else if (m$subtype == 1) {
+            .ConstSet$new(
+            self, m$name, m$domain, TRUE,
+            records = NULL,
+            m$expltext, dt, m$numRecs)
             }
-            else if (m$type == GMS_DT_EQU) {
-                type = which(EqTypeSubtype() == m$subtype)
-                if (is.integer0(type)) {
-                  type = "eq"
-                }
-                else {
-                  type = names(EqTypeSubtype())[[type]]
-                }
+            else {
+              stop(paste0("Unknown set classification with 
+              GAMS Subtype ", m$subtype, "cannot load set ", m$name))
+            }
+        }
+        else if (m$type == GMS_DT_VAR) {
+            type = which(VarTypeSubtype() == m$subtype)
+            if (is.integer0(type)) {
+              type = "free"
+            }
+            else {
+              type = names(VarTypeSubtype())[[type]]
+            }
+            .ConstVariable$new(
+            self, m$name, type, m$domain,
+            description = m$expltext, domaintype = m$domaintype,
+            numberRecords=m$numRecs)
+        }
+        else if (m$type == GMS_DT_EQU) {
+            type = which(EqTypeSubtype() == m$subtype)
+            if (is.integer0(type)) {
+              type = "eq"
+            }
+            else {
+              type = names(EqTypeSubtype())[[type]]
+            }
 
-                .ConstEquation$new(
-                self, m$name, type, m$domain,
-                description = m$expltext, domaintype = m$domaintype,
-                numberRecords=m$numRecs)
+            .ConstEquation$new(
+            self, m$name, type, m$domain,
+            description = m$expltext, domaintype = m$domaintype,
+            numberRecords=m$numRecs)
+        }
+        else if (m$type == GMS_DT_ALIAS) {
+            dt = m$domaintype
+            if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
+              dt = 2 # for relaxed domain type
             }
-            else if (m$type == GMS_DT_ALIAS) {
-                dt = m$domaintype
-                if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
-                  dt = 2 # for relaxed domain type
-                }
 
-                if (m$subtype == 0) {
-                  .ConstAlias$new(self, m$name, m$aliasfor, m$domain, FALSE,
-                  m$expltext, dt, m$numRecs)
-                }
-                else if (m$subtype == 1) {
-                  .ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
-                  m$expltext, dt, m$numRecs)
-                }
+            if (m$subtype == 0) {
+              .ConstAlias$new(self, m$name, m$aliasfor, m$domain, FALSE,
+              m$expltext, dt, m$numRecs)
             }
-         }
+            else if (m$subtype == 1) {
+              .ConstAlias$new(self, m$name, m$aliasfor, m$domain, TRUE,
+              m$expltext, dt, m$numRecs)
+            }
+        }
       }
 
+      # set acronyms to NA
       if (records == TRUE) {
 
         for (s in readData) {
