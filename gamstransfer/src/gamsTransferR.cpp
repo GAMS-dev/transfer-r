@@ -31,17 +31,19 @@ std::string error_message = "Something went wrong. Please "
 
 void WriteData(gdxHandle_t PGX, StringVector s,
 std::vector<double> V, int VarType, int Dim,
-std::string elemText) {
+std::string elemText, std::string sym_name) {
 
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
 	int rc;
+  char gdx_err_msg[GMS_SSSIZE];
+  std::string rec_name;
   GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
   for (int D=0; D < Dim; D++) {
     strcpy(Indx[D], s[D]);
   }
-	
+
   if (VarType == GMS_DT_VAR || VarType == GMS_DT_EQU) {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
     Values[GMS_VAL_MARGINAL] = V[GMS_VAL_MARGINAL];
@@ -53,7 +55,9 @@ std::string elemText) {
     if (elemText.compare("") != 0 ) {
       int txtnr;
       if (VarType == GMS_DT_SET) {
-        gdxAddSetText(PGX, elemText.c_str(), &txtnr);
+        if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr)) {
+          stop("WriteData:gdxAddSetText GDX error (gdxAddSetText)");
+        }
       }
       Values[GMS_VAL_LEVEL] = txtnr;
       Values[GMS_VAL_MARGINAL] = 0;
@@ -71,7 +75,23 @@ std::string elemText) {
   }
 
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
-  if (!rc) stop("error calling gdxDataWriteStr");
+  if (!rc) {
+    gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
+
+    rec_name = rec_name + sym_name;
+    rec_name = rec_name + "(";
+    for (int i = 0; i < Dim; i++)
+    {
+        if (i > 0)
+           rec_name = rec_name + ",";
+        rec_name = rec_name + s[i];
+    }
+
+    rec_name = rec_name + ")";
+
+    stop("WriteData:gdxDataWriteStr GDX error in record %s:%s", rec_name, gdx_err_msg );
+  }
+
   return;
 }
 
@@ -85,7 +105,7 @@ gdxSVals_t sVals;
 int rc;
 std::string mysysDir = Rcpp::as<std::string>(sysDir);
 rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-if (!rc) stop("Error creating GDX object: %s", Msg);
+if (!rc) stop("CPP_getSpecialValues:gdxCreateD GDX init failed: %s", Msg);
 
 gdxGetSpecialValues (PGX, sVals);
 List L = List::create(
@@ -115,7 +135,7 @@ bool is_uel_priority, bool compress) {
 
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("Error creating GDX object: %s", Msg);
+  if (!rc) stop("CPP_gdxWriteSuper:gdxCreateD GDX init failed: %s", Msg);
 
   gdxSVals_t sVals;
   gdxGetSpecialValues(PGX, sVals);
@@ -127,30 +147,32 @@ bool is_uel_priority, bool compress) {
   sVals[GMS_SVIDX_MINF] = R_NegInf;
 
   rc = gdxSetSpecialValues(PGX, sVals);
+  if (!rc) stop("CPP_gdxWriteSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
 
 	gdxGetDLLVersion(PGX, Msg);
 
 	/* Write demand data */
   if (!compress) {
     rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
-    if (!rc) stop("Error opening the file %s with error code %i", myFileName, ErrNr);
+    if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWrite Error opening the file %s with error code %i", myFileName, ErrNr);
   }
   else {
     rc = gdxOpenWriteEx(PGX, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
-    if (!rc) stop("Error opening the file %s with error code %i", myFileName, ErrNr);
+    if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWriteEx Error opening the file %s with error code %i", myFileName, ErrNr);
   }
 
   // register UELs
   int UELno;
   if (is_uel_priority) {
     rc = gdxUELRegisterStrStart(PGX);
-    if (!rc) stop("Error in gdxUELRegisterStrStart.");
+    if (!rc) stop("CPP_gdxWriteSuper:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
     for (int i = 0; i < uel_priority.length(); i++) {
       myUEL = uel_priority(i);
       rc = gdxUELRegisterStr(PGX, myUEL.c_str(), &UELno);
       if (!rc) stop("Error registering UEL: %s", myUEL);
     }
-    gdxUELRegisterDone(PGX);
+    if (!gdxUELRegisterDone(PGX))
+      stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
   }
 
   DataFrame df;
@@ -171,7 +193,7 @@ bool is_uel_priority, bool compress) {
       Environment alias_with_env = symname["aliasWith"];
       std::string alias_with = alias_with_env["name"];
       if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
-      stop("Error in gdxAddAlias: cannot add alias");
+      stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
       continue;
     }
     Dim = symname["dimension"];
@@ -187,7 +209,7 @@ bool is_uel_priority, bool compress) {
     std::string expltxt = symname["description"];
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
     expltxt.c_str(), Dim, varType, varSubType))
-    stop("Error in gdxDataWriteStrStart");
+    stop("CPP_gdxWriteSuper:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart)");
 
     for (int D=0; D < Dim; D++) {
       strcpy(domains_ptr[D], domainstr[D]);
@@ -196,11 +218,17 @@ bool is_uel_priority, bool compress) {
     std::string domaintype = symname["domainType"];
     if (domaintype == "regular") {
       rc = gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
-      if (!rc) stop("gdxSymbolSetDomain failed");
+      if (!rc) {
+        gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+        stop("CPP_gdxWriteSuper:gdxSymbolSetDomain GDX error: %s",Msg);
+      }
     }
     else if (domaintype == "relaxed") {
       rc = gdxSymbolSetDomainX(PGX, d + 1, (const char **)domains_ptr);
-      if (!rc) stop("gdxSymbolSetDomainX failed");
+      if (!rc) {
+        gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+        stop("CPP_gdxWriteSuper:gdxSymbolSetDomainX GDX error: %s",Msg);
+      }
     }
     int nrows = df.nrows();
     int ncols = df.size();
@@ -226,20 +254,26 @@ bool is_uel_priority, bool compress) {
 
 
       if (varType != GMS_DT_SET){
-        WriteData(PGX, names, values, varType, Dim, elemText);
+        WriteData(PGX, names, values, varType, Dim, elemText, mysym);
       }
       else {
-        WriteData(PGX, names, values, varType, Dim, elemText);
+        WriteData(PGX, names, values, varType, Dim, elemText, mysym);
       }
       elemText.clear();
       values.clear();
     }
 
-    if (!gdxDataWriteDone(PGX)) stop("Error finishing the write operation with gdxDataWriteDone");
+    if (!gdxDataWriteDone(PGX)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+  
+  // get the error count
+   if (gdxDataErrorCount(PGX)) {
+      gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+      stop("CPP_gdxWriteSuper:gdxError GDX error for %s: %s", mysym, Msg);
+   }
   }
 
   gdxAutoConvert(PGX, 0);
-  if (gdxClose(PGX)) stop("Error in closing GDX file");
+  if (gdxClose(PGX)) stop("CPP_gdxWriteSuper:gdxClose GDX error (gdxClose)");
   return;
 }
 
@@ -256,21 +290,30 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     char aliasForID[GMS_SSSIZE], explText[GMS_SSSIZE];
 
     // loop over symbols to get metadata
-		gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type);
+		if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
+      stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
 
-    gdxSymbolInfoX(PGX, varNr, &nrecs, &subtype, explText);
+    if (!gdxSymbolInfoX(PGX, varNr, &nrecs, &subtype, explText))
+      stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
 
     domain_type = gdxSymbolGetDomainX(PGX, varNr, domains_ptr);
-    if (!domain_type) stop("Error calling gdxSymbolGetDomainX");
+    if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
     for (int j=0; j < Dim; j++) {
     domain.push_back(domains_ptr[j]);
     }
     if (sym_type == GMS_DT_ALIAS) {
       int parent_set_subtype;
-      gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy);
-      gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText);
+      if (!gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy))
+        stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+
+      if (!gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText))
+        stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
+
       domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
-      gdxDataReadStrStart(PGX, subtype, &NrRecs);
+      if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
+
+      if (!gdxDataReadStrStart(PGX, subtype, &NrRecs))
+      stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
 
       templistAlias["name"] = symbolID;
       templistAlias["type"] = sym_type;
@@ -306,7 +349,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
   if (sym_type == GMS_DT_ALIAS) return;
 
   if (!gdxDataReadStrStart(PGX, varNr, &NrRecs)) {
-    stop("Error in gdxDataReadStrStart");
+    stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
   }
 
   if (NrRecs == 0) {
@@ -385,7 +428,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     L1[l1count] = clone(templist);
   }
 
-  gdxDataReadDone(PGX);
+  if (!gdxDataReadDone(PGX))
+    stop("readInternal:gdxDataReadDone GDX error (gdxDataReadDone)");
   return;
 
 }
@@ -414,10 +458,10 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   int symCount, UelCount;
 // open GDX file and start reading
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("Error creating GDX object: %s", Msg);
+  if (!rc) stop("CPP_readSuper:gdxCreateD GDX init failed: %s", Msg);
 
   gdxOpenRead(PGX, mygdxName.c_str(), &ErrNr);
-  if (ErrNr) stop("Error in gdxOpenRead with error code %i", ErrNr);
+  if (ErrNr) stop("CPP_readSuper:gdxOpenRead GDX error with error code %i", ErrNr);
 
   gdxFileVersion(PGX, Msg, Producer);
   // check for acronyms
@@ -440,7 +484,9 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   }
 
   // get symbol count
-  gdxSystemInfo(PGX, &symCount, &UelCount);
+  if (!gdxSystemInfo(PGX, &symCount, &UelCount))
+    stop("CPP_readSuper:gdxSystemInfo GDX error (gdxSystemInfo)");
+
   // initialize empty lists for metadata
   List templist, templistAlias;
   templistAlias =List::create(_["name"] = "", _["type"] = -1,
@@ -477,6 +523,8 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
     sVals[GMS_SVIDX_MINF] = R_NegInf;
 
     rc = gdxSetSpecialValues(PGX, sVals);
+    if (!rc) stop("CPP_readSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
+
   }
   int l1count;
   l1count = 1;
@@ -504,7 +552,7 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
     }
   }
   // close the file and return
-  if (gdxClose(PGX)) stop("Error in closing GDX file");
+  if (gdxClose(PGX)) stop("CPP_readSuper:gdxClose GDX error (gdxClose)");
   return L1;
 
 }
