@@ -99,101 +99,6 @@ return L;
 }
 
 // [[Rcpp::export]]
-List CPP_checkAcronyms(CharacterVector gdxName, CharacterVector sysDir) {
-  gdxHandle_t PGX = NULL;
-  char Msg[GMS_SSSIZE], acrName[GMS_SSSIZE];
-  std::string myname = Rcpp::as<std::string>(gdxName);
-  std::string mysysDir = Rcpp::as<std::string>(sysDir);
-  List L;
-  int rc, errCode;
-
-  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("Error creating GDX object: %s", Msg);
-
-  gdxOpenRead(PGX, myname.c_str(), &errCode);
-
-  // check acronyms
-  int nAcronym;
-  nAcronym = gdxAcronymCount(PGX);
-  if (nAcronym > 0) {
-    int acrID;
-    std::vector<int> acronyms;
-    for (int i=0; i < nAcronym; i++){
-      gdxAcronymGetInfo(PGX, i+1, acrName, Msg, &acrID);
-      acronyms.push_back(acrID);
-    }
-    L = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
-  }
-  else {
-    L = List::create(_["nAcronyms"]=nAcronym);
-  }
-  if (gdxClose(PGX)) stop("Error in closing GDX file");
-  return L;
-
-}
-
-// [[Rcpp::export]]
-List CPP_getMetadata(CharacterVector gdxName, CharacterVector sysDir) {
-  gdxHandle_t PGX = NULL;
-  std::vector<std::string> domain;
-  int rc, errCode, symCount, UelCount, sym_dimension, sym_type, nrecs, dummy,
-  subtype, domain_type, NrRecs;
-  char symbolID[GMS_SSSIZE],aliasForID[GMS_SSSIZE],
-   explText[GMS_SSSIZE], Msg[GMS_SSSIZE];
-  std::string myname = Rcpp::as<std::string>(gdxName);
-  std::string mysysDir = Rcpp::as<std::string>(sysDir);
-	gdxStrIndexPtrs_t domains_ptr;
-	gdxStrIndex_t domains;
-
-	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
-
-  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("Error creating GDX object: %s", Msg);
-  gdxOpenRead(PGX, myname.c_str(), &errCode);
-
-  gdxSystemInfo(PGX, &symCount, &UelCount);
-
-  List templist, L1;
-	for (int i=0; i <= symCount; i++) {
-		gdxSymbolInfo(PGX, i, symbolID, &sym_dimension, &sym_type);
-    if (strcmp(symbolID, "*") == 0) {
-      continue;
-    }
-    gdxSymbolInfoX(PGX, i, &nrecs, &subtype, explText);
-
-      domain_type = gdxSymbolGetDomainX(PGX, i, domains_ptr);
-      if (!domain_type) stop("Error calling gdxSymbolGetDomainX");
-      for (int j=0; j < sym_dimension; j++) {
-      domain.push_back(domains_ptr[j]);
-		  }
-
-      if (sym_type == GMS_DT_ALIAS) {
-        int parent_set_subtype;
-        gdxSymbolInfo(PGX, subtype, aliasForID, &sym_dimension, &dummy);
-        gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText);
-        domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
-        gdxDataReadStrStart(PGX, subtype, &NrRecs);
-
-        templist = List::create(_["name"] = symbolID, _["type"] = sym_type,
-         _["aliasfor"] = aliasForID, _["domain"]=domain, _["subtype"] = 
-         parent_set_subtype, _["expltext"]=explText, _["domaintype"]=domain_type,
-         _["numRecs"] = NrRecs);
-      }
-      else {
-        templist = List::create(_["name"] = symbolID, _["type"] = sym_type, 
-        _["dimensions"]=sym_dimension, _["domain"]=domain, _["subtype"] = subtype,
-        _["expltext"]=explText, _["domaintype"]=domain_type, _["numRecs"] = nrecs);
-      }
-
-    domain.clear();
-
-    L1.push_back(templist);
-  }
-
-  return L1;
-}
-
-// [[Rcpp::export]]
 void CPP_gdxWriteSuper(List data, CharacterVector sysDir, 
 CharacterVector fileName, CharacterVector uel_priority, 
 bool is_uel_priority, bool compress) {
@@ -338,31 +243,176 @@ bool is_uel_priority, bool compress) {
   return;
 }
 
+void readInternal(gdxHandle_t PGX, int varNr, bool records, 
+  List templistAlias,List templist,List &L1, int l1count,
+  gdxStrIndexPtrs_t Indx, gdxValues_t Values, gdxStrIndexPtrs_t domains_ptr) {
+    std::vector<double> levels, marginals, lower, upper, scale;
+    int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
+    domain_type;
+    char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE];
+
+    std::vector<std::string> domain, index, elemText;
+    std::vector<std::vector<std::string>> indices;
+    char aliasForID[GMS_SSSIZE], explText[GMS_SSSIZE];
+
+    // loop over symbols to get metadata
+		gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type);
+
+    gdxSymbolInfoX(PGX, varNr, &nrecs, &subtype, explText);
+
+    domain_type = gdxSymbolGetDomainX(PGX, varNr, domains_ptr);
+    if (!domain_type) stop("Error calling gdxSymbolGetDomainX");
+    for (int j=0; j < Dim; j++) {
+    domain.push_back(domains_ptr[j]);
+    }
+    if (sym_type == GMS_DT_ALIAS) {
+      int parent_set_subtype;
+      gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy);
+      gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText);
+      domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
+      gdxDataReadStrStart(PGX, subtype, &NrRecs);
+
+      templistAlias["name"] = symbolID;
+      templistAlias["type"] = sym_type;
+      templistAlias["aliasfor"] = aliasForID;
+      templistAlias["domain"] = domain;
+      templistAlias["subtype"] = parent_set_subtype;
+      templistAlias["expltext"] = explText;
+      templistAlias["domaintype"] = domain_type;
+      templistAlias["numRecs"] = NrRecs;
+
+      L1[l1count] = clone(templistAlias);
+    }
+    else {
+      templist["name"] = symbolID;
+      templist["type"] = sym_type;
+      templist["dimensions"] = Dim;
+      templist["domain"] = domain;
+      templist["subtype"] = subtype;
+      templist["expltext"] = explText;
+      templist["domaintype"] = domain_type;
+      templist["numRecs"] = nrecs;
+
+      L1[l1count] = clone(templist);
+    }
+    domain.clear();
+
+  // if we just need metadata, stop here and return
+  if (!records) {
+    return;
+  }
+
+  // if we also want records
+  if (sym_type == GMS_DT_ALIAS) return;
+
+  if (!gdxDataReadStrStart(PGX, varNr, &NrRecs)) {
+    stop("Error in gdxDataReadStrStart");
+  }
+
+  if (NrRecs == 0) {
+    templist["records"]=R_NilValue;
+    L1[l1count] = clone(templist);
+  }
+  else {
+    while (gdxDataReadStr(PGX, Indx, Values, &N)) {
+      if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR) {
+        if (sym_type == GMS_DT_SET){
+          rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
+          if (rc != 0) {
+            elemText.push_back(Msg);
+          }
+          else {
+            elemText.push_back("");
+          }
+        } else {
+          levels.push_back(Values[GMS_VAL_LEVEL]);
+        }
+        for (int D = 0; D < Dim; D++) {
+          index.push_back(Indx[D]);
+        }
+      }
+      else if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
+        levels.push_back(Values[GMS_VAL_LEVEL]);
+        marginals.push_back(Values[GMS_VAL_MARGINAL]);
+        upper.push_back(Values[GMS_VAL_UPPER]);
+        lower.push_back(Values[GMS_VAL_LOWER]);
+        scale.push_back(Values[GMS_VAL_SCALE]);
+        for (int D = 0; D < Dim; D++) {
+          index.push_back(Indx[D]);
+        }
+      }
+      indices.push_back(index);
+      index.clear();
+    }
+    DataFrame df;
+    std::vector<std::string> index_columns;
+    for (int D = 0; D < Dim; D++) {
+      for (int i=0; i < NrRecs; i++){
+        index_columns.push_back(indices[i][D]);
+      }
+      if (strcmp(domain[D].c_str(), "*")== 0) {
+        df["uni_"+std::to_string(D)] = index_columns;
+      }
+      else {
+        df[domain[D] + "_" + std::to_string(D)] = index_columns;
+      }
+      index_columns.clear();
+    }
+    indices.clear();
+    if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
+      df["level"] = levels;
+      df["marginal"] = marginals;
+      df["lower"] = lower;
+      df["upper"] = upper;
+      df["scale"] = scale;
+    }
+    else {
+      if (sym_type == GMS_DT_PAR) {
+        df["values"] = levels;
+      } else {
+        df["element_text"] = elemText;
+      }
+    }
+    elemText.clear();
+    levels.clear();
+    marginals.clear();
+    upper.clear();
+    lower.clear();
+    scale.clear();
+    domain.clear();
+    // copy end
+    templist["records"]=df;
+    L1[l1count] = clone(templist);
+  }
+
+  gdxDataReadDone(PGX);
+  return;
+
+}
+
 // [[Rcpp::export]]
-List CPP_readSymbols(CharacterVector symNames, CharacterVector gdxName,
-                CharacterVector sysDir) {
+List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
+                CharacterVector sysDir, LogicalVector records, bool symisnull) {
   gdxHandle_t PGX = NULL;
-	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE];
-	int         ErrNr, VarNr, NrRecs, N, Dim, VarType, D, rc, iDummy;
-  char symbolID[GMS_SSSIZE];
+	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], acrName[GMS_SSSIZE];
+	int         ErrNr, VarNr, rc;
 
   std::string mysymName;
   std::string mygdxName = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
+
   gdxStrIndexPtrs_t Indx;
 
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
   GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
 
-  std::vector<double> levels, marginals, lower, upper, scale;
-  std::vector<std::string> domain, index, elemText;
-  std::vector<std::vector<std::string>> indices;
   gdxStrIndexPtrs_t domains_ptr;
 	gdxStrIndex_t domains;
 	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
-  // find symbol in the gdx
+  int symCount, UelCount;
+// open GDX file and start reading
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
   if (!rc) stop("Error creating GDX object: %s", Msg);
 
@@ -370,116 +420,91 @@ List CPP_readSymbols(CharacterVector symNames, CharacterVector gdxName,
   if (ErrNr) stop("Error in gdxOpenRead with error code %i", ErrNr);
 
   gdxFileVersion(PGX, Msg, Producer);
-
-  gdxSVals_t sVals;
-  gdxGetSpecialValues(PGX, sVals);
-
-  sVals[GMS_SVIDX_NA] = NA_REAL;
-  sVals[GMS_SVIDX_EPS] = -0.0;
-  sVals[GMS_SVIDX_UNDEF] = R_NaN;
-  sVals[GMS_SVIDX_PINF] = R_PosInf;
-  sVals[GMS_SVIDX_MINF] = R_NegInf;
-
-  rc = gdxSetSpecialValues(PGX, sVals);
-
-  List L = List::create();
-  for(int symcount=0; symcount < symNames.size(); symcount++) {
-    mysymName = symNames(symcount);
-
-		if (!gdxFindSymbol(PGX, mysymName.c_str(), &VarNr)) {
-			stop("Could not find variable %s", mysymName);
-		}
-
-    gdxSymbolInfo(PGX, VarNr, symbolID, &Dim, &VarType);
-    if (VarType == GMS_DT_ALIAS) continue;
-
-    rc = gdxSymbolGetDomainX(PGX, VarNr, domains_ptr);
-    for (int j=0; j < Dim; j++) {
-      domain.push_back(domains_ptr[j]);
+  // check for acronyms
+  int nAcronym;
+  List acronymList;
+  nAcronym = gdxAcronymCount(PGX);
+  if (nAcronym > 0) {
+    warning("GDX file contains acronyms. "
+          "Acronyms are not supported and are set to GAMS NA.\n");
+    int acrID;
+    std::vector<int> acronyms;
+    for (int i=0; i < nAcronym; i++){
+      gdxAcronymGetInfo(PGX, i+1, acrName, Msg, &acrID);
+      acronyms.push_back(acrID);
     }
+    acronymList = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
+  }
+  else {
+    acronymList = List::create(_["nAcronyms"]=nAcronym);
+  }
 
-    if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) {
-      stop("Error in gdxDataReadStrStart");
-    }
+  // get symbol count
+  gdxSystemInfo(PGX, &symCount, &UelCount);
+  // initialize empty lists for metadata
+  List templist, templistAlias;
+  templistAlias =List::create(_["name"] = "", _["type"] = -1,
+         _["aliasfor"] = "", _["domain"]="", _["subtype"] = 
+         -1, _["expltext"]="", _["domaintype"]=-1,
+         _["numRecs"] = -1);
+  templist = List::create(_["name"] = "", _["type"] = -1, 
+  _["dimensions"]=-1, _["domain"]="", _["subtype"] = -1,
+  _["expltext"]="", _["domaintype"]=-1, _["numRecs"] = -1,
+  _["records"]=-1);
 
-    if (NrRecs == 0) {
-      List L1 = List::create(Named("names")=mysymName, _["records"]=R_NilValue);
-      L.push_back(L1);
-    }
-    else {
-      while (gdxDataReadStr(PGX, Indx, Values, &N)) {
-        if (VarType == GMS_DT_SET || VarType == GMS_DT_PAR) {
-          if (VarType == GMS_DT_SET){
-            rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
-            if (rc != 0) {
-              elemText.push_back(Msg);
-            }
-            else {
-              elemText.push_back("");
-            }
-          } else {
-            levels.push_back(Values[GMS_VAL_LEVEL]);
-          }
-          for (D = 0; D < Dim; D++) {
-            index.push_back(Indx[D]);
-          }
-        }
-        else if (VarType == GMS_DT_VAR || VarType == GMS_DT_EQU) {
-          levels.push_back(Values[GMS_VAL_LEVEL]);
-          marginals.push_back(Values[GMS_VAL_MARGINAL]);
-          upper.push_back(Values[GMS_VAL_UPPER]);
-          lower.push_back(Values[GMS_VAL_LOWER]);
-          scale.push_back(Values[GMS_VAL_SCALE]);
-          for (D = 0; D < Dim; D++) {
-            index.push_back(Indx[D]);
-          }
-        }
-        indices.push_back(index);
-        index.clear();
-      }
-      DataFrame df;
-      std::vector<std::string> index_columns;
-      for (D = 0; D < Dim; D++) {
-        for (int i=0; i < NrRecs; i++){
-          index_columns.push_back(indices[i][D]);
-        }
-        if (strcmp(domain[D].c_str(), "*")== 0) {
-          df["uni_"+std::to_string(D)] = index_columns;
-        }
-        else {
-          df[domain[D] + "_" + std::to_string(D)] = index_columns;
-        }
-        index_columns.clear();
-      }
-      indices.clear();
-      if (VarType == GMS_DT_VAR || VarType == GMS_DT_EQU) {
-        df["level"] = levels;
-        df["marginal"] = marginals;
-        df["lower"] = lower;
-        df["upper"] = upper;
-        df["scale"] = scale;
-      }
-      else {
-        if (VarType == GMS_DT_PAR) {
-          df["values"] = levels;
-        } else {
-          df["element_text"] = elemText;
-        }
-      }
-      elemText.clear();
-      levels.clear();
-      marginals.clear();
-      upper.clear();
-      lower.clear();
-      scale.clear();
-      domain.clear();
-      // copy end
+  int l1_preallocate_size;
+  if (symisnull == 1) {
+    l1_preallocate_size = symCount + 1;
+  }
+  else {
+    l1_preallocate_size = symNames.size() + 1;
+  }
+  List L1(l1_preallocate_size);
+  L1[0] = acronymList;
 
-      List L1 = List::create(Named("names")=mysymName, _["records"]=df);
-      L.push_back(L1);
+  // if user wants to read all symbols, iterate over gdx symbols
+  // otherwise iterate over symbols provided by user
+
+  if (records) {
+    //set special values
+    gdxSVals_t sVals;
+    gdxGetSpecialValues(PGX, sVals);
+
+    sVals[GMS_SVIDX_NA] = NA_REAL;
+    sVals[GMS_SVIDX_EPS] = -0.0;
+    sVals[GMS_SVIDX_UNDEF] = R_NaN;
+    sVals[GMS_SVIDX_PINF] = R_PosInf;
+    sVals[GMS_SVIDX_MINF] = R_NegInf;
+
+    rc = gdxSetSpecialValues(PGX, sVals);
+  }
+  int l1count;
+  l1count = 1;
+  if (symisnull == 1) {
+    for (int i=1; i <= symCount; i++) {
+      // do something
+      readInternal(PGX, i, records, templistAlias, 
+      templist, L1, l1count, Indx, Values, domains_ptr);
+      l1count += 1;
     }
   }
-  gdxDataReadDone(PGX);
+  else {
+    for(int symcount=0; symcount < symNames.size(); symcount++) {
+      mysymName = symNames(symcount);
+      if (!gdxFindSymbol(PGX, mysymName.c_str(), &VarNr)) {
+        stop("User specified to read symbol %s, but it does not "
+        "exist in the source file", mysymName);
+      }
+
+
+      // do the same something
+      readInternal(PGX, VarNr, records, templistAlias, 
+      templist, L1, l1count, Indx,Values, domains_ptr);
+      l1count += 1;
+    }
+  }
+  // close the file and return
   if (gdxClose(PGX)) stop("Error in closing GDX file");
-  return L;
+  return L1;
+
 }

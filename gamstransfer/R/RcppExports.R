@@ -5,19 +5,11 @@ CPP_getSpecialValues <- function(gdxName, sysDir) {
     .Call(`_gamstransfer_CPP_getSpecialValues`, gdxName, sysDir)
 }
 
-CPP_checkAcronyms <- function(gdxName, sysDir) {
-    .Call(`_gamstransfer_CPP_checkAcronyms`, gdxName, sysDir)
-}
-
-CPP_getMetadata <- function(gdxName, sysDir) {
-    .Call(`_gamstransfer_CPP_getMetadata`, gdxName, sysDir)
-}
-
 CPP_gdxWriteSuper <- function(data, sysDir, fileName, uel_priority, is_uel_priority, compress) {
     invisible(.Call(`_gamstransfer_CPP_gdxWriteSuper`, data, sysDir, fileName, uel_priority, is_uel_priority, compress))
 }
 
-CPP_readSymbols <- function(symNames, gdxName, sysDir) {
-    .Call(`_gamstransfer_CPP_readSymbols`, symNames, gdxName, sysDir)
+CPP_readSuper <- function(symNames, gdxName, sysDir, records, symisnull) {
+    .Call(`_gamstransfer_CPP_readSuper`, symNames, gdxName, sysDir, records, symisnull)
 }
 
