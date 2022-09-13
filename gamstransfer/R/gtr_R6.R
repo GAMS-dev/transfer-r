@@ -536,6 +536,21 @@ Container <- R6::R6Class (
           self$data[[i]]$.linkDomainCategories()
         }
       }
+    },
+
+    countDuplicateRecords = function() {
+      dups = lapply(self$data, function(x) return(x$countDuplicateRecords()))
+      dups = dups[dups > 0]
+      return(dups)
+    },
+
+    hasDuplicateRecords = function() {
+      has_dups = lapply(self$data, function(x) return(x$hasDuplicateRecords()))
+      return(any(has_dups))
+    },
+
+    dropDuplicateRecords = function(keep = "first") {
+      dummy=lapply(self$data, function(x) {x$dropDuplicateRecords(keep)})
     }
 
   ),
@@ -1037,6 +1052,49 @@ Symbol <- R6Class(
     }
     else {
       return(idx)
+    }
+  },
+
+  countDuplicateRecords = function() {
+    return(sum(duplicated(self$records)))
+  },
+
+  findDuplicateRecords = function(keep="first") {
+    if (keep != FALSE && keep != "first" && keep != "last") {
+      stop("The argument `keep` must be one of the following:
+      `first`, `last`, or FALSE\n")
+    }
+
+    if (keep == "first") {
+      fl = FALSE
+      idx = which(duplicated(self$records, fromLast =fl) == TRUE)
+    }
+    else if (keep == "last") {
+      fl = TRUE
+      idx = which(duplicated(self$records, fromLast =fl) == TRUE)
+    }
+    else {
+      idx_first = which(duplicated(self$records, fromLast =FALSE) == TRUE)
+      idx_last = which(duplicated(self$records, fromLast =TRUE) == TRUE)
+      idx = append(idx_last, idx_first)
+    }
+
+    if (is.integer0(idx)) {
+      return(NULL)
+    }
+    else {
+      return(idx)
+    }
+  },
+
+  hasDuplicateRecords = function() {
+    return(ifelse( self$countDuplicateRecords() > 0, TRUE, FALSE))
+  },
+
+  dropDuplicateRecords = function(keep = "first") {
+    idx = self$findDuplicateRecords(keep)
+    if (!is.null(idx)) {
+      self$records = self$records[-idx, ]
     }
   },
 
@@ -2932,6 +2990,57 @@ Alias <- R6Class(
       }
     },
 
+    countDuplicateRecords = function() {
+      if (inherits(self$refContainer, "Container")) {
+        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
+          self$name, " is no longer in the container and cannot 
+          be referenced\n"))
+        }
+        else {
+          return(self$aliasWith$countDuplicateRecords())
+        }
+      }
+    },
+
+    findDuplicateRecords = function(keep="first") {
+      if (inherits(self$refContainer, "Container")) {
+        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
+          self$name, " is no longer in the container and cannot 
+          be referenced\n"))
+        }
+        else {
+          return(self$aliasWith$findDuplicateRecords())
+        }
+      }
+    },
+
+    hasDuplicateRecords = function(keep="first") {
+      if (inherits(self$refContainer, "Container")) {
+        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
+          self$name, " is no longer in the container and cannot 
+          be referenced\n"))
+        }
+        else {
+          return(self$aliasWith$hasDuplicateRecords())
+        }
+      }
+    },
+
+    dropDuplicateRecords = function(keep="first") {
+      if (inherits(self$refContainer, "Container")) {
+        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
+          self$name, " is no longer in the container and cannot 
+          be referenced\n"))
+        }
+        else {
+          return(self$aliasWith$dropDuplicateRecords())
+        }
+      }
+    },
 
     #' main convenience method to set standard dataframe formatted records
     #' @param records specify set records as a string vector or a dataframe.

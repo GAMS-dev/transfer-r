@@ -7545,3 +7545,63 @@ expect_equal(m$listSymbols(isValid=TRUE), "i")
 expect_equal(m$listSymbols(isValid=FALSE), "a")
 }
 )
+
+#test symbol duplicate record methods
+test_that("test_num_77", {
+m = Container$new()
+df = data.frame(matrix(NA, nrow=30, ncol=2))
+df[1:10, 1] = paste0("i", 1:10)
+df[11:20, 1] = paste0("j", 1:10)
+df[21:30, 1] = paste0("i", 1:10)
+df[1:10, 2] = 1:10
+df[11:20, 2] = 1:10
+df[21:30, 2] = 1:10
+a = Parameter$new(m, "a", domain="*", records = df)
+b = Parameter$new(m, "b", domain="*", records= data.frame(paste0("i",1:10), 1:10))
+
+expect_equal(a$isValid(), FALSE)
+expect_equal(a$findDuplicateRecords(keep="first"), 21:30)
+expect_equal(a$findDuplicateRecords(keep="last"), 1:10)
+expect_equal(a$findDuplicateRecords(keep=FALSE), append(1:10, 21:30))
+expect_equal(a$countDuplicateRecords(), 10)
+expect_true(a$hasDuplicateRecords())
+a$dropDuplicateRecords(keep="first")
+expect_equal(as.character(a$records[,1]), append(paste0("i", 1:10), paste0("j", 1:10)))
+
+m$removeSymbols("a")
+
+a = Parameter$new(m, "a", domain="*", records= df)
+a$dropDuplicateRecords(keep="last")
+expect_equal(as.character(a$records[,1]), append(paste0("j", 1:10), paste0("i", 1:10)))
+
+expect_true(b$isValid())
+expect_equal(b$countDuplicateRecords(), 0)
+expect_true(!b$hasDuplicateRecords())
+bcopy = b
+b$dropDuplicateRecords()
+expect_equal(bcopy, b)
+expect_true(m$isValid())
+
+}
+)
+
+#test container duplicate record methods
+test_that("test_num_78", {
+m = Container$new()
+df = data.frame(matrix(NA, nrow=30, ncol=2))
+df[1:10, 1] = paste0("i", 1:10)
+df[11:20, 1] = paste0("j", 1:10)
+df[21:30, 1] = paste0("i", 1:10)
+df[1:10, 2] = 1:10
+df[11:20, 2] = 1:10
+df[21:30, 2] = 1:10
+a = Parameter$new(m, "a", "*", records=df)
+b = Parameter$new(m, "b", "*", records=data.frame(paste0("i",1:10), 1:10))
+c = Parameter$new(m, "c", "*", records=data.frame(paste0("j",1:10), 1:10))
+
+expect_true(m$hasDuplicateRecords())
+expect_equal(m$countDuplicateRecords(), list("a"=10))
+m$dropDuplicateRecords()
+expect_true(m$isValid())
+}
+)
