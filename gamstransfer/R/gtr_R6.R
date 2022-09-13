@@ -201,24 +201,26 @@ Container <- R6::R6Class (
         }
       }
 
-      setOrAlias = list()
-      for (n in symbols) {
-        sym = self$data[[n]]
+      setOrAliasBool = sapply(symbols, function(x) {
+        return(inherits(self$getSymbols(x), c("Set", "Alias")))
+      }, USE.NAMES = FALSE)
+      setOrAlias = symbols[setOrAliasBool]
+
+      dummy = sapply(symbols, function(n) {
+        x = self$getSymbolNames(n)
+        sym = self$data[[x]]
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
-
-        if (inherits(sym, c("Set", "Alias"))) {
-          setOrAlias = append(setOrAlias, sym)
-        }
-        self$data[[n]] <- NULL
-      }
+        self$data[[x]] <- NULL
+        return()
+      }, USE.NAMES = FALSE)
 
       # if there were any sets or aliases removed from the data list
       # then reset check flag for all symbols
       if (length(setOrAlias) != 0) {
-        for (i in self$listSymbols()) {
-          self$data[[i]]$.requiresStateCheck = TRUE
-        }
+        dummy = sapply(self$listSymbols(), function(x) {
+          self$data[[x]]$.requiresStateCheck = TRUE
+        }, USE.NAMES = FALSE)
       }
 
       # reset the check flag for the container
@@ -237,12 +239,12 @@ Container <- R6::R6Class (
         stop("Argument 'newName' must be type character\n")
       }
 
-      if (is.null(self$data[[oldName]])) {
+      if (!self$hasSymbols(oldName)) {
         stop(paste0("Symbol ", oldName, " does not exist\n"))
       }
 
       if (oldName != newName) {
-        sym = self$data[[oldName]]
+        sym = self$data[[self$getSymbolNames(oldName)]]
         sym$name = newName
         self$.requiresStateCheck = TRUE
       }
@@ -367,16 +369,16 @@ Container <- R6::R6Class (
         }
       }
 
-      obj = list()
-      for (i in symbols) {
-        if (!is.null(self$data[[i]])) {
-          obj = append(obj, self$data[[i]])
-        }
-        else {
-          stop(paste0("Symbol ", i, "does not appear in the container \n"))
-        }
+      objisnull = sapply(symbols, self$hasSymbols, USE.NAMES = FALSE)
+      if (any(objisnull == FALSE)) {
+        stop(paste0("Symbol ", i, "does not appear in the container \n"))
       }
-      return(obj)
+
+      # all symbols exist in the container
+      return(sapply(symbols, function(x) {
+        return(self$data[[self$getSymbolNames(x)]])
+      }, 
+      USE.NAMES = FALSE))
     },
 
     #' @description a write method to write to a gdxout GDX file
@@ -472,7 +474,7 @@ Container <- R6::R6Class (
         (!setequal(intersect(uelPriority, universe), uelPriority))) {
           stop("uelPriority must be a subset of the universe, check 
           spelling of an element in uelPriority? Also check 
-          getUniverseSet() method for assumed UniverseSet.\n")
+          getUniverseSet() method for the assumed Universe Set.\n")
         }
 
         reorder = uelPriority
@@ -543,8 +545,7 @@ Container <- R6::R6Class (
     .gdxRead = function(loadFrom, symbols, records) {
         # check if container contains any of the symbols already
         if (!is.null(symbols)) {
-          sym_already_exists = lapply(symbols, 
-          function(x) !is.null(self$data[[x]]))
+          sym_already_exists = self$hasSymbols(symbols)
           if (any(sym_already_exists == TRUE)) {
             s = which(sym_already_exists == TRUE)
             stop(paste0("Attempting to add symbol ", 
@@ -673,7 +674,7 @@ Container <- R6::R6Class (
             }
           }
 
-          private$linkDomainObjects(symbolsToRead)
+          private$.linkDomainObjects(symbolsToRead)
           self$.linkDomainCategories()
         }
 
@@ -686,12 +687,10 @@ Container <- R6::R6Class (
           symbolsToRead = syms
       }
       else {
-        symbolsToRead = list()
-        symbol_already_exists = lapply(symbols, 
-        function(x) is.null(loadFrom$data[[x]]))
+        symbol_in_source = loadFrom$hasSymbols(symbols)
 
-        if (any(symbol_already_exists == TRUE)) {
-          s = which(symbol_already_exists == TRUE)
+        if (any(symbol_in_source == FALSE)) {
+          s = which(symbol_in_source == FALSE)
           stop(paste0("User specified to read symbol ", 
           symbols[s], " but it does 
           not exist in the source container\n"))
@@ -704,8 +703,8 @@ Container <- R6::R6Class (
       symbolsToRead = intersect(syms, symbolsToRead)
 
 
-      sym_already_exists = lapply(symbolsToRead, 
-      function(x) !is.null(self$data[[x]]))
+      sym_already_exists = self$hasSymbols(symbolsToRead)
+
       if (any(sym_already_exists == TRUE)) {
         s = which(sym_already_exists == TRUE)
         stop(paste0("Attempting to add symbol ", 
@@ -728,7 +727,7 @@ Container <- R6::R6Class (
       }
 
         for (s in symbolsToRead) {
-          s_loadfrom = loadFrom$data[[s]]
+          s_loadfrom = loadFrom$data[[loadFrom$getSymbolNames(s)]]
           if (length(s_loadfrom$domainNames) == 1 && is.na(s_loadfrom$domainNames)) {
             dnames = NULL
           }
@@ -793,11 +792,11 @@ Container <- R6::R6Class (
           }
         }
 
-        private$linkDomainObjects(symbolsToRead)
+        private$.linkDomainObjects(symbolsToRead)
         self$.linkDomainCategories()
     },
 
-    linkDomainObjects = function(symbols) {
+    .linkDomainObjects = function(symbols) {
       for (s in symbols) {
         if (! inherits(self$data[[s]], "Alias")) {
           d = list()
@@ -830,26 +829,6 @@ Container <- R6::R6Class (
           "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n"))
         }
         self$.requiresStateCheck = FALSE
-      }
-    },
-
-    remap_special_values = function(syms) {
-      for (s in syms) {
-        for (c in names(self$data[[s]]$records)) {
-          idx = list()
-          for (specVal in names(SpecialValues)) {
-            idx[[specVal]] = which(self$data[[s]]$records[[c]] == 
-            private$gdx_specVals_write[specVal])
-          }
-
-          for (specVal in names(SpecialValues)) {
-            if (any(idx[[specVal]])) {
-              for (i in idx[[specVal]]) {
-                self$data[[s]]$records[[c]][[i]] = SpecialValues[specVal]
-              }
-            }
-          }
-        }
       }
     },
 
@@ -1369,10 +1348,9 @@ Symbol <- R6Class(
         domaintemp = list()
         for (d in domain_input) {
           if (is.character(d)) {
-            if (inherits(self$refContainer$data[[d]], c("Set", "Alias"))) {
+            if ((d != "*") && self$refContainer$hasSymbols(d) &&
+            inherits(self$refContainer$getSymbols(d), c("Set", "Alias"))) {
               domaintemp = append(domaintemp, d)
-              # domaintemp = append(domaintemp, 
-              # self$refContainer$data[[d]])
             }
             else {
               # attach as a plain string
@@ -1442,7 +1420,7 @@ Symbol <- R6Class(
           " max is ", private$symbolMaxLength, " characters\n"))
         }
 
-        if (!is.null(self$refContainer$data[[name_input]])) {
+        if (self$refContainer$hasSymbols(name_input)) {
           stop(paste0("A symbol with the name ", name_input, 
           " already exists in the container\n"))
         }
@@ -1574,7 +1552,7 @@ Symbol <- R6Class(
         # if regular domain, symbols in domain must be valid
         if (self$domainType == "regular") {
           for (i in self$domain) {
-            if (!any(names(self$refContainer$data) == i$name)) {
+            if (!self$refContainer$hasSymbols(i$name)) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the object referenced is not in the", 
               " Container anymore -- must reset domain for symbol ", 
@@ -2998,7 +2976,7 @@ Alias <- R6Class(
           " max is ", private$symbolMaxLength, " characters"))
         }
 
-        if (!is.null(self$refContainer$data[[name_input]])) {
+        if (self$refContainer$hasSymbols(name_input)) {
           stop(paste0("A symbol with the name ", name_input, 
           " already exists in the container\n"))
         }
@@ -3382,13 +3360,13 @@ ConstContainer <- R6::R6Class (
         }
         else {
           for (n in self$domainNames) {
-            if (is.null(self$refContainer$data[[n]])) {
+            if (!self$refContainer$hasSymbols(n)) {
               return(NA)
             }
           }
           card = 1
           for (n in self$domainNames) {
-            domainSym = self$refContainer$data[[n]]
+            domainSym = self$refContainer$data[[self$refContainer$getSymbolNames(n)]]
             card = card * domainSym$numberRecords
           }
           return(card)
@@ -3411,7 +3389,7 @@ ConstContainer <- R6::R6Class (
         }
         else {
           for (n in self$domainNames) {
-            if (is.null(self$refContainer$data[[n]])) {
+            if (!self$refContainer$hasSymbols(n)) {
               return(NA)
             }
           }
@@ -3491,12 +3469,6 @@ ConstContainer <- R6::R6Class (
 
     numberRecords = function() {
       return(private$.number_records)
-      # if (!is.null(self$records)) {
-      #   return(nrow(self$records))
-      # }
-      # else {
-      #   return(0)
-      # }
     },
 
     domainType = function() {
@@ -3819,15 +3791,8 @@ ConstContainer <- R6::R6Class (
       super$initialize(container, name, GMS_DT_ALIAS, 
       isSingleton, domain, description, domainType, numberRecords)
 
-      # self$refContainer = container
-      # self$name = name
-      # refcontainer = self$refContainer
-      # refcontainer$data[[name]] = self
-      # self$.gams_type = GMS_DT_ALIAS
-      # self$.gams_subtype = 1
       private$.aliasWith = aliasFor
       private$.is_singleton = isSingleton
-      # self$aliasWith = aliasFor
     },
 
 
@@ -3841,7 +3806,6 @@ ConstContainer <- R6::R6Class (
 
     setRecords = function(records) {
       return(super$.set_records(records))
-      # return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
   ),
 
@@ -3958,6 +3922,36 @@ is.integer0 <- function(x)
       self$data = list()
     },
 
+    hasSymbols = function(names) {
+      if (!is.character(names)) {
+        stop("The argument `names` must be type character\n")
+      }
+
+      sym_names = names(self$data)
+      bool = sapply(names, function(x) {
+        return(any(tolower(x) == tolower(sym_names)))
+        }, USE.NAMES = FALSE)
+      return(bool)
+    },
+
+    getSymbolNames = function(names) {
+      if (!is.character(names)) {
+        stop("The argument `names` must be type character\n")
+      }
+
+      sym_names = names(self$data)
+      syms = sapply(names, function(x){
+        idx = which(tolower(sym_names) == tolower(x))
+        if (is.integer0(idx)) {
+          stop("Symbol ", x, " does not exist in the container\n")
+        }
+        else {
+          return(sym_names[idx])
+        }
+      }, USE.NAMES = FALSE)
+      return(syms)
+    },
+
     #' @description list all symbols in the container if isValid = NULL
     #' list all valid symbols in the container if  isValid = TRUE
     #' list all invalid symbols in the container if isValid = FALSE
@@ -3970,18 +3964,13 @@ is.integer0 <- function(x)
       if (!is.null(isValid)) {
         assertthat::assert_that(is.logical(isValid),
         msg = "argument 'isValid' must be type logical\n")
-        l = NULL
-        for (d in self$data) {
-          if (d$isValid() == isValid) {
-            if (is.null(l)) {
-              l = d$name
-            }
-            else {
-              l = append(l, d$name)
-            }
-          }
-        }
-        return(l)
+
+        actual_isvalid = sapply(self$data, function(x) {
+          return(x$isValid())
+        }, USE.NAMES = FALSE)
+
+        correct_validity_data = self$data[actual_isvalid == isValid]
+        return(unlist(lapply(correct_validity_data, function(x) x$name), use.names = FALSE))
       }
       else {
         return(names(self$data))
@@ -4199,6 +4188,8 @@ is.integer0 <- function(x)
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
       rowCount = 0
+
+      symbols = self$getSymbolNames(symbols)
       for (i in symbols) {
         if (any(self$listSets() == i)|| any(self$listAliases() == i)) {
           symDescription = list(
@@ -4282,6 +4273,7 @@ is.integer0 <- function(x)
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
       rowCount = 0
+      symbols = self$getSymbolNames(symbols)
       for (i in symbols) {
         if (any(self$listAliases() == i)) {
           if(inherits(self, "Container")) {
@@ -4358,6 +4350,8 @@ is.integer0 <- function(x)
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
       rowCount = 0
+
+      symbols = self$getSymbolNames(symbols)
       for (i in symbols) {
         if (any(self$listParameters() == i)) {
           symDescription = list(
@@ -4438,6 +4432,7 @@ is.integer0 <- function(x)
       length(symbols), ncol = length(colNames)))
       rowCount = 0
 
+      symbols = self$getSymbolNames(symbols)
       for (i in symbols) {
         if (any(self$listVariables() == i)) {
           symDescription = list(
@@ -4519,6 +4514,7 @@ is.integer0 <- function(x)
       length(symbols), ncol = length(colNames)))
       rowCount = 0
 
+      symbols = self$getSymbolNames(symbols)
       for (i in symbols) {
         if (any(self$listEquations() == i)) {
           symDescription = list(

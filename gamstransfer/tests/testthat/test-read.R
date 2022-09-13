@@ -7464,3 +7464,84 @@ ProfitM(t) = uniformInt(1,10);
 
 }
 )
+
+test_that("test_num_74", {
+m = Container$new()
+d = Parameter$new(m, "d")
+e = Parameter$new(m, "e")
+expect_true(m$hasSymbols("d"))
+expect_true(m$hasSymbols("e"))
+expect_true(m$hasSymbols("D"))
+expect_true(m$hasSymbols("E"))
+expect_equal(m$hasSymbols(c("d", "e")), c(TRUE, TRUE))
+
+expect_false(m$hasSymbols("f"))
+expect_equal(m$hasSymbols(c("F", "g")), c(FALSE, FALSE))
+
+expect_equal(m$getSymbolNames(c("D", "d")), c("d", "d"))
+expect_equal(m$getSymbolNames("D"), "d")
+expect_error(m$getSymbolNames("F"))
+
+}
+)
+
+# test case sensitive rename and remove
+test_that("test_num_75", {
+m = Container$new()
+d = Parameter$new(m, "d")
+e = Parameter$new(m, "e")
+
+# case insensitive remove
+m$removeSymbols("D")
+expect_equal(names(m$data), "e")
+
+d = Parameter$new(m, "d")
+
+# case insensitive rename
+m$renameSymbol("D", "d_new")
+expect_equal(names(m$data), c("e","d_new"))
+
+# change case using rename
+expect_error(m$renameSymbol("d_new","D_neW"))
+expect_equal(tolower(names(m$data)), tolower(c("e", "D_neW")))
+
+}
+)
+
+#test getsymbols
+test_that("test_num_76", {
+m = Container$new()
+d = Parameter$new(m, "d")
+e = Parameter$new(m, "e")
+
+expect_equal(length(m$getSymbols(m$listSymbols())), 2)
+symbolobjects = m$getSymbols(m$listSymbols())
+
+expect_true(inherits(symbolobjects[[1]], "Parameter"))
+expect_true(inherits(symbolobjects[[2]], "Parameter"))
+
+expect_error(m$getSymbols("f"))
+
+symobject = m$getSymbols("d")
+expect_true(inherits(symobject[[1]], "Parameter"))
+
+symobject = m$getSymbols("D")
+expect_true(inherits(symobject[[1]], "Parameter"))
+
+expect_error(m$getSymbols(200))
+
+}
+)
+
+#test listSymbols
+test_that("test_num_76", {
+
+m  = Container$new()
+i = Set$new(m, "i", records=c("a", "b", "c"))
+a = Parameter$new(m, "a", i, records=data.frame(c("aa", "c"), c(1, 2)))
+
+expect_equal(a$isValid(), FALSE)
+expect_equal(m$listSymbols(isValid=TRUE), "i")
+expect_equal(m$listSymbols(isValid=FALSE), "a")
+}
+)
