@@ -1,3 +1,16 @@
+GAMS Transfer R
+==================
+- Breaking: Symbol name uniqueness is now checked case insensitively. For
+  example, it is not possible to have two different symbols named
+  `symbol` and `Symbol` or `SYMBOL` anymore
+- Added a method `Container$getSymbolNames` to return the original symbol names
+  for a list of symbol names of any case
+- Added a method `Container$hasSymbols` to check if symbol name (case insensitive)
+  exists
+- Changed `Container$getSymbols`, `Container$removeSymbols`,
+  `Container$renameSymbol`, `Container$describe*` and others that use
+  `Container$getSymbols` to accept symbol names case insensitively
+
 GAMS Transfer R v1.0.0
 ==================
 - added a new class ConstContainer for efficient data transfer
