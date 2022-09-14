@@ -10,6 +10,8 @@ GAMS Transfer R
 - Changed `Container$getSymbols`, `Container$removeSymbols`,
   `Container$renameSymbol`, `Container$describe*` and others that use
   `Container$getSymbols` to accept symbol names case insensitively
+- New Symbol methods `hasDuplicateRecords`, `countDuplicateRecords`, `findDuplicateRecords`, and `dropDuplicateRecords` to help debug and resolve errors with duplicate records
+- New Container methods `hasDuplicateRecords`, `countDuplicateRecords`, and `dropDuplicateRecords` to help find symbols that contain duplicate records that cause the Symbol to be invalid
 
 GAMS Transfer R v1.0.0
 ==================
