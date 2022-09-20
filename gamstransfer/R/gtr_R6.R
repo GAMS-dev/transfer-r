@@ -433,36 +433,36 @@ Container <- R6::R6Class (
       # private$validSymbolOrder()
 
       # remap special values
-      specialValsGDX = CPP_getSpecialValues(gdxout, self$systemDirectory)
+      # specialValsGDX = CPP_getSpecialValues(gdxout, self$systemDirectory)
 
-      for (s in self$data) {
-        # no mapping required for alias
-        if (inherits(s, c("Alias", "Set"))) next
-        if (is.null(s$records)) next
-        colrange = (s$dimension + 1):length(s$records)
-        s$records[, colrange][is.nan(
-          s$records[, colrange])] = 
-          specialValsGDX[["UNDEF"]]
+      # for (s in self$data) {
+      #   # no mapping required for alias
+      #   if (inherits(s, c("Alias", "Set"))) next
+      #   if (is.null(s$records)) next
+      #   colrange = (s$dimension + 1):length(s$records)
+      #   s$records[, colrange][is.nan(
+      #     s$records[, colrange])] = 
+      #     specialValsGDX[["UNDEF"]]
 
-        s$records[,colrange][is.na(
-          s$records[,colrange])] = 
-          specialValsGDX[["NA"]]
+      #   s$records[,colrange][is.na(
+      #     s$records[,colrange])] = 
+      #     specialValsGDX[["NA"]]
 
-        s$records[,colrange][
-          ((s$records[, colrange] == Inf)
-        & (sign(s$records[, colrange]) 
-        == 1))] = specialValsGDX[["POSINF"]]
+      #   s$records[,colrange][
+      #     ((s$records[, colrange] == Inf)
+      #   & (sign(s$records[, colrange]) 
+      #   == 1))] = specialValsGDX[["POSINF"]]
 
-        s$records[, colrange][
-          ((s$records[, colrange] == -Inf)
-        &(sign(s$records[, colrange]) 
-        == -1))] = specialValsGDX[["NEGINF"]]
+      #   s$records[, colrange][
+      #     ((s$records[, colrange] == -Inf)
+      #   &(sign(s$records[, colrange]) 
+      #   == -1))] = specialValsGDX[["NEGINF"]]
 
-        s$records[,colrange][
-          ((s$records[,colrange] == 0)
-        & (sign(1/s$records[,colrange]) 
-        == -1))] = specialValsGDX[["EPS"]]
-      }
+      #   s$records[,colrange][
+      #     ((s$records[,colrange] == 0)
+      #   & (sign(1/s$records[,colrange]) 
+      #   == -1))] = specialValsGDX[["EPS"]]
+      # }
 
       if (is.null(uelPriority)) {
         CPP_gdxWriteSuper(self$data, self$systemDirectory, 
@@ -538,6 +538,42 @@ Container <- R6::R6Class (
       }
     },
 
+    getUELs = function(symbols=NULL, ignoreUnused = FALSE) {
+      if (is.null(symbols)) {
+        symbols = names(self$data)
+      }
+      else {
+        symbols = self$getSymbolNames(symbols)
+      }
+      uel_all_symbols = lapply(symbols, function(s) {
+        self$data[[s]]$getUELs(dim = 1:self$data[[s]]$dimension, 
+        ignoreUnused=ignoreUnused)
+      })
+      uel_all_symbols = unique(unlist(uel_all_symbols, use.names = FALSE))
+      return(uel_all_symbols)
+    },
+
+    getDomainViolations = function(symbols=NULL, ignoreUnused=FALSE) {
+      cont_dom_violations = list(replicate(length(self$data), NA))
+      dom_violation_count = 0
+      if (is.null(symbols)) {
+        syms = names(self$data)
+      }
+      else {
+        syms = self$getSymbolNames(symbols)
+      }
+
+      for (s in syms) {
+        dom_violations = s$getDomainViolations(ignoreUnused)
+        if (is.null(dom_violations)) next
+
+        cont_dom_violations[(dom_violation_count+1):(dom_violation_count + 
+        length(dom_violations))] = dom_violations
+        dom_violation_count = dom_violation_count + length(dom_violations)
+      }
+
+    },
+
     countDuplicateRecords = function() {
       dups = lapply(self$data, function(x) return(x$countDuplicateRecords()))
       dups = dups[dups > 0]
@@ -546,7 +582,7 @@ Container <- R6::R6Class (
 
     hasDuplicateRecords = function() {
       has_dups = lapply(self$data, function(x) return(x$hasDuplicateRecords()))
-      return(any(has_dups))
+      return(any(has_dups==TRUE))
     },
 
     dropDuplicateRecords = function(keep = "first") {
@@ -690,7 +726,7 @@ Container <- R6::R6Class (
           }
 
           private$.linkDomainObjects(symbolsToRead)
-          self$.linkDomainCategories()
+          # self$.linkDomainCategories()
         }
 
     },
@@ -808,7 +844,7 @@ Container <- R6::R6Class (
         }
 
         private$.linkDomainObjects(symbolsToRead)
-        self$.linkDomainCategories()
+        # self$.linkDomainCategories()
     },
 
     .linkDomainObjects = function(symbols) {
@@ -1041,6 +1077,73 @@ Symbol <- R6Class(
 
   },
 
+  getUELs = function(dim=NULL, codes=NULL, ignoreUnused = FALSE) {
+    if (is.null(dim)) dim = 1:self$dimension
+    if (!is.numeric(dim) || !all(dim %% 1 == 0) || 
+    any(dim < 1) || any(dim > self$dimension)) {
+      stop(paste0("All elements of the argument `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.logical(ignoreUnused)){
+      stop("The argument `ignoreUnused` must be type logical\n")
+    }
+
+    if (!is.null(codes) && !is.numeric(codes) && 
+    !all(codes %% 1 == 0) && all(codes >= 1)) {
+      stop("The argument codes must be integers or a vector of integers >= 1\n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol must be valid in order to manage UELs\n")
+    }
+
+    uels = unlist(lapply(dim, function(d) {
+      if (ignoreUnused) {
+        uels_d = levels(droplevels(self$records[, d]))
+      }
+      else {
+        uels_d = levels(self$records[, d])
+      }
+
+      if (!is.null(codes)) {
+        uels_d = uels_d[codes]
+      }
+      return(uels_d)
+    }), use.names = FALSE)
+
+    return(unique(uels))
+  },
+
+  getDomainViolations = function() {
+    if (!self$isValid()) {
+      stop("The object must be valid to get domain violations\n")
+    }
+    if (self$dimension == 0) return()
+
+    it_vec = 1:self$dimension
+    is_set_alias = unlist(lapply(it_vec, function(x) {
+      inherits(self$domain[[x]], c("Set", "Alias"))
+    }), use.names = FALSE)
+    it_vec = it_vec[is_set_alias]
+
+    added_uel_all = lapply(it_vec, function(d) {
+      setdiff(tolower(self$getUELs(d, ignoreUnused=TRUE)), 
+      tolower(self$domain[[d]]$getUELs(1, ignoreUnused=TRUE)))
+    })
+
+    length_added_uel = unlist(lapply(added_uel_all, length), use.names = FALSE)
+    it_vec = it_vec[length_added_uel > 0]
+
+    dom_violations = lapply(it_vec, function(d) {
+      DomainViolation$new(self, d, self$domain[[d]], added_uel_all[d])
+    })
+
+    if (length(dom_violations) == 0) return()
+
+    return(dom_violations)
+  },
+
   findDomainViolations = function() {
     if (self$dimension == 0) {
       return(NULL)
@@ -1088,7 +1191,7 @@ Symbol <- R6Class(
   },
 
   hasDuplicateRecords = function() {
-    return(ifelse( self$countDuplicateRecords() > 0, TRUE, FALSE))
+    return(ifelse(self$countDuplicateRecords() > 0, TRUE, FALSE))
   },
 
   dropDuplicateRecords = function(keep = "first") {
@@ -1235,6 +1338,9 @@ Symbol <- R6Class(
       else {
         a = array(0, dim = self$shape())
         idx = lapply(self$records[,1:self$dimension], as.numeric)
+        idx = lapply(1:self$dimension, function(d) {
+          return(as.numeric(factor(self$records[,d], levels = levels(self$domain[[d]]$records[, 1]))) )
+        })
         a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
         return(a)
       }
@@ -1245,25 +1351,31 @@ Symbol <- R6Class(
   },
 
   .linkDomainCategories = function() {
-    if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
-      for (n in seq_along(self$domain)) {
+    # if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
+
+      private$.records[, 1:self$dimension] = lapply(1:self$dimension, function(n) {
         i  = self$domain[[n]]
-        if (((inherits(i, c("Alias", "Set"))) )
-        && (!is.null(i$records))) {
-          if (i$isValid()) {
-            private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
-          }
-          else {
-            private$.records[, n] = factor(private$.records[, n], 
-            levels = unique(private$.records[, n]), ordered = TRUE)
-          }
-        }
-        else {
-          private$.records[, n] = factor(private$.records[, n], 
-          levels = unique(private$.records[, n]), ordered = TRUE)
-        }
-      }
-    }
+        return(factor(private$.records[, n], 
+        levels = levels(i$records[, 1]), ordered = TRUE))
+      })
+      # for (n in seq_along(self$domain)) {
+      #   i  = self$domain[[n]]
+        # if (((inherits(i, c("Alias", "Set"))) )
+        # && (!is.null(i$records))) {
+        #   if (i$isValid()) {
+            # private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
+          # }
+          # else {
+          #   private$.records[, n] = factor(private$.records[, n], 
+          #   levels = unique(private$.records[, n]), ordered = TRUE)
+          # }
+        # }
+        # else {
+        #   private$.records[, n] = factor(private$.records[, n], 
+        #   levels = unique(private$.records[, n]), ordered = TRUE)
+        # }
+      # }
+    # }
   }
   ),
 
@@ -1275,13 +1387,12 @@ Symbol <- R6Class(
       }
       else {
         private$.records = records_input
-
         if (!is.null(self$records)) {
           if (self$domainForwarding == TRUE) {
             private$domain_forwarding()
-            if (inherits(self$refContainer, "Container")) {
-              self$refContainer$.linkDomainCategories()
-            }
+            # if (inherits(self$refContainer, "Container")) {
+            #   self$refContainer$.linkDomainCategories()
+            # }
 
             for (i in self$refContainer$listSymbols()) {
               self$refContainer$data[[i]]$.requiresStateCheck = TRUE
@@ -1690,64 +1801,64 @@ Symbol <- R6Class(
             'records' must be of type character\n")
           }
 
-          # check if columns are factors
-          for (i in self$domainLabels) {
-            if (!is.factor(self$records[[i]])) {
-              stop(paste0("Domain information in column ", i, " must be a factor\n"))
-            }
-          }
+          # # check if columns are factors
+          # for (i in self$domainLabels) {
+          #   if (!is.factor(self$records[[i]])) {
+          #     stop(paste0("Domain information in column ", i, " must be a factor\n"))
+          #   }
+          # }
 
           # check if domain has records
-          for (i in self$domain) {
-            if (inherits(i, c("Set", "Alias"))) {
-              if (is.null(i$records)) {
-                stop(paste0("Referenced domain set ", i$name, " does 
-                not does not contain records; ",
-                "cannot properly establish domain information link.\n"))
-              }
-            }
-          }
+          # for (i in self$domain) {
+          #   if (inherits(i, c("Set", "Alias"))) {
+          #     if (is.null(i$records)) {
+          #       stop(paste0("Referenced domain set ", i$name, " does 
+          #       not does not contain records; ",
+          #       "cannot properly establish domain information link.\n"))
+          #     }
+          #   }
+          # }
 
           #check if factors are ordered
-          for (i in self$domainLabels) {
-            if (!is.ordered(self$records[[i]])) {
-              stop(paste0("Domain information in column ", i, 
-              " must be an ORDERED factor\n"))
-            }
-          }
+          # for (i in self$domainLabels) {
+          #   if (!is.ordered(self$records[[i]])) {
+          #     stop(paste0("Domain information in column ", i, 
+          #     " must be an ORDERED factor\n"))
+          #   }
+          # }
 
           # if there are linked domains, make sure their levels are equal
-          for (n in seq_len(self$dimension)) {
-            i = self$domain[[n]]
-            if (inherits(i, c("Set", "Alias"))) {
-              if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
-                stop(paste0("Levels for domain column ", i$name, " do not match those 
-                of the referenced domain set. If setting records directly, the user is
-                responsible for creating factors for domain columns. \n"))
-              }
-            }
-          }
+          # for (n in seq_len(self$dimension)) {
+          #   i = self$domain[[n]]
+          #   if (inherits(i, c("Set", "Alias"))) {
+          #     if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
+          #       stop(paste0("Levels for domain column ", i$name, " do not match those 
+          #       of the referenced domain set. If setting records directly, the user is
+          #       responsible for creating factors for domain columns. \n"))
+          #     }
+          #   }
+          # }
           # check for domain violations
-          if (self$dimension != 0) {
-            nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
-            narecords = self$records[,1:self$dimension][is.na(self$records[,1:self$dimension])]
+          # if (self$dimension != 0) {
+          #   nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
+          #   narecords = self$records[,1:self$dimension][is.na(self$records[,1:self$dimension])]
 
-            if (length(nullrecords) != 0 || 
-            length(narecords) != 0 ) {
-              stop(paste0("Symbol 'records' contain domain violations;",
-              " ensure that all domain elements have",
-              " been mapped properly to a factor\n"))
-            }
-          }
+          #   if (length(nullrecords) != 0 || 
+          #   length(narecords) != 0 ) {
+          #     stop(paste0("Symbol 'records' contain domain violations;",
+          #     " ensure that all domain elements have",
+          #     " been mapped properly to a factor\n"))
+          #   }
+          # }
 
           # drop duplicates
-          if (self$dimension != 0) {
-            if (nrow(self$records) != 
-            nrow(unique(self$records[self$domainLabels]))) {
-              stop(paste0("Symbol 'records' contain non-unique",
-               " domain members; ensure that only unique members exist\n"))
-            }
-          }
+          # if (self$dimension != 0) {
+          #   if (nrow(self$records) != 
+          #   nrow(unique(self$records[self$domainLabels]))) {
+          #     stop(paste0("Symbol 'records' contain non-unique",
+          #      " domain members; ensure that only unique members exist\n"))
+          #   }
+          # }
 
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
@@ -1774,7 +1885,6 @@ Symbol <- R6Class(
         to_grow = append(to_grow, d$name)
         d = d$domain[[1]]
       }
-
       # reverse the to_grow list because when the records are set, we check domain
       # domain_forwarding for domain sets is FALSE until specified explicitly 
       # so we should grow parent sets first and then children
@@ -1790,11 +1900,17 @@ Symbol <- R6Class(
           df = self$records[dl]
           colnames(df) = dim
           df[["element_text"]] = ""
-          recs = rbind(recs, df)
+          recs1 = factor(append(as.character(recs[, 1]), as.character(df[,dim])),
+          levels = unique(append(levels(recs[, 1]), levels(df[,dim]))))
+          recs2 = append(recs[, 2], df$element_text)
+          cnames =colnames(recs)
+          recs= data.frame(recs1, recs2)
+          colnames(recs) = cnames
+          # recs = rbind(recs, df)
           recs = recs[!duplicated(recs[[dim]]),]
         }
         else {
-          recs = unique(self$records[dl])
+          recs = self$records[dl]
           colnames(recs) = dim
           recs[["element_text"]] = ""
         }
@@ -1890,10 +2006,24 @@ Set <- R6Class(
       }
       columnNames = self$domainLabels
       columnNames = append(columnNames, "element_text")
-      colnames(records) = columnNames
 
+      if (self$dimension == 0) {
+        colnames(records) = columnNames
+        self$records = records
+        return()
+      }
+
+      records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
+        factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+      })
+      records = data.frame(records)
+      # lapply(seq_along(self$domain), function(d) {
+      #     self$records[, d] = factor(self$records[, d], levels = self$records[, d])
+      #   })
+
+      colnames(records) = columnNames
       self$records = records
-      self$.linkDomainCategories()
+      # self$.linkDomainCategories()
     }
   ),
 
@@ -2090,14 +2220,24 @@ Parameter <- R6Class(
 
         columnNames = self$domainLabels
         columnNames = append(columnNames, "value")
-        colnames(records) = columnNames
 
         #if records "value" is not numeric, stop.
         if (any(!is.numeric(records[,length(records)]))) {
           stop("All entries in the 'values' column of a parameter must be numeric.\n")
         }
+
+        if (self$dimension == 0) {
+          colnames(records) = columnNames
+          self$records = records
+          return()
+        }
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
+          factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+        })
+        records = data.frame(records)
+        colnames(records) = columnNames
         self$records = records
-        self$.linkDomainCategories()
+        # self$.linkDomainCategories()
       }
     }
   ),
@@ -2400,10 +2540,20 @@ Variable <- R6Class(
 
         #rename columns
         columnNames = append(columnNames, private$.attr())
-        colnames(records) = columnNames
 
+        if (self$dimension == 0) {
+          colnames(records) = columnNames
+          self$records = records
+          return()
+        }
+
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
+          factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+        })
+        records = data.frame(records)
+        colnames(records) = columnNames
         self$records = records
-        self$.linkDomainCategories()
+        # self$.linkDomainCategories()
 
       }
     }
@@ -2796,10 +2946,19 @@ Equation <- R6Class(
         records = records[, correct_order]
 
         columnNames = append(columnNames, private$.attr())
-        colnames(records) = columnNames
 
+        if (self$dimension == 0) {
+          colnames(records) = columnNames
+          self$records = records
+          return()
+        }
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
+          factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+        })
+        records = data.frame(records)
+        colnames(records) = columnNames
         self$records = records
-        self$.linkDomainCategories()
+        # self$.linkDomainCategories()
 
       }
     }
@@ -5373,3 +5532,22 @@ is.integer0 <- function(x)
   )
 )
 
+DomainViolation <- R6::R6Class (
+  "DomainViolation",
+  public = list(
+    symbol=NULL,
+    dimension = NULL,
+    domain= NULL,
+    violations = NULL,
+    initialize = function(symbol, dimension, domain,violations) {
+      self$symbol = symbol
+      self$dimension = dimension
+      self$domain = domain
+      self$violations = violations
+      lockBinding("symbol", self)
+      lockBinding("dimension", self)
+      lockBinding("domain", self)
+      lockBinding("violations", self)
+    }
+  )
+)
