@@ -12,6 +12,11 @@ GAMS Transfer R
   `Container$getSymbols` to accept symbol names case insensitively
 - New Symbol methods `hasDuplicateRecords`, `countDuplicateRecords`, `findDuplicateRecords`, and `dropDuplicateRecords` to help debug and resolve errors with duplicate records
 - New Container methods `hasDuplicateRecords`, `countDuplicateRecords`, and `dropDuplicateRecords` to help find symbols that contain duplicate records that cause the Symbol to be invalid
+- Raises an exception if attempting to read a symbol that does not exist in the data source (previously symbol names were silently ignored)
+- New tests within `Container$isValid()` method to detect broken container references in symbols and inconsistent symbol naming between the `<Container>$data` field and the symbol objects
+- Breaking: Symbol records and symbol names are treated in a case insensitive manner. Symbols
+ domain is not automaitcally checked
+- isValid method does not check for symbol record domain columns being factors, for duplicates, and for domain violations
 
 GAMS Transfer R v1.0.0
 ==================

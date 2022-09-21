@@ -415,7 +415,8 @@ Container <- R6::R6Class (
         }
 
         if (is.list(uelPriority)) {
-          if (!all(unlist(lapply(uelPriority, is.character)))) {
+          if (!all(unlist(lapply(uelPriority, is.character), 
+          use.names = FALSE))) {
             stop("Argument `uelPriority` must contain only type character\n")
           }
         }
@@ -430,39 +431,6 @@ Container <- R6::R6Class (
       if (private$isValidSymbolOrder() == FALSE) {
         self$reorderSymbols()
       }
-      # private$validSymbolOrder()
-
-      # remap special values
-      # specialValsGDX = CPP_getSpecialValues(gdxout, self$systemDirectory)
-
-      # for (s in self$data) {
-      #   # no mapping required for alias
-      #   if (inherits(s, c("Alias", "Set"))) next
-      #   if (is.null(s$records)) next
-      #   colrange = (s$dimension + 1):length(s$records)
-      #   s$records[, colrange][is.nan(
-      #     s$records[, colrange])] = 
-      #     specialValsGDX[["UNDEF"]]
-
-      #   s$records[,colrange][is.na(
-      #     s$records[,colrange])] = 
-      #     specialValsGDX[["NA"]]
-
-      #   s$records[,colrange][
-      #     ((s$records[, colrange] == Inf)
-      #   & (sign(s$records[, colrange]) 
-      #   == 1))] = specialValsGDX[["POSINF"]]
-
-      #   s$records[, colrange][
-      #     ((s$records[, colrange] == -Inf)
-      #   &(sign(s$records[, colrange]) 
-      #   == -1))] = specialValsGDX[["NEGINF"]]
-
-      #   s$records[,colrange][
-      #     ((s$records[,colrange] == 0)
-      #   & (sign(1/s$records[,colrange]) 
-      #   == -1))] = specialValsGDX[["EPS"]]
-      # }
 
       if (is.null(uelPriority)) {
         CPP_gdxWriteSuper(self$data, self$systemDirectory, 
@@ -488,11 +456,7 @@ Container <- R6::R6Class (
     #' @description reorder symbols in order to avoid domain violations
     reorderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
-      datacopy = self$data
-      self$data = list()
-      for (s in orderedSymbols) {
-        self$data[[s]] = datacopy[[s]]
-      }
+      self$data = self$data[orderedSymbols]
     },
 
     #' @description TRUE if all the symbols is in the Container are 
@@ -871,23 +835,43 @@ Container <- R6::R6Class (
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
+        # check for cycles
          private$validSymbolOrder()
 
-        if (!setequal(self$listSymbols(), self$listSymbols(isValid = TRUE))) {
-          stop(paste0("Container contains invalid symbols; ",
-          "invalid symbols can be found with the .listSymbols() ",
+        # make sure that all symbols have consistent naming
+        lapply(names(self$data), function(n) {
+          if (n != self$data[[n]]$name) {
+            stop(paste0("Container `data` field is inconsistent with the symbol 
+            object name (", n, " != ", self$data[[n]]$name, "). Update symbol name 
+            with <symbol>$name = <name from `data` field> \n"))
+          }
+          })
+
+        # make sure that all symbols reference the correct Container instance
+        lapply(self$data, function(n) {
+          if (!identical(self, n$refContainer)) {
+            stop(paste0("Symbol ", self$name, " has a broken container 
+            reference. Update symbol reference with <symbol>$refContainer 
+            = <new_container>\n"))
+          }
+          })
+        if (!is.null(self$listSymbols(isValid=FALSE))) {
+          stop("Container contains invalid symbols; ",
+          "invalid symbols can be found with the $listSymbols() ",
           "method. Debug invalid symbol(s) by running .",
-          "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n"))
+          "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n")
         }
         self$.requiresStateCheck = FALSE
       }
     },
 
     validSymbolOrder = function() {
-      orderedSymbols = list()
+
       symbolsToSort = self$listSymbols()
+      orderedSymbols = replicate(length(symbolsToSort), NA)
 
       idx = 1
+      orderedSymCount = 0
       while (length(symbolsToSort) != 0) {
         sym = symbolsToSort[[idx]]
         # special 1D sets (universe domain & relaxed sets)
@@ -895,27 +879,28 @@ Container <- R6::R6Class (
         self$data[[sym]]$dimension == 1 &&
         is.character(self$data[[sym]]$domain[[1]])
         ) {
-          orderedSymbols = append(orderedSymbols, sym)
+          orderedSymCount = orderedSymCount + 1
+          orderedSymbols[orderedSymCount] = sym
           symbolsToSort = symbolsToSort[-idx]
           idx = 1
         }
         else {
-          doi = list()
-          for (i in self$data[[sym]]$domain) {
+          doi = unlist(lapply(self$data[[sym]]$domain, function(i) {
             if (is.character(i)) {
-              doi = append(doi, TRUE)
+             return(TRUE)
             }
             else if ((inherits(i, c("Set", "Alias"))) &
-            any(orderedSymbols == i$name)) {
-               doi = append(doi, TRUE)
+            any(orderedSymbols[1:orderedSymCount] == i$name)) {
+               return(TRUE)
             }
             else {
-              doi = append(doi, FALSE)
+              return(FALSE)
             }
-          }
+          }), use.names = FALSE)
 
           if (all(doi == TRUE)) {
-            orderedSymbols = append(orderedSymbols, sym)
+            orderedSymCount = orderedSymCount + 1
+            orderedSymbols[orderedSymCount] = sym
             symbolsToSort = symbolsToSort[-1]
             idx = 1
           }
@@ -926,12 +911,11 @@ Container <- R6::R6Class (
         }
 
         if (idx == length(symbolsToSort) + 1 & length(symbolsToSort) != 0) {
-          symString = ""
-          for (s in symbolsToSort) {
-            if (inherits(self$data[[s]], "Set")) {
-              symString = paste(symString, s)
-            }
-          }
+          inherits_set = unlist(lapply(symbolsToSort, 
+           function(s) inherits(self$data[[s]], "Set")), use.names = FALSE)
+
+          symString = symbolsToSort[inherits_set]
+          symString = paste(symString)
 
           stop(paste0("Error: Graph cycle detected among symbols: ",
           symString, " -- must resolve circular domain referencing\n"))
@@ -944,22 +928,23 @@ Container <- R6::R6Class (
       validOrder = private$validSymbolOrder()
       currentOrder = names(self$data)
       h = c()
-      for (i in seq_along(self$data)) {
-        symName = names(self$data)[i]
-        if ( inherits(self$data[[symName]], c("Set", "Alias"))) {
-          if (i <= match(symName, validOrder)){
-            h = append(h, TRUE)
-          }
-          else {
-            h = append(h, FALSE)
-          }
+      isSetAlias = unlist(lapply(currentOrder, function(s) {
+        return(inherits(self$data[[s]], c("Set", "Alias")))
+      }), use.names = FALSE)
+
+      set_alias_index = which(isSetAlias)
+      if (is.integer0(set_alias_index)) return(TRUE)
+
+      order_valid = unlist(lapply(set_alias_index, function(idx) {
+        if (idx <= match(currentOrder[idx], validOrder)) {
+          return(TRUE)
         }
         else {
-          h = append(h, TRUE)
+          return(FALSE)
         }
-      }
+      }), use.names = FALSE)
 
-      if (all(h) == TRUE) {
+      if (all(order_valid == TRUE)) {
         return(TRUE)
       }
       else {
