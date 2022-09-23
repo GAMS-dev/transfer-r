@@ -510,11 +510,29 @@ Container <- R6::R6Class (
         symbols = self$getSymbolNames(symbols)
       }
       uel_all_symbols = lapply(symbols, function(s) {
-        self$data[[s]]$getUELs(dim = 1:self$data[[s]]$dimension, 
+        self$data[[s]]$getUELs(dimension = 1:self$data[[s]]$dimension, 
         ignoreUnused=ignoreUnused)
       })
       uel_all_symbols = unique(unlist(uel_all_symbols, use.names = FALSE))
       return(uel_all_symbols)
+    },
+
+    removeUELs = function(uels = NULL) {
+      symbols = names(self$data)
+
+      lapply(symbols, function(s) {
+        self$data[[s]]$removeUELs(uels= uels, 
+        dimension = 1:self$data[[s]]$dimension)
+      })
+    },
+
+    renameUELs = function(uels) {
+      symbols = names(self$data)
+
+      lapply(symbols, function(s) {
+        self$data[[s]]$renameUELs(uels= uels, 
+        dimension = 1:self$data[[s]]$dimension)
+      })
     },
 
     getDomainViolations = function(symbols=NULL, ignoreUnused=FALSE) {
@@ -1062,11 +1080,20 @@ Symbol <- R6Class(
 
   },
 
-  getUELs = function(dim=NULL, codes=NULL, ignoreUnused = FALSE) {
-    if (is.null(dim)) dim = 1:self$dimension
-    if (!is.numeric(dim) || !all(dim %% 1 == 0) || 
-    any(dim < 1) || any(dim > self$dimension)) {
-      stop(paste0("All elements of the argument `dim` must be integers in [1, ", 
+  getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
+    if (is.null(dimension)) {
+      if (!is.null(codes)) {
+        stop("User must specify `dimension` if retrieving UELs with the 
+        `codes` argument\n")
+      }
+      dimension = 1:self$dimension
+    }
+
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dimension` must be integers in [1, ", 
       self$dimension, "]\n"))
     }
 
@@ -1074,16 +1101,17 @@ Symbol <- R6Class(
       stop("The argument `ignoreUnused` must be type logical\n")
     }
 
-    if (!is.null(codes) && !is.numeric(codes) && 
-    !all(codes %% 1 == 0) && all(codes >= 1)) {
-      stop("The argument codes must be integers or a vector of integers >= 1\n")
+    if (!is.null(codes) && (!(is.numeric(codes) || is.integer(codes)) || 
+    !all(codes %% 1 == 0) || !all(codes >= 1))) {
+      stop("The argument `codes` must be integers or 
+      a vector of integers >= 1\n")
     }
 
     if (!self$isValid()) {
       stop("The symbol must be valid in order to manage UELs\n")
     }
 
-    uels = unlist(lapply(dim, function(d) {
+    uels = unlist(lapply(dimension, function(d) {
       if (ignoreUnused) {
         uels_d = levels(droplevels(self$records[, d]))
       }
@@ -1098,6 +1126,206 @@ Symbol <- R6Class(
     }), use.names = FALSE)
 
     return(unique(uels))
+  },
+
+  setUELs = function(uels, dimension = NULL, rename=FALSE) {
+    if (is.null(dimension)) {
+      dimension = 1:self$dimension
+    }
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!is.logical(rename)) {
+      stop("The argument `rename` must be type logical")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to set UELs \n")
+    }
+
+    for (d in dimension) {
+      if (rename) {
+        levels(private$.records[, d]) = uels
+      }
+      else {
+        private$.records[, d] = 
+        factor(as.character(private$.records[, d]), levels=uels, 
+        ordered = TRUE)
+      }
+    }
+
+  },
+
+  reOrderUELs = function(uels, dimension) {
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to reorder UELs \n")
+    }
+
+    for (d in dimension) {
+      if ((length(uels) != length(levels(private$.records[, d])))) {
+        stop("The argument `uel` should 
+        contain all uels that need to be reordered")
+      }
+      else {
+        if (length(setdiff(uels, private$.records[,d])) == 0) {
+          stop("The argument `uel` should 
+          contain all uels that need to be reordered")
+        }
+      }
+      private$.records[, d] = factor(private$.records[, d], levels=uels)
+    }
+  },
+
+  addUELs = function(uels, dimension=NULL) {
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to add UELs \n")
+    }
+
+    for (d in dimension) {
+
+      if (length(setdiff(uels, private$.records[,d])) == 0) {
+        stop("The argument `uels` should not
+        contain existing uels")
+      }
+
+      private$.records[, d] = factor(private$.records[, d], 
+      levels=append(levels(private$.records[, d], uels)))
+    }
+  },
+
+  removeUELs = function(uels=NULL, dimension=NULL) {
+    if (!is.null(dimension)) {
+      # input check
+      if (!(is.integer(dimension) || is.numeric(dimension)) || 
+      !all(dimension %% 1 == 0) || 
+      any(dimension < 1) || any(dimension > self$dimension)) {
+        stop(paste0("All elements of the argument 
+        `dim` must be integers in [1, ", 
+        self$dimension, "]\n"))
+      }
+    }
+    else {
+      dimension = 1:self$dimension
+    }
+
+    if (!is.null(uels)) {
+      if (!is.character(uels)) {
+        stop("The argument `uels`` must be type `character` \n")
+      }
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to remove UELs \n")
+    }
+
+    for (d in dimension) {
+      if (!is.null(uels)) {
+        # remove from values and from levels
+        # private$.records[, d] = 
+        # (private$.records[, d])[private$.records[, d] != uels]
+       private$.records[, d] = 
+        factor(private$.records[, d], 
+        levels = setdiff(levels(private$.records[, d]), uels))
+      }
+      else {
+        # remove unused levels
+        private$.records[, d] = droplevels(private$.records[, d])
+      }
+    }
+  },
+
+  renameUELs = function(uels, dimension=NULL) {
+    if (!is.null(dimension)) {
+      # input check
+      if (!(is.integer(dimension) || is.numeric(dimension)) || 
+      !all(dimension %% 1 == 0) || 
+      any(dimension < 1) || any(dimension > self$dimension)) {
+        stop(paste0("All elements of the argument 
+        `dim` must be integers in [1, ", 
+        self$dimension, "]\n"))
+      }
+    }
+    else {
+      dimension = 1:self$dimension
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to add UELs \n")
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!is.null(names(uels))) {
+      #error on duplicates
+      if (any(duplicated(uels) == TRUE)) {
+        stop("cannot rename the same `uel` more than 
+        once in a single call\n")
+      }
+      # user has provided uelmap
+      old_uels = names(uels)
+      lapply(dimension, function(d) {
+        # get current levels
+        cur_uels = levels(private$.records[, d])
+        # update current levels
+        for (uel in old_uels) {
+          idx = which(cur_uels == uel)
+          if (!is.integer0(idx)) {
+            cur_uels[idx] = uels[[uel]]
+          } # ignore if current uels don't exist
+        }
+        # set current levels
+        private$.records[, d] = factor(private$.records[, d], 
+        levels = cur_uels)
+      })
+    }
+    else {
+      if (any(duplicated(uels)) == TRUE) {
+        stop("The argument `uels` cannot contain duplicates\n")
+      }
+
+      lapply(dimension, function(d) {
+        levels(private$.records[, d]) = uels
+      })
+    }
+
   },
 
   getDomainViolations = function() {
@@ -3087,6 +3315,29 @@ Alias <- R6Class(
       self$aliasWith = aliasFor
     },
 
+    getUELs = function(dimension =NULL, codes=NULL, ignoreUnused = FALSE) {
+      self$aliasWith$getUELs(dimension, codes, ignoreUnused)
+    },
+
+    setUELs = function(uels, dimension, rename=FALSE) {
+      self$aliasWith$setUELs(uels, dimension, rename)
+    },
+
+    reOrderUELs = function(uels, dimension) {
+      self$aliasWith$reOrderUELs(uels, dimension)
+    },
+
+    addUELs = function(uels, dimension=NULL) {
+      self$aliasWith$addUELs(uels, dimension)
+    },
+
+    removeUELs = function(uels=NULL, dimension=NULL) {
+      self$aliasWith$removeUELs(uels, dimension)
+    },
+
+    renameUELs = function(uels, dimension=NULL) {
+      self$aliasWith$renameUELs(uels, dimension)
+    },
 
     #' @description getCardinality get the full cartesian product of the domain
     getCardinality = function() {

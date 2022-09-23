@@ -7605,3 +7605,84 @@ m$dropDuplicateRecords()
 expect_true(m$isValid())
 }
 )
+
+#test getUELs method
+test_that("test_num_79", {
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
+j = Set$new(m, "j", domain=c("*", "*"), records=data.frame(c("j1","j2","j3"), c("j4","j5","j6")))
+
+expect_equal(i$getUELs(dimension=1), c("i1","i2","i3"))
+expect_equal(i$getUELs(dimension=2), c("i4","i5","i6"))
+expect_equal(i$getUELs(), paste0("i", 1:6))
+expect_error(i$getUELs(dimension=3))
+expect_error(i$getUELs(codes=0))
+
+expect_equal(i$getUELs(dimension=1), paste0("i", 1:3))
+expect_equal(i$getUELs(dimension=2), paste0("i", 4:6))
+expect_error(i$getUELs(dimension=3))
+expect_error(i$getUELs(codes=0))
+
+expect_equal(i$getUELs(dimension=1, codes=1), "i1")
+expect_equal(i$getUELs(dimension=1, codes=3), "i3")
+expect_equal(i$getUELs(dimension=1, codes=c(1, 3)), c("i1", "i3"))
+expect_error(i$getUELs(codes=100, dimension=0))
+
+expect_equal(j$getUELs(dimension=1), paste0("j", 1:3))
+expect_equal(j$getUELs(dimension=2), paste0("j", 4:6))
+expect_equal(j$getUELs(), paste0("j", 1:6))
+expect_error(j$getUELs(dimension=3))
+
+expect_equal(m$getUELs("i"), i$getUELs())
+expect_equal(m$getUELs("j"), j$getUELs())
+expect_equal(m$getUELs(), append(i$getUELs(), j$getUELs()))
+expect_error(m$getUELs("k"))
+}
+)
+
+#test removeUELs method
+test_that("test_num_80", {
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
+i$removeUELs("hi", 1)
+i$removeUELs("hi", 2)
+i$removeUELs("hi")
+
+expect_equal(i$getUELs(), paste0("i", 1:6))
+
+i$removeUELs("i1", 1)
+expect_equal(i$getUELs(), paste0("i",2:6))
+
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
+i$removeUELs("i4")
+expect_equal(i$getUELs(), append(paste0("i", 1:3), c("i5", "i6")))
+
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
+j = Set$new(m, "j", domain=c("*", "*"), records=data.frame(c("j1","j2","j3"), c("j4","j5","j6")))
+
+m$removeUELs(c("i1","j4"))
+expect_equal(m$getUELs(), append(paste0("i",2:6), paste0("j",c(1:3,5,6))))
+}
+)
+
+#test renameUELs method
+test_that("test_num_81", {
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i5"), c("i4","i5","i6")))
+i$renameUELs(c("jammin"="java"), 1)
+i$renameUELs(c("jammin"="java"), 2)
+i$renameUELs(c("jammin"="java"))
+m$renameUELs(c("jammin"="java"))
+
+i$renameUELs(c(i2="java"))
+expect_equal(i$getUELs(1), c("i1", "java", "i5"))
+
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i5"), c("i4","i5","i6")))
+expect_equal(m$getUELs(), c("i1","i2","i5","i4","i6"))
+m$renameUELs(c(i2="java"))
+expect_equal(m$getUELs(), c("i1","java","i5","i4","i6"))
+}
+)
