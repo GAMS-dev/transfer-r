@@ -1166,7 +1166,7 @@ Symbol <- R6Class(
 
   },
 
-  reOrderUELs = function(uels, dimension) {
+  reorderUELs = function(uels, dimension) {
     # input check
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
@@ -1177,7 +1177,7 @@ Symbol <- R6Class(
     }
 
     if (!is.character(uels)) {
-      stop("The argument uels must be type `character` \n")
+      stop("The argument `uels` must be type `character` \n")
     }
 
     if (!self$isValid()) {
@@ -1186,12 +1186,12 @@ Symbol <- R6Class(
 
     for (d in dimension) {
       if ((length(uels) != length(levels(private$.records[, d])))) {
-        stop("The argument `uel` should 
+        stop("The argument `uels` must 
         contain all uels that need to be reordered")
       }
       else {
-        if (length(setdiff(uels, private$.records[,d])) == 0) {
-          stop("The argument `uel` should 
+        if (length(setdiff(uels, private$.records[,d])) != 0) {
+          stop("The argument `uels` must 
           contain all uels that need to be reordered")
         }
       }
@@ -1225,7 +1225,7 @@ Symbol <- R6Class(
       }
 
       private$.records[, d] = factor(private$.records[, d], 
-      levels=append(levels(private$.records[, d], uels)))
+      levels=append(levels(private$.records[, d]), uels))
     }
   },
 
@@ -1349,7 +1349,7 @@ Symbol <- R6Class(
     it_vec = it_vec[length_added_uel > 0]
 
     dom_violations = lapply(it_vec, function(d) {
-      DomainViolation$new(self, d, self$domain[[d]], added_uel_all[d])
+      DomainViolation$new(self, d, self$domain[[d]], added_uel_all[[d]])
     })
 
     if (length(dom_violations) == 0) return()
@@ -3323,8 +3323,8 @@ Alias <- R6Class(
       self$aliasWith$setUELs(uels, dimension, rename)
     },
 
-    reOrderUELs = function(uels, dimension) {
-      self$aliasWith$reOrderUELs(uels, dimension)
+    reorderUELs = function(uels, dimension) {
+      self$aliasWith$reorderUELs(uels, dimension)
     },
 
     addUELs = function(uels, dimension=NULL) {

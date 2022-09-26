@@ -7686,3 +7686,89 @@ m$renameUELs(c(i2="java"))
 expect_equal(m$getUELs(), c("i1","java","i5","i4","i6"))
 }
 )
+
+#test addUELs method
+test_that("test_num_82", {
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i5"), c("i4","i5","i6")))
+i$addUELs("ham", 1)
+expect_equal(i$getUELs(1), c("i1","i2","i5","ham"))
+
+i$addUELs("cheese", 2)
+expect_equal(i$getUELs(2), c("i4","i5","i6","cheese"))
+
+m$removeUELs()
+expect_equal(m$getUELs(), c("i1","i2","i5","i4","i6"))
+}
+)
+
+#test reorderUELs method
+test_that("test_num_83", {
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2","i3"))
+a = Parameter$new(m, "a",i, records=data.frame(paste0("i",c(1,3,2)), c(1,3,2)))
+
+expect_equal(a$getUELs(1), c("i1","i3","i2"))
+a$reorderUELs(i$getUELs(1), 1)
+expect_equal(a$getUELs(), c("i1","i2","i3"))
+}
+)
+
+#test setUELs method
+test_that("test_num_84", {
+m = Container$new()
+i = Set$new(m, "i", records=c("a","b","c"))
+j = Parameter$new(m, "j",i, records=data.frame(c("a","c"), c(1,2)))
+
+expect_equal(j$getUELs(1), c("a","c"))
+
+j$setUELs(c("j1","a","c","j4"), 1, rename=TRUE)
+expect_equal(j$getUELs(1), c("j1","a","c","j4"))
+expect_equal(as.character(j$records[, 1]), c("j1","a"))
+
+
+m = Container$new()
+i = Set$new(m, "i", records=c("a","b","c"))
+j = Parameter$new(m, "j",i, records=data.frame(c("a","c"), c(1,2)))
+
+expect_equal(j$getUELs(1), c("a","c"))
+
+j$setUELs(c("j1","a","c","j4"), 1, rename=FALSE)
+expect_equal(j$getUELs(1), c("j1","a","c","j4"))
+expect_equal(as.character(j$records[, 1]), c("a","c"))
+
+#multiple dimensions
+m = Container$new()
+i = Set$new(m, "i", records=c("a","b","c"))
+j = Parameter$new(m, "j",c(i,i), records=data.frame(c("a","c"),c("b","a"), c(1,2)))
+j$setUELs(c("j1","a","c","j4"), rename=FALSE)
+expect_equal(j$getUELs(1), c("j1","a","c","j4"))
+expect_equal(j$getUELs(2), c("j1","a","c","j4"))
+
+expect_equal(as.character(j$records[, 1]), c("a","c"))
+expect_true(is.na(j$records[1, 2]))
+expect_equal(as.character(j$records[, 1]), c("a","c"))
+}
+)
+
+#test getDomainViolations method
+test_that("test_num_85", {
+m = Container$new()
+i = Set$new(m, "i", records=c("SeaTtle", "hamburg"))
+j = Set$new(m, "j", i, records=c("seattle", "Hamburg"))
+
+expect_true(i$isValid())
+expect_true(j$isValid())
+expect_equal(i$getDomainViolations(), NULL)
+expect_equal(j$getDomainViolations(), NULL)
+
+m = Container$new()
+i = Set$new(m, "i", records=c("SeaTtle", "hamburg"))
+j = Set$new(m, "j", i, records=c("seattle ", "Hamburg"))
+
+expect_true(i$isValid())
+expect_true(j$isValid())
+expect_equal(i$getDomainViolations(), NULL)
+expect_equal(j$getDomainViolations()[[1]]$violations, c("seattle "))
+}
+)
