@@ -1332,7 +1332,7 @@ Symbol <- R6Class(
     if (!self$isValid()) {
       stop("The object must be valid to get domain violations\n")
     }
-    if (self$dimension == 0) return()
+    if (self$dimension == 0 || is.null(self$records)) return()
 
     it_vec = 1:self$dimension
     is_set_alias = unlist(lapply(it_vec, function(x) {
@@ -1358,17 +1358,20 @@ Symbol <- R6Class(
   },
 
   findDomainViolations = function() {
-    if (self$dimension == 0) {
-      return(NULL)
-    }
+    violations = self$getDomainViolations()
 
-    idx = which(is.na(self$records[, (1:self$dimension)]), arr.ind = TRUE)
-    if (self$dimension > 1) {
-      return(idx[, 1])
-    }
-    else {
-      return(idx)
-    }
+    if (is.null(violations)) return()
+
+    idx = lapply(violations, function(dv) {
+      set_dv = unique(dv$violations)
+
+      idx = lapply(set_dv, function(v) {
+        return(which(self$records[, dv$dimension] == v, arr.ind = TRUE))
+      })
+      return(unlist(idx, use.names=FALSE))
+    })
+
+    return(self$records[unlist(unique(idx)), ])
   },
 
   countDuplicateRecords = function() {

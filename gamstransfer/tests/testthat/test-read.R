@@ -7772,3 +7772,15 @@ expect_equal(i$getDomainViolations(), NULL)
 expect_equal(j$getDomainViolations()[[1]]$violations, c("seattle "))
 }
 )
+
+#test findDomainViolations method
+test_that("test_num_86", {
+m = Container$new()
+i = Set$new(m, "i", records=c("j1", "j2"))
+a = Parameter$new(m, "a", i, records= data.frame(paste0("j",1:10), 1:10))
+a2 = Parameter$new(m, "a2", c(i,i), records= data.frame(paste0("j",1:10),paste0("j",1:10), 1:10))
+expect_true(a$isValid())
+expect_true(is.data.frame(a$findDomainViolations()))
+expect_equal(a$findDomainViolations(), a$records[3:10,])
+}
+)
