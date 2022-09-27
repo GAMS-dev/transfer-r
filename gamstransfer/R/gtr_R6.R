@@ -453,6 +453,7 @@ Container <- R6::R6Class (
         gdxout, unlist(reorder), TRUE, compress)
       }
     },
+
     #' @description reorder symbols in order to avoid domain violations
     reorderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
@@ -554,6 +555,22 @@ Container <- R6::R6Class (
         dom_violation_count = dom_violation_count + length(dom_violations)
       }
 
+    },
+
+    hasDomainViolations = function() {
+      return(any(unlist(lapply(self$data, 
+      function(s) {s$hasDomainViolations()}), use.names=FALSE) == TRUE))
+    },
+
+    countDomainViolations = function() {
+      dv = lapply(self$data, function(s) s$countDomainViolations())
+      return(dv[dv != 0])
+    },
+
+    dropDomainViolations = function() {
+      lapply(self$countDomainViolations(), 
+      function(s) self$data[[s]]$dropDomainViolations())
+      return()
     },
 
     countDuplicateRecords = function() {
@@ -1372,6 +1389,37 @@ Symbol <- R6Class(
     })
 
     return(self$records[unlist(unique(idx)), ])
+  },
+
+  hasDomainViolations = function() {
+    df = self$findDomainViolations()
+    return(!is.null(df))
+  },
+
+  countDomainViolations = function() {
+    df = self$findDomainViolations()
+    if (is.null(df)) {
+      return(0)
+    }
+    else {
+      nrow(df)
+    }
+  },
+
+  dropDomainViolations = function() {
+    violations = self$getDomainViolations()
+
+    if (is.null(violations)) return()
+
+    idx = lapply(violations, function(dv) {
+      set_dv = unique(dv$violations)
+
+      idx = lapply(set_dv, function(v) {
+        return(which(self$records[, dv$dimension] == v, arr.ind = TRUE))
+      })
+      return(unlist(idx, use.names=FALSE))
+    })
+    private$.records = private$.records[-unlist(unique(idx)), ]
   },
 
   countDuplicateRecords = function() {
@@ -3319,31 +3367,45 @@ Alias <- R6Class(
     },
 
     getUELs = function(dimension =NULL, codes=NULL, ignoreUnused = FALSE) {
+      private$.testRefContainer()
+      private$.testParentSet()
       self$aliasWith$getUELs(dimension, codes, ignoreUnused)
     },
 
     setUELs = function(uels, dimension, rename=FALSE) {
+      private$.testRefContainer()
+      private$.testParentSet()
       self$aliasWith$setUELs(uels, dimension, rename)
     },
 
     reorderUELs = function(uels, dimension) {
+      private$.testRefContainer()
+      private$.testParentSet()
       self$aliasWith$reorderUELs(uels, dimension)
     },
 
     addUELs = function(uels, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
       self$aliasWith$addUELs(uels, dimension)
     },
 
     removeUELs = function(uels=NULL, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
       self$aliasWith$removeUELs(uels, dimension)
     },
 
     renameUELs = function(uels, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
       self$aliasWith$renameUELs(uels, dimension)
     },
 
     #' @description getCardinality get the full cartesian product of the domain
     getCardinality = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
     },
 
@@ -3351,6 +3413,8 @@ Alias <- R6Class(
     #' @description getSparsity get the sparsity of the symbol 
     #' w.r.t the cardinality
     getSparsity = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
     },
 
@@ -3388,61 +3452,63 @@ Alias <- R6Class(
       }
     },
 
+    findDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$findDomainViolations())
+    },
+
+    hasDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$hasDomainViolations())
+    },
+
+    countDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$countDomainViolations())
+    },
+
+    dropDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$dropDomainViolations())
+    },
+
     countDuplicateRecords = function() {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$countDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$countDuplicateRecords())
     },
 
     findDuplicateRecords = function(keep="first") {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$findDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$findDuplicateRecords())
     },
 
     hasDuplicateRecords = function(keep="first") {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$hasDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$hasDuplicateRecords())
     },
 
     dropDuplicateRecords = function(keep="first") {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$dropDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$dropDuplicateRecords())
     },
 
     #' main convenience method to set standard dataframe formatted records
     #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
   ),
@@ -3474,6 +3540,7 @@ Alias <- R6Class(
         return(private$.name)
       }
       else {
+        private$.testRefContainer()
         if (!is.character(name_input)) {
           stop("GAMS symbol 'name' must be type chracter\n")
         }
@@ -3507,8 +3574,9 @@ Alias <- R6Class(
         return(private$.aliasWith)
       }
       else {
+        private$.testRefContainer()
         if (!(inherits(alias_with_input, c("Set", "Alias")))) {
-          stop("GAMS 'alias_with' must be type Set or Alias\n")
+          stop("GAMS 'aliasWith' must be type Set or Alias\n")
         }
 
         if (inherits(alias_with_input, "Alias")) {
@@ -3524,15 +3592,15 @@ Alias <- R6Class(
         else {
           if (!identical(private$.aliasWith, alias_with_input)) {
             self$.requiresStateCheck = TRUE
-            if (inherits(self$refContainer, "Container")) {
-              self$refContainer$.requiresStateCheck = TRUE
-            }
+            self$refContainer$.requiresStateCheck = TRUE
           }
         }
       }
     },
 
     isSingleton = function(is_singleton) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(is_singleton)) {
         refcontainer = self$refContainer
         sym = refcontainer$data[[self$aliasWith$name]]
@@ -3546,6 +3614,8 @@ Alias <- R6Class(
     },
 
     description = function(description_input) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(description_input)) {
         refcontainer = self$refContainer
         aliaswithname = self$aliasWith$name
@@ -3561,6 +3631,8 @@ Alias <- R6Class(
     },
 
     dimension = function(dimension_input) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(dimension_input)) {
         return(self$refContainer$data[[self$aliasWith$name]]$dimension)
       }
@@ -3572,10 +3644,20 @@ Alias <- R6Class(
     },
 
     records = function(records_input) {
-      return(self$refContainer$data[[self$aliasWith$name]]$records)
+      private$.testRefContainer()
+      private$.testParentSet()
+      if (missing(records_input)) {
+        return(self$refContainer$data[[self$aliasWith$name]]$records)
+      }
+      else {
+        self$refContainer$data[[self$aliasWith$name]]$records = records_input
+      }
+
     },
 
     domain = function(domain_input) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(domain_input)) {
         return(self$refContainer$data[[self$aliasWith$name]]$domain)
       }
@@ -3587,22 +3669,32 @@ Alias <- R6Class(
     },
 
     numberRecords = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
     },
 
     domainType = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$domainType)
     },
 
     domainNames = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
     },
 
     domainLabels = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
     },
 
     summary = function() {
+    private$.testRefContainer()
+    private$.testParentSet()
     return(list(
       "name" = self$name,
       "alias_with" = self$aliasWith,
@@ -3631,11 +3723,26 @@ Alias <- R6Class(
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         if (self$refContainer$data[[self$aliasWith$name]]$isValid() == FALSE) {
-          stop(paste0("Alias symbol is not valid because parent set ", self$aliasWith$name,
+          stop(paste0("Alias is not valid because parent set ", self$aliasWith$name,
           "is not valid\n"))
         }
       }
+    },
+
+    .testParentSet = function() {
+      if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+        stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
+        self$name, " is no longer in the container and cannot 
+        be referenced\n"))
+      }
+    },
+
+    .testRefContainer = function() {
+      if (!inherits(self$refContainer, "Container")) {
+        stop("Alias is no longer referring a Container object\n")
+      }
     }
+
   )
 )
 

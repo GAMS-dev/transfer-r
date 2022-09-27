@@ -7782,5 +7782,15 @@ a2 = Parameter$new(m, "a2", c(i,i), records= data.frame(paste0("j",1:10),paste0(
 expect_true(a$isValid())
 expect_true(is.data.frame(a$findDomainViolations()))
 expect_equal(a$findDomainViolations(), a$records[3:10,])
+
+expect_equal(a$countDomainViolations(), 8)
+expect_true(a$hasDomainViolations())
+
+a$dropDomainViolations()
+expect_equal(as.character(a$records[,1]), c("j1","j2") )
+expect_false(a$hasDomainViolations())
+expect_equal(a$countDomainViolations(), 0)
+expect_true(is.null(a$findDuplicateRecords()))
+expect_true(a$isValid())
 }
 )
