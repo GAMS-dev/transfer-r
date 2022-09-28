@@ -7796,7 +7796,7 @@ expect_true(a$isValid())
 )
 
 
-#test findDomainViolations method
+#test overwriting sets
 test_that("test_num_87", {
 m = Container$new()
 i = Set$new(m, "i", records=c("a", "b", "c"))
@@ -7810,5 +7810,78 @@ expect_true(inherits(m$addSet("i",records=c("f","b","c")), "Set"))
 expect_equal(m$data$i$description, "hamburger")
 
 expect_error(Set$new(m, "i", records=c("f","b","c")))
+}
+)
+
+#test overwriting Parameters
+test_that("test_num_88", {
+m = Container$new()
+i = Parameter$new(m, "i", "*", records=data.frame(paste0("i",1:5), 1:5))
+
+expect_true(inherits(m$addParameter("i", "*", records=data.frame(paste0("i",1:5), 1:5)), "Parameter"))
+expect_error(m$addParameter("i","a",records=data.frame(paste0("i",1:5), 1:5)))
+expect_true(inherits(m$addParameter("i","*",records=data.frame(paste0("i",1:5), 1:5), description="hamburger"), "Parameter"))
+
+expect_equal(m$data$i$description, "hamburger")
+expect_true(inherits(m$addParameter("i","*",records=data.frame(paste0("i",1:5), 1:5)), "Parameter"))
+expect_equal(m$data$i$description, "hamburger")
+
+expect_error(Parameter$new(m, "i", records=data.frame(paste0("i",1:5), 1:5)))
+}
+)
+
+#test overwriting Variables
+test_that("test_num_89", {
+m = Container$new()
+recs= data.frame(paste0("i",1:5), 1:5)
+colnames(recs) = c("1", "level")
+i = Variable$new(m, "i", "free", "*", records=recs)
+
+expect_true(inherits(m$addVariable("i", "free", "*", records=recs), "Variable"))
+expect_error(m$addVariable("i", "free","a",records=recs))
+expect_true(inherits(m$addVariable("i", "free","*",records=recs, description="hamburger"), "Variable"))
+
+expect_equal(m$data$i$description, "hamburger")
+expect_true(inherits(m$addVariable("i", "free","*",records=recs), "Variable"))
+expect_equal(m$data$i$description, "hamburger")
+
+expect_error(Variable$new(m, "i", "free", records=recs))
+}
+)
+
+#test overwriting Equations
+test_that("test_num_90", {
+m = Container$new()
+recs= data.frame(paste0("i",1:5), 1:5)
+colnames(recs) = c("1", "level")
+i = Equation$new(m, "i", "eq", "*", records=recs)
+
+expect_true(inherits(m$addEquation("i", "eq", "*", records=recs), "Equation"))
+expect_error(m$addEquation("i", "eq","a",records=recs))
+expect_true(inherits(m$addEquation("i", "eq","*",records=recs, description="hamburger"), "Equation"))
+
+expect_equal(m$data$i$description, "hamburger")
+expect_true(inherits(m$addEquation("i", "eq","*",records=recs), "Equation"))
+expect_equal(m$data$i$description, "hamburger")
+
+expect_error(Equation$new(m, "i", "eq", records=recs))
+}
+)
+
+#test overwriting Alias
+test_that("test_num_91", {
+m = Container$new()
+i = Set$new(m, "i", records=c("a","b","c"))
+j = Set$new(m, "j", records=c("i","j","k"))
+ip = m$addAlias("ip", i)
+
+expect_true(inherits(ip, "Alias"))
+expect_equal(ip$aliasWith, i)
+expect_error(m$addAlias("j", i))
+
+ip = m$addAlias("ip", j)
+expect_true(inherits(ip, "Alias"))
+expect_equal(ip$aliasWith, j)
+
 }
 )

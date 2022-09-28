@@ -3799,6 +3799,7 @@ Alias <- R6Class(
           if (!identical(private$.aliasWith, alias_with_input)) {
             self$.requiresStateCheck = TRUE
             self$refContainer$.requiresStateCheck = TRUE
+            private$.aliasWith = alias_with_input
           }
         }
       }
