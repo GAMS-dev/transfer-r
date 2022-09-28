@@ -20,6 +20,8 @@ GAMS Transfer R
 - New Symbol methods `hasDomainViolations`, `countDomainViolations`, `findDomainViolations`, `dropDomainViolations`
 - New Container methods `hasDomainViolations`, `countDomainViolations`, `dropDomainViolations`
 - bug fix in Alias record setter
+- bug fix in `toDense()` method for Symbols with domaintype other than `regular`
+- allowed symbol overwriting with `addSet/addParameter/addVariable/addEquation/addAlias` methods when everything other than records and description is unchanged
 
 GAMS Transfer R v1.0.0
 ==================

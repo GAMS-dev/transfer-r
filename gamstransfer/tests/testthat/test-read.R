@@ -7523,10 +7523,10 @@ expect_true(inherits(symbolobjects[[2]], "Parameter"))
 expect_error(m$getSymbols("f"))
 
 symobject = m$getSymbols("d")
-expect_true(inherits(symobject[[1]], "Parameter"))
+expect_true(inherits(symobject, "Parameter"))
 
 symobject = m$getSymbols("D")
-expect_true(inherits(symobject[[1]], "Parameter"))
+expect_true(inherits(symobject, "Parameter"))
 
 expect_error(m$getSymbols(200))
 
@@ -7792,5 +7792,23 @@ expect_false(a$hasDomainViolations())
 expect_equal(a$countDomainViolations(), 0)
 expect_true(is.null(a$findDuplicateRecords()))
 expect_true(a$isValid())
+}
+)
+
+
+#test findDomainViolations method
+test_that("test_num_87", {
+m = Container$new()
+i = Set$new(m, "i", records=c("a", "b", "c"))
+
+expect_true(inherits(m$addSet("i", records=c("f","b","c")), "Set"))
+expect_error(m$addSet("i","a",records=c("f","b","c")))
+expect_true(inherits(m$addSet("i",records=c("f","b","c"), description="hamburger"), "Set"))
+
+expect_equal(m$data$i$description, "hamburger")
+expect_true(inherits(m$addSet("i",records=c("f","b","c")), "Set"))
+expect_equal(m$data$i$description, "hamburger")
+
+expect_error(Set$new(m, "i", records=c("f","b","c")))
 }
 )

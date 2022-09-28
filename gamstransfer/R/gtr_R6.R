@@ -201,26 +201,25 @@ Container <- R6::R6Class (
         }
       }
 
-      setOrAliasBool = sapply(symbols, function(x) {
+      setOrAliasBool = unlist(lapply(symbols, function(x) {
         return(inherits(self$getSymbols(x), c("Set", "Alias")))
-      }, USE.NAMES = FALSE)
+      }), use.names = FALSE)
       setOrAlias = symbols[setOrAliasBool]
 
-      dummy = sapply(symbols, function(n) {
-        x = self$getSymbolNames(n)
-        sym = self$data[[x]]
+      lapply(symbols, function(n) {
+        sym = self$getSymbols(n)
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
-        self$data[[x]] <- NULL
+        self$data[[sym$name]] <- NULL
         return()
-      }, USE.NAMES = FALSE)
+      })
 
       # if there were any sets or aliases removed from the data list
       # then reset check flag for all symbols
       if (length(setOrAlias) != 0) {
-        dummy = sapply(self$listSymbols(), function(x) {
+        lapply(self$listSymbols(), function(x) {
           self$data[[x]]$.requiresStateCheck = TRUE
-        }, USE.NAMES = FALSE)
+        })
       }
 
       # reset the check flag for the container
@@ -244,7 +243,8 @@ Container <- R6::R6Class (
       }
 
       if (oldName != newName) {
-        sym = self$data[[self$getSymbolNames(oldName)]]
+        sym = self$getSymbols(oldName)
+        # sym = self$data[[self$getSymbolNames(oldName)]]
         sym$name = newName
         self$.requiresStateCheck = TRUE
       }
@@ -267,11 +267,50 @@ Container <- R6::R6Class (
     #' @return a Set object
     addSet = function(name, domain = "*", isSingleton = FALSE,
     records = NULL, domainForwarding=FALSE, description = "") {
-      Set$new(
-      self, name, domain, isSingleton,
-      records, domainForwarding, description)
-      return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Set$new(
+        self, name, domain, isSingleton,
+        records, domainForwarding, description)
+        return(obj)
+      }
+      else {
+        tryCatch(
+        {
+          m = Container$new()
+          obj = Set$new(m, self$getSymbolNames(name), domain, isSingleton,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Set")
+        && all(symobj$domain == domain)
+        && symobj$isSingleton == isSingleton
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+      }
     },
+
     #' @description There are two different ways to create a GAMS parameter and 
     #' add it to a Container. One is using the Parameter constructor and 
     #' the other is using addParameter method which calls the 
@@ -287,10 +326,47 @@ Container <- R6::R6Class (
     #' @return a Parameter object
     addParameter = function(name, domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
-      Parameter$new(
-        self, name, domain, records,
-        domainForwarding, description)
-        return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Parameter$new(
+          self, name, domain, records,
+          domainForwarding, description)
+          return(obj)
+      }
+      else {
+         tryCatch(
+        {
+          m = Container$new()
+          obj = Parameter$new(m, self$getSymbolNames(name), domain,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Parameter")
+        && all(symobj$domain == domain)
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+      }
     },
 
     #' @description There are two different ways to create a GAMS Variable and 
@@ -311,10 +387,49 @@ Container <- R6::R6Class (
     #' @return a Variable object
     addVariable = function(name, type="free", domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
-      Variable$new(
-        self, name, type, domain, records,
-        domainForwarding, description)
-        return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Variable$new(
+          self, name, type, domain, records,
+          domainForwarding, description)
+          return(obj)
+      }
+      else {
+         tryCatch(
+        {
+          m = Container$new()
+          obj = Variable$new(m, self$getSymbolNames(name), type, domain,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Variable")
+        && symobj$type == type
+        && all(symobj$domain == domain)
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+
+      }
     },
 
     #' @description There are two different ways to create a GAMS Equation and 
@@ -334,10 +449,49 @@ Container <- R6::R6Class (
     #' @return a Equation object
     addEquation = function(name, type, domain = NULL, 
     records = NULL, domainForwarding=FALSE, description = "") {
-      Equation$new(
-        self, name, type, domain, records,
-        domainForwarding, description)
-        return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Equation$new(
+          self, name, type, domain, records,
+          domainForwarding, description)
+          return(obj)
+      }
+      else {
+         tryCatch(
+        {
+          m = Container$new()
+          obj = Equation$new(m, self$getSymbolNames(name), type, domain,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Equation")
+        && symobj$type == type
+        && all(symobj$domain == domain)
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+
+      }
     },
 
     #' @description There are two different ways to create a GAMS Alias and 
@@ -349,9 +503,37 @@ Container <- R6::R6Class (
     #' @param aliasWith string argument for the set/alias we want to add
     #' an alias for
     addAlias = function(name, aliasWith) {
-      Alias$new(
-      self, name, aliasWith)
-      return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Alias$new(
+        self, name, aliasWith)
+        return(obj)
+      }
+      else {
+        if (!inherits(aliasWith, c("Set", "Alias"))) {
+          stop("GAMS `aliasWith` must be type set or Alias\n")
+        }
+
+        if (inherits(aliasWith, "Alias")) {
+          parent = alias_with_input
+          while (!inherits(parent, "Set")) {
+            parent = parent$aliasWith
+          }
+          alias_with_input = parent
+        }
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Alias")) {
+          symobj$aliasWith = aliasWith
+          return(symobj)
+        }
+        else {
+          stop(paste0("Attempting to add an Alias symbol named ", name, 
+          " however, a symbol with this name but different type already exists 
+          in the container. Symbol replacement is only possible if this symbols 
+          is first removed from the Container with the 
+          removeSymbols() method\n"))
+        }
+      }
     },
 
     #' @description returns a list of object references for `Symbols`
@@ -369,16 +551,21 @@ Container <- R6::R6Class (
         }
       }
 
-      objisnull = sapply(symbols, self$hasSymbols, USE.NAMES = FALSE)
+      objisnull = unlist(lapply(symbols, self$hasSymbols), use.names = FALSE)
       if (any(objisnull == FALSE)) {
-        stop(paste0("Symbol ", i, "does not appear in the container \n"))
+        stop(paste0("Symbol ", i, " does not appear in the container \n"))
       }
 
-      # all symbols exist in the container
-      return(sapply(symbols, function(x) {
-        return(self$data[[self$getSymbolNames(x)]])
-      }, 
-      USE.NAMES = FALSE))
+      if (length(symbols) == 1) {
+        return(self$data[[self$getSymbolNames(symbols)]])
+      }
+      else {
+        # all symbols exist in the container
+        return(unlist(lapply(symbols, function(x) {
+          return(self$data[[self$getSymbolNames(x)]])
+        }),
+        use.names = FALSE))
+      }
     },
 
     #' @description a write method to write to a gdxout GDX file
@@ -505,13 +692,13 @@ Container <- R6::R6Class (
 
     getUELs = function(symbols=NULL, ignoreUnused = FALSE) {
       if (is.null(symbols)) {
-        symbols = names(self$data)
+        symbols = self$data
       }
       else {
-        symbols = self$getSymbolNames(symbols)
+        symbols = self$getSymbols(symbols)
       }
-      uel_all_symbols = lapply(symbols, function(s) {
-        self$data[[s]]$getUELs(dimension = 1:self$data[[s]]$dimension, 
+      uel_all_symbols = lapply(c(symbols), function(s) {
+        s$getUELs(dimension = 1:s$dimension, 
         ignoreUnused=ignoreUnused)
       })
       uel_all_symbols = unique(unlist(uel_all_symbols, use.names = FALSE))
@@ -519,20 +706,18 @@ Container <- R6::R6Class (
     },
 
     removeUELs = function(uels = NULL) {
-      symbols = names(self$data)
 
-      lapply(symbols, function(s) {
-        self$data[[s]]$removeUELs(uels= uels, 
-        dimension = 1:self$data[[s]]$dimension)
+      lapply(self$data, function(s) {
+        s$removeUELs(uels= uels, 
+        dimension = 1:s$dimension)
       })
     },
 
     renameUELs = function(uels) {
-      symbols = names(self$data)
 
-      lapply(symbols, function(s) {
-        self$data[[s]]$renameUELs(uels= uels, 
-        dimension = 1:self$data[[s]]$dimension)
+      lapply(self$data, function(s) {
+        s$renameUELs(uels= uels, 
+        dimension = 1:s$dimension)
       })
     },
 
@@ -585,7 +770,7 @@ Container <- R6::R6Class (
     },
 
     dropDuplicateRecords = function(keep = "first") {
-      dummy=lapply(self$data, function(x) {x$dropDuplicateRecords(keep)})
+      lapply(self$data, function(x) {x$dropDuplicateRecords(keep)})
     }
 
   ),
@@ -716,10 +901,12 @@ Container <- R6::R6Class (
             if (!is.null(self$acronyms)) {
               if (inherits(self$data[[s$name]], c("Parameter", 
               "Variable", "Equation"))) {
+                records = self$data[[s$name]]$records
                 for (a in self$acronyms) {
-                  self$data[[s$name]]$records[(self$data[[s$name]]$records 
+                  records[(records 
                   == a * 1e301)] = SpecialValues[["NA"]]
                 }
+                self$data[[s$name]]$records = records
               }
             }
           }
@@ -752,7 +939,6 @@ Container <- R6::R6Class (
       # sort the symbols argument to preserve the order from original container
       symbolsToRead = intersect(syms, symbolsToRead)
 
-
       sym_already_exists = self$hasSymbols(symbolsToRead)
 
       if (any(sym_already_exists == TRUE)) {
@@ -763,6 +949,7 @@ Container <- R6::R6Class (
         " is only possible if the symbol is first removed from the", 
         "Container with the removeSymbols() method.\n"))
       }
+
       if (inherits(loadFrom, "Container")) {
         sym_is_valid = lapply(symbolsToRead, 
         function(x) {
@@ -777,8 +964,9 @@ Container <- R6::R6Class (
       }
 
         for (s in symbolsToRead) {
-          s_loadfrom = loadFrom$data[[loadFrom$getSymbolNames(s)]]
-          if (length(s_loadfrom$domainNames) == 1 && is.na(s_loadfrom$domainNames)) {
+          s_loadfrom = loadFrom$data[[s]]
+          if (length(s_loadfrom$domainNames) == 1 
+          && is.na(s_loadfrom$domainNames)) {
             dnames = NULL
           }
           else {
@@ -847,25 +1035,28 @@ Container <- R6::R6Class (
     },
 
     .linkDomainObjects = function(symbols) {
-      for (s in symbols) {
-        if (! inherits(self$data[[s]], "Alias")) {
-          d = list()
-          for (j in self$data[[s]]$domain) {
-            if ((is.character(j) && (j == s)) || 
-            (inherits(j, "Set") && (identical(j,s)))) {
-              d = append(d, j)
-            }
-            else if (is.character(j) && (any(symbols == j)) && (j != s)) {
-               d = append(d, self$data[[j]])
-            }
-            else {
-              d = append(d, j)
-            }
-          }
+      symbol_is_alias = unlist(lapply(symbols, function(s) {
+        inherits(self$data[[s]], "Alias")}), use.names=FALSE)
+      symbol_not_alias = symbols[!symbol_is_alias]
 
+      lapply(symbol_not_alias, function(s) {
+        d = unlist(lapply(self$data[[s]]$domain, function(j) {
+          if (is.character(j) && (any(symbol_not_alias == j)) && (j != s)) {
+               return(self$data[[j]])
+          }
+          else {
+            return(j)
+          }
+        }), use.names = FALSE)
+        if (self$data[[s]]$dimension == 1) {
+          self$data[[s]]$domain = d[[1]]
+        }
+        else {
           self$data[[s]]$domain = d
         }
-      }
+
+      })
+
     },
 
     check = function() {
@@ -877,8 +1068,8 @@ Container <- R6::R6Class (
         lapply(names(self$data), function(n) {
           if (n != self$data[[n]]$name) {
             stop(paste0("Container `data` field is inconsistent with the symbol 
-            object name (", n, " != ", self$data[[n]]$name, "). Update symbol name 
-            with <symbol>$name = <name from `data` field> \n"))
+            object name (", n, " != ", self$data[[n]]$name, "). Update 
+            symbol name with <symbol>$name = <name from `data` field> \n"))
           }
           })
 
@@ -1600,13 +1791,28 @@ Symbol <- R6Class(
         return(self$records[[column]])
       }
       else {
+        if (self$domainType == "regular") {
+          if (self$hasDomainViolations()) {
+            stop("Cannot create dense array because there are domain violations i.e.,
+             the UELs in the symbol are not a subset of UELs in the domain set/s\n")
+          }
+
+
+          idx = lapply(1:self$dimension, function(d) {
+            return(as.numeric(factor(self$records[,d], levels = levels(self$domain[[d]]$records[, 1]))) )
+          })
+
+        }
+        else {
+          idx = lapply(1:self$dimension, function(d) {
+            return(as.numeric(factor(self$records[,d], levels = levels(self$records[, d]))) )
+          })
+        }
+
         a = array(0, dim = self$shape())
-        idx = lapply(self$records[,1:self$dimension], as.numeric)
-        idx = lapply(1:self$dimension, function(d) {
-          return(as.numeric(factor(self$records[,d], levels = levels(self$domain[[d]]$records[, 1]))) )
-        })
         a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
         return(a)
+
       }
     }
     else {
@@ -4542,9 +4748,9 @@ is.integer0 <- function(x)
       }
 
       sym_names = names(self$data)
-      bool = sapply(names, function(x) {
+      bool = unlist(lapply(names, function(x) {
         return(any(tolower(x) == tolower(sym_names)))
-        }, USE.NAMES = FALSE)
+        }), use.names = FALSE)
       return(bool)
     },
 
@@ -4554,7 +4760,7 @@ is.integer0 <- function(x)
       }
 
       sym_names = names(self$data)
-      syms = sapply(names, function(x){
+      syms = unlist(lapply(names, function(x){
         idx = which(tolower(sym_names) == tolower(x))
         if (is.integer0(idx)) {
           stop("Symbol ", x, " does not exist in the container\n")
@@ -4562,7 +4768,7 @@ is.integer0 <- function(x)
         else {
           return(sym_names[idx])
         }
-      }, USE.NAMES = FALSE)
+      }), use.names = FALSE)
       return(syms)
     },
 
@@ -4579,9 +4785,9 @@ is.integer0 <- function(x)
         assertthat::assert_that(is.logical(isValid),
         msg = "argument 'isValid' must be type logical\n")
 
-        actual_isvalid = sapply(self$data, function(x) {
+        actual_isvalid = unlist(lapply(self$data, function(x) {
           return(x$isValid())
-        }, USE.NAMES = FALSE)
+        }), use.names = FALSE)
 
         correct_validity_data = self$data[actual_isvalid == isValid]
         return(unlist(lapply(correct_validity_data, function(x) x$name), use.names = FALSE))
