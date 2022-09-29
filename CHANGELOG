@@ -22,6 +22,9 @@ GAMS Transfer R
 - bug fix in Alias record setter
 - bug fix in `toDense()` method for Symbols with domaintype other than `regular`
 - allowed symbol overwriting with `addSet/addParameter/addVariable/addEquation/addAlias` methods when everything other than records and description is unchanged
+- Added methods `SpecialValues$isNA`, `SpecialValues$isEps`, `SpecialValues$isUndef`, `SpecialValues$isPosInf`, `SpcialValues$isNegInf` to test for SpecialValues
+- bug fix in count* methods for multiple columns
+- The argument for where* methods changed from `columns` to `column`
 
 GAMS Transfer R v1.0.0
 ==================

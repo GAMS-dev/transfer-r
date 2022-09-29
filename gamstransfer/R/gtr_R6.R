@@ -58,8 +58,14 @@ SpecialValues = list(
   "EPS" = -0.0,
   "UNDEF" = NaN,
   "POSINF" = Inf,
-  "NEGINF" = -Inf
+  "NEGINF" = -Inf,
+  "isNA" = function(x) return(is.na(x)),
+  "isEps" = function(x) return((x == 0) & (sign(1/x) == -1)),
+  "isUndef" = function(x) return(is.nan(x)),
+  "isPosInf" = function(x) return(is.infinite(x) & sign(x) == 1),
+  "isNegInf" = function(x) return(is.infinite(x) & sign(x) == -1)
   )
+
 #' @title Container Class
 #' @description The main object class within GAMS Transfer is called 
 #' Container. The Container is the vessel that allows symbols to be 
@@ -5393,52 +5399,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMaxValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", toString(columns), "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(self$records[[columns]]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    private$.getMetric(columns, "max")
   },
 
   #' @description getMinValue get the minimum value in value column
@@ -5447,53 +5408,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMinValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input '", toString(columns), 
-        "', however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", columns, "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-    tryCatch(
-      {
-        return(min(self$records[, columns]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
+    private$.getMetric(columns, "min")
   },
 
   #' @description getMeanValue get the mean value in value column
@@ -5502,52 +5417,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMeanValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        meanVal = mean(self$records[[columns]])
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    private$.getMetric(columns, "mean")
   },
 
   #' @description getMaxAbsValue get the maximum absolute value in value column
@@ -5557,52 +5427,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMaxAbsValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(abs(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    private$.getMetric(columns, "maxAbs")
   },
 
   #' @description whereMax find the row number in records data frame with a 
@@ -5612,59 +5437,8 @@ is.integer0 <- function(x)
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
-  whereMax = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(self$records[[columns]])
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+  whereMax = function(column=NULL) {
+    return(private$.whereMetric(column, "max"))
   },
 
   #' @description whereMaxAbs find the row number in records data frame 
@@ -5676,59 +5450,8 @@ is.integer0 <- function(x)
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
-  whereMaxAbs = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(abs(self$records[[columns]]))
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+  whereMaxAbs = function(column=NULL) {
+    return(private$.whereMetric(column, "maxAbs"))
   },
 
   #' @description whereMin find the the row number in records data frame 
@@ -5740,60 +5463,8 @@ is.integer0 <- function(x)
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
-  whereMin = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-          whereMinVal = which.min(self$records[[columns]])
-          if (is.integer0(whereMinVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMinVal)
-          }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
+  whereMin = function(column=NULL) {
+    return(private$.whereMetric(column, "min"))
   },
 
   #'@description countNA total number of SpecialValues[["NA"]] in value column
@@ -5803,52 +5474,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   countNA = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.na(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isNA"))
   },
 
   #' @description countEps total number of SpecialValues$EPS in value column
@@ -5858,56 +5484,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   countEps = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
-        , "\n")))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &
-          (sign(self$records[,columns]) == sign(1/SpecialValues$EPS))
-          ))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
+    return(private$.countSpecialValue(columns, "isEps"))
   },
 
   #'@description countUndef total number of SpecialValues$UNDEF in value column
@@ -5917,52 +5494,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   countUndef = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.nan(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isUndef"))
   },
 
   #'@description countPosInf total number of 
@@ -5973,52 +5505,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.  
   countPosInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$POSINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isPosInf"))
   },
 
   #'@description countNegInf total number of 
@@ -6029,56 +5516,110 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.  
   countNegInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)){
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isNegInf"))
   }
+
   ),
 
   private = list(
+    .getMetric = function(columns, metric) {
+      if (is.null(self$records) || inherits(self, c("Set", ".ConstSet"))) {
+        return(NA)
+      }
+
+      columns = private$.checkColumnsArgument(columns)
+
+      tryCatch(
+        {
+          if (metric == "max") {
+            return(max(self$records[,columns]))
+          }
+          else if (metric == "min") {
+            return(min(self$records[, columns]))
+          }
+          else if (metric == "mean") {
+            return(mean(self$records[,columns]))
+          }
+          else if (metric == "maxAbs") {
+            return(max(abs(self$records[,columns])))
+          }
+        },
+        error = function(cond) return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .whereMetric = function(column, metric) {
+      if (is.null(self$records) || inherits(self, c("Set", ".ConstSet"))) {
+        return(NA)
+      }
+
+      column = private$.checkColumnsArgument(column)
+
+      if (length(column) > 1) {
+        stop("At most one `column` can be specified\n")
+      }
+
+      tryCatch(
+        {
+          if (metric == "min") {
+            whereMetricVal = which.min(self$records[,column])
+          }
+          else if (metric == "max") {
+            whereMetricVal = which.max(self$records[,column])
+          }
+          else if (metric == "maxAbs") {
+            whereMetricVal = which.max(abs(self$records[,column]))
+          }
+
+            if (is.integer0(whereMetricVal)) {
+              return(NA)
+            }
+            else {
+              return(whereMetricVal)
+            }
+        },
+        error = function(cond) return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .countSpecialValue = function(columns, specialValueFunc) {
+      if (is.null(self$records) || inherits(self, c("Set", ".ConstSet"))) {
+        return(NA)
+      }
+      columns = private$.checkColumnsArgument(columns)
+      tryCatch(
+        {
+          return(sum(SpecialValues[[specialValueFunc]](self$records[,columns])))
+        },
+        error = function(cond)  return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .checkColumnsArgument = function(columns) {
+      if (inherits(self, c("Parameter",".ConstParameter"))) {
+        columns = "value"
+      }
+      else {
+        if (!is.null(columns)) {
+          if (!is.character(columns)) {
+            stop("The argument `columns` must be type character\n")
+          }
+
+          diff = setdiff(columns, private$.attr())
+          if (length(diff) != 0) {
+            stop(paste0("User entered columns (", toString(columns), ") must be a subset
+            of valid numeric columns ", toString(private$.attr()), "\n"))
+          }
+        }
+        else {
+          columns = "level"
+        }
+      }
+      return(columns)
+    },
     .attr = function() {
       return(c("level", "marginal", "lower", "upper", "scale"))
     }
