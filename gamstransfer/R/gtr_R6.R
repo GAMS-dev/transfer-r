@@ -4702,10 +4702,6 @@ find_gams <- function() {
   return(sysDirPath)
 }
 
-#is.nan function for dataframe
-is.nan.data.frame <- function(x)
-do.call(cbind, lapply(x, is.nan))
-
 is.integer0 <- function(x)
 {
   is.integer(x) && length(x) == 0L
