@@ -659,11 +659,13 @@ Container <- R6::R6Class (
     #' @param verbose type logical
     #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
-      assertthat::assert_that(is.logical(verbose), 
-      msg = "Argument 'verbose' must be logical")
+      if (!is.logical(verbose)) {
+        stop("Argument 'verbose' must be logical\n")
+      }
 
-      assertthat::assert_that(is.logical(force), 
-      msg = "Argument 'force' must be logical")
+      if (!is.logical(force)) {
+        stop("Argument 'force' must be logical\n")
+      }
 
       if (force == TRUE) {
         self$.requiresStateCheck = TRUE
@@ -1711,11 +1713,13 @@ Symbol <- R6Class(
   #' @param verbose type logical
   #' @param force type logical
   isValid = function(verbose=FALSE, force=FALSE) {
-    assertthat::assert_that(is.logical(verbose), 
-    msg = "Argument 'verbose' must be logical")
+    if (!is.logical(verbose)) {
+      stop("Argument 'verbose' must be logical\n")
+    }
 
-    assertthat::assert_that(is.logical(force), 
-    msg = "Argument 'force' must be logical")
+    if (!is.logical(force)) {
+      stop("Argument 'force' must be logical\n")
+    }
 
     if (force == TRUE) {
       self$.requiresStateCheck = TRUE
@@ -1934,14 +1938,12 @@ Symbol <- R6Class(
         return(length(self$domain))
       }
       else {
-        assertthat::assert_that(
-           (inherits(dimension_input, c("numeric", "integer"))) && 
-           (dimension_input %% 1 == 0) && (dimension_input >= 0),
-           msg = "Symbol 'dimension' must be type 
-           int (greater than or equal to 0)")
-
-        assertthat::assert_that((dimension_input <= GMS_MAX_INDEX_DIM),
-        msg = paste0("Symbol `domain` length cannot be > ", GMS_MAX_INDEX_DIM))
+        if (!((inherits(dimension_input, c("numeric", "integer"))) && 
+           (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
+           (dimension_input <= GMS_MAX_INDEX_DIM))) {
+            stop(paste0("Symbol 'dimension' must be 
+           an integer in [0, ", GMS_MAX_INDEX_DIM, "]\n"))
+           }
 
         if (length(self$domain) > dimension_input) {
           if (dimension_input == 0) {
@@ -1976,52 +1978,34 @@ Symbol <- R6Class(
           domain_input = list(domain_input)
         }
 
-        for (d in domain_input) {
-          assertthat::assert_that((inherits(d, c("Set", "Alias" )) ||
-          is.character(d)),
-          msg = "All 'domain' elements must be type Set, Alias, or Character"
-          )
-          if (inherits(d, c("Set", "Alias"))) {
-            assertthat::assert_that( d$dimension == 1,
-            msg = "All linked 'domain' elements must be one dimensional"
-            )
-          }
+        if (length(domain_input) > GMS_MAX_INDEX_DIM) {
+          stop(paste0("Argument 'domain' length cannot be > ", 
+          GMS_MAX_INDEX_DIM, "\n"))
+        }
+        domain_arg_check = unlist(lapply(domain_input, function(d) {
+          return((inherits(d, c("Set", "Alias" )) && d$dimension == 1)
+        || is.character(d))}), use.names = FALSE)
+        if (any(domain_arg_check == FALSE)) {
+          stop("All 'domain' elements must be either one dimensional Set/Alias
+          , or must be type Character\n")
         }
 
-      assertthat::assert_that(length(domain_input) <= GMS_MAX_INDEX_DIM,
-      msg = paste0("Argument 'domain' length cannot be > ", GMS_MAX_INDEX_DIM))
-        domaintemp = list()
-        for (d in domain_input) {
-          if (is.character(d)) {
-            if ((d != "*") && self$refContainer$hasSymbols(d) &&
-            inherits(self$refContainer$getSymbols(d), c("Set", "Alias"))) {
-              domaintemp = append(domaintemp, d)
+        # check change of domain
+        if (!identical(private$.domain, domain_input)) {
+            self$.requiresStateCheck = TRUE
+            if (inherits(self$refContainer, "Container")) {
+              self$refContainer$.requiresStateCheck = TRUE
             }
-            else {
-              # attach as a plain string
-              domaintemp = append(domaintemp, d)
+            private$.domain = domain_input
+            if (self$dimension == 0) return()
+
+            if (!is.null(self$records)) {
+              temp_colnames=colnames(self$records)
+              temp_colnames[1:self$dimension] = self$domainLabels
+              colnames(private$.records) = temp_colnames
             }
-          }
-          else {
-            if ((inherits(d, "Set"))) {
-              if (identical(d$refContainer,self$refContainer)) {
-                domaintemp = append(domaintemp, d)
-              }
-              else {
-                stop("domain elements cannot belong to a different container\n")
-              }
-            }
-            else if (inherits(d, "Alias")) {
-              if (identical(d$aliasWith$refContainer, self$refContainer)) {
-                domaintemp = append(domaintemp, d)
-              }
-              else {
-                stop("domain elements cannot belong to a different container\n")
-              }
-            }
-          }
         }
-        private$.domain = domaintemp
+
       }
     },
 
@@ -2370,8 +2354,10 @@ Symbol <- R6Class(
         dim = (self$refContainer$data[[i]]$domainLabels)[1]
         if (!is.null(self$refContainer$data[[i]]$records)) {
           recs = self$refContainer$data[[i]]$records
-          assert_that((self$refContainer$data[[i]]$dimension == 1),
-          msg = "attempting to forward a domain set that has dimension > 1")
+
+          if (self$refContainer$data[[i]]$dimension > 1) {
+            stop("attempting to forward a domain set that has dimension > 1\n")
+          }
 
           df = self$records[dl]
           colnames(df) = dim
@@ -2687,12 +2673,11 @@ Parameter <- R6Class(
         r = nrow(records)
         c = length(records)
 
-        assertthat::assert_that(
-          c == self$dimension + 1,
-          msg = paste0("Dimensionality of records ", c - 1, 
+        if (c != (self$dimension + 1)) {
+          stop(paste0("Dimensionality of records ", c - 1, 
           " is inconsistent with parameter domain specification ", 
-          self$dimension)
-        )
+          self$dimension))
+        }
 
         columnNames = self$domainLabels
         columnNames = append(columnNames, "value")
@@ -3635,11 +3620,13 @@ Alias <- R6Class(
     #' @param verbose type logical
     #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
-      assertthat::assert_that(is.logical(verbose),
-      msg = "Argument 'verbose' must be logical")
+      if (!is.logical(verbose)) {
+        stop("Argument 'verbose' must be logical\n")
+      }
 
-      assertthat::assert_that(is.logical(force),
-      msg = "Argument 'force' must be logical")
+      if (!is.logical(force)) {
+        stop("Argument 'force' must be logical\n")
+      }
 
       if (force == TRUE) {
         self$.requiresStateCheck = TRUE
@@ -4785,8 +4772,9 @@ is.integer0 <- function(x)
       isValid = args[["isValid"]]
 
       if (!is.null(isValid)) {
-        assertthat::assert_that(is.logical(isValid),
-        msg = "argument 'isValid' must be type logical\n")
+        if (!is.logical(isValid)) {
+          stop("The argument 'isValid' must be type logical\n")
+        }
 
         actual_isvalid = unlist(lapply(self$data, function(x) {
           return(x$isValid())

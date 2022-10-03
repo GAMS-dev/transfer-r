@@ -25,6 +25,8 @@ GAMS Transfer R
 - Added methods `SpecialValues$isNA`, `SpecialValues$isEps`, `SpecialValues$isUndef`, `SpecialValues$isPosInf`, `SpcialValues$isNegInf` to test for SpecialValues
 - bug fix in count* methods for multiple columns
 - The argument for where* methods changed from `columns` to `column`
+- Changing the symbol domain now changes column names of records data.frame accordingly
+- removed dependence on the package `assertthat`
 
 GAMS Transfer R v1.0.0
 ==================

@@ -3442,7 +3442,7 @@ test_that("test_num_25", {
   m = Container$new(testthat::test_path("data.gdx"))
 
   expect_equal(names(m$data), "i")
-  expect_equal(m$data[["i"]]$domain, list("i"))
+  expect_equal(m$data[["i"]]$domain, c("i"))
   expect_equal(m$data[["i"]]$domainType, "relaxed")
 }
 )
@@ -3659,11 +3659,11 @@ test_that("test_num_38", {
   i = Set$new(m, "i")
 
   expect_equal(i$dimension, 1)
-  expect_equal(i$domain, list("*"))
+  expect_equal(i$domain, c("*"))
 
   i$dimension = 2
   expect_equal(i$dimension, 2)
-  expect_equal(i$domain, list("*", "*"))
+  expect_equal(i$domain, c("*", "*"))
 
   i$dimension = 0
   expect_equal(i$dimension, 0)
@@ -7882,6 +7882,19 @@ expect_error(m$addAlias("j", i))
 ip = m$addAlias("ip", j)
 expect_true(inherits(ip, "Alias"))
 expect_equal(ip$aliasWith, j)
+
+}
+)
+
+#change column headings when changing domain
+test_that("test_num_92", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+
+a = Parameter$new(m, "a", c(i,i), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
+a$domain = c("p","p")
+expect_true(a$isValid())
+expect_equal(colnames(a$records), c("p_1","p_2","value"))
 
 }
 )
