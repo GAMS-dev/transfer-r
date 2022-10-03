@@ -7893,8 +7893,28 @@ i = Set$new(m, "i", records=paste0("i",1:5))
 
 a = Parameter$new(m, "a", c(i,i), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
 a$domain = c("p","p")
+expect_equal(a$domain, c("p","p"))
 expect_true(a$isValid())
 expect_equal(colnames(a$records), c("p_1","p_2","value"))
 
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+ip = Alias$new(m, "ip", i)
+
+a = Parameter$new(m, "a", c(i,ip), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
+a$domain = c("p","p")
+expect_equal(a$domain, c("p","p"))
+expect_true(a$isValid())
+expect_equal(colnames(a$records), c("p_1","p_2","value"))
+
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+r = Set$new(m, "r", records=paste0("r",1:5))
+
+a = Parameter$new(m, "a", c(i,i), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
+a$domain = c(r,r)
+expect_equal(a$domain, c(r,r))
+expect_true(a$isValid())
+expect_equal(colnames(a$records), c("r_1","r_2","value"))
 }
 )
