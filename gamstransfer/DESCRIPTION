@@ -22,7 +22,7 @@ Description: GAMS Transfer is a package to maintain GAMS data outside a GAMS
      from and writing to GAMS can transfer the data as a bulk -
      resulting in the high performance of this package.
 License: MIT + file LICENSE
-Imports: Rcpp (>= 1.0.6), R6 (>= 2.5.1), assertthat (>= 0.2.1), R.utils (>= 2.11.0)
+Imports: Rcpp (>= 1.0.6), R6 (>= 2.5.1), R.utils (>= 2.11.0)
 LinkingTo: Rcpp
 Suggests: 
     testthat (>= 3.0.0)
