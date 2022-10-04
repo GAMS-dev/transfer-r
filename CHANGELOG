@@ -27,6 +27,7 @@ GAMS Transfer R
 - The argument for where* methods changed from `columns` to `column`
 - Changing the symbol domain now changes column names of records data.frame accordingly
 - removed dependence on the package `assertthat`
+- automatically remove trailing whitespaces from UELs in `setRecords` and `*UEL` methods
 
 GAMS Transfer R v1.0.0
 ==================

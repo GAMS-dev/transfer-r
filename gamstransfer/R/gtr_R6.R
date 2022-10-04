@@ -1369,6 +1369,9 @@ Symbol <- R6Class(
       stop("The symbol has to be valid to set UELs \n")
     }
 
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
+
     for (d in dimension) {
       if (rename) {
         levels(private$.records[, d]) = uels
@@ -1382,8 +1385,10 @@ Symbol <- R6Class(
 
   },
 
-  reorderUELs = function(uels, dimension) {
+  reorderUELs = function(uels, dimension=NULL) {
     # input check
+    if (is.null(dimension)) dimension =1:self$dimension
+
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
     any(dimension < 1) || any(dimension > self$dimension)) {
@@ -1416,6 +1421,8 @@ Symbol <- R6Class(
   },
 
   addUELs = function(uels, dimension=NULL) {
+    if (is.null(dimension)) dimension =1:self$dimension
+
     # input check
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
@@ -1432,6 +1439,9 @@ Symbol <- R6Class(
     if (!self$isValid()) {
       stop("The symbol has to be valid to add UELs \n")
     }
+
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
 
     for (d in dimension) {
 
@@ -1517,6 +1527,10 @@ Symbol <- R6Class(
       }
       # user has provided uelmap
       old_uels = names(uels)
+
+      # remove trailing whitespaces from uels
+      uels = trimws(uels, which="right")
+
       lapply(dimension, function(d) {
         # get current levels
         cur_uels = levels(private$.records[, d])
@@ -1536,6 +1550,9 @@ Symbol <- R6Class(
       if (any(duplicated(uels)) == TRUE) {
         stop("The argument `uels` cannot contain duplicates\n")
       }
+
+      # remove trailing whitespaces from uels
+      uels = trimws(uels, which="right")
 
       lapply(dimension, function(d) {
         levels(private$.records[, d]) = uels
@@ -2476,16 +2493,20 @@ Set <- R6Class(
       }
 
       records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
-        factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+        if (is.factor(records[, d])) {
+          levels(records[, d]) = trimws(levels(records[, d]), which="right")
+        }
+        else {
+          records[, d] = factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+          levels(records[, d]) = trimws(levels(records[, d]), which="right")
+        }
+        return(records[, d])
       })
+
       records = data.frame(records)
-      # lapply(seq_along(self$domain), function(d) {
-      #     self$records[, d] = factor(self$records[, d], levels = self$records[, d])
-      #   })
 
       colnames(records) = columnNames
       self$records = records
-      # self$.linkDomainCategories()
     }
   ),
 
@@ -2684,7 +2705,8 @@ Parameter <- R6Class(
 
         #if records "value" is not numeric, stop.
         if (any(!is.numeric(records[,length(records)]))) {
-          stop("All entries in the 'values' column of a parameter must be numeric.\n")
+          stop("All entries in the 'values' column of a parameter 
+          must be numeric.\n")
         }
 
         if (self$dimension == 0) {
@@ -2692,13 +2714,23 @@ Parameter <- R6Class(
           self$records = records
           return()
         }
-        records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
-          factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), 
+        function(d) {
+          if (is.factor(records[, d])) {
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          else {
+            records[, d] = factor(records[, d], levels = 
+            unique(records[, d]), ordered=TRUE)
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          return(records[, d])
         })
+
         records = data.frame(records)
         colnames(records) = columnNames
         self$records = records
-        # self$.linkDomainCategories()
       }
     }
   ),
@@ -3008,9 +3040,19 @@ Variable <- R6Class(
           return()
         }
 
-        records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
-          factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), 
+        function(d) {
+          if (is.factor(records[, d])) {
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          else {
+            records[, d] = factor(records[, d], levels = 
+            unique(records[, d]), ordered=TRUE)
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          return(records[, d])
         })
+
         records = data.frame(records)
         colnames(records) = columnNames
         self$records = records
@@ -3413,9 +3455,20 @@ Equation <- R6Class(
           self$records = records
           return()
         }
-        records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
-          factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), 
+        function(d) {
+          if (is.factor(records[, d])) {
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          else {
+            records[, d] = factor(records[, d], levels = 
+            unique(records[, d]), ordered=TRUE)
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          return(records[, d])
         })
+
         records = data.frame(records)
         colnames(records) = columnNames
         self$records = records
@@ -3575,7 +3628,7 @@ Alias <- R6Class(
       self$aliasWith$setUELs(uels, dimension, rename)
     },
 
-    reorderUELs = function(uels, dimension) {
+    reorderUELs = function(uels, dimension=NULL) {
       private$.testRefContainer()
       private$.testParentSet()
       self$aliasWith$reorderUELs(uels, dimension)

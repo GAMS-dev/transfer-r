@@ -7764,12 +7764,12 @@ expect_equal(j$getDomainViolations(), NULL)
 
 m = Container$new()
 i = Set$new(m, "i", records=c("SeaTtle", "hamburg"))
-j = Set$new(m, "j", i, records=c("seattle ", "Hamburg"))
+j = Set$new(m, "j", i, records=c(" seattle", "Hamburg"))
 
 expect_true(i$isValid())
 expect_true(j$isValid())
 expect_equal(i$getDomainViolations(), NULL)
-expect_equal(j$getDomainViolations()[[1]]$violations, c("seattle "))
+expect_equal(j$getDomainViolations()[[1]]$violations, c(" seattle"))
 }
 )
 
@@ -7916,5 +7916,63 @@ a$domain = c(r,r)
 expect_equal(a$domain, c(r,r))
 expect_true(a$isValid())
 expect_equal(colnames(a$records), c("r_1","r_2","value"))
+}
+)
+
+# white space removal and user category survival
+test_that("test_num_93", {
+recs = data.frame(uni_1=paste0("i",1:3), stringsAsFactors = TRUE)
+levels(recs[,1]) = append(levels(recs[,1]), "j1")
+expect_equal(levels(recs[,1]), c("i1","i2","i3","j1"))
+
+m = Container$new()
+i = Set$new(m, "i", records=recs)
+
+expect_equal(levels(i$records$uni_1), c("i1","i2","i3","j1"))
+
+recs= data.frame(uni_1=paste0("i",1:3), value=1:3, stringsAsFactors = TRUE)
+levels(recs[,1]) = append(levels(recs[,1]), "j1")
+expect_equal(levels(recs[,1]), c("i1","i2","i3","j1"))
+
+a = Parameter$new(m, "a", i, records=recs)
+expect_equal(levels(a$records$i_1), c("i1","i2","i3","j1"))
+
+recs= data.frame(uni_1=paste0("i",1:3), level=1:3, stringsAsFactors = TRUE)
+levels(recs[,1]) = append(levels(recs[,1]), "j1")
+expect_equal(levels(recs[,1]), c("i1","i2","i3","j1"))
+
+v = Variable$new(m, "v", "free", i, records=recs)
+expect_equal(levels(v$records$i_1), c("i1","i2","i3","j1"))
+
+e = Equation$new(m, "e", "eq", i, records=recs)
+expect_equal(levels(e$records$i_1), c("i1","i2","i3","j1"))
+
+}
+)
+
+test_that("test_num_94", {
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+expect_equal(i$getUELs(), c(" i1", "i2", "i3"))
+i$setUELs(c(" i1 ", " i2 ", "i3"))
+expect_equal(i$getUELs(), c(" i1", " i2", "i3"))
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+i$reorderUELs(c("i2", " i1", "i3"))
+expect_equal(i$getUELs(), c("i2", " i1", "i3"))
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+i$renameUELs(c("i1   ", "i2   ", " i3   "))
+expect_equal(i$getUELs(), c("i1", "i2", " i3"))
+
+m$renameUELs(c("i1"="cheeseburgerz "))
+expect_equal(i$getUELs(), c("cheeseburgerz", "i2", " i3"))
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+i$addUELs("i4   ")
+expect_equal(i$getUELs(), c(" i1", "i2", "i3", "i4"))
 }
 )
