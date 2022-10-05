@@ -155,9 +155,6 @@ Container <- R6::R6Class (
       else if (inherits(loadFrom, c("Container", "ConstContainer"))) {
         private$.containerRead(loadFrom, symbols, records)
       }
-      # else if (inherits(loadFrom, "ConstContainer")) {
-      #   private$.gdxRead(loadFrom$loadFrom, symbols, records)
-      # }
       else {
         stop("Argument `loadFrom` must be type character, 
         an instance of another Container, or an instance of a 
@@ -1039,7 +1036,6 @@ Container <- R6::R6Class (
         }
 
         private$.linkDomainObjects(symbolsToRead)
-        # self$.linkDomainCategories()
     },
 
     .linkDomainObjects = function(symbols) {
@@ -1065,6 +1061,7 @@ Container <- R6::R6Class (
 
       })
 
+      return(invisible(NULL))
     },
 
     check = function() {
