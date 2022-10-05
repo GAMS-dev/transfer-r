@@ -1259,8 +1259,8 @@ b = "boolean"
 #' @description An abstract symbol class from 
 #' which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
-Symbol <- R6Class(
-  "Symbol",
+.Symbol <- R6Class(
+  ".Symbol",
   inherit = .BaseSymbol,
   public = list(
   .requiresStateCheck = NULL,
@@ -2275,65 +2275,6 @@ Symbol <- R6Class(
             'records' must be of type character\n")
           }
 
-          # # check if columns are factors
-          # for (i in self$domainLabels) {
-          #   if (!is.factor(self$records[[i]])) {
-          #     stop(paste0("Domain information in column ", i, " must be a factor\n"))
-          #   }
-          # }
-
-          # check if domain has records
-          # for (i in self$domain) {
-          #   if (inherits(i, c("Set", "Alias"))) {
-          #     if (is.null(i$records)) {
-          #       stop(paste0("Referenced domain set ", i$name, " does 
-          #       not does not contain records; ",
-          #       "cannot properly establish domain information link.\n"))
-          #     }
-          #   }
-          # }
-
-          #check if factors are ordered
-          # for (i in self$domainLabels) {
-          #   if (!is.ordered(self$records[[i]])) {
-          #     stop(paste0("Domain information in column ", i, 
-          #     " must be an ORDERED factor\n"))
-          #   }
-          # }
-
-          # if there are linked domains, make sure their levels are equal
-          # for (n in seq_len(self$dimension)) {
-          #   i = self$domain[[n]]
-          #   if (inherits(i, c("Set", "Alias"))) {
-          #     if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
-          #       stop(paste0("Levels for domain column ", i$name, " do not match those 
-          #       of the referenced domain set. If setting records directly, the user is
-          #       responsible for creating factors for domain columns. \n"))
-          #     }
-          #   }
-          # }
-          # check for domain violations
-          # if (self$dimension != 0) {
-          #   nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
-          #   narecords = self$records[,1:self$dimension][is.na(self$records[,1:self$dimension])]
-
-          #   if (length(nullrecords) != 0 || 
-          #   length(narecords) != 0 ) {
-          #     stop(paste0("Symbol 'records' contain domain violations;",
-          #     " ensure that all domain elements have",
-          #     " been mapped properly to a factor\n"))
-          #   }
-          # }
-
-          # drop duplicates
-          # if (self$dimension != 0) {
-          #   if (nrow(self$records) != 
-          #   nrow(unique(self$records[self$domainLabels]))) {
-          #     stop(paste0("Symbol 'records' contain non-unique",
-          #      " domain members; ensure that only unique members exist\n"))
-          #   }
-          # }
-
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
@@ -2417,7 +2358,7 @@ Symbol <- R6Class(
 #' @field summary output a list of only the metadata
 Set <- R6Class(
   "Set",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
     #' @description There are two different ways to create a GAMS set and 
     #' add it to a Container. One is using the Set constructor and 
@@ -2566,7 +2507,7 @@ Set <- R6Class(
 #' @field summary output a list of only the metadata
 Parameter <- R6Class(
   "Parameter",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
     #' @description There are two different ways to create a GAMS 
     #' parameter and add it to a Container. One is using the 
@@ -2783,7 +2724,7 @@ Parameter <- R6Class(
 #' @field type type of variable (string)
 Variable <- R6Class(
   "Variable",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
 
     #' @description There are two different ways to create a GAMS Variable and 
@@ -3193,7 +3134,7 @@ Variable <- R6Class(
 #' @field type type of variable (string)
 Equation <- R6Class(
   "Equation",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
 
     #' @description There are two different ways to create a GAMS Equation and 
@@ -3612,6 +3553,8 @@ Alias <- R6Class(
       private$.is_alias = TRUE
       self$aliasWith = aliasFor
     },
+    format = function(...) paste0("GAMS Transfer: R6 object of class Alias. 
+    Use ", self$name, "$summary for details"),
 
     getUELs = function(dimension =NULL, codes=NULL, ignoreUnused = FALSE) {
       private$.testRefContainer()
@@ -4659,7 +4602,6 @@ ConstContainer <- R6::R6Class (
       private$.is_singleton = isSingleton
     },
 
-
     getCardinality = function() {
       return(self$refContainer$data[[self$aliasWith]]$getCardinality())
     },
@@ -4781,6 +4723,9 @@ is.integer0 <- function(x)
       self$acronyms = list()
       self$data = list()
     },
+
+    format = function(...) paste0("GAMS Transfer: R6 object of class ", 
+    class(self)[1]),
 
     hasSymbols = function(names) {
       if (!is.character(names)) {
@@ -5427,6 +5372,9 @@ is.integer0 <- function(x)
     self$.gams_subtype = subtype
   },
 
+  format = function(...) paste0("GAMS Transfer: R6 object of class ", 
+  class(self)[1], ". Use ", self$name, "$summary for details"),
+
   #' @description getMaxValue get the maximum value
   #' @param columns columns over which one wants to get the maximum.
   #' This is an optional argument which defaults to `value` for parameter
@@ -5676,6 +5624,8 @@ DomainViolation <- R6::R6Class (
       lockBinding("dimension", self)
       lockBinding("domain", self)
       lockBinding("violations", self)
-    }
+    },
+    format = function(...) paste0("GAMS Transfer: R6 object of class ", 
+      class(self)[1])
   )
 )
