@@ -726,25 +726,23 @@ Container <- R6::R6Class (
       })
     },
 
-    getDomainViolations = function(symbols=NULL, ignoreUnused=FALSE) {
-      cont_dom_violations = list(replicate(length(self$data), NA))
+    getDomainViolations = function() {
+      n_dim = unlist(lapply(self$data, function(s) s$dimension), 
+      use.names = FALSE)
+
+      cont_dom_violations = list(replicate(length(self$data) * sum(n_dim), NA))
       dom_violation_count = 0
-      if (is.null(symbols)) {
-        syms = names(self$data)
-      }
-      else {
-        syms = self$getSymbolNames(symbols)
-      }
+      syms = names(self$data)
+
 
       for (s in syms) {
-        dom_violations = s$getDomainViolations(ignoreUnused)
+        dom_violations = s$getDomainViolations()
         if (is.null(dom_violations)) next
-
         cont_dom_violations[(dom_violation_count+1):(dom_violation_count + 
         length(dom_violations))] = dom_violations
         dom_violation_count = dom_violation_count + length(dom_violations)
       }
-
+      return(cont_dom_violations[1:dom_violation_count])
     },
 
     hasDomainViolations = function() {
@@ -3642,6 +3640,12 @@ Alias <- R6Class(
       else {
         return(TRUE)
       }
+    },
+
+    getDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$getDomainViolations())
     },
 
     findDomainViolations = function() {
