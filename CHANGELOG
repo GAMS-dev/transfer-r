@@ -17,7 +17,7 @@ GAMS Transfer R
 - Breaking: Symbol records and symbol names are treated in a case insensitive manner. Symbols
  domain is not automaitcally checked
 - isValid method does not check for symbol record domain columns being factors, for duplicates, and for domain violations
-- New Symbol methods `hasDomainViolations`, `countDomainViolations`, `findDomainViolations`, `dropDomainViolations`
+- New Symbol methods `hasDomainViolations`, `countDomainViolations`, `findDomainViolations`, `dropDomainViolations`, `getDomainViolations`
 - New Container methods `hasDomainViolations`, `countDomainViolations`, `dropDomainViolations`
 - bug fix in Alias record setter
 - bug fix in `toDense()` method for Symbols with domaintype other than `regular`

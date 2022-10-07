@@ -59,7 +59,7 @@ SpecialValues = list(
   "UNDEF" = NaN,
   "POSINF" = Inf,
   "NEGINF" = -Inf,
-  "isNA" = function(x) return(is.na(x)),
+  "isNA" = function(x) return(is.na(x) & !is.nan(x)),
   "isEps" = function(x) return((x == 0) & (sign(1/x) == -1)),
   "isUndef" = function(x) return(is.nan(x)),
   "isPosInf" = function(x) return(is.infinite(x) & sign(x) == 1),
