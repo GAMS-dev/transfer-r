@@ -58,8 +58,14 @@ SpecialValues = list(
   "EPS" = -0.0,
   "UNDEF" = NaN,
   "POSINF" = Inf,
-  "NEGINF" = -Inf
+  "NEGINF" = -Inf,
+  "isNA" = function(x) return(is.na(x) & !is.nan(x)),
+  "isEps" = function(x) return((x == 0) & (sign(1/x) == -1)),
+  "isUndef" = function(x) return(is.nan(x)),
+  "isPosInf" = function(x) return(is.infinite(x) & sign(x) == 1),
+  "isNegInf" = function(x) return(is.infinite(x) & sign(x) == -1)
   )
+
 #' @title Container Class
 #' @description The main object class within GAMS Transfer is called 
 #' Container. The Container is the vessel that allows symbols to be 
@@ -149,9 +155,6 @@ Container <- R6::R6Class (
       else if (inherits(loadFrom, c("Container", "ConstContainer"))) {
         private$.containerRead(loadFrom, symbols, records)
       }
-      # else if (inherits(loadFrom, "ConstContainer")) {
-      #   private$.gdxRead(loadFrom$loadFrom, symbols, records)
-      # }
       else {
         stop("Argument `loadFrom` must be type character, 
         an instance of another Container, or an instance of a 
@@ -201,26 +204,25 @@ Container <- R6::R6Class (
         }
       }
 
-      setOrAliasBool = sapply(symbols, function(x) {
+      setOrAliasBool = unlist(lapply(symbols, function(x) {
         return(inherits(self$getSymbols(x), c("Set", "Alias")))
-      }, USE.NAMES = FALSE)
+      }), use.names = FALSE)
       setOrAlias = symbols[setOrAliasBool]
 
-      dummy = sapply(symbols, function(n) {
-        x = self$getSymbolNames(n)
-        sym = self$data[[x]]
+      lapply(symbols, function(n) {
+        sym = self$getSymbols(n)
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
-        self$data[[x]] <- NULL
+        self$data[[sym$name]] <- NULL
         return()
-      }, USE.NAMES = FALSE)
+      })
 
       # if there were any sets or aliases removed from the data list
       # then reset check flag for all symbols
       if (length(setOrAlias) != 0) {
-        dummy = sapply(self$listSymbols(), function(x) {
+        lapply(self$listSymbols(), function(x) {
           self$data[[x]]$.requiresStateCheck = TRUE
-        }, USE.NAMES = FALSE)
+        })
       }
 
       # reset the check flag for the container
@@ -244,7 +246,8 @@ Container <- R6::R6Class (
       }
 
       if (oldName != newName) {
-        sym = self$data[[self$getSymbolNames(oldName)]]
+        sym = self$getSymbols(oldName)
+        # sym = self$data[[self$getSymbolNames(oldName)]]
         sym$name = newName
         self$.requiresStateCheck = TRUE
       }
@@ -267,11 +270,50 @@ Container <- R6::R6Class (
     #' @return a Set object
     addSet = function(name, domain = "*", isSingleton = FALSE,
     records = NULL, domainForwarding=FALSE, description = "") {
-      Set$new(
-      self, name, domain, isSingleton,
-      records, domainForwarding, description)
-      return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Set$new(
+        self, name, domain, isSingleton,
+        records, domainForwarding, description)
+        return(obj)
+      }
+      else {
+        tryCatch(
+        {
+          m = Container$new()
+          obj = Set$new(m, self$getSymbolNames(name), domain, isSingleton,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Set")
+        && all(symobj$domain == domain)
+        && symobj$isSingleton == isSingleton
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+      }
     },
+
     #' @description There are two different ways to create a GAMS parameter and 
     #' add it to a Container. One is using the Parameter constructor and 
     #' the other is using addParameter method which calls the 
@@ -287,10 +329,47 @@ Container <- R6::R6Class (
     #' @return a Parameter object
     addParameter = function(name, domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
-      Parameter$new(
-        self, name, domain, records,
-        domainForwarding, description)
-        return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Parameter$new(
+          self, name, domain, records,
+          domainForwarding, description)
+          return(obj)
+      }
+      else {
+         tryCatch(
+        {
+          m = Container$new()
+          obj = Parameter$new(m, self$getSymbolNames(name), domain,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Parameter")
+        && all(symobj$domain == domain)
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+      }
     },
 
     #' @description There are two different ways to create a GAMS Variable and 
@@ -311,10 +390,49 @@ Container <- R6::R6Class (
     #' @return a Variable object
     addVariable = function(name, type="free", domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
-      Variable$new(
-        self, name, type, domain, records,
-        domainForwarding, description)
-        return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Variable$new(
+          self, name, type, domain, records,
+          domainForwarding, description)
+          return(obj)
+      }
+      else {
+         tryCatch(
+        {
+          m = Container$new()
+          obj = Variable$new(m, self$getSymbolNames(name), type, domain,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Variable")
+        && symobj$type == type
+        && all(symobj$domain == domain)
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+
+      }
     },
 
     #' @description There are two different ways to create a GAMS Equation and 
@@ -334,10 +452,49 @@ Container <- R6::R6Class (
     #' @return a Equation object
     addEquation = function(name, type, domain = NULL, 
     records = NULL, domainForwarding=FALSE, description = "") {
-      Equation$new(
-        self, name, type, domain, records,
-        domainForwarding, description)
-        return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Equation$new(
+          self, name, type, domain, records,
+          domainForwarding, description)
+          return(obj)
+      }
+      else {
+         tryCatch(
+        {
+          m = Container$new()
+          obj = Equation$new(m, self$getSymbolNames(name), type, domain,
+        records, domainForwarding, description)
+        },
+        error = function(e) {
+          stop(e)
+
+        }
+        )
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Equation")
+        && symobj$type == type
+        && all(symobj$domain == domain)
+        && symobj$domainForwarding == domainForwarding
+        ) {
+          symobj$setRecords(records)
+
+          if (description != "") {
+            symobj$description = description
+          }
+          return(symobj)
+        }
+        else {
+            stop(paste0("Attempting to add symbol ", 
+            name, ", however,
+             one already exists in the Container. Symbol replacement
+             is only possible if the symbol is first removed from the 
+            Container with the removeSymbols() method. Overwriting symbol
+            `records` and `description` are possible if all other fields have
+             not changed\n"))
+        }
+
+      }
     },
 
     #' @description There are two different ways to create a GAMS Alias and 
@@ -349,9 +506,37 @@ Container <- R6::R6Class (
     #' @param aliasWith string argument for the set/alias we want to add
     #' an alias for
     addAlias = function(name, aliasWith) {
-      Alias$new(
-      self, name, aliasWith)
-      return(self$data[[name]])
+      if (!self$hasSymbols(name)) {
+        obj = Alias$new(
+        self, name, aliasWith)
+        return(obj)
+      }
+      else {
+        if (!inherits(aliasWith, c("Set", "Alias"))) {
+          stop("GAMS `aliasWith` must be type set or Alias\n")
+        }
+
+        if (inherits(aliasWith, "Alias")) {
+          parent = alias_with_input
+          while (!inherits(parent, "Set")) {
+            parent = parent$aliasWith
+          }
+          alias_with_input = parent
+        }
+
+        symobj = self$getSymbols(name)
+        if (inherits(symobj, "Alias")) {
+          symobj$aliasWith = aliasWith
+          return(symobj)
+        }
+        else {
+          stop(paste0("Attempting to add an Alias symbol named ", name, 
+          " however, a symbol with this name but different type already exists 
+          in the container. Symbol replacement is only possible if this symbols 
+          is first removed from the Container with the 
+          removeSymbols() method\n"))
+        }
+      }
     },
 
     #' @description returns a list of object references for `Symbols`
@@ -369,16 +554,21 @@ Container <- R6::R6Class (
         }
       }
 
-      objisnull = sapply(symbols, self$hasSymbols, USE.NAMES = FALSE)
+      objisnull = unlist(lapply(symbols, self$hasSymbols), use.names = FALSE)
       if (any(objisnull == FALSE)) {
-        stop(paste0("Symbol ", i, "does not appear in the container \n"))
+        stop(paste0("Symbol ", i, " does not appear in the container \n"))
       }
 
-      # all symbols exist in the container
-      return(sapply(symbols, function(x) {
-        return(self$data[[self$getSymbolNames(x)]])
-      }, 
-      USE.NAMES = FALSE))
+      if (length(symbols) == 1) {
+        return(self$data[[self$getSymbolNames(symbols)]])
+      }
+      else {
+        # all symbols exist in the container
+        return(unlist(lapply(symbols, function(x) {
+          return(self$data[[self$getSymbolNames(x)]])
+        }),
+        use.names = FALSE))
+      }
     },
 
     #' @description a write method to write to a gdxout GDX file
@@ -415,7 +605,8 @@ Container <- R6::R6Class (
         }
 
         if (is.list(uelPriority)) {
-          if (!all(unlist(lapply(uelPriority, is.character)))) {
+          if (!all(unlist(lapply(uelPriority, is.character), 
+          use.names = FALSE))) {
             stop("Argument `uelPriority` must contain only type character\n")
           }
         }
@@ -429,39 +620,6 @@ Container <- R6::R6Class (
 
       if (private$isValidSymbolOrder() == FALSE) {
         self$reorderSymbols()
-      }
-      # private$validSymbolOrder()
-
-      # remap special values
-      specialValsGDX = CPP_getSpecialValues(gdxout, self$systemDirectory)
-
-      for (s in self$data) {
-        # no mapping required for alias
-        if (inherits(s, c("Alias", "Set"))) next
-        if (is.null(s$records)) next
-        colrange = (s$dimension + 1):length(s$records)
-        s$records[, colrange][is.nan(
-          s$records[, colrange])] = 
-          specialValsGDX[["UNDEF"]]
-
-        s$records[,colrange][is.na(
-          s$records[,colrange])] = 
-          specialValsGDX[["NA"]]
-
-        s$records[,colrange][
-          ((s$records[, colrange] == Inf)
-        & (sign(s$records[, colrange]) 
-        == 1))] = specialValsGDX[["POSINF"]]
-
-        s$records[, colrange][
-          ((s$records[, colrange] == -Inf)
-        &(sign(s$records[, colrange]) 
-        == -1))] = specialValsGDX[["NEGINF"]]
-
-        s$records[,colrange][
-          ((s$records[,colrange] == 0)
-        & (sign(1/s$records[,colrange]) 
-        == -1))] = specialValsGDX[["EPS"]]
       }
 
       if (is.null(uelPriority)) {
@@ -485,14 +643,11 @@ Container <- R6::R6Class (
         gdxout, unlist(reorder), TRUE, compress)
       }
     },
+
     #' @description reorder symbols in order to avoid domain violations
     reorderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
-      datacopy = self$data
-      self$data = list()
-      for (s in orderedSymbols) {
-        self$data[[s]] = datacopy[[s]]
-      }
+      self$data = self$data[orderedSymbols]
     },
 
     #' @description TRUE if all the symbols is in the Container are 
@@ -501,11 +656,13 @@ Container <- R6::R6Class (
     #' @param verbose type logical
     #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
-      assertthat::assert_that(is.logical(verbose), 
-      msg = "Argument 'verbose' must be logical")
+      if (!is.logical(verbose)) {
+        stop("Argument 'verbose' must be logical\n")
+      }
 
-      assertthat::assert_that(is.logical(force), 
-      msg = "Argument 'force' must be logical")
+      if (!is.logical(force)) {
+        stop("Argument 'force' must be logical\n")
+      }
 
       if (force == TRUE) {
         self$.requiresStateCheck = TRUE
@@ -538,6 +695,72 @@ Container <- R6::R6Class (
       }
     },
 
+    getUELs = function(symbols=NULL, ignoreUnused = FALSE) {
+      if (is.null(symbols)) {
+        symbols = self$data
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+      uel_all_symbols = lapply(c(symbols), function(s) {
+        s$getUELs(dimension = 1:s$dimension, 
+        ignoreUnused=ignoreUnused)
+      })
+      uel_all_symbols = unique(unlist(uel_all_symbols, use.names = FALSE))
+      return(uel_all_symbols)
+    },
+
+    removeUELs = function(uels = NULL) {
+
+      lapply(self$data, function(s) {
+        s$removeUELs(uels= uels, 
+        dimension = 1:s$dimension)
+      })
+    },
+
+    renameUELs = function(uels) {
+
+      lapply(self$data, function(s) {
+        s$renameUELs(uels= uels, 
+        dimension = 1:s$dimension)
+      })
+    },
+
+    getDomainViolations = function() {
+      n_dim = unlist(lapply(self$data, function(s) s$dimension), 
+      use.names = FALSE)
+
+      cont_dom_violations = list(replicate(length(self$data) * sum(n_dim), NA))
+      dom_violation_count = 0
+      syms = names(self$data)
+
+
+      for (s in syms) {
+        dom_violations = s$getDomainViolations()
+        if (is.null(dom_violations)) next
+        cont_dom_violations[(dom_violation_count+1):(dom_violation_count + 
+        length(dom_violations))] = dom_violations
+        dom_violation_count = dom_violation_count + length(dom_violations)
+      }
+      return(cont_dom_violations[1:dom_violation_count])
+    },
+
+    hasDomainViolations = function() {
+      return(any(unlist(lapply(self$data, 
+      function(s) {s$hasDomainViolations()}), use.names=FALSE) == TRUE))
+    },
+
+    countDomainViolations = function() {
+      dv = lapply(self$data, function(s) s$countDomainViolations())
+      return(dv[dv != 0])
+    },
+
+    dropDomainViolations = function() {
+      lapply(self$countDomainViolations(), 
+      function(s) self$data[[s]]$dropDomainViolations())
+      return()
+    },
+
     countDuplicateRecords = function() {
       dups = lapply(self$data, function(x) return(x$countDuplicateRecords()))
       dups = dups[dups > 0]
@@ -546,11 +769,11 @@ Container <- R6::R6Class (
 
     hasDuplicateRecords = function() {
       has_dups = lapply(self$data, function(x) return(x$hasDuplicateRecords()))
-      return(any(has_dups))
+      return(any(has_dups==TRUE))
     },
 
     dropDuplicateRecords = function(keep = "first") {
-      dummy=lapply(self$data, function(x) {x$dropDuplicateRecords(keep)})
+      lapply(self$data, function(x) {x$dropDuplicateRecords(keep)})
     }
 
   ),
@@ -681,16 +904,18 @@ Container <- R6::R6Class (
             if (!is.null(self$acronyms)) {
               if (inherits(self$data[[s$name]], c("Parameter", 
               "Variable", "Equation"))) {
+                records = self$data[[s$name]]$records
                 for (a in self$acronyms) {
-                  self$data[[s$name]]$records[(self$data[[s$name]]$records 
+                  records[(records 
                   == a * 1e301)] = SpecialValues[["NA"]]
                 }
+                self$data[[s$name]]$records = records
               }
             }
           }
 
           private$.linkDomainObjects(symbolsToRead)
-          self$.linkDomainCategories()
+          # self$.linkDomainCategories()
         }
 
     },
@@ -717,7 +942,6 @@ Container <- R6::R6Class (
       # sort the symbols argument to preserve the order from original container
       symbolsToRead = intersect(syms, symbolsToRead)
 
-
       sym_already_exists = self$hasSymbols(symbolsToRead)
 
       if (any(sym_already_exists == TRUE)) {
@@ -728,6 +952,7 @@ Container <- R6::R6Class (
         " is only possible if the symbol is first removed from the", 
         "Container with the removeSymbols() method.\n"))
       }
+
       if (inherits(loadFrom, "Container")) {
         sym_is_valid = lapply(symbolsToRead, 
         function(x) {
@@ -742,8 +967,9 @@ Container <- R6::R6Class (
       }
 
         for (s in symbolsToRead) {
-          s_loadfrom = loadFrom$data[[loadFrom$getSymbolNames(s)]]
-          if (length(s_loadfrom$domainNames) == 1 && is.na(s_loadfrom$domainNames)) {
+          s_loadfrom = loadFrom$data[[s]]
+          if (length(s_loadfrom$domainNames) == 1 
+          && is.na(s_loadfrom$domainNames)) {
             dnames = NULL
           }
           else {
@@ -808,50 +1034,73 @@ Container <- R6::R6Class (
         }
 
         private$.linkDomainObjects(symbolsToRead)
-        self$.linkDomainCategories()
     },
 
     .linkDomainObjects = function(symbols) {
-      for (s in symbols) {
-        if (! inherits(self$data[[s]], "Alias")) {
-          d = list()
-          for (j in self$data[[s]]$domain) {
-            if ((is.character(j) && (j == s)) || 
-            (inherits(j, "Set") && (identical(j,s)))) {
-              d = append(d, j)
-            }
-            else if (is.character(j) && (any(symbols == j)) && (j != s)) {
-               d = append(d, self$data[[j]])
-            }
-            else {
-              d = append(d, j)
-            }
-          }
+      symbol_is_alias = unlist(lapply(symbols, function(s) {
+        inherits(self$data[[s]], "Alias")}), use.names=FALSE)
+      symbol_not_alias = symbols[!symbol_is_alias]
 
+      lapply(symbol_not_alias, function(s) {
+        d = unlist(lapply(self$data[[s]]$domain, function(j) {
+          if (is.character(j) && (any(symbol_not_alias == j)) && (j != s)) {
+               return(self$data[[j]])
+          }
+          else {
+            return(j)
+          }
+        }), use.names = FALSE)
+        if (self$data[[s]]$dimension == 1) {
+          self$data[[s]]$domain = d[[1]]
+        }
+        else {
           self$data[[s]]$domain = d
         }
-      }
+
+      })
+
+      return(invisible(NULL))
     },
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
+        # check for cycles
          private$validSymbolOrder()
 
-        if (!setequal(self$listSymbols(), self$listSymbols(isValid = TRUE))) {
-          stop(paste0("Container contains invalid symbols; ",
-          "invalid symbols can be found with the .listSymbols() ",
+        # make sure that all symbols have consistent naming
+        lapply(names(self$data), function(n) {
+          if (n != self$data[[n]]$name) {
+            stop(paste0("Container `data` field is inconsistent with the symbol 
+            object name (", n, " != ", self$data[[n]]$name, "). Update 
+            symbol name with <symbol>$name = <name from `data` field> \n"))
+          }
+          })
+
+        # make sure that all symbols reference the correct Container instance
+        lapply(self$data, function(n) {
+          if (!identical(self, n$refContainer)) {
+            stop(paste0("Symbol ", self$name, " has a broken container 
+            reference. Update symbol reference with <symbol>$refContainer 
+            = <new_container>\n"))
+          }
+          })
+        if (!is.null(self$listSymbols(isValid=FALSE))) {
+          stop("Container contains invalid symbols; ",
+          "invalid symbols can be found with the $listSymbols() ",
           "method. Debug invalid symbol(s) by running .",
-          "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n"))
+          "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n")
         }
         self$.requiresStateCheck = FALSE
       }
     },
 
     validSymbolOrder = function() {
-      orderedSymbols = list()
+
       symbolsToSort = self$listSymbols()
+      orderedSymbols = replicate(length(symbolsToSort), NA)
 
       idx = 1
+      orderedSymCount = 0
       while (length(symbolsToSort) != 0) {
         sym = symbolsToSort[[idx]]
         # special 1D sets (universe domain & relaxed sets)
@@ -859,27 +1108,28 @@ Container <- R6::R6Class (
         self$data[[sym]]$dimension == 1 &&
         is.character(self$data[[sym]]$domain[[1]])
         ) {
-          orderedSymbols = append(orderedSymbols, sym)
+          orderedSymCount = orderedSymCount + 1
+          orderedSymbols[orderedSymCount] = sym
           symbolsToSort = symbolsToSort[-idx]
           idx = 1
         }
         else {
-          doi = list()
-          for (i in self$data[[sym]]$domain) {
+          doi = unlist(lapply(self$data[[sym]]$domain, function(i) {
             if (is.character(i)) {
-              doi = append(doi, TRUE)
+             return(TRUE)
             }
             else if ((inherits(i, c("Set", "Alias"))) &
-            any(orderedSymbols == i$name)) {
-               doi = append(doi, TRUE)
+            any(orderedSymbols[1:orderedSymCount] == i$name)) {
+               return(TRUE)
             }
             else {
-              doi = append(doi, FALSE)
+              return(FALSE)
             }
-          }
+          }), use.names = FALSE)
 
           if (all(doi == TRUE)) {
-            orderedSymbols = append(orderedSymbols, sym)
+            orderedSymCount = orderedSymCount + 1
+            orderedSymbols[orderedSymCount] = sym
             symbolsToSort = symbolsToSort[-1]
             idx = 1
           }
@@ -890,12 +1140,11 @@ Container <- R6::R6Class (
         }
 
         if (idx == length(symbolsToSort) + 1 & length(symbolsToSort) != 0) {
-          symString = ""
-          for (s in symbolsToSort) {
-            if (inherits(self$data[[s]], "Set")) {
-              symString = paste(symString, s)
-            }
-          }
+          inherits_set = unlist(lapply(symbolsToSort, 
+           function(s) inherits(self$data[[s]], "Set")), use.names = FALSE)
+
+          symString = symbolsToSort[inherits_set]
+          symString = paste(symString)
 
           stop(paste0("Error: Graph cycle detected among symbols: ",
           symString, " -- must resolve circular domain referencing\n"))
@@ -908,22 +1157,23 @@ Container <- R6::R6Class (
       validOrder = private$validSymbolOrder()
       currentOrder = names(self$data)
       h = c()
-      for (i in seq_along(self$data)) {
-        symName = names(self$data)[i]
-        if ( inherits(self$data[[symName]], c("Set", "Alias"))) {
-          if (i <= match(symName, validOrder)){
-            h = append(h, TRUE)
-          }
-          else {
-            h = append(h, FALSE)
-          }
+      isSetAlias = unlist(lapply(currentOrder, function(s) {
+        return(inherits(self$data[[s]], c("Set", "Alias")))
+      }), use.names = FALSE)
+
+      set_alias_index = which(isSetAlias)
+      if (is.integer0(set_alias_index)) return(TRUE)
+
+      order_valid = unlist(lapply(set_alias_index, function(idx) {
+        if (idx <= match(currentOrder[idx], validOrder)) {
+          return(TRUE)
         }
         else {
-          h = append(h, TRUE)
+          return(FALSE)
         }
-      }
+      }), use.names = FALSE)
 
-      if (all(h) == TRUE) {
+      if (all(order_valid == TRUE)) {
         return(TRUE)
       }
       else {
@@ -1007,8 +1257,8 @@ b = "boolean"
 #' @description An abstract symbol class from 
 #' which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
-Symbol <- R6Class(
-  "Symbol",
+.Symbol <- R6Class(
+  ".Symbol",
   inherit = .BaseSymbol,
   public = list(
   .requiresStateCheck = NULL,
@@ -1041,18 +1291,346 @@ Symbol <- R6Class(
 
   },
 
-  findDomainViolations = function() {
-    if (self$dimension == 0) {
-      return(NULL)
+  getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
+    if (is.null(dimension)) {
+      if (!is.null(codes)) {
+        stop("User must specify `dimension` if retrieving UELs with the 
+        `codes` argument\n")
+      }
+      dimension = 1:self$dimension
     }
 
-    idx = which(is.na(self$records[, (1:self$dimension)]), arr.ind = TRUE)
-    if (self$dimension > 1) {
-      return(idx[, 1])
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dimension` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.logical(ignoreUnused)){
+      stop("The argument `ignoreUnused` must be type logical\n")
+    }
+
+    if (!is.null(codes) && (!(is.numeric(codes) || is.integer(codes)) || 
+    !all(codes %% 1 == 0) || !all(codes >= 1))) {
+      stop("The argument `codes` must be integers or 
+      a vector of integers >= 1\n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol must be valid in order to manage UELs\n")
+    }
+
+    uels = unlist(lapply(dimension, function(d) {
+      if (ignoreUnused) {
+        uels_d = levels(droplevels(self$records[, d]))
+      }
+      else {
+        uels_d = levels(self$records[, d])
+      }
+
+      if (!is.null(codes)) {
+        uels_d = uels_d[codes]
+      }
+      return(uels_d)
+    }), use.names = FALSE)
+
+    return(unique(uels))
+  },
+
+  setUELs = function(uels, dimension = NULL, rename=FALSE) {
+    if (is.null(dimension)) {
+      dimension = 1:self$dimension
+    }
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!is.logical(rename)) {
+      stop("The argument `rename` must be type logical")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to set UELs \n")
+    }
+
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
+
+    for (d in dimension) {
+      if (rename) {
+        levels(private$.records[, d]) = uels
+      }
+      else {
+        private$.records[, d] = 
+        factor(as.character(private$.records[, d]), levels=uels, 
+        ordered = TRUE)
+      }
+    }
+
+  },
+
+  reorderUELs = function(uels, dimension=NULL) {
+    # input check
+    if (is.null(dimension)) dimension =1:self$dimension
+
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument `uels` must be type `character` \n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to reorder UELs \n")
+    }
+
+    for (d in dimension) {
+      if ((length(uels) != length(levels(private$.records[, d])))) {
+        stop("The argument `uels` must 
+        contain all uels that need to be reordered")
+      }
+      else {
+        if (length(setdiff(uels, private$.records[,d])) != 0) {
+          stop("The argument `uels` must 
+          contain all uels that need to be reordered")
+        }
+      }
+      private$.records[, d] = factor(private$.records[, d], levels=uels)
+    }
+  },
+
+  addUELs = function(uels, dimension=NULL) {
+    if (is.null(dimension)) dimension =1:self$dimension
+
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to add UELs \n")
+    }
+
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
+
+    for (d in dimension) {
+
+      if (length(setdiff(uels, private$.records[,d])) == 0) {
+        stop("The argument `uels` should not
+        contain existing uels")
+      }
+
+      private$.records[, d] = factor(private$.records[, d], 
+      levels=append(levels(private$.records[, d]), uels))
+    }
+  },
+
+  removeUELs = function(uels=NULL, dimension=NULL) {
+    if (!is.null(dimension)) {
+      # input check
+      if (!(is.integer(dimension) || is.numeric(dimension)) || 
+      !all(dimension %% 1 == 0) || 
+      any(dimension < 1) || any(dimension > self$dimension)) {
+        stop(paste0("All elements of the argument 
+        `dim` must be integers in [1, ", 
+        self$dimension, "]\n"))
+      }
     }
     else {
-      return(idx)
+      dimension = 1:self$dimension
     }
+
+    if (!is.null(uels)) {
+      if (!is.character(uels)) {
+        stop("The argument `uels`` must be type `character` \n")
+      }
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to remove UELs \n")
+    }
+
+    for (d in dimension) {
+      if (!is.null(uels)) {
+        # remove from values and from levels
+        # private$.records[, d] = 
+        # (private$.records[, d])[private$.records[, d] != uels]
+       private$.records[, d] = 
+        factor(private$.records[, d], 
+        levels = setdiff(levels(private$.records[, d]), uels))
+      }
+      else {
+        # remove unused levels
+        private$.records[, d] = droplevels(private$.records[, d])
+      }
+    }
+  },
+
+  renameUELs = function(uels, dimension=NULL) {
+    if (!is.null(dimension)) {
+      # input check
+      if (!(is.integer(dimension) || is.numeric(dimension)) || 
+      !all(dimension %% 1 == 0) || 
+      any(dimension < 1) || any(dimension > self$dimension)) {
+        stop(paste0("All elements of the argument 
+        `dim` must be integers in [1, ", 
+        self$dimension, "]\n"))
+      }
+    }
+    else {
+      dimension = 1:self$dimension
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to add UELs \n")
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!is.null(names(uels))) {
+      #error on duplicates
+      if (any(duplicated(uels) == TRUE)) {
+        stop("cannot rename the same `uel` more than 
+        once in a single call\n")
+      }
+      # user has provided uelmap
+      old_uels = names(uels)
+
+      # remove trailing whitespaces from uels
+      uels = trimws(uels, which="right")
+
+      lapply(dimension, function(d) {
+        # get current levels
+        cur_uels = levels(private$.records[, d])
+        # update current levels
+        for (uel in old_uels) {
+          idx = which(cur_uels == uel)
+          if (!is.integer0(idx)) {
+            cur_uels[idx] = uels[[uel]]
+          } # ignore if current uels don't exist
+        }
+        # set current levels
+        private$.records[, d] = factor(private$.records[, d], 
+        levels = cur_uels)
+      })
+    }
+    else {
+      if (any(duplicated(uels)) == TRUE) {
+        stop("The argument `uels` cannot contain duplicates\n")
+      }
+
+      # remove trailing whitespaces from uels
+      uels = trimws(uels, which="right")
+
+      lapply(dimension, function(d) {
+        levels(private$.records[, d]) = uels
+      })
+    }
+
+  },
+
+  getDomainViolations = function() {
+    if (!self$isValid()) {
+      stop("The object must be valid to get domain violations\n")
+    }
+    if (self$dimension == 0 || is.null(self$records)) return()
+
+    it_vec = 1:self$dimension
+    is_set_alias = unlist(lapply(it_vec, function(x) {
+      inherits(self$domain[[x]], c("Set", "Alias"))
+    }), use.names = FALSE)
+    it_vec = it_vec[is_set_alias]
+
+    added_uel_all = lapply(it_vec, function(d) {
+      setdiff(tolower(self$getUELs(d, ignoreUnused=TRUE)), 
+      tolower(self$domain[[d]]$getUELs(1, ignoreUnused=TRUE)))
+    })
+
+    length_added_uel = unlist(lapply(added_uel_all, length), use.names = FALSE)
+    it_vec = it_vec[length_added_uel > 0]
+
+    dom_violations = lapply(it_vec, function(d) {
+      DomainViolation$new(self, d, self$domain[[d]], added_uel_all[[d]])
+    })
+
+    if (length(dom_violations) == 0) return()
+
+    return(dom_violations)
+  },
+
+  findDomainViolations = function() {
+    violations = self$getDomainViolations()
+
+    if (is.null(violations)) return()
+
+    idx = lapply(violations, function(dv) {
+      set_dv = unique(dv$violations)
+
+      idx = lapply(set_dv, function(v) {
+        return(which(self$records[, dv$dimension] == v, arr.ind = TRUE))
+      })
+      return(unlist(idx, use.names=FALSE))
+    })
+
+    return(self$records[unlist(unique(idx)), ])
+  },
+
+  hasDomainViolations = function() {
+    df = self$findDomainViolations()
+    return(!is.null(df))
+  },
+
+  countDomainViolations = function() {
+    df = self$findDomainViolations()
+    if (is.null(df)) {
+      return(0)
+    }
+    else {
+      nrow(df)
+    }
+  },
+
+  dropDomainViolations = function() {
+    violations = self$getDomainViolations()
+
+    if (is.null(violations)) return()
+
+    idx = lapply(violations, function(dv) {
+      set_dv = unique(dv$violations)
+
+      idx = lapply(set_dv, function(v) {
+        return(which(self$records[, dv$dimension] == v, arr.ind = TRUE))
+      })
+      return(unlist(idx, use.names=FALSE))
+    })
+    private$.records = private$.records[-unlist(unique(idx)), ]
   },
 
   countDuplicateRecords = function() {
@@ -1088,7 +1666,7 @@ Symbol <- R6Class(
   },
 
   hasDuplicateRecords = function() {
-    return(ifelse( self$countDuplicateRecords() > 0, TRUE, FALSE))
+    return(ifelse(self$countDuplicateRecords() > 0, TRUE, FALSE))
   },
 
   dropDuplicateRecords = function(keep = "first") {
@@ -1147,11 +1725,13 @@ Symbol <- R6Class(
   #' @param verbose type logical
   #' @param force type logical
   isValid = function(verbose=FALSE, force=FALSE) {
-    assertthat::assert_that(is.logical(verbose), 
-    msg = "Argument 'verbose' must be logical")
+    if (!is.logical(verbose)) {
+      stop("Argument 'verbose' must be logical\n")
+    }
 
-    assertthat::assert_that(is.logical(force), 
-    msg = "Argument 'force' must be logical")
+    if (!is.logical(force)) {
+      stop("Argument 'force' must be logical\n")
+    }
 
     if (force == TRUE) {
       self$.requiresStateCheck = TRUE
@@ -1233,10 +1813,28 @@ Symbol <- R6Class(
         return(self$records[[column]])
       }
       else {
+        if (self$domainType == "regular") {
+          if (self$hasDomainViolations()) {
+            stop("Cannot create dense array because there are domain violations i.e.,
+             the UELs in the symbol are not a subset of UELs in the domain set/s\n")
+          }
+
+
+          idx = lapply(1:self$dimension, function(d) {
+            return(as.numeric(factor(self$records[,d], levels = levels(self$domain[[d]]$records[, 1]))) )
+          })
+
+        }
+        else {
+          idx = lapply(1:self$dimension, function(d) {
+            return(as.numeric(factor(self$records[,d], levels = levels(self$records[, d]))) )
+          })
+        }
+
         a = array(0, dim = self$shape())
-        idx = lapply(self$records[,1:self$dimension], as.numeric)
         a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
         return(a)
+
       }
     }
     else {
@@ -1245,25 +1843,31 @@ Symbol <- R6Class(
   },
 
   .linkDomainCategories = function() {
-    if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
-      for (n in seq_along(self$domain)) {
+    # if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
+
+      private$.records[, 1:self$dimension] = lapply(1:self$dimension, function(n) {
         i  = self$domain[[n]]
-        if (((inherits(i, c("Alias", "Set"))) )
-        && (!is.null(i$records))) {
-          if (i$isValid()) {
-            private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
-          }
-          else {
-            private$.records[, n] = factor(private$.records[, n], 
-            levels = unique(private$.records[, n]), ordered = TRUE)
-          }
-        }
-        else {
-          private$.records[, n] = factor(private$.records[, n], 
-          levels = unique(private$.records[, n]), ordered = TRUE)
-        }
-      }
-    }
+        return(factor(private$.records[, n], 
+        levels = levels(i$records[, 1]), ordered = TRUE))
+      })
+      # for (n in seq_along(self$domain)) {
+      #   i  = self$domain[[n]]
+        # if (((inherits(i, c("Alias", "Set"))) )
+        # && (!is.null(i$records))) {
+        #   if (i$isValid()) {
+            # private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
+          # }
+          # else {
+          #   private$.records[, n] = factor(private$.records[, n], 
+          #   levels = unique(private$.records[, n]), ordered = TRUE)
+          # }
+        # }
+        # else {
+        #   private$.records[, n] = factor(private$.records[, n], 
+        #   levels = unique(private$.records[, n]), ordered = TRUE)
+        # }
+      # }
+    # }
   }
   ),
 
@@ -1275,13 +1879,12 @@ Symbol <- R6Class(
       }
       else {
         private$.records = records_input
-
         if (!is.null(self$records)) {
           if (self$domainForwarding == TRUE) {
             private$domain_forwarding()
-            if (inherits(self$refContainer, "Container")) {
-              self$refContainer$.linkDomainCategories()
-            }
+            # if (inherits(self$refContainer, "Container")) {
+            #   self$refContainer$.linkDomainCategories()
+            # }
 
             for (i in self$refContainer$listSymbols()) {
               self$refContainer$data[[i]]$.requiresStateCheck = TRUE
@@ -1347,14 +1950,12 @@ Symbol <- R6Class(
         return(length(self$domain))
       }
       else {
-        assertthat::assert_that(
-           (inherits(dimension_input, c("numeric", "integer"))) && 
-           (dimension_input %% 1 == 0) && (dimension_input >= 0),
-           msg = "Symbol 'dimension' must be type 
-           int (greater than or equal to 0)")
-
-        assertthat::assert_that((dimension_input <= GMS_MAX_INDEX_DIM),
-        msg = paste0("Symbol `domain` length cannot be > ", GMS_MAX_INDEX_DIM))
+        if (!((inherits(dimension_input, c("numeric", "integer"))) && 
+           (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
+           (dimension_input <= GMS_MAX_INDEX_DIM))) {
+            stop(paste0("Symbol 'dimension' must be 
+           an integer in [0, ", GMS_MAX_INDEX_DIM, "]\n"))
+           }
 
         if (length(self$domain) > dimension_input) {
           if (dimension_input == 0) {
@@ -1389,52 +1990,34 @@ Symbol <- R6Class(
           domain_input = list(domain_input)
         }
 
-        for (d in domain_input) {
-          assertthat::assert_that((inherits(d, c("Set", "Alias" )) ||
-          is.character(d)),
-          msg = "All 'domain' elements must be type Set, Alias, or Character"
-          )
-          if (inherits(d, c("Set", "Alias"))) {
-            assertthat::assert_that( d$dimension == 1,
-            msg = "All linked 'domain' elements must be one dimensional"
-            )
-          }
+        if (length(domain_input) > GMS_MAX_INDEX_DIM) {
+          stop(paste0("Argument 'domain' length cannot be > ", 
+          GMS_MAX_INDEX_DIM, "\n"))
+        }
+        domain_arg_check = unlist(lapply(domain_input, function(d) {
+          return((inherits(d, c("Set", "Alias" )) && d$dimension == 1)
+        || is.character(d))}), use.names = FALSE)
+        if (any(domain_arg_check == FALSE)) {
+          stop("All 'domain' elements must be either one dimensional Set/Alias
+          , or must be type Character\n")
         }
 
-      assertthat::assert_that(length(domain_input) <= GMS_MAX_INDEX_DIM,
-      msg = paste0("Argument 'domain' length cannot be > ", GMS_MAX_INDEX_DIM))
-        domaintemp = list()
-        for (d in domain_input) {
-          if (is.character(d)) {
-            if ((d != "*") && self$refContainer$hasSymbols(d) &&
-            inherits(self$refContainer$getSymbols(d), c("Set", "Alias"))) {
-              domaintemp = append(domaintemp, d)
+        # check change of domain
+        if (!identical(private$.domain, domain_input)) {
+            self$.requiresStateCheck = TRUE
+            if (inherits(self$refContainer, "Container")) {
+              self$refContainer$.requiresStateCheck = TRUE
             }
-            else {
-              # attach as a plain string
-              domaintemp = append(domaintemp, d)
+            private$.domain = domain_input
+            if (self$dimension == 0) return()
+
+            if (!is.null(self$records)) {
+              temp_colnames=colnames(self$records)
+              temp_colnames[1:self$dimension] = self$domainLabels
+              colnames(private$.records) = temp_colnames
             }
-          }
-          else {
-            if ((inherits(d, "Set"))) {
-              if (identical(d$refContainer,self$refContainer)) {
-                domaintemp = append(domaintemp, d)
-              }
-              else {
-                stop("domain elements cannot belong to a different container\n")
-              }
-            }
-            else if (inherits(d, "Alias")) {
-              if (identical(d$aliasWith$refContainer, self$refContainer)) {
-                domaintemp = append(domaintemp, d)
-              }
-              else {
-                stop("domain elements cannot belong to a different container\n")
-              }
-            }
-          }
         }
-        private$.domain = domaintemp
+
       }
     },
 
@@ -1690,65 +2273,6 @@ Symbol <- R6Class(
             'records' must be of type character\n")
           }
 
-          # check if columns are factors
-          for (i in self$domainLabels) {
-            if (!is.factor(self$records[[i]])) {
-              stop(paste0("Domain information in column ", i, " must be a factor\n"))
-            }
-          }
-
-          # check if domain has records
-          for (i in self$domain) {
-            if (inherits(i, c("Set", "Alias"))) {
-              if (is.null(i$records)) {
-                stop(paste0("Referenced domain set ", i$name, " does 
-                not does not contain records; ",
-                "cannot properly establish domain information link.\n"))
-              }
-            }
-          }
-
-          #check if factors are ordered
-          for (i in self$domainLabels) {
-            if (!is.ordered(self$records[[i]])) {
-              stop(paste0("Domain information in column ", i, 
-              " must be an ORDERED factor\n"))
-            }
-          }
-
-          # if there are linked domains, make sure their levels are equal
-          for (n in seq_len(self$dimension)) {
-            i = self$domain[[n]]
-            if (inherits(i, c("Set", "Alias"))) {
-              if (!identical(levels(self$records[, n]), levels(i$records[,1]))) {
-                stop(paste0("Levels for domain column ", i$name, " do not match those 
-                of the referenced domain set. If setting records directly, the user is
-                responsible for creating factors for domain columns. \n"))
-              }
-            }
-          }
-          # check for domain violations
-          if (self$dimension != 0) {
-            nullrecords = self$records[,1:self$dimension][is.null(self$records[,1:self$dimension])]
-            narecords = self$records[,1:self$dimension][is.na(self$records[,1:self$dimension])]
-
-            if (length(nullrecords) != 0 || 
-            length(narecords) != 0 ) {
-              stop(paste0("Symbol 'records' contain domain violations;",
-              " ensure that all domain elements have",
-              " been mapped properly to a factor\n"))
-            }
-          }
-
-          # drop duplicates
-          if (self$dimension != 0) {
-            if (nrow(self$records) != 
-            nrow(unique(self$records[self$domainLabels]))) {
-              stop(paste0("Symbol 'records' contain non-unique",
-               " domain members; ensure that only unique members exist\n"))
-            }
-          }
-
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
@@ -1774,7 +2298,6 @@ Symbol <- R6Class(
         to_grow = append(to_grow, d$name)
         d = d$domain[[1]]
       }
-
       # reverse the to_grow list because when the records are set, we check domain
       # domain_forwarding for domain sets is FALSE until specified explicitly 
       # so we should grow parent sets first and then children
@@ -1784,17 +2307,25 @@ Symbol <- R6Class(
         dim = (self$refContainer$data[[i]]$domainLabels)[1]
         if (!is.null(self$refContainer$data[[i]]$records)) {
           recs = self$refContainer$data[[i]]$records
-          assert_that((self$refContainer$data[[i]]$dimension == 1),
-          msg = "attempting to forward a domain set that has dimension > 1")
+
+          if (self$refContainer$data[[i]]$dimension > 1) {
+            stop("attempting to forward a domain set that has dimension > 1\n")
+          }
 
           df = self$records[dl]
           colnames(df) = dim
           df[["element_text"]] = ""
-          recs = rbind(recs, df)
+          recs1 = factor(append(as.character(recs[, 1]), as.character(df[,dim])),
+          levels = unique(append(levels(recs[, 1]), levels(df[,dim]))))
+          recs2 = append(recs[, 2], df$element_text)
+          cnames =colnames(recs)
+          recs= data.frame(recs1, recs2)
+          colnames(recs) = cnames
+          # recs = rbind(recs, df)
           recs = recs[!duplicated(recs[[dim]]),]
         }
         else {
-          recs = unique(self$records[dl])
+          recs = self$records[dl]
           colnames(recs) = dim
           recs[["element_text"]] = ""
         }
@@ -1825,7 +2356,7 @@ Symbol <- R6Class(
 #' @field summary output a list of only the metadata
 Set <- R6Class(
   "Set",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
     #' @description There are two different ways to create a GAMS set and 
     #' add it to a Container. One is using the Set constructor and 
@@ -1890,10 +2421,28 @@ Set <- R6Class(
       }
       columnNames = self$domainLabels
       columnNames = append(columnNames, "element_text")
-      colnames(records) = columnNames
 
+      if (self$dimension == 0) {
+        colnames(records) = columnNames
+        self$records = records
+        return()
+      }
+
+      records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
+        if (is.factor(records[, d])) {
+          levels(records[, d]) = trimws(levels(records[, d]), which="right")
+        }
+        else {
+          records[, d] = factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
+          levels(records[, d]) = trimws(levels(records[, d]), which="right")
+        }
+        return(records[, d])
+      })
+
+      records = data.frame(records)
+
+      colnames(records) = columnNames
       self$records = records
-      self$.linkDomainCategories()
     }
   ),
 
@@ -1956,7 +2505,7 @@ Set <- R6Class(
 #' @field summary output a list of only the metadata
 Parameter <- R6Class(
   "Parameter",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
     #' @description There are two different ways to create a GAMS 
     #' parameter and add it to a Container. One is using the 
@@ -2081,23 +2630,43 @@ Parameter <- R6Class(
         r = nrow(records)
         c = length(records)
 
-        assertthat::assert_that(
-          c == self$dimension + 1,
-          msg = paste0("Dimensionality of records ", c - 1, 
+        if (c != (self$dimension + 1)) {
+          stop(paste0("Dimensionality of records ", c - 1, 
           " is inconsistent with parameter domain specification ", 
-          self$dimension)
-        )
+          self$dimension))
+        }
 
         columnNames = self$domainLabels
         columnNames = append(columnNames, "value")
-        colnames(records) = columnNames
 
         #if records "value" is not numeric, stop.
         if (any(!is.numeric(records[,length(records)]))) {
-          stop("All entries in the 'values' column of a parameter must be numeric.\n")
+          stop("All entries in the 'values' column of a parameter 
+          must be numeric.\n")
         }
+
+        if (self$dimension == 0) {
+          colnames(records) = columnNames
+          self$records = records
+          return()
+        }
+
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), 
+        function(d) {
+          if (is.factor(records[, d])) {
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          else {
+            records[, d] = factor(records[, d], levels = 
+            unique(records[, d]), ordered=TRUE)
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          return(records[, d])
+        })
+
+        records = data.frame(records)
+        colnames(records) = columnNames
         self$records = records
-        self$.linkDomainCategories()
       }
     }
   ),
@@ -2153,7 +2722,7 @@ Parameter <- R6Class(
 #' @field type type of variable (string)
 Variable <- R6Class(
   "Variable",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
 
     #' @description There are two different ways to create a GAMS Variable and 
@@ -2400,10 +2969,30 @@ Variable <- R6Class(
 
         #rename columns
         columnNames = append(columnNames, private$.attr())
-        colnames(records) = columnNames
 
+        if (self$dimension == 0) {
+          colnames(records) = columnNames
+          self$records = records
+          return()
+        }
+
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), 
+        function(d) {
+          if (is.factor(records[, d])) {
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          else {
+            records[, d] = factor(records[, d], levels = 
+            unique(records[, d]), ordered=TRUE)
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          return(records[, d])
+        })
+
+        records = data.frame(records)
+        colnames(records) = columnNames
         self$records = records
-        self$.linkDomainCategories()
+        # self$.linkDomainCategories()
 
       }
     }
@@ -2543,7 +3132,7 @@ Variable <- R6Class(
 #' @field type type of variable (string)
 Equation <- R6Class(
   "Equation",
-  inherit = Symbol,
+  inherit = .Symbol,
   public = list(
 
     #' @description There are two different ways to create a GAMS Equation and 
@@ -2796,10 +3385,30 @@ Equation <- R6Class(
         records = records[, correct_order]
 
         columnNames = append(columnNames, private$.attr())
-        colnames(records) = columnNames
 
+        if (self$dimension == 0) {
+          colnames(records) = columnNames
+          self$records = records
+          return()
+        }
+
+        records[, 1:self$dimension] = lapply(seq_along(self$domain), 
+        function(d) {
+          if (is.factor(records[, d])) {
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          else {
+            records[, d] = factor(records[, d], levels = 
+            unique(records[, d]), ordered=TRUE)
+            levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          }
+          return(records[, d])
+        })
+
+        records = data.frame(records)
+        colnames(records) = columnNames
         self$records = records
-        self$.linkDomainCategories()
+        # self$.linkDomainCategories()
 
       }
     }
@@ -2942,10 +3551,49 @@ Alias <- R6Class(
       private$.is_alias = TRUE
       self$aliasWith = aliasFor
     },
+    format = function(...) paste0("GAMS Transfer: R6 object of class Alias. 
+    Use ", self$name, "$summary for details"),
 
+    getUELs = function(dimension =NULL, codes=NULL, ignoreUnused = FALSE) {
+      private$.testRefContainer()
+      private$.testParentSet()
+      self$aliasWith$getUELs(dimension, codes, ignoreUnused)
+    },
+
+    setUELs = function(uels, dimension, rename=FALSE) {
+      private$.testRefContainer()
+      private$.testParentSet()
+      self$aliasWith$setUELs(uels, dimension, rename)
+    },
+
+    reorderUELs = function(uels, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
+      self$aliasWith$reorderUELs(uels, dimension)
+    },
+
+    addUELs = function(uels, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
+      self$aliasWith$addUELs(uels, dimension)
+    },
+
+    removeUELs = function(uels=NULL, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
+      self$aliasWith$removeUELs(uels, dimension)
+    },
+
+    renameUELs = function(uels, dimension=NULL) {
+      private$.testRefContainer()
+      private$.testParentSet()
+      self$aliasWith$renameUELs(uels, dimension)
+    },
 
     #' @description getCardinality get the full cartesian product of the domain
     getCardinality = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
     },
 
@@ -2953,6 +3601,8 @@ Alias <- R6Class(
     #' @description getSparsity get the sparsity of the symbol 
     #' w.r.t the cardinality
     getSparsity = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
     },
 
@@ -2961,11 +3611,13 @@ Alias <- R6Class(
     #' @param verbose type logical
     #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
-      assertthat::assert_that(is.logical(verbose),
-      msg = "Argument 'verbose' must be logical")
+      if (!is.logical(verbose)) {
+        stop("Argument 'verbose' must be logical\n")
+      }
 
-      assertthat::assert_that(is.logical(force),
-      msg = "Argument 'force' must be logical")
+      if (!is.logical(force)) {
+        stop("Argument 'force' must be logical\n")
+      }
 
       if (force == TRUE) {
         self$.requiresStateCheck = TRUE
@@ -2990,61 +3642,69 @@ Alias <- R6Class(
       }
     },
 
+    getDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$getDomainViolations())
+    },
+
+    findDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$findDomainViolations())
+    },
+
+    hasDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$hasDomainViolations())
+    },
+
+    countDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$countDomainViolations())
+    },
+
+    dropDomainViolations = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
+      return(self$aliasWith$dropDomainViolations())
+    },
+
     countDuplicateRecords = function() {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$countDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$countDuplicateRecords())
     },
 
     findDuplicateRecords = function(keep="first") {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$findDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$findDuplicateRecords())
     },
 
     hasDuplicateRecords = function(keep="first") {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$hasDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$hasDuplicateRecords())
     },
 
     dropDuplicateRecords = function(keep="first") {
-      if (inherits(self$refContainer, "Container")) {
-        if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
-          stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-          self$name, " is no longer in the container and cannot 
-          be referenced\n"))
-        }
-        else {
-          return(self$aliasWith$dropDuplicateRecords())
-        }
-      }
+      private$.testRefContainer()
+      private$.testParentSet()
+
+      return(self$aliasWith$dropDuplicateRecords())
     },
 
     #' main convenience method to set standard dataframe formatted records
     #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
     }
   ),
@@ -3076,6 +3736,7 @@ Alias <- R6Class(
         return(private$.name)
       }
       else {
+        private$.testRefContainer()
         if (!is.character(name_input)) {
           stop("GAMS symbol 'name' must be type chracter\n")
         }
@@ -3109,8 +3770,9 @@ Alias <- R6Class(
         return(private$.aliasWith)
       }
       else {
+        private$.testRefContainer()
         if (!(inherits(alias_with_input, c("Set", "Alias")))) {
-          stop("GAMS 'alias_with' must be type Set or Alias\n")
+          stop("GAMS 'aliasWith' must be type Set or Alias\n")
         }
 
         if (inherits(alias_with_input, "Alias")) {
@@ -3126,15 +3788,16 @@ Alias <- R6Class(
         else {
           if (!identical(private$.aliasWith, alias_with_input)) {
             self$.requiresStateCheck = TRUE
-            if (inherits(self$refContainer, "Container")) {
-              self$refContainer$.requiresStateCheck = TRUE
-            }
+            self$refContainer$.requiresStateCheck = TRUE
+            private$.aliasWith = alias_with_input
           }
         }
       }
     },
 
     isSingleton = function(is_singleton) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(is_singleton)) {
         refcontainer = self$refContainer
         sym = refcontainer$data[[self$aliasWith$name]]
@@ -3148,6 +3811,8 @@ Alias <- R6Class(
     },
 
     description = function(description_input) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(description_input)) {
         refcontainer = self$refContainer
         aliaswithname = self$aliasWith$name
@@ -3163,6 +3828,8 @@ Alias <- R6Class(
     },
 
     dimension = function(dimension_input) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(dimension_input)) {
         return(self$refContainer$data[[self$aliasWith$name]]$dimension)
       }
@@ -3174,10 +3841,20 @@ Alias <- R6Class(
     },
 
     records = function(records_input) {
-      return(self$refContainer$data[[self$aliasWith$name]]$records)
+      private$.testRefContainer()
+      private$.testParentSet()
+      if (missing(records_input)) {
+        return(self$refContainer$data[[self$aliasWith$name]]$records)
+      }
+      else {
+        self$refContainer$data[[self$aliasWith$name]]$records = records_input
+      }
+
     },
 
     domain = function(domain_input) {
+      private$.testRefContainer()
+      private$.testParentSet()
       if (missing(domain_input)) {
         return(self$refContainer$data[[self$aliasWith$name]]$domain)
       }
@@ -3189,22 +3866,32 @@ Alias <- R6Class(
     },
 
     numberRecords = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
     },
 
     domainType = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$domainType)
     },
 
     domainNames = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
     },
 
     domainLabels = function() {
+      private$.testRefContainer()
+      private$.testParentSet()
       return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
     },
 
     summary = function() {
+    private$.testRefContainer()
+    private$.testParentSet()
     return(list(
       "name" = self$name,
       "alias_with" = self$aliasWith,
@@ -3233,11 +3920,26 @@ Alias <- R6Class(
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         if (self$refContainer$data[[self$aliasWith$name]]$isValid() == FALSE) {
-          stop(paste0("Alias symbol is not valid because parent set ", self$aliasWith$name,
+          stop(paste0("Alias is not valid because parent set ", self$aliasWith$name,
           "is not valid\n"))
         }
       }
+    },
+
+    .testParentSet = function() {
+      if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+        stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
+        self$name, " is no longer in the container and cannot 
+        be referenced\n"))
+      }
+    },
+
+    .testRefContainer = function() {
+      if (!inherits(self$refContainer, "Container")) {
+        stop("Alias is no longer referring a Container object\n")
+      }
     }
+
   )
 )
 
@@ -3904,7 +4606,6 @@ ConstContainer <- R6::R6Class (
       private$.is_singleton = isSingleton
     },
 
-
     getCardinality = function() {
       return(self$refContainer$data[[self$aliasWith]]$getCardinality())
     },
@@ -3984,10 +4685,6 @@ find_gams <- function() {
   return(sysDirPath)
 }
 
-#is.nan function for dataframe
-is.nan.data.frame <- function(x)
-do.call(cbind, lapply(x, is.nan))
-
 is.integer0 <- function(x)
 {
   is.integer(x) && length(x) == 0L
@@ -4031,15 +4728,18 @@ is.integer0 <- function(x)
       self$data = list()
     },
 
+    format = function(...) paste0("GAMS Transfer: R6 object of class ", 
+    class(self)[1]),
+
     hasSymbols = function(names) {
       if (!is.character(names)) {
         stop("The argument `names` must be type character\n")
       }
 
       sym_names = names(self$data)
-      bool = sapply(names, function(x) {
+      bool = unlist(lapply(names, function(x) {
         return(any(tolower(x) == tolower(sym_names)))
-        }, USE.NAMES = FALSE)
+        }), use.names = FALSE)
       return(bool)
     },
 
@@ -4049,7 +4749,7 @@ is.integer0 <- function(x)
       }
 
       sym_names = names(self$data)
-      syms = sapply(names, function(x){
+      syms = unlist(lapply(names, function(x){
         idx = which(tolower(sym_names) == tolower(x))
         if (is.integer0(idx)) {
           stop("Symbol ", x, " does not exist in the container\n")
@@ -4057,7 +4757,7 @@ is.integer0 <- function(x)
         else {
           return(sym_names[idx])
         }
-      }, USE.NAMES = FALSE)
+      }), use.names = FALSE)
       return(syms)
     },
 
@@ -4071,12 +4771,13 @@ is.integer0 <- function(x)
       isValid = args[["isValid"]]
 
       if (!is.null(isValid)) {
-        assertthat::assert_that(is.logical(isValid),
-        msg = "argument 'isValid' must be type logical\n")
+        if (!is.logical(isValid)) {
+          stop("The argument 'isValid' must be type logical\n")
+        }
 
-        actual_isvalid = sapply(self$data, function(x) {
+        actual_isvalid = unlist(lapply(self$data, function(x) {
           return(x$isValid())
-        }, USE.NAMES = FALSE)
+        }), use.names = FALSE)
 
         correct_validity_data = self$data[actual_isvalid == isValid]
         return(unlist(lapply(correct_validity_data, function(x) x$name), use.names = FALSE))
@@ -4675,58 +5376,16 @@ is.integer0 <- function(x)
     self$.gams_subtype = subtype
   },
 
+  format = function(...) paste0("GAMS Transfer: R6 object of class ", 
+  class(self)[1], ". Use ", self$name, "$summary for details"),
+
   #' @description getMaxValue get the maximum value
   #' @param columns columns over which one wants to get the maximum.
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMaxValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", toString(columns), "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(self$records[[columns]]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    private$.getMetric(columns, "max")
   },
 
   #' @description getMinValue get the minimum value in value column
@@ -4735,53 +5394,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMinValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input '", toString(columns), 
-        "', however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column '", columns, "' must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-    tryCatch(
-      {
-        return(min(self$records[, columns]))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
+    private$.getMetric(columns, "min")
   },
 
   #' @description getMeanValue get the mean value in value column
@@ -4790,52 +5403,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMeanValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        meanVal = mean(self$records[[columns]])
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    private$.getMetric(columns, "mean")
   },
 
   #' @description getMaxAbsValue get the maximum absolute value in value column
@@ -4845,52 +5413,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   getMaxAbsValue = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records[,(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(max(abs(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    private$.getMetric(columns, "maxAbs")
   },
 
   #' @description whereMax find the row number in records data frame with a 
@@ -4900,59 +5423,8 @@ is.integer0 <- function(x)
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
-  whereMax = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        colnames(self$records)[(self$dimension+1):length(self$records)]
-        ,"\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(self$records[[columns]])
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+  whereMax = function(column=NULL) {
+    return(private$.whereMetric(column, "max"))
   },
 
   #' @description whereMaxAbs find the row number in records data frame 
@@ -4964,59 +5436,8 @@ is.integer0 <- function(x)
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
-  whereMaxAbs = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        whereMaxVal = which.max(abs(self$records[[columns]]))
-        if (is.integer0(whereMaxVal)) {
-          return(NA)
-        }
-        else {
-          return(whereMaxVal)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+  whereMaxAbs = function(column=NULL) {
+    return(private$.whereMetric(column, "maxAbs"))
   },
 
   #' @description whereMin find the the row number in records data frame 
@@ -5028,60 +5449,8 @@ is.integer0 <- function(x)
   #' This is an optional argument which defaults to `value` for parameter
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
-  whereMin = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-          whereMinVal = which.min(self$records[[columns]])
-          if (is.integer0(whereMinVal)) {
-            return(NA)
-          }
-          else {
-            return(whereMinVal)
-          }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
+  whereMin = function(column=NULL) {
+    return(private$.whereMetric(column, "min"))
   },
 
   #'@description countNA total number of SpecialValues[["NA"]] in value column
@@ -5091,52 +5460,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   countNA = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.na(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isNA"))
   },
 
   #' @description countEps total number of SpecialValues$EPS in value column
@@ -5146,56 +5470,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   countEps = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records[(self$dimension + 1):length(self$records)])
-        , "\n")))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(
-          (self$records[,columns] == SpecialValues$EPS) &
-          (sign(self$records[,columns]) == sign(1/SpecialValues$EPS))
-          ))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-
+    return(private$.countSpecialValue(columns, "isEps"))
   },
 
   #'@description countUndef total number of SpecialValues$UNDEF in value column
@@ -5205,52 +5480,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.
   countUndef = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension + 1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(is.nan(self$records[[columns]])))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isUndef"))
   },
 
   #'@description countPosInf total number of 
@@ -5261,52 +5491,7 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.  
   countPosInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)) {
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension + 1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$POSINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isPosInf"))
   },
 
   #'@description countNegInf total number of 
@@ -5317,59 +5502,139 @@ is.integer0 <- function(x)
   #'  and `level` for variable and equation. For variables and equations, 
   #' alternate column/columns can be provided using the columns argument.  
   countNegInf = function(columns=NULL) {
-    if (!is.null(columns)) {
-      if (!is.character(columns)){
-        stop(paste0("User input ", toString(columns), ", however it is only possible to",
-        " select one column at a time (i.e. argument 'column' must be type",
-        " character)\n"))
-      }
-
-      if (is.null(self$records)) {
-        return(NA)
-      }
-
-      if (inherits(self, c("Set", ".ConstSet"))) {
-        return(NA)
-      }
-
-      if (!setequal(intersect(columns, 
-      colnames(self$records)[(self$dimension+1):length(self$records)]), 
-      columns)) {
-        stop(paste0("User entered column ", toString(columns), " must be a subset",
-        " of valid numeric columns", 
-        toString(colnames(self$records)[(self$dimension+1):length(self$records)])
-        , "\n"))
-      }
-    }
-    else {
-      #columns argument is NULL
-        if (inherits(self, c("Parameter", ".ConstParameter"))) {
-          columns = "value"
-        }
-        else {
-          # variable or equation
-          columns = "level"
-        }
-    }
-
-    tryCatch(
-      {
-        return(sum(self$records[[columns]] == SpecialValues$NEGINF))
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
+    return(private$.countSpecialValue(columns, "isNegInf"))
   }
+
   ),
 
   private = list(
+    .getMetric = function(columns, metric) {
+      if (is.null(self$records) || inherits(self, c("Set", ".ConstSet"))) {
+        return(NA)
+      }
+
+      columns = private$.checkColumnsArgument(columns)
+
+      tryCatch(
+        {
+          if (metric == "max") {
+            return(max(self$records[,columns]))
+          }
+          else if (metric == "min") {
+            return(min(self$records[, columns]))
+          }
+          else if (metric == "mean") {
+            return(mean(self$records[,columns]))
+          }
+          else if (metric == "maxAbs") {
+            return(max(abs(self$records[,columns])))
+          }
+        },
+        error = function(cond) return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .whereMetric = function(column, metric) {
+      if (is.null(self$records) || inherits(self, c("Set", ".ConstSet"))) {
+        return(NA)
+      }
+
+      column = private$.checkColumnsArgument(column)
+
+      if (length(column) > 1) {
+        stop("At most one `column` can be specified\n")
+      }
+
+      tryCatch(
+        {
+          if (metric == "min") {
+            whereMetricVal = which.min(self$records[,column])
+          }
+          else if (metric == "max") {
+            whereMetricVal = which.max(self$records[,column])
+          }
+          else if (metric == "maxAbs") {
+            whereMetricVal = which.max(abs(self$records[,column]))
+          }
+
+            if (is.integer0(whereMetricVal)) {
+              return(NA)
+            }
+            else {
+              return(whereMetricVal)
+            }
+        },
+        error = function(cond) return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .countSpecialValue = function(columns, specialValueFunc) {
+      if (is.null(self$records) || inherits(self, c("Set", ".ConstSet"))) {
+        return(NA)
+      }
+      columns = private$.checkColumnsArgument(columns)
+      tryCatch(
+        {
+          return(sum(SpecialValues[[specialValueFunc]](self$records[,columns])))
+        },
+        error = function(cond)  return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .checkColumnsArgument = function(columns) {
+      if (inherits(self, c("Parameter",".ConstParameter"))) {
+        columns = "value"
+      }
+      else {
+        if (!is.null(columns)) {
+          if (!is.character(columns)) {
+            stop("The argument `columns` must be type character\n")
+          }
+
+          diff = setdiff(columns, private$.attr())
+          if (length(diff) != 0) {
+            stop(paste0("User entered columns (", toString(columns), ") must be a subset
+            of valid numeric columns ", toString(private$.attr()), "\n"))
+          }
+        }
+        else {
+          columns = "level"
+        }
+      }
+      return(columns)
+    },
     .attr = function() {
       return(c("level", "marginal", "lower", "upper", "scale"))
     }
   )
 )
 
+DomainViolation <- R6::R6Class (
+  "DomainViolation",
+  public = list(
+    symbol=NULL,
+    dimension = NULL,
+    domain= NULL,
+    violations = NULL,
+    initialize = function(symbol, dimension, domain,violations) {
+      self$symbol = symbol
+      self$dimension = dimension
+      self$domain = domain
+      self$violations = violations
+      lockBinding("symbol", self)
+      lockBinding("dimension", self)
+      lockBinding("domain", self)
+      lockBinding("violations", self)
+    },
+    format = function(...) {
+      paste0("GAMS Transfer: DomainViolation with properties: \n", 
+      "Symbol: ", self$symbol$name, "\n",
+      "dimension: ", self$diemnsion, "\n",
+      "domain: ", self$domain$name, "\n",
+      "violations: ", toString(self$violations))
+    }
+  )
+)

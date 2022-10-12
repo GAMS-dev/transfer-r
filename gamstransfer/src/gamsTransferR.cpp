@@ -137,18 +137,6 @@ bool is_uel_priority, bool compress) {
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
   if (!rc) stop("CPP_gdxWriteSuper:gdxCreateD GDX init failed: %s", Msg);
 
-  gdxSVals_t sVals;
-  gdxGetSpecialValues(PGX, sVals);
-
-  sVals[GMS_SVIDX_NA] = NA_REAL;
-  sVals[GMS_SVIDX_EPS] = -0.0;
-  sVals[GMS_SVIDX_UNDEF] = R_NaN;
-  sVals[GMS_SVIDX_PINF] = R_PosInf;
-  sVals[GMS_SVIDX_MINF] = R_NegInf;
-
-  rc = gdxSetSpecialValues(PGX, sVals);
-  if (!rc) stop("CPP_gdxWriteSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
-
 	gdxGetDLLVersion(PGX, Msg);
 
 	/* Write demand data */
@@ -160,6 +148,18 @@ bool is_uel_priority, bool compress) {
     rc = gdxOpenWriteEx(PGX, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
     if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWriteEx Error opening the file %s with error code %i", myFileName, ErrNr);
   }
+
+  gdxSVals_t sVals;
+  gdxGetSpecialValues(PGX, sVals);
+
+  sVals[GMS_SVIDX_NA] = NA_REAL;
+  sVals[GMS_SVIDX_EPS] = -0.0;
+  sVals[GMS_SVIDX_UNDEF] = R_NaN;
+  sVals[GMS_SVIDX_PINF] = R_PosInf;
+  sVals[GMS_SVIDX_MINF] = R_NegInf;
+
+  rc = gdxSetSpecialValues(PGX, sVals);
+  if (!rc) stop("CPP_gdxWriteSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
 
   // register UELs
   int UELno;

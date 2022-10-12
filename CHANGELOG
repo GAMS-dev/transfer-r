@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.4.0
 ==================
 - Breaking: Symbol name uniqueness is now checked case insensitively. For
   example, it is not possible to have two different symbols named
@@ -12,6 +12,22 @@ GAMS Transfer R
   `Container$getSymbols` to accept symbol names case insensitively
 - New Symbol methods `hasDuplicateRecords`, `countDuplicateRecords`, `findDuplicateRecords`, and `dropDuplicateRecords` to help debug and resolve errors with duplicate records
 - New Container methods `hasDuplicateRecords`, `countDuplicateRecords`, and `dropDuplicateRecords` to help find symbols that contain duplicate records that cause the Symbol to be invalid
+- Raises an exception if attempting to read a symbol that does not exist in the data source (previously symbol names were silently ignored)
+- New tests within `Container$isValid()` method to detect broken container references in symbols and inconsistent symbol naming between the `<Container>$data` field and the symbol objects
+- Breaking: Symbol records and symbol names are treated in a case insensitive manner. Symbols
+ domain is not automaitcally checked
+- isValid method does not check for symbol record domain columns being factors, for duplicates, and for domain violations
+- New Symbol methods `hasDomainViolations`, `countDomainViolations`, `findDomainViolations`, `dropDomainViolations`, `getDomainViolations`
+- New Container methods `hasDomainViolations`, `countDomainViolations`, `dropDomainViolations`
+- bug fix in Alias record setter
+- bug fix in `toDense()` method for Symbols with domaintype other than `regular`
+- allowed symbol overwriting with `addSet/addParameter/addVariable/addEquation/addAlias` methods when everything other than records and description is unchanged
+- Added methods `SpecialValues$isNA`, `SpecialValues$isEps`, `SpecialValues$isUndef`, `SpecialValues$isPosInf`, `SpcialValues$isNegInf` to test for SpecialValues
+- bug fix in count* methods for multiple columns
+- The argument for where* methods changed from `columns` to `column`
+- Changing the symbol domain now changes column names of records data.frame accordingly
+- removed dependence on the package `assertthat`
+- automatically remove trailing whitespaces from UELs in `setRecords` and `*UEL` methods
 
 GAMS Transfer R v1.0.0
 ==================
