@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.4.0
 ==================
 - Breaking: Symbol name uniqueness is now checked case insensitively. For
   example, it is not possible to have two different symbols named

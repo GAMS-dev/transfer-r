@@ -5629,7 +5629,12 @@ DomainViolation <- R6::R6Class (
       lockBinding("domain", self)
       lockBinding("violations", self)
     },
-    format = function(...) paste0("GAMS Transfer: R6 object of class ", 
-      class(self)[1])
+    format = function(...) {
+      paste0("GAMS Transfer: DomainViolation with properties: \n", 
+      "Symbol: ", self$symbol$name, "\n",
+      "dimension: ", self$diemnsion, "\n",
+      "domain: ", self$domain$name, "\n",
+      "violations: ", toString(self$violations))
+    }
   )
 )
