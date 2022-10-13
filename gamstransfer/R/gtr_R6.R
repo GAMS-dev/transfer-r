@@ -4972,6 +4972,7 @@ is.integer0 <- function(x)
     describeSets = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listSets()
+        if (is.null(symbols)) return()
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
@@ -5056,6 +5057,7 @@ is.integer0 <- function(x)
     describeAliases = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listAliases()
+        if (is.null(symbols)) return()
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
@@ -5125,6 +5127,7 @@ is.integer0 <- function(x)
     describeParameters = function(symbols = NULL) {
       if (is.null(symbols)) {
         symbols = self$listParameters()
+        if (is.null(symbols)) return()
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
@@ -5205,6 +5208,7 @@ is.integer0 <- function(x)
     describeVariables = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listVariables()
+        if (is.null(symbols)) return()
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
@@ -5287,6 +5291,7 @@ is.integer0 <- function(x)
     describeEquations = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listEquations()
+        if (is.null(symbols)) return()
       }
       else {
         if (!(is.list(symbols) ||is.character(symbols))) {
