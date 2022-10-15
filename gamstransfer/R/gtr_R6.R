@@ -2323,11 +2323,14 @@ b = "boolean"
           colnames(recs) = cnames
           # recs = rbind(recs, df)
           recs = recs[!duplicated(recs[[dim]]),]
+          rownames(recs) <- NULL
         }
         else {
           recs = self$records[dl]
           colnames(recs) = dim
           recs[["element_text"]] = ""
+          recs = recs[!duplicated(recs[[dim]]),]
+          rownames(recs) <- NULL
         }
         self$refContainer$data[[i]]$records = recs
       }
