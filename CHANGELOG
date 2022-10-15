@@ -1,3 +1,8 @@
+GAMS Transfer R
+==================
+- domain forwarding bug fix when the records are NULL
+- describe* method bug fix when the type of symbol is not present in the Container
+
 GAMS Transfer R v1.4.0
 ==================
 - Breaking: Symbol name uniqueness is now checked case insensitively. For
