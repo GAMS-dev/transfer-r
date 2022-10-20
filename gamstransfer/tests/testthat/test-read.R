@@ -7976,3 +7976,40 @@ i$addUELs("i4   ")
 expect_equal(i$getUELs(), c(" i1", "i2", "i3", "i4"))
 }
 )
+
+# test reading and writing UniverseAlias with Container
+test_that("test_num_95", {
+
+  # gams syntax
+  gams_text = '
+set i /i1*i5/;
+alias(ip,i);
+alias(h,*);
+  '
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+
+  # read all symbols
+  m$read(testthat::test_path("data.gdx"))
+
+  # write everything
+  m$write(testthat::test_path("gt.gdx"))
+
+  expect_true(inherits(m$data$h, "UniverseAlias"))
+  expect_true(inherits(m$data$ip, "Alias"))
+  expect_true(inherits(m$data$i, "Set"))
+
+  expect_equal(m$listSets(), "i")
+  expect_equal(m$listAliases(), c("ip", "h"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+}
+)
