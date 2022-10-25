@@ -741,6 +741,7 @@ Container <- R6::R6Class (
           dimension = 1:s$dimension)
         }
       })
+      return(invisible(NULL))
     },
 
     renameUELs = function(uels) {
