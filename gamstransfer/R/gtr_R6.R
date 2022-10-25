@@ -205,7 +205,7 @@ Container <- R6::R6Class (
       }
 
       setOrAliasBool = unlist(lapply(symbols, function(x) {
-        return(inherits(self$getSymbols(x), c("Set", "Alias")))
+        return(inherits(self$getSymbols(x), c("Set", ".BaseAlias")))
       }), use.names = FALSE)
       setOrAlias = symbols[setOrAliasBool]
 
@@ -920,7 +920,7 @@ Container <- R6::R6Class (
         if (records == TRUE) {
           for (s in readData) {
             if (is.null(s$records) || inherits(self$data[[s$name]], 
-            c("Alias", "UniverseAlias"))) {
+            c(".BaseAlias"))) {
               next
             }
 
@@ -1068,7 +1068,7 @@ Container <- R6::R6Class (
 
     .linkDomainObjects = function(symbols) {
       symbol_is_alias = unlist(lapply(symbols, function(s) {
-        inherits(self$data[[s]], "Alias")}), use.names=FALSE)
+        inherits(self$data[[s]], ".BaseAlias")}), use.names=FALSE)
       symbol_not_alias = symbols[!symbol_is_alias]
 
       lapply(symbol_not_alias, function(s) {
@@ -1148,7 +1148,7 @@ Container <- R6::R6Class (
             if (is.character(i)) {
              return(TRUE)
             }
-            else if ((inherits(i, c("Set", "Alias"))) &
+            else if ((inherits(i, c("Set", ".BaseAlias"))) &
             any(orderedSymbols[1:orderedSymCount] == i$name)) {
                return(TRUE)
             }
@@ -1567,8 +1567,7 @@ b = "boolean"
           } # ignore if current uels don't exist
         }
         # set current levels
-        private$.records[, d] = factor(private$.records[, d], 
-        levels = cur_uels)
+        levels(private$.records[, d]) = cur_uels
       })
     }
     else {
@@ -1594,13 +1593,13 @@ b = "boolean"
 
     it_vec = 1:self$dimension
     is_set_alias = unlist(lapply(it_vec, function(x) {
-      inherits(self$domain[[x]], c("Set", "Alias"))
+      inherits(self$domain[[x]], c("Set", ".BaseAlias"))
     }), use.names = FALSE)
     it_vec = it_vec[is_set_alias]
 
     added_uel_all = lapply(it_vec, function(d) {
       setdiff(tolower(self$getUELs(d, ignoreUnused=TRUE)), 
-      tolower(self$domain[[d]]$getUELs(1, ignoreUnused=TRUE)))
+      tolower(self$domain[[d]]$getUELs(ignoreUnused=TRUE)))
     })
 
     length_added_uel = unlist(lapply(added_uel_all, length), use.names = FALSE)
@@ -1618,7 +1617,7 @@ b = "boolean"
   findDomainViolations = function() {
     violations = self$getDomainViolations()
 
-    if (is.null(violations)) return()
+    if (is.null(violations)) return(data.frame())
 
     idx = lapply(violations, function(dv) {
       set_dv = unique(dv$violations)
@@ -1634,17 +1633,17 @@ b = "boolean"
 
   hasDomainViolations = function() {
     df = self$findDomainViolations()
-    return(!is.null(df))
+    if ((nrow(df) == 0) && (length(df) == 0)) {
+      return(FALSE)
+    }
+    else {
+      return(TRUE)
+    }
   },
 
   countDomainViolations = function() {
     df = self$findDomainViolations()
-    if (is.null(df)) {
-      return(0)
-    }
-    else {
-      nrow(df)
-    }
+    return(nrow(df))
   },
 
   dropDomainViolations = function() {
@@ -2025,7 +2024,7 @@ b = "boolean"
           GMS_MAX_INDEX_DIM, "\n"))
         }
         domain_arg_check = unlist(lapply(domain_input, function(d) {
-          return((inherits(d, c("Set", "Alias" )) && d$dimension == 1)
+          return((inherits(d, c("Set", ".BaseAlias")) && d$dimension == 1)
         || is.character(d))}), use.names = FALSE)
         if (any(domain_arg_check == FALSE)) {
           stop("All 'domain' elements must be either one dimensional Set/Alias/UniverseAlias
@@ -2140,15 +2139,10 @@ b = "boolean"
     },
 
     domainType = function() {
-      regularCheck = list()
-      for (d in self$domain) {
-        if (inherits(d, c("Set", "Alias"))) {
-          regularCheck = append(regularCheck, TRUE)
-        }
-        else {
-            regularCheck = append(regularCheck, FALSE)
-        }
-      }
+      regularCheck = unlist(lapply(self$domain, function(d) {
+        return(inherits(d, c("Set", ".BaseAlias")))
+       }), use.names = FALSE)
+
       if (all(regularCheck == TRUE) && self$dimension != 0) {
           return("regular")
       }
@@ -2164,25 +2158,16 @@ b = "boolean"
     },
 
     domainNames = function() {
-      d = NA
-      for (i in self$domain) {
-        if (inherits(i, c("Set", "Alias"))) {
-          if (any(is.na(d))) {
-            d = i$name
-          }
-          else {
-            d = append(d, i$name)
-          }
+      if (self$dimension == 0) return(NA)
+
+      d = unlist(lapply(self$domain, function(i) {
+        if (inherits(i, c("Set", ".BaseAlias"))) {
+          return(i$name)
         }
         else {
-          if (any(is.na(d))) {
-            d = i
-          }
-          else {
-            d = append(d, i)
-          }
+          return(i)
         }
-      }
+      }), use.names = FALSE)
       return(d)
     },
 
@@ -2493,7 +2478,7 @@ Set <- R6Class(
       return(list(
         "name" = self$name,
         "isSingleton" = self$isSingleton,
-        "domain_objects" = self$domain,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -2711,8 +2696,8 @@ Parameter <- R6Class(
     summary = function() {
       return(list(
         "name" = self$name,
-        "is_scalar" = self$isScalar,
-        "domain_objects" = self$domain,
+        "isScalar" = self$isScalar,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -3052,7 +3037,7 @@ Variable <- R6Class(
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domain_objects" = self$domain,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -3465,7 +3450,7 @@ Equation <- R6Class(
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domain_objects" = self$domain,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -3957,10 +3942,10 @@ Alias <- R6Class(
     private$.testParentSet()
     return(list(
       "name" = self$name,
-      "alias_with" = self$aliasWith,
-      "alias_with_name" = self$aliasWith$name,
+      "aliasWith" = self$aliasWith,
+      "aliasWith_name" = self$aliasWith$name,
       "isSingleton" = self$isSingleton,
-      "domain_objects" = self$domain,
+      "domainObjects" = self$domain,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
@@ -4038,7 +4023,7 @@ UniverseAlias <- R6Class(
 
     getUELs = function(ignoreUnused = FALSE) {
       if (self$isValid()) {
-        return(self$refContainer$getUELs(ignoreUnused))
+        return(self$refContainer$getUELs(ignoreUnused = ignoreUnused))
       }
       else {
         return(NULL)
@@ -4146,7 +4131,7 @@ UniverseAlias <- R6Class(
     summary = function() {
     return(list(
       "name" = self$name,
-      "alias_with_name" = self$aliasWith,
+      "aliasWith_name" = self$aliasWith,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
@@ -4332,8 +4317,8 @@ ConstContainer <- R6::R6Class (
             }
 
             if (m$aliasfor == "*") {
-              .ConstUniverseAlias$new(self, m$name, m$aliasfor, "*", FALSE,
-              "Aliased with *", "none", m$numRecs
+              .ConstUniverseAlias$new(self, m$name, m$aliasfor, m$domain,
+              m$expltext, dt, m$numRecs
               )
             }
             else {
@@ -4606,7 +4591,7 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "isSingleton" = self$isSingleton,
-        "domain_objects" = self$domain,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4663,8 +4648,8 @@ ConstContainer <- R6::R6Class (
     summary = function() {
       return(list(
         "name" = self$name,
-        "is_scalar" = self$isScalar,
-        "domain_objects" = self$domain,
+        "isScalar" = self$isScalar,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4724,7 +4709,7 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domain_objects" = self$domain,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4789,7 +4774,7 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domain_objects" = self$domain,
+        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4861,7 +4846,7 @@ ConstContainer <- R6::R6Class (
     summary = function() {
     return(list(
       "name" = self$name,
-      "alias_with_name" = self$aliasWith,
+      "aliasWith_name" = self$aliasWith,
       "isSingleton" = self$isSingleton,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
@@ -4889,14 +4874,14 @@ ConstContainer <- R6::R6Class (
     .gams_subtype = NULL,
 
     initialize = function(container=NULL, name=NULL, aliasFor=NULL, 
-                          domain, isSingleton, 
+                          domain, 
                           description, domainType, numberRecords
                           ) {
       super$initialize(container, name, GMS_DT_ALIAS, 
-      isSingleton, domain, description, domainType, numberRecords)
+      FALSE, domain, description, domainType, numberRecords)
 
       private$.aliasWith = aliasFor
-      private$.is_singleton = isSingleton
+      private$.is_singleton = FALSE
     },
 
     getCardinality = function() {
@@ -4943,7 +4928,7 @@ ConstContainer <- R6::R6Class (
     summary = function() {
     return(list(
       "name" = self$name,
-      "alias_with_name" = self$aliasWith,
+      "aliasWith_name" = self$aliasWith,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
@@ -5151,8 +5136,8 @@ is.integer0 <- function(x)
       }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Alias", ".ConstAlias", 
-        "UniverseAlias", ".ConstUniverseAlias"))) {
+        if (inherits(self$data[[s]], c(".BaseAlias", ".ConstAlias", 
+        ".ConstUniverseAlias"))) {
           if (is.null(aliases)) {
             aliases = s
           }
@@ -5326,7 +5311,7 @@ is.integer0 <- function(x)
         for (i in nrow(df)) {
           name =df[i, 1]
           is_alias = append(is_alias, 
-          inherits(self$data[[name]], c("Alias", ".ConstAlias")))
+          inherits(self$data[[name]], c(".BaseAlias", ".ConstAlias")))
           if (inherits(self, "Container")) {
             if (inherits(self$data[[name]], "Alias")) {
              alias_with = append(alias_with, self$data[[name]]$aliasWith$name)

@@ -8013,3 +8013,85 @@ alias(h,*);
 
 }
 )
+
+# test reading and writing UniverseAlias with ConstContainer
+test_that("test_num_96", {
+
+  # gams syntax
+  gams_text = '
+set i /i1*i5/;
+alias(ip,i);
+alias(h,*);
+  '
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = ConstContainer$new()
+
+  # read all symbols
+  m$read(testthat::test_path("data.gdx"))
+
+  m2 = Container$new(m)
+  # write everything
+  m2$write(testthat::test_path("gt.gdx"))
+
+  expect_true(inherits(m2$data$h, "UniverseAlias"))
+  expect_true(inherits(m2$data$ip, "Alias"))
+  expect_true(inherits(m2$data$i, "Set"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+}
+)
+
+# UniverseAlias UEL functions
+test_that("test_num_97", {
+
+  m = Container$new()
+  i = Set$new(m, "i", records=paste0("i", 1:5))
+  ip = UniverseAlias$new(m, "ip")
+  p0 = Parameter$new(m, "p0", ip, records=data.frame(paste0("i",1:5), 1:5))
+
+  expect_equal(m$getUELs(), paste0("i",1:5))
+  m$renameUELs(c("i1" = "cheeseburgerz"))
+  expect_equal(m$getUELs(), c("cheeseburgerz", "i2","i3","i4", "i5"))
+
+  p0$addUELs("mustard")
+  expect_equal(p0$getUELs(), c("cheeseburgerz", "i2","i3","i4", "i5", "mustard"))
+
+  m$removeUELs()
+
+  expect_equal(m$getUELs(), c("cheeseburgerz", "i2","i3","i4", "i5"))
+
+  m$renameUELs(c("i2 " = "cheeseburgerz"))
+  expect_equal(m$getUELs(), c("cheeseburgerz", "i2","i3","i4", "i5"))
+}
+)
+
+# UniverseAlias as domain
+test_that("test_num_97", {
+  m = Container$new()
+  i = Set$new(m, "i", records=paste0("i", 1:5))
+  ip = UniverseAlias$new(m, "ip")
+  p0 = Parameter$new(m, "p0", ip, records=data.frame(paste0("i",1:5), 1:5))
+
+  expect_true(p0$isValid())
+  expect_equal(p0$domain[[1]], ip)
+  expect_equal(p0$domainType, "regular")
+  expect_equal(p0$dimension, 1)
+  expect_true(is.null(p0$getDomainViolations()))
+  expect_equal(nrow(p0$findDomainViolations()), 0)
+  expect_equal(p0$countDomainViolations(), 0)
+  expect_true(!p0$hasDuplicateRecords())
+  expect_true(is.null(p0$findDuplicateRecords()))
+  expect_equal(p0$countDuplicateRecords(), 0)
+  expect_equal(p0$summary, 
+  list(name="p0", isScalar=FALSE, domainObjects = list(ip), domainNames = "ip",
+  dimension=1, description="", numberRecords=5, domainType="regular"))
+}
+)

@@ -318,6 +318,9 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       if (subtype == 0) {
         // alias to the Universe
         strcpy(aliasForID, "*");
+
+        if (!gdxDataReadStrStart(PGX, varNr, &NrRecs))
+        stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
       }
       else {
         // normal Alias
@@ -359,7 +362,6 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 
       L1[l1count] = clone(templist);
     }
-    domain.clear();
 
   // if we just need metadata, stop here and return
   if (!records) {
