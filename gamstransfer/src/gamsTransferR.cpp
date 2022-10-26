@@ -190,11 +190,24 @@ bool is_uel_priority, bool compress) {
     varSubType = symname[".gams_subtype"];
 
     if (varType == GMS_DT_ALIAS) {
-      Environment alias_with_env = symname["aliasWith"];
-      std::string alias_with = alias_with_env["name"];
-      if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
-      stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
-      continue;
+      bool isUniverseAlias = symname[".isUniverseAlias"];
+
+      if (isUniverseAlias == true) {
+        std::string alias_with = symname["aliasWith"];
+
+        if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
+        stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
+        continue;
+      }
+      else {
+        Environment alias_with_env = symname["aliasWith"];
+        std::string alias_with = alias_with_env["name"];
+
+        if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
+        stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
+        continue;
+      }
+
     }
     Dim = symname["dimension"];
     StringVector names(Dim);
@@ -288,7 +301,6 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     std::vector<std::string> domain, index, elemText;
     std::vector<std::vector<std::string>> indices;
     char aliasForID[GMS_SSSIZE], explText[GMS_SSSIZE];
-
     // loop over symbols to get metadata
 		if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
       stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
@@ -303,17 +315,29 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     }
     if (sym_type == GMS_DT_ALIAS) {
       int parent_set_subtype;
-      if (!gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy))
-        stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+      if (subtype == 0) {
+        // alias to the Universe
+        strcpy(aliasForID, "*");
 
-      if (!gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText))
-        stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
+        if (!gdxDataReadStrStart(PGX, varNr, &NrRecs))
+        stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
+      }
+      else {
+        // normal Alias
+        if (!gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy))
+          stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
 
-      domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
-      if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
+        if (!gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText))
+          stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
 
-      if (!gdxDataReadStrStart(PGX, subtype, &NrRecs))
-      stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
+        domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
+        if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
+
+        if (!gdxDataReadStrStart(PGX, subtype, &NrRecs))
+        stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
+
+      }
+
 
       templistAlias["name"] = symbolID;
       templistAlias["type"] = sym_type;
@@ -338,7 +362,6 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 
       L1[l1count] = clone(templist);
     }
-    domain.clear();
 
   // if we just need metadata, stop here and return
   if (!records) {
@@ -346,20 +369,26 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
   }
 
   // if we also want records
-  if (sym_type == GMS_DT_ALIAS) return;
+  // if (sym_type == GMS_DT_ALIAS) return;
 
   if (!gdxDataReadStrStart(PGX, varNr, &NrRecs)) {
     stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
   }
 
   if (NrRecs == 0) {
-    templist["records"]=R_NilValue;
-    L1[l1count] = clone(templist);
+    if (sym_type == GMS_DT_ALIAS) {
+      templistAlias["records"] = R_NilValue;
+      L1[l1count] = clone(templistAlias);
+    }
+    else {
+      templist["records"]=R_NilValue;
+      L1[l1count] = clone(templist);
+    }
   }
   else {
     while (gdxDataReadStr(PGX, Indx, Values, &N)) {
-      if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR) {
-        if (sym_type == GMS_DT_SET){
+      if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR || sym_type == GMS_DT_ALIAS) {
+        if (sym_type == GMS_DT_SET || sym_type == GMS_DT_ALIAS) {
           rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
           if (rc != 0) {
             elemText.push_back(Msg);
@@ -424,8 +453,14 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     scale.clear();
     domain.clear();
     // copy end
-    templist["records"]=df;
-    L1[l1count] = clone(templist);
+    if (sym_type == GMS_DT_ALIAS) {
+      templistAlias["records"]=df;
+      L1[l1count] = clone(templistAlias);
+    }
+    else {
+      templist["records"]=df;
+      L1[l1count] = clone(templist);
+    }
   }
 
   if (!gdxDataReadDone(PGX))
@@ -492,7 +527,7 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   templistAlias =List::create(_["name"] = "", _["type"] = -1,
          _["aliasfor"] = "", _["domain"]="", _["subtype"] = 
          -1, _["expltext"]="", _["domaintype"]=-1,
-         _["numRecs"] = -1);
+         _["numRecs"] = -1, _["records"]=-1);
   templist = List::create(_["name"] = "", _["type"] = -1, 
   _["dimensions"]=-1, _["domain"]="", _["subtype"] = -1,
   _["expltext"]="", _["domaintype"]=-1, _["numRecs"] = -1,
