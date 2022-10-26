@@ -1,7 +1,9 @@
-GAMS Transfer R
+GAMS Transfer R 1.6.0
 ==================
 - domain forwarding bug fix when the records are NULL
 - describe* method bug fix when the type of symbol is not present in the Container
+- added UniverseAlias symbol type for alias to the Universe
+- renameUELs methods now have `allowMerge` argument for more data flexibility
 
 GAMS Transfer R v1.4.0
 ==================
