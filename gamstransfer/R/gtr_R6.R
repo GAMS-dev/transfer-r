@@ -744,14 +744,15 @@ Container <- R6::R6Class (
       return(invisible(NULL))
     },
 
-    renameUELs = function(uels) {
+    renameUELs = function(uels, allowMerge=FALSE) {
 
       lapply(self$data, function(s) {
         if (!inherits(s, "UniverseAlias")) {
           s$renameUELs(uels= uels, 
-          dimension = 1:s$dimension)
+          dimension = 1:s$dimension, allowMerge)
         }
       })
+      return(invisible(NULL))
     },
 
     getDomainViolations = function() {
@@ -1522,7 +1523,7 @@ b = "boolean"
     }
   },
 
-  renameUELs = function(uels, dimension=NULL) {
+  renameUELs = function(uels, dimension=NULL, allowMerge=FALSE) {
     if (!is.null(dimension)) {
       # input check
       if (!(is.integer(dimension) || is.numeric(dimension)) || 
@@ -1537,6 +1538,10 @@ b = "boolean"
       dimension = 1:self$dimension
     }
 
+    if (!is.logical(allowMerge)) {
+      stop("The argument `allowMerge` must be type logical\n")
+    }
+
     if (!self$isValid()) {
       stop("The symbol has to be valid to add UELs \n")
     }
@@ -1545,45 +1550,94 @@ b = "boolean"
       stop("The argument uels must be type `character` \n")
     }
 
-    if (!is.null(names(uels))) {
-      #error on duplicates
-      if (any(duplicated(uels) == TRUE)) {
-        stop("cannot rename the same `uel` more than 
-        once in a single call\n")
-      }
-      # user has provided uelmap
-      old_uels = names(uels)
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
 
-      # remove trailing whitespaces from uels
-      uels = trimws(uels, which="right")
-
+    # for list input add names
+    if (is.null(names(uels))) {
       lapply(dimension, function(d) {
-        # get current levels
-        cur_uels = levels(private$.records[, d])
-        # update current levels
-        for (uel in old_uels) {
-          idx = which(cur_uels == uel)
-          if (!is.integer0(idx)) {
-            cur_uels[idx] = uels[[uel]]
-          } # ignore if current uels don't exist
+        if (length(levels(private$.records[, d])) != length(uels)) {
+          stop(paste0("User passed a vector of length ", length(uels), 
+          " which does not match the length of existing uels: ", 
+          length(levels(private$.records[, d])), "\n"))
         }
-        # set current levels
-        levels(private$.records[, d]) = cur_uels
+
+        if (allowMerge == TRUE) {
+          levels(private$.records[, d]) = unique(uels)
+        }
+        else {
+          # make sure that the integer mapping is unaltered
+
+          if (any(duplicated(uels) == TRUE)) {
+            stop("Multiple UELs cannot be renamed to a UEL. 
+            Use `allowMerge=TRUE`\n")
+          }
+
+          if (length(intersect(levels(private$.records[, d]), uels)) != 0) {
+            stop("UEL cannot be renamed to an existing UEL. 
+            Use `allowMerge=TRUE`.\n")
+          }
+
+          levels(private$.records[, d]) = uels
+        }
       })
     }
     else {
-      if (any(duplicated(uels)) == TRUE) {
-        stop("The argument `uels` cannot contain duplicates\n")
+      # user has provided a UEL map named vector
+      # no duplicate keys
+      if (any(duplicated(names(uels)) == TRUE)) {
+        stop("A UEL cannot be renamed more than once in a single call. 
+        names(uels) must be unique")
       }
+      if (allowMerge == TRUE) {
+        # user has provided uelmap
+        old_uels = names(uels)
 
-      # remove trailing whitespaces from uels
-      uels = trimws(uels, which="right")
+        lapply(dimension, function(d) {
+          # get current levels
+          cur_uels = levels(private$.records[, d])
+          new_uels = cur_uels
 
-      lapply(dimension, function(d) {
-        levels(private$.records[, d]) = uels
-      })
+          idx = match(old_uels, cur_uels)
+          isna_idx = is.na(idx)
+          idx = idx[!isna_idx]
+          new_uels[idx] = uels[!isna_idx]
+
+          # set current levels
+          levels(private$.records[, d]) = new_uels
+        })
+      }
+      else {
+        # user has provided uelmap
+        old_uels = names(uels)
+
+        lapply(dimension, function(d) {
+
+          # get current levels
+          cur_uels = levels(private$.records[, d])
+          new_uels = cur_uels
+
+          idx = match(old_uels, cur_uels)
+          isna_idx = is.na(idx)
+          idx = idx[!isna_idx]
+          new_uels[idx] = uels[!isna_idx]
+
+
+          # don't allow more than one uels to be mapped to a same uel
+          if (any(duplicated(new_uels[idx]) == TRUE)) {
+            stop("Multiple UELs cannot be renamed to a UEL. Use `allowMerge=TRUE`\n")
+          }
+
+          # a uel cannot be mapped to an existing uel
+          if (length(intersect(levels(private$.records[, d]), new_uels[idx])) != 0) {
+            stop("UEL cannot be renamed to an existing UEL. Use `allowMerge=TRUE`.\n")
+          }
+
+          # set current levels
+          levels(private$.records[, d]) = new_uels
+        })
+      }
     }
-
   },
 
   getDomainViolations = function() {
@@ -3684,10 +3738,10 @@ Alias <- R6Class(
       self$aliasWith$removeUELs(uels, dimension)
     },
 
-    renameUELs = function(uels, dimension=NULL) {
+    renameUELs = function(uels, dimension=NULL, allowMerge=FALSE) {
       super$.testRefContainer()
       private$.testParentSet()
-      self$aliasWith$renameUELs(uels, dimension)
+      self$aliasWith$renameUELs(uels, dimension, allowMerge)
     },
 
     #' @description getCardinality get the full cartesian product of the domain

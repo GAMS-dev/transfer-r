@@ -7964,11 +7964,11 @@ expect_equal(i$getUELs(), c("i2", " i1", "i3"))
 
 m = Container$new()
 i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
-i$renameUELs(c("i1   ", "i2   ", " i3   "))
-expect_equal(i$getUELs(), c("i1", "i2", " i3"))
+i$renameUELs(c("i1   ", "  i2   ", " i3   "))
+expect_equal(i$getUELs(), c("i1", "  i2", " i3"))
 
 m$renameUELs(c("i1"="cheeseburgerz "))
-expect_equal(i$getUELs(), c("cheeseburgerz", "i2", " i3"))
+expect_equal(i$getUELs(), c("cheeseburgerz", "  i2", " i3"))
 
 m = Container$new()
 i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
