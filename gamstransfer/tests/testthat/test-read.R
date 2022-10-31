@@ -3582,7 +3582,7 @@ test_that("test_num_31", {
   a = Parameter$new(m, "a", c(i, j))
   m$removeSymbols("j")
   j = Set$new(m, "j", "i")
-  expect_error(a$isValid(verbose=TRUE))
+  expect_true(a$isValid(verbose=TRUE))
 
 }
 )
@@ -3916,12 +3916,9 @@ test_that("test_num_45", {
 
   expect_true(is.null(i$refContainer))
   expect_true(names(m$data) == c("j"))
-  expect_true(j$isValid() == FALSE)
+  expect_true(j$isValid())
+  expect_equal(j$domain, "*")
 
-  expect_error(Container$new(m))
-
-  m2 = Container$new()
-  expect_error(m2$read(m))
 }
 )
 
@@ -8086,6 +8083,7 @@ test_that("test_num_97", {
   expect_equal(p0$dimension, 1)
   expect_true(is.null(p0$getDomainViolations()))
   expect_equal(nrow(p0$findDomainViolations()), 0)
+  expect_true(!p0$hasDomainViolations())
   expect_equal(p0$countDomainViolations(), 0)
   expect_true(!p0$hasDuplicateRecords())
   expect_true(is.null(p0$findDuplicateRecords()))
@@ -8093,5 +8091,50 @@ test_that("test_num_97", {
   expect_equal(p0$summary, 
   list(name="p0", isScalar=FALSE, domainObjects = list(ip), domainNames = "ip",
   dimension=1, description="", numberRecords=5, domainType="regular"))
+
+  m$removeSymbols("ip")
+  expect_true(p0$isValid())
+  expect_equal(p0$domain[[1]], "*")
+  expect_equal(p0$domainType, "none")
+  expect_equal(p0$dimension, 1)
+  expect_true(is.null(p0$getDomainViolations()))
+  expect_true(!p0$hasDomainViolations())
+  expect_equal(nrow(p0$findDomainViolations()), 0)
+  expect_equal(p0$countDomainViolations(), 0)
+  expect_true(!p0$hasDuplicateRecords())
+  expect_true(is.null(p0$findDuplicateRecords()))
+  expect_equal(p0$countDuplicateRecords(), 0)
+  expect_equal(p0$summary, 
+  list(name="p0", isScalar=FALSE, domainObjects = "*", domainNames = "*",
+  dimension=1, description="", numberRecords=5, domainType="none"))
+
+  expect_true(!ip$isValid())
+  expect_equal(ip$summary,
+  list("name" = "ip",
+  aliasWith_name = "*",
+  domainNames = "*",
+  dimension = 1,
+  description = "Aliased with *",
+  numberRecords = NA,
+  domainType = "none"))
+}
+)
+
+# remove symbols including alias
+test_that("test_num_98", {
+m = Container$new()
+i = Set$new(m, "i")
+ii = Alias$new(m, "ii", i)
+j = Set$new(m, "j", domain=ii)
+
+m$removeSymbols("ii")
+# should affect j
+expect_equal(j$domain, "*")
+
+ii = Alias$new(m, "ii", i)
+m$removeSymbols("i")
+
+expect_true(is.null(m$data[["ii"]]))
+expect_equal(j$domain, "*")
 }
 )
