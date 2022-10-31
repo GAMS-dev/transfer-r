@@ -798,7 +798,7 @@ Container <- R6::R6Class (
 
       cont_dom_violations = list(replicate(length(self$data) * sum(n_dim), NA))
       dom_violation_count = 0
-      syms = names(self$data)
+      syms = self$data
 
 
       for (s in syms) {
@@ -808,7 +808,12 @@ Container <- R6::R6Class (
         length(dom_violations))] = dom_violations
         dom_violation_count = dom_violation_count + length(dom_violations)
       }
-      return(cont_dom_violations[1:dom_violation_count])
+      if (dom_violation_count == 0) {
+        return(invisible(NULL))
+      }
+      else {
+        return(cont_dom_violations[1:dom_violation_count])
+      }
     },
 
     hasDomainViolations = function() {
@@ -822,9 +827,9 @@ Container <- R6::R6Class (
     },
 
     dropDomainViolations = function() {
-      lapply(self$countDomainViolations(), 
+      lapply(names(self$countDomainViolations()), 
       function(s) self$data[[s]]$dropDomainViolations())
-      return()
+      return(invisible(NULL))
     },
 
     countDuplicateRecords = function() {
@@ -1701,7 +1706,7 @@ b = "boolean"
       DomainViolation$new(self, d, self$domain[[d]], added_uel_all[[d]])
     })
 
-    if (length(dom_violations) == 0) return()
+    if (length(dom_violations) == 0) return(invisible(NULL))
 
     return(dom_violations)
   },
@@ -6028,7 +6033,7 @@ DomainViolation <- R6::R6Class (
     format = function(...) {
       paste0("GAMS Transfer: DomainViolation with properties: \n", 
       "Symbol: ", self$symbol$name, "\n",
-      "dimension: ", self$diemnsion, "\n",
+      "dimension: ", self$dimension, "\n",
       "domain: ", self$domain$name, "\n",
       "violations: ", toString(self$violations))
     }

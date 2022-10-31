@@ -7759,6 +7759,9 @@ expect_true(j$isValid())
 expect_equal(i$getDomainViolations(), NULL)
 expect_equal(j$getDomainViolations(), NULL)
 
+# test container getdomainviolations
+expect_true(is.null(m$getDomainViolations()))
+
 m = Container$new()
 i = Set$new(m, "i", records=c("SeaTtle", "hamburg"))
 j = Set$new(m, "j", i, records=c(" seattle", "Hamburg"))
@@ -7767,6 +7770,13 @@ expect_true(i$isValid())
 expect_true(j$isValid())
 expect_equal(i$getDomainViolations(), NULL)
 expect_equal(j$getDomainViolations()[[1]]$violations, c(" seattle"))
+
+expect_equal(length(m$getDomainViolations()),  1)
+dv = m$getDomainViolations()
+expect_equal(dv[[1]]$symbol, j)
+expect_equal(dv[[1]]$dimension, 1)
+expect_equal(dv[[1]]$domain, i)
+expect_equal(dv[[1]]$violations, c(" seattle"))
 }
 )
 
@@ -7782,6 +7792,12 @@ expect_equal(a$findDomainViolations(), a$records[3:10,])
 
 expect_equal(a$countDomainViolations(), 8)
 expect_true(a$hasDomainViolations())
+#container hasDomainViolations()
+expect_true(m$hasDomainViolations())
+
+#container countDomainViolations()
+expect_equal(m$countDomainViolations()$a, 8)
+expect_equal(m$countDomainViolations()$a2, 8)
 
 a$dropDomainViolations()
 expect_equal(as.character(a$records[,1]), c("j1","j2") )
@@ -7789,6 +7805,19 @@ expect_false(a$hasDomainViolations())
 expect_equal(a$countDomainViolations(), 0)
 expect_true(is.null(a$findDuplicateRecords()))
 expect_true(a$isValid())
+
+# test dropdomainviolations for container
+m = Container$new()
+i = Set$new(m, "i", records=c("j1", "j2"))
+a = Parameter$new(m, "a", i, records= data.frame(paste0("j",1:10), 1:10))
+a2 = Parameter$new(m, "a2", c(i,i), records= data.frame(paste0("j",1:10),paste0("j",1:10), 1:10))
+
+m$dropDomainViolations()
+expect_equal(as.character(a$records[,1]), c("j1","j2") )
+expect_false(m$hasDomainViolations())
+empty_named_list = list()
+names(empty_named_list) = character(0)
+expect_equal(m$countDomainViolations(), empty_named_list)
 }
 )
 
