@@ -758,9 +758,15 @@ Container <- R6::R6Class (
       return(uel_all_symbols)
     },
 
-    removeUELs = function(uels = NULL) {
+    removeUELs = function(uels = NULL, symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
 
-      lapply(self$data, function(s) {
+      lapply(symbols, function(s) {
         if (!inherits(s, "UniverseAlias")) {
           s$removeUELs(uels= uels, 
           dimension = 1:s$dimension)
@@ -769,9 +775,15 @@ Container <- R6::R6Class (
       return(invisible(NULL))
     },
 
-    renameUELs = function(uels, allowMerge=FALSE) {
+    renameUELs = function(uels, symbols=NULL, allowMerge=FALSE) {
+      if (is.null(symbols)) {
+        symbols = self$data
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
 
-      lapply(self$data, function(s) {
+      lapply(symbols, function(s) {
         if (!inherits(s, "UniverseAlias")) {
           s$renameUELs(uels= uels, 
           dimension = 1:s$dimension, allowMerge)
