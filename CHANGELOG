@@ -1,3 +1,7 @@
+GAMS Transfer R
+==================
+- `removeSymbols` removes symbol links in other symbols
+
 GAMS Transfer R v1.6.0
 ==================
 - domain forwarding bug fix when the records are NULL

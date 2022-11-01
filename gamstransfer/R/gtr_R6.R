@@ -209,12 +209,37 @@ Container <- R6::R6Class (
       }), use.names = FALSE)
       setOrAlias = symbols[setOrAliasBool]
 
+      setOrAliasObj = self$getSymbols(setOrAlias)
+
       lapply(symbols, function(n) {
         sym = self$getSymbols(n)
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
         self$data[[sym$name]] <- NULL
         return()
+      })
+
+
+      # remove alias if parent set is removed
+      lapply(self$data, function(s) {
+        if (inherits(s, "Alias")) {
+          if (any(identical(setOrAliasObj, s$aliasWith))) {
+            self$removeSymbols(s$name)
+          }
+        }
+      })
+
+      # remove domain references
+      lapply(self$data, function(s) {
+        new_dom = unlist(lapply(s$domain, function(d) {
+          if (any(identical(setOrAliasObj, d))) {
+            return("*")
+          }
+          else {
+            return(d)
+          }
+        }), use.names = FALSE)
+        s$domain = new_dom
       })
 
       # if there were any sets or aliases removed from the data list
@@ -3606,6 +3631,11 @@ Equation <- R6Class(
         return(private$.ref_container)
       }
       else {
+        if (is.null(ref_container_input)) {
+          private$.ref_container = NULL
+          self$.requiresStateCheck = TRUE
+          return()
+        }
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }
@@ -4147,7 +4177,7 @@ UniverseAlias <- R6Class(
     },
 
     description = function(description_input) {
-      return("Alias for *")
+      return("Aliased with *")
     },
 
     dimension = function(dimension_input) {
@@ -4166,13 +4196,13 @@ UniverseAlias <- R6Class(
     },
 
     numberRecords = function() {
-      if (!self$isValid()) return(NULL)
+      if (!self$isValid()) return(NA)
 
       return(nrow(self$records))
     },
 
     domainType = function() {
-      return(NA)
+      return("none")
     },
 
     domainNames = function() {
