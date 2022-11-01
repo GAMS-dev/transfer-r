@@ -1757,6 +1757,8 @@ b = "boolean"
       return(unlist(idx, use.names=FALSE))
     })
     private$.records = private$.records[-unlist(unique(idx)), ]
+    rownames(private$.records) <- NULL
+    return(invisible(NULL))
   },
 
   countDuplicateRecords = function() {
