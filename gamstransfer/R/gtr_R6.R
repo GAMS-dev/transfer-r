@@ -3761,7 +3761,7 @@ Alias <- R6Class(
       self$aliasWith$getUELs(dimension, codes, ignoreUnused)
     },
 
-    setUELs = function(uels, dimension, rename=FALSE) {
+    setUELs = function(uels, dimension=NULL, rename=FALSE) {
       super$.testRefContainer()
       private$.testParentSet()
       self$aliasWith$setUELs(uels, dimension, rename)
