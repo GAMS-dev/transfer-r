@@ -8291,3 +8291,179 @@ ip$dropDuplicateRecords()
 expect_equal(nrow(i$records), 1)
 }
 )
+
+#summary test
+test_that("test_num_101", {
+  # gams syntax
+  gams_text = "
+    Set
+        i 'canning plants' / seattle,  san-diego /
+        j 'markets'        / new-york, chicago, topeka /;
+
+    Parameter
+        a(i) 'capacity of plant i in cases'
+            / seattle    350
+              san-diego  600 /
+
+        b(j) 'demand at market j in cases'
+            / new-york   325
+              chicago    300
+              topeka     275 /;
+    alias(i, ip);
+    Table d(i,j) 'distance in thousands of miles'
+                  new-york  chicago  topeka
+        seattle         2.5      1.7     1.8
+        san-diego       2.5      1.8     1.4;
+
+    Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+    Parameter c(i,j) 'transport cost in thousands of dollars per case';
+    c(i,j) = f*d(i,j)/1000;
+
+    Variable
+        x(i,j) 'shipment quantities in cases'
+        z      'total transportation costs in thousands of dollars';
+
+    Positive Variable x;
+
+    Equation
+        cost      'define objective function'
+        supply(i) 'observe supply limit at plant i'
+        demand(j) 'satisfy demand at market j';
+
+    cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+    supply(i).. sum(j, x(i,j)) =l= a(i);
+
+    demand(j).. sum(i, x(i,j)) =g= b(j);
+
+    Model transport / all /;
+
+    solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  expect_error(m$read(testthat::test_path("data.gdx"), records="true"))
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"))
+  expect_equal(m$data$i$summary, list(
+    name = "i",
+    isSingleton = FALSE,
+    domainObjects = "*",
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+
+  expect_equal(m$data$d$summary, list(
+    name = "d",
+    isScalar = FALSE,
+    domainObjects = c(m$data$i, m$data$j),
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "distance in thousands of miles",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$x$summary, list(
+    name = "x",
+    type = "positive",
+    domainObjects = c(m$data$i, m$data$j),
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "shipment quantities in cases",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$demand$summary, list(
+    name = "demand",
+    type = "geq",
+    domainObjects = list(m$data$j),
+    domainNames = "j",
+    dimension = 1,
+    description = "satisfy demand at market j",
+    numberRecords = 3,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$ip$summary, list(
+    name = "ip",
+    aliasWith = m$data$i,
+    aliasWith_name = "i",
+    isSingleton = FALSE,
+    domainObjects = "*",
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+
+  # constcontainer
+  m = ConstContainer$new()
+  expect_error(m$read(testthat::test_path("data.gdx"), records="true"))
+
+  m = ConstContainer$new()
+  m$read(testthat::test_path("data.gdx"))
+  expect_equal(m$data$i$summary, list(
+    name = "i",
+    isSingleton = FALSE,
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+
+  expect_equal(m$data$d$summary, list(
+    name = "d",
+    isScalar = FALSE,
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "distance in thousands of miles",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$x$summary, list(
+    name = "x",
+    type = "positive",
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "shipment quantities in cases",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$demand$summary, list(
+    name = "demand",
+    type = "geq",
+    domainNames = "j",
+    dimension = 1,
+    description = "satisfy demand at market j",
+    numberRecords = 3,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$ip$summary, list(
+    name = "ip",
+    aliasWith_name = "i",
+    isSingleton = FALSE,
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+}
+)

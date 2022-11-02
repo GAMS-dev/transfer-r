@@ -4049,7 +4049,8 @@ Alias <- R6Class(
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords
+      "numberRecords" = self$numberRecords,
+      "domainType" = self$domainType
     ))
     }
   ),
@@ -4637,7 +4638,6 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "isSingleton" = self$isSingleton,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4686,7 +4686,6 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "isScalar" = self$isScalar,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4737,7 +4736,6 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4790,7 +4788,6 @@ ConstContainer <- R6::R6Class (
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
