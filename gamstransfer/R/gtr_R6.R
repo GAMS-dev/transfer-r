@@ -98,13 +98,7 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
-        if (inherits(self, "Container")) {
-          self$read(loadFrom)
-        }
-        else if (inherits(self, "ConstContainer")) {
-          self$read(loadFrom, records=FALSE)
-        }
-
+        self$read(loadFrom)
       }
     },
 
