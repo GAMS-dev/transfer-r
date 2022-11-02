@@ -1801,7 +1801,9 @@ b = "boolean"
     idx = self$findDuplicateRecords(keep)
     if (!is.null(idx)) {
       self$records = self$records[-idx, ]
+      rownames(self$records) <- NULL
     }
+    return(invisible(NULL))
   },
 
   #' @description getCardinality get the full cartesian product of the domain
