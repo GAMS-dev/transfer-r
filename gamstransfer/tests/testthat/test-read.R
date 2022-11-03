@@ -7889,6 +7889,21 @@ expect_true(inherits(m$addParameter("i","*",records=data.frame(paste0("i",1:5), 
 expect_equal(m$data$i$description, "hamburger")
 
 expect_error(Parameter$new(m, "i", records=data.frame(paste0("i",1:5), 1:5)))
+
+# overwriting parameter with domain
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+j = Set$new(m, "j", records=paste0("j",1:5))
+d = Parameter$new(m, "d", domain=c(i, j), records=diag(5))
+
+# test filtering zeros
+expect_equal(as.character(d$records$i_1), paste0("i",1:5))
+expect_equal(as.character(d$records$j_2), paste0("j",1:5))
+expect_equal(as.numeric(d$records$value),replicate(5, 1))
+
+# overwriting
+m$addParameter("d", , domain=c(i, j), records=matrix(0, 5, 5))
+expect_true(is.null(d$records))
 }
 )
 
