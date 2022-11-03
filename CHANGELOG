@@ -1,6 +1,7 @@
 GAMS Transfer R
 ==================
 - `removeSymbols` removes symbol links in other symbols
+- added `symbols` argument to Container methods `renameUELs` and `removeUELs`
 
 GAMS Transfer R v1.6.0
 ==================

@@ -7652,13 +7652,31 @@ expect_equal(i$getUELs(), paste0("i",2:6))
 
 m = Container$new()
 i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
+ip = Alias$new(m, "ip", i)
+ip$removeUELs("hi", 1)
+ip$removeUELs("hi", 2)
+ip$removeUELs("hi")
+
+expect_equal(ip$getUELs(), paste0("i", 1:6))
+
+ip$removeUELs("i1", 1)
+expect_equal(ip$getUELs(), paste0("i",2:6))
+
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
 i$removeUELs("i4")
 expect_equal(i$getUELs(), append(paste0("i", 1:3), c("i5", "i6")))
 
 m = Container$new()
 i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
-j = Set$new(m, "j", domain=c("*", "*"), records=data.frame(c("j1","j2","j3"), c("j4","j5","j6")))
+ip = Alias$new(m, "ip", i)
+ip$removeUELs("i4")
+expect_equal(ip$getUELs(), append(paste0("i", 1:3), c("i5", "i6")))
 
+m = Container$new()
+i = Set$new(m, "i", domain=c("*", "*"), records=data.frame(c("i1","i2","i3"), c("i4","i5","i6")))
+j = Set$new(m, "j", domain=c("*", "*"), records=data.frame(c("j1","j2","j3"), c("j4","j5","j6")))
+ip = Alias$new(m, "ip", i)
 m$removeUELs(c("i1","j4"))
 expect_equal(m$getUELs(), append(paste0("i",2:6), paste0("j",c(1:3,5,6))))
 }
@@ -7753,20 +7771,48 @@ test_that("test_num_85", {
 m = Container$new()
 i = Set$new(m, "i", records=c("SeaTtle", "hamburg"))
 j = Set$new(m, "j", i, records=c("seattle", "Hamburg"))
+ip = Alias$new(m, "ip", i)
+jp = Alias$new(m, "jp", j)
 
 expect_true(i$isValid())
 expect_true(j$isValid())
 expect_equal(i$getDomainViolations(), NULL)
 expect_equal(j$getDomainViolations(), NULL)
+expect_equal(ip$getDomainViolations(), NULL)
+expect_equal(jp$getDomainViolations(), NULL)
+
+# test container getdomainviolations
+expect_true(is.null(m$getDomainViolations()))
 
 m = Container$new()
 i = Set$new(m, "i", records=c("SeaTtle", "hamburg"))
 j = Set$new(m, "j", i, records=c(" seattle", "Hamburg"))
+ip = Alias$new(m, "ip", i)
+jp = Alias$new(m, "jp", j)
 
 expect_true(i$isValid())
 expect_true(j$isValid())
 expect_equal(i$getDomainViolations(), NULL)
 expect_equal(j$getDomainViolations()[[1]]$violations, c(" seattle"))
+expect_equal(ip$getDomainViolations(), NULL)
+expect_equal(jp$getDomainViolations()[[1]]$violations, c(" seattle"))
+
+expect_equal(length(m$getDomainViolations()),  2)
+dv = m$getDomainViolations()
+expect_equal(dv[[1]]$symbol, j)
+expect_equal(dv[[1]]$dimension, 1)
+expect_equal(dv[[1]]$domain, i)
+expect_equal(dv[[1]]$violations, c(" seattle"))
+
+# finddomainviolations  for alias
+df = jp$findDomainViolations()
+expect_equal(as.character(df[[1]]), " seattle")
+
+expect_true(jp$hasDomainViolations())
+expect_equal(jp$countDomainViolations(), 1)
+jp$dropDomainViolations()
+expect_equal(as.character(j$records$i_1), "Hamburg")
+
 }
 )
 
@@ -7782,6 +7828,12 @@ expect_equal(a$findDomainViolations(), a$records[3:10,])
 
 expect_equal(a$countDomainViolations(), 8)
 expect_true(a$hasDomainViolations())
+#container hasDomainViolations()
+expect_true(m$hasDomainViolations())
+
+#container countDomainViolations()
+expect_equal(m$countDomainViolations()$a, 8)
+expect_equal(m$countDomainViolations()$a2, 8)
 
 a$dropDomainViolations()
 expect_equal(as.character(a$records[,1]), c("j1","j2") )
@@ -7789,6 +7841,19 @@ expect_false(a$hasDomainViolations())
 expect_equal(a$countDomainViolations(), 0)
 expect_true(is.null(a$findDuplicateRecords()))
 expect_true(a$isValid())
+
+# test dropdomainviolations for container
+m = Container$new()
+i = Set$new(m, "i", records=c("j1", "j2"))
+a = Parameter$new(m, "a", i, records= data.frame(paste0("j",1:10), 1:10))
+a2 = Parameter$new(m, "a2", c(i,i), records= data.frame(paste0("j",1:10),paste0("j",1:10), 1:10))
+
+m$dropDomainViolations()
+expect_equal(as.character(a$records[,1]), c("j1","j2") )
+expect_false(m$hasDomainViolations())
+empty_named_list = list()
+names(empty_named_list) = character(0)
+expect_equal(m$countDomainViolations(), empty_named_list)
 }
 )
 
@@ -7824,6 +7889,21 @@ expect_true(inherits(m$addParameter("i","*",records=data.frame(paste0("i",1:5), 
 expect_equal(m$data$i$description, "hamburger")
 
 expect_error(Parameter$new(m, "i", records=data.frame(paste0("i",1:5), 1:5)))
+
+# overwriting parameter with domain
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+j = Set$new(m, "j", records=paste0("j",1:5))
+d = Parameter$new(m, "d", domain=c(i, j), records=diag(5))
+
+# test filtering zeros
+expect_equal(as.character(d$records$i_1), paste0("i",1:5))
+expect_equal(as.character(d$records$j_2), paste0("j",1:5))
+expect_equal(as.numeric(d$records$value),replicate(5, 1))
+
+# overwriting
+m$addParameter("d", , domain=c(i, j), records=matrix(0, 5, 5))
+expect_true(is.null(d$records))
 }
 )
 
@@ -7956,8 +8036,23 @@ expect_equal(i$getUELs(), c(" i1", " i2", "i3"))
 
 m = Container$new()
 i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+ip = Alias$new(m, "ip", i)
+expect_equal(ip$getUELs(), c(" i1", "i2", "i3"))
+ip$setUELs(c(" i1 ", " i2 ", "i3"))
+expect_equal(i$getUELs(), c(" i1", " i2", "i3"))
+expect_equal(i$getUELs(), ip$getUELs())
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
 i$reorderUELs(c("i2", " i1", "i3"))
 expect_equal(i$getUELs(), c("i2", " i1", "i3"))
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+ip = Alias$new(m, "ip", i)
+ip$reorderUELs(c("i2", " i1", "i3"))
+expect_equal(ip$getUELs(), c("i2", " i1", "i3"))
+expect_equal(i$getUELs(), ip$getUELs())
 
 m = Container$new()
 i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
@@ -7969,8 +8064,25 @@ expect_equal(i$getUELs(), c("cheeseburgerz", "  i2", " i3"))
 
 m = Container$new()
 i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+ip = Alias$new(m, "ip", i)
+ip$renameUELs(c("i1   ", "  i2   ", " i3   "))
+expect_equal(ip$getUELs(), c("i1", "  i2", " i3"))
+expect_equal(i$getUELs(), ip$getUELs())
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
 i$addUELs("i4   ")
 expect_equal(i$getUELs(), c(" i1", "i2", "i3", "i4"))
+m$renameUELs(c("i1"="cheeseburgerz "))
+expect_equal(i$getUELs(), c(" i1", "i2", "i3", "i4"))
+
+m = Container$new()
+i = Set$new(m, "i", records=c(" i1 ", "i2", "i3"))
+ip = Alias$new(m, "ip", i)
+ip$addUELs("i4   ")
+expect_equal(ip$getUELs(), c(" i1", "i2", "i3", "i4"))
+m$renameUELs(c("i1"="cheeseburgerz "))
+expect_equal(i$getUELs(), ip$getUELs())
 }
 )
 
@@ -8136,5 +8248,237 @@ m$removeSymbols("i")
 
 expect_true(is.null(m$data[["ii"]]))
 expect_equal(j$domain, "*")
+}
+)
+
+# GDX read errors
+test_that("test_num_99", {
+  # gams syntax
+  gams_text = '
+set i /i1*i5/;
+alias(ip,i);
+  '
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  i = Set$new(m, "i")
+
+  # read all symbols: expect error because i already exists
+  expect_error(m$read(testthat::test_path("data.gdx")))
+
+  m2 = ConstContainer$new()
+  m2$read(testthat::test_path("data.gdx"))
+
+  # read all symbols: expect error because i already exists
+  expect_error(m$read(m2))
+
+  #read constcontainer into container
+  m = Container$new(m2)
+  expect_equal(m$listSymbols(), m2$listSymbols())
+
+  # expect error on reading only alias
+  m = Container$new()
+  expect_error(m$read(testthat::test_path("data.gdx"), symbols="ip"))
+
+  # expect error if user wants to read a symbol from another container but it doesn't exist
+  m = Container$new()
+  expect_error(m$read(m2, symols="j"))
+
+  # expect error on reading only alias
+  m2 = Container$new()
+  expect_error(m2$read(testthat::test_path("data.gdx"), symols="ip"))
+}
+)
+
+# alias duplicaterecords
+test_that("test_num_100", {
+m = Container$new()
+i = Set$new(m, "i", records=replicate(5, "i1"))
+ip = Alias$new(m, "ip", i)
+
+expect_equal(ip$countDuplicateRecords(), 4)
+expect_equal(ip$findDuplicateRecords(), 2:5)
+expect_true(ip$hasDuplicateRecords())
+ip$dropDuplicateRecords()
+expect_equal(nrow(i$records), 1)
+}
+)
+
+#summary test
+test_that("test_num_101", {
+  # gams syntax
+  gams_text = "
+    Set
+        i 'canning plants' / seattle,  san-diego /
+        j 'markets'        / new-york, chicago, topeka /;
+
+    Parameter
+        a(i) 'capacity of plant i in cases'
+            / seattle    350
+              san-diego  600 /
+
+        b(j) 'demand at market j in cases'
+            / new-york   325
+              chicago    300
+              topeka     275 /;
+    alias(i, ip);
+    Table d(i,j) 'distance in thousands of miles'
+                  new-york  chicago  topeka
+        seattle         2.5      1.7     1.8
+        san-diego       2.5      1.8     1.4;
+
+    Scalar f 'freight in dollars per case per thousand miles' / 90 /;
+
+    Parameter c(i,j) 'transport cost in thousands of dollars per case';
+    c(i,j) = f*d(i,j)/1000;
+
+    Variable
+        x(i,j) 'shipment quantities in cases'
+        z      'total transportation costs in thousands of dollars';
+
+    Positive Variable x;
+
+    Equation
+        cost      'define objective function'
+        supply(i) 'observe supply limit at plant i'
+        demand(j) 'satisfy demand at market j';
+
+    cost..      z =e= sum((i,j), c(i,j)*x(i,j));
+
+    supply(i).. sum(j, x(i,j)) =l= a(i);
+
+    demand(j).. sum(i, x(i,j)) =g= b(j);
+
+    Model transport / all /;
+
+    solve transport using lp minimizing z;
+  "
+
+  write(gams_text, "data.gms")
+  ret = system2(command="gams", args= 
+  paste0(testthat::test_path("data.gms"), " gdx=data.gdx"), 
+  stdout = TRUE, stderr = TRUE)
+
+  m = Container$new()
+  expect_error(m$read(testthat::test_path("data.gdx"), records="true"))
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"))
+  expect_equal(m$data$i$summary, list(
+    name = "i",
+    isSingleton = FALSE,
+    domainObjects = "*",
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+
+  expect_equal(m$data$d$summary, list(
+    name = "d",
+    isScalar = FALSE,
+    domainObjects = c(m$data$i, m$data$j),
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "distance in thousands of miles",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$x$summary, list(
+    name = "x",
+    type = "positive",
+    domainObjects = c(m$data$i, m$data$j),
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "shipment quantities in cases",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$demand$summary, list(
+    name = "demand",
+    type = "geq",
+    domainObjects = list(m$data$j),
+    domainNames = "j",
+    dimension = 1,
+    description = "satisfy demand at market j",
+    numberRecords = 3,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$ip$summary, list(
+    name = "ip",
+    aliasWith = m$data$i,
+    aliasWith_name = "i",
+    isSingleton = FALSE,
+    domainObjects = "*",
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+
+  # constcontainer
+  m = ConstContainer$new()
+  expect_error(m$read(testthat::test_path("data.gdx"), records="true"))
+
+  m = ConstContainer$new()
+  m$read(testthat::test_path("data.gdx"))
+  expect_equal(m$data$i$summary, list(
+    name = "i",
+    isSingleton = FALSE,
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
+
+  expect_equal(m$data$d$summary, list(
+    name = "d",
+    isScalar = FALSE,
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "distance in thousands of miles",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$x$summary, list(
+    name = "x",
+    type = "positive",
+    domainNames = c("i","j"),
+    dimension = 2,
+    description = "shipment quantities in cases",
+    numberRecords = 6,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$demand$summary, list(
+    name = "demand",
+    type = "geq",
+    domainNames = "j",
+    dimension = 1,
+    description = "satisfy demand at market j",
+    numberRecords = 3,
+    domainType = "regular"
+  ))
+
+  expect_equal(m$data$ip$summary, list(
+    name = "ip",
+    aliasWith_name = "i",
+    isSingleton = FALSE,
+    domainNames = "*",
+    dimension = 1,
+    description = "canning plants",
+    numberRecords = 2,
+    domainType = "none"
+  ))
 }
 )

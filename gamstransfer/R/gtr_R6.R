@@ -98,13 +98,7 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
-        if (inherits(self, "Container")) {
-          self$read(loadFrom)
-        }
-        else if (inherits(self, "ConstContainer")) {
-          self$read(loadFrom, records=FALSE)
-        }
-
+        self$read(loadFrom)
       }
     },
 
@@ -316,7 +310,7 @@ Container <- R6::R6Class (
 
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Set")
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$isSingleton == isSingleton
         && symobj$domainForwarding == domainForwarding
         ) {
@@ -375,7 +369,7 @@ Container <- R6::R6Class (
 
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Parameter")
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
         ) {
           symobj$setRecords(records)
@@ -437,7 +431,7 @@ Container <- R6::R6Class (
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Variable")
         && symobj$type == type
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
         ) {
           symobj$setRecords(records)
@@ -499,7 +493,7 @@ Container <- R6::R6Class (
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Equation")
         && symobj$type == type
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
         ) {
           symobj$setRecords(records)
@@ -758,9 +752,15 @@ Container <- R6::R6Class (
       return(uel_all_symbols)
     },
 
-    removeUELs = function(uels = NULL) {
+    removeUELs = function(uels = NULL, symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
 
-      lapply(self$data, function(s) {
+      lapply(symbols, function(s) {
         if (!inherits(s, "UniverseAlias")) {
           s$removeUELs(uels= uels, 
           dimension = 1:s$dimension)
@@ -769,9 +769,15 @@ Container <- R6::R6Class (
       return(invisible(NULL))
     },
 
-    renameUELs = function(uels, allowMerge=FALSE) {
+    renameUELs = function(uels, symbols=NULL, allowMerge=FALSE) {
+      if (is.null(symbols)) {
+        symbols = self$data
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
 
-      lapply(self$data, function(s) {
+      lapply(symbols, function(s) {
         if (!inherits(s, "UniverseAlias")) {
           s$renameUELs(uels= uels, 
           dimension = 1:s$dimension, allowMerge)
@@ -786,7 +792,7 @@ Container <- R6::R6Class (
 
       cont_dom_violations = list(replicate(length(self$data) * sum(n_dim), NA))
       dom_violation_count = 0
-      syms = names(self$data)
+      syms = self$data
 
 
       for (s in syms) {
@@ -796,7 +802,12 @@ Container <- R6::R6Class (
         length(dom_violations))] = dom_violations
         dom_violation_count = dom_violation_count + length(dom_violations)
       }
-      return(cont_dom_violations[1:dom_violation_count])
+      if (dom_violation_count == 0) {
+        return(invisible(NULL))
+      }
+      else {
+        return(cont_dom_violations[1:dom_violation_count])
+      }
     },
 
     hasDomainViolations = function() {
@@ -810,9 +821,9 @@ Container <- R6::R6Class (
     },
 
     dropDomainViolations = function() {
-      lapply(self$countDomainViolations(), 
+      lapply(names(self$countDomainViolations()), 
       function(s) self$data[[s]]$dropDomainViolations())
-      return()
+      return(invisible(NULL))
     },
 
     countDuplicateRecords = function() {
@@ -1689,7 +1700,7 @@ b = "boolean"
       DomainViolation$new(self, d, self$domain[[d]], added_uel_all[[d]])
     })
 
-    if (length(dom_violations) == 0) return()
+    if (length(dom_violations) == 0) return(invisible(NULL))
 
     return(dom_violations)
   },
@@ -1740,6 +1751,8 @@ b = "boolean"
       return(unlist(idx, use.names=FALSE))
     })
     private$.records = private$.records[-unlist(unique(idx)), ]
+    rownames(private$.records) <- NULL
+    return(invisible(NULL))
   },
 
   countDuplicateRecords = function() {
@@ -1782,7 +1795,9 @@ b = "boolean"
     idx = self$findDuplicateRecords(keep)
     if (!is.null(idx)) {
       self$records = self$records[-idx, ]
+      rownames(self$records) <- NULL
     }
+    return(invisible(NULL))
   },
 
   #' @description getCardinality get the full cartesian product of the domain
@@ -3744,7 +3759,7 @@ Alias <- R6Class(
       self$aliasWith$getUELs(dimension, codes, ignoreUnused)
     },
 
-    setUELs = function(uels, dimension, rename=FALSE) {
+    setUELs = function(uels, dimension=NULL, rename=FALSE) {
       super$.testRefContainer()
       private$.testParentSet()
       self$aliasWith$setUELs(uels, dimension, rename)
@@ -4034,7 +4049,8 @@ Alias <- R6Class(
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords
+      "numberRecords" = self$numberRecords,
+      "domainType" = self$domainType
     ))
     }
   ),
@@ -4442,6 +4458,15 @@ ConstContainer <- R6::R6Class (
   ".ConstSymbol",
   inherit = .BaseSymbol,
   public = list(
+    records = NULL,
+    description = NULL,
+    dimension = NULL,
+    domain = NULL,
+    refContainer = NULL,
+    name = NULL,
+    numberRecords = NULL,
+    domainType = NULL,
+    domainLabels = NULL,
   initialize = function(container, name,
                         type, subtype, 
                         domain,
@@ -4450,16 +4475,30 @@ ConstContainer <- R6::R6Class (
 
     super$initialize(type, subtype)
 
-    private$.ref_container = container
+    self$refContainer = container
+    lockBinding("refContainer", self)
+
+    self$name = name
+    lockBinding("name", self)
     container$data[[name]] = self
 
-    private$.name <- name
-    private$.domain = domain
-    private$.dimension = length(domain)
-    private$.domainType = domaintype
-    private$.description = description
-    private$.number_records = numberRecords
+    self$domain = domain
+    lockBinding("domain", self)
 
+    self$dimension = length(domain)
+    lockBinding("dimension", self)
+
+    self$domainType = private$.domain_type_map[[domaintype]]
+    lockBinding("domainType", self)
+
+    self$description = description
+    lockBinding("description", self)
+
+    self$numberRecords = numberRecords
+    lockBinding("numberRecords", self)
+
+    self$domainLabels = private$.get_domain_labels()
+    lockBinding("domainLabels", self)
   },
 
   getCardinality = function() {
@@ -4521,70 +4560,6 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-
-    records = function(records_input) {
-      if (missing(records_input)) {
-        return(private$.records)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    description = function(description_input) {
-      if (missing(description_input)) {
-        return(private$.description)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    dimension = function(dimension_input) {
-      if (missing(dimension_input)) {
-        return(private$.dimension)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    domain = function(domain_input) {
-
-      if (missing(domain_input)) {
-        return(private$.domain)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    refContainer = function(ref_container_input) {
-      if (missing(ref_container_input)) {
-        return(private$.ref_container)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    name = function(name_input) {
-      if (missing(name_input)) {
-        return(private$.name)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    numberRecords = function() {
-      return(private$.number_records)
-    },
-
-    domainType = function() {
-      return(private$.domain_type_map[[private$.domainType]])
-    },
-
     domainNames = function() {
       if (is.null(self$domain) || (length(self$domain) == 0)) {
         return(NA)
@@ -4592,9 +4567,18 @@ ConstContainer <- R6::R6Class (
       else {
         return(self$domain)
       }
+    }
+  ),
+  private = list(
+    symbolMaxLength = 63,
+    descriptionMaxLength = 255,
+    .domain_type_map = list("none", "relaxed", "regular"),
+    .set_records = function(records) {
+      self$records = records
+      lockBinding("records", self)
     },
 
-    domainLabels = function() {
+    .get_domain_labels = function() {
       dom_is_univ = (self$domain == "*")
       dom_temp = self$domain
       dom_temp[dom_is_univ] = "uni"
@@ -4604,22 +4588,6 @@ ConstContainer <- R6::R6Class (
 
       return(column_names)
     }
-  ),
-  private = list(
-    .description = NULL,
-    .domain = NULL,
-    .ref_container = NULL,
-    .name = NULL,
-    .records = NULL,
-    symbolMaxLength = 63,
-    descriptionMaxLength = 255,
-    .domain_type_map = list("none", "relaxed", "regular"),
-    .domainType = NULL,
-    .number_records = NULL,
-    .dimension = NULL,
-    .set_records = function(records) {
-      private$.records = records
-    }
   )
 )
 
@@ -4627,12 +4595,15 @@ ConstContainer <- R6::R6Class (
   ".ConstSet",
   inherit = .ConstSymbol,
   public = list(
+    isSingleton = NULL,
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
                           records = NULL,
                           description="", domaintype=NULL,
                           numberRecords=NULL) {
-      private$.is_singleton <- isSingleton
+      self$isSingleton = isSingleton
+      lockBinding("isSingleton", self)
+
       if (!isSingleton) {
         type = GMS_DT_SET
         subtype = SetTypeSubtype()[["set"]]
@@ -4663,20 +4634,10 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-    isSingleton = function(is_singleton_input) {
-      if (missing(is_singleton_input)) {
-        return(private$.is_singleton)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
     summary = function() {
       return(list(
         "name" = self$name,
         "isSingleton" = self$isSingleton,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4694,6 +4655,7 @@ ConstContainer <- R6::R6Class (
   ".ConstParameter",
   inherit = .ConstSymbol,
   public = list(
+    isScalar = NULL,
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
                           description="", domaintype=NULL,
@@ -4707,6 +4669,7 @@ ConstContainer <- R6::R6Class (
       if (!is.null(records)) {
         self$setRecords(records)
       }
+      self$isScalar = (self$dimension == 0)
     },
 
     setRecords = function(records) {
@@ -4719,22 +4682,10 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-    isScalar = function(isScalar_input) {
-      if (missing(isScalar_input)) {
-        if (length(self$domain) == 0) {
-          return(TRUE)
-        }
-        else {
-          return(FALSE)
-        }
-      }
-    },
-
     summary = function() {
       return(list(
         "name" = self$name,
         "isScalar" = self$isScalar,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4749,14 +4700,14 @@ ConstContainer <- R6::R6Class (
   ".ConstVariable",
   inherit = .ConstSymbol,
   public = list(
-
+    type = NULL,
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = NULL, records = NULL,
                           description="", domaintype=NULL,
                           numberRecords=NULL) {
-
-      private$.type = type
+      self$type = type
+      lockBinding("type", self)
 
       symtype = GMS_DT_VAR
       symsubtype = VarTypeSubtype()[[type]]
@@ -4781,20 +4732,10 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-    type = function(type_input) {
-      if (missing(type_input)) {
-        return(private$.type)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
     summary = function() {
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4802,10 +4743,6 @@ ConstContainer <- R6::R6Class (
         "domainType" = self$domainType
       ))
     }
-  ),
-
-  private = list(
-    .type = NULL
   )
 )
 
@@ -4813,15 +4750,16 @@ ConstContainer <- R6::R6Class (
   ".ConstEquation",
   inherit = .ConstSymbol,
   public = list(
-
+    type = NULL,
     initialize = function(container=NULL, name=NULL, 
                           type=NULL,
                           domain=NULL,
                           records = NULL,
                           description="", domaintype=NULL,
                           numberRecords = NULL) {
+      self$type = type
+      lockBinding("type", self)
 
-      private$.type = type
       # call from outside
       type = .EquationTypes[[type]]
 
@@ -4846,20 +4784,10 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-    type = function(type_input) {
-      if (missing(type_input)) {
-        return(private$.type)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
     summary = function() {
       return(list(
         "name" = self$name,
         "type" = self$type,
-        "domainObjects" = self$domain,
         "domainNames" = self$domainNames,
         "dimension" = self$dimension,
         "description" = self$description,
@@ -4867,9 +4795,6 @@ ConstContainer <- R6::R6Class (
         "domainType" = self$domainType
       ))
     }
-  ),
-  private = list(
-    .type = NULL
   )
 )
 
@@ -4879,7 +4804,8 @@ ConstContainer <- R6::R6Class (
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
-
+    aliasWith = NULL,
+    isSingleton = NULL,
     initialize = function(container=NULL, name=NULL, aliasFor=NULL, 
                           domain, isSingleton, 
                           description, domainType, numberRecords
@@ -4887,8 +4813,11 @@ ConstContainer <- R6::R6Class (
       super$initialize(container, name, GMS_DT_ALIAS, 
       isSingleton, domain, description, domainType, numberRecords)
 
-      private$.aliasWith = aliasFor
-      private$.is_singleton = isSingleton
+      self$aliasWith = aliasFor
+      lockBinding("aliasWith", self)
+
+      self$isSingleton = isSingleton
+      lockBinding("isSingleton", self)
     },
 
     getCardinality = function() {
@@ -4909,25 +4838,6 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-
-    aliasWith = function(alias_with_input) {
-      if (missing(alias_with_input)) {
-        return(private$.aliasWith)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    isSingleton = function(is_singleton) {
-      if (missing(is_singleton)) {
-        return(private$.is_singleton)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
     summary = function() {
     return(list(
       "name" = self$name,
@@ -4940,14 +4850,6 @@ ConstContainer <- R6::R6Class (
       "domainType" = self$domainType
     ))
     }
-  ),
-
-  private = list(
-    symbolMaxLength = 63,
-    .ref_container = NULL,
-    .name = NULL,
-    .aliasWith = NULL,
-    .is_singleton = NULL
   )
 )
 
@@ -4957,7 +4859,9 @@ ConstContainer <- R6::R6Class (
   public = list(
     .gams_type = NULL,
     .gams_subtype = NULL,
-
+    aliasWith = NULL,
+    isSingleton = NULL,
+    domainLabels = NULL,
     initialize = function(container=NULL, name=NULL, aliasFor=NULL, 
                           domain, 
                           description, domainType, numberRecords
@@ -4965,8 +4869,15 @@ ConstContainer <- R6::R6Class (
       super$initialize(container, name, GMS_DT_ALIAS, 
       FALSE, domain, description, domainType, numberRecords)
 
-      private$.aliasWith = aliasFor
-      private$.is_singleton = FALSE
+      self$aliasWith = aliasFor
+      lockBinding("aliasWith", self)
+
+      self$isSingleton = FALSE
+      lockBinding("isSingleton", self)
+
+      unlockBinding("domainLabels", self)
+      self$domainLabels = "*"
+      lockBinding("domainLabels", self)
     },
 
     getCardinality = function() {
@@ -4987,29 +4898,6 @@ ConstContainer <- R6::R6Class (
   ),
 
   active = list(
-
-    aliasWith = function(alias_with_input) {
-      if (missing(alias_with_input)) {
-        return(private$.aliasWith)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    isSingleton = function(is_singleton) {
-      if (missing(is_singleton)) {
-        return(FALSE)
-      }
-      else {
-        stop("Fields of the symbols in a ConstContainer cannot be modified\n")
-      }
-    },
-
-    domainLabels = function(){
-      return("*")
-    },
-
     summary = function() {
     return(list(
       "name" = self$name,
@@ -5021,14 +4909,6 @@ ConstContainer <- R6::R6Class (
       "domainType" = self$domainType
     ))
     }
-  ),
-
-  private = list(
-    symbolMaxLength = 63,
-    .ref_container = NULL,
-    .name = NULL,
-    .aliasWith = NULL,
-    .is_singleton = NULL
   )
 )
 
@@ -6016,7 +5896,7 @@ DomainViolation <- R6::R6Class (
     format = function(...) {
       paste0("GAMS Transfer: DomainViolation with properties: \n", 
       "Symbol: ", self$symbol$name, "\n",
-      "dimension: ", self$diemnsion, "\n",
+      "dimension: ", self$dimension, "\n",
       "domain: ", self$domain$name, "\n",
       "violations: ", toString(self$violations))
     }
