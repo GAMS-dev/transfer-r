@@ -310,7 +310,7 @@ Container <- R6::R6Class (
 
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Set")
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$isSingleton == isSingleton
         && symobj$domainForwarding == domainForwarding
         ) {
@@ -369,7 +369,7 @@ Container <- R6::R6Class (
 
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Parameter")
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
         ) {
           symobj$setRecords(records)
@@ -431,7 +431,7 @@ Container <- R6::R6Class (
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Variable")
         && symobj$type == type
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
         ) {
           symobj$setRecords(records)
@@ -493,7 +493,7 @@ Container <- R6::R6Class (
         symobj = self$getSymbols(name)
         if (inherits(symobj, "Equation")
         && symobj$type == type
-        && all(symobj$domain == domain)
+        && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
         ) {
           symobj$setRecords(records)
