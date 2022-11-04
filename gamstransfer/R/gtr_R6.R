@@ -3868,21 +3868,21 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
 
-      return(self$aliasWith$findDuplicateRecords())
+      return(self$aliasWith$findDuplicateRecords(keep))
     },
 
     hasDuplicateRecords = function(keep="first") {
       super$.testRefContainer()
       private$.testParentSet()
 
-      return(self$aliasWith$hasDuplicateRecords())
+      return(self$aliasWith$hasDuplicateRecords(keep))
     },
 
     dropDuplicateRecords = function(keep="first") {
       super$.testRefContainer()
       private$.testParentSet()
 
-      return(self$aliasWith$dropDuplicateRecords())
+      return(self$aliasWith$dropDuplicateRecords(keep))
     },
 
     #' main convenience method to set standard dataframe formatted records
