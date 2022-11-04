@@ -1756,7 +1756,7 @@ b = "boolean"
   },
 
   countDuplicateRecords = function() {
-    return(sum(duplicated(self$records)))
+    return(nrow(self$findDuplicateRecords()))
   },
 
   findDuplicateRecords = function(keep="first") {
@@ -1770,7 +1770,7 @@ b = "boolean"
   },
 
   hasDuplicateRecords = function() {
-    return(ifelse(self$countDuplicateRecords() > 0, TRUE, FALSE))
+    return(self$countDuplicateRecords() > 0)
   },
 
   dropDuplicateRecords = function(keep = "first") {
@@ -2413,15 +2413,19 @@ b = "boolean"
 
     if (keep == "first") {
       fl = FALSE
-      idx = which(duplicated(self$records, fromLast =fl) == TRUE)
+      idx = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =fl) == TRUE)
     }
     else if (keep == "last") {
       fl = TRUE
-      idx = which(duplicated(self$records, fromLast =fl) == TRUE)
+      idx = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =fl) == TRUE)
     }
     else {
-      idx_first = which(duplicated(self$records, fromLast =FALSE) == TRUE)
-      idx_last = which(duplicated(self$records, fromLast =TRUE) == TRUE)
+      idx_first = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =FALSE) == TRUE)
+      idx_last = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =TRUE) == TRUE)
       idx = append(idx_last, idx_first)
     }
     return(idx)
