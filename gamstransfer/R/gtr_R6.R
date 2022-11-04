@@ -3871,11 +3871,11 @@ Alias <- R6Class(
       return(self$aliasWith$findDuplicateRecords(keep))
     },
 
-    hasDuplicateRecords = function(keep="first") {
+    hasDuplicateRecords = function() {
       super$.testRefContainer()
       private$.testParentSet()
 
-      return(self$aliasWith$hasDuplicateRecords(keep))
+      return(self$aliasWith$hasDuplicateRecords())
     },
 
     dropDuplicateRecords = function(keep="first") {
