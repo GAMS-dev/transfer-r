@@ -7557,9 +7557,9 @@ a = Parameter$new(m, "a", domain="*", records = df)
 b = Parameter$new(m, "b", domain="*", records= data.frame(paste0("i",1:10), 1:10))
 
 # expect_equal(a$isValid(), FALSE)
-expect_equal(a$findDuplicateRecords(keep="first"), 21:30)
-expect_equal(a$findDuplicateRecords(keep="last"), 1:10)
-expect_equal(a$findDuplicateRecords(keep=FALSE), append(1:10, 21:30))
+expect_equal(a$findDuplicateRecords(keep="first"), a$records[21:30, ])
+expect_equal(a$findDuplicateRecords(keep="last"), a$records[1:10, ])
+expect_equal(a$findDuplicateRecords(keep=FALSE), a$records[append(1:10, 21:30), ])
 expect_equal(a$countDuplicateRecords(), 10)
 expect_true(a$hasDuplicateRecords())
 a$dropDuplicateRecords(keep="first")
@@ -7839,7 +7839,7 @@ a$dropDomainViolations()
 expect_equal(as.character(a$records[,1]), c("j1","j2") )
 expect_false(a$hasDomainViolations())
 expect_equal(a$countDomainViolations(), 0)
-expect_true(is.null(a$findDuplicateRecords()))
+expect_equal(a$findDuplicateRecords(), data.frame())
 expect_true(a$isValid())
 
 # test dropdomainviolations for container
@@ -8198,7 +8198,7 @@ test_that("test_num_97", {
   expect_true(!p0$hasDomainViolations())
   expect_equal(p0$countDomainViolations(), 0)
   expect_true(!p0$hasDuplicateRecords())
-  expect_true(is.null(p0$findDuplicateRecords()))
+  expect_equal(p0$findDuplicateRecords(), data.frame())
   expect_equal(p0$countDuplicateRecords(), 0)
   expect_equal(p0$summary, 
   list(name="p0", isScalar=FALSE, domainObjects = list(ip), domainNames = "ip",
@@ -8214,7 +8214,7 @@ test_that("test_num_97", {
   expect_equal(nrow(p0$findDomainViolations()), 0)
   expect_equal(p0$countDomainViolations(), 0)
   expect_true(!p0$hasDuplicateRecords())
-  expect_true(is.null(p0$findDuplicateRecords()))
+  expect_equal(p0$findDuplicateRecords(), data.frame())
   expect_equal(p0$countDuplicateRecords(), 0)
   expect_equal(p0$summary, 
   list(name="p0", isScalar=FALSE, domainObjects = "*", domainNames = "*",
@@ -8300,7 +8300,7 @@ i = Set$new(m, "i", records=replicate(5, "i1"))
 ip = Alias$new(m, "ip", i)
 
 expect_equal(ip$countDuplicateRecords(), 4)
-expect_equal(ip$findDuplicateRecords(), 2:5)
+expect_equal(ip$findDuplicateRecords(), ip$records[2:5, ])
 expect_true(ip$hasDuplicateRecords())
 ip$dropDuplicateRecords()
 expect_equal(nrow(i$records), 1)

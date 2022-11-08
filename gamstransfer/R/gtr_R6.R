@@ -1756,44 +1756,27 @@ b = "boolean"
   },
 
   countDuplicateRecords = function() {
-    return(sum(duplicated(self$records)))
+    return(nrow(self$findDuplicateRecords()))
   },
 
   findDuplicateRecords = function(keep="first") {
-    if (keep != FALSE && keep != "first" && keep != "last") {
-      stop("The argument `keep` must be one of the following:
-      `first`, `last`, or FALSE\n")
-    }
-
-    if (keep == "first") {
-      fl = FALSE
-      idx = which(duplicated(self$records, fromLast =fl) == TRUE)
-    }
-    else if (keep == "last") {
-      fl = TRUE
-      idx = which(duplicated(self$records, fromLast =fl) == TRUE)
-    }
-    else {
-      idx_first = which(duplicated(self$records, fromLast =FALSE) == TRUE)
-      idx_last = which(duplicated(self$records, fromLast =TRUE) == TRUE)
-      idx = append(idx_last, idx_first)
-    }
-
+    idx = private$.get_duplicate_index(keep)
     if (is.integer0(idx)) {
-      return(NULL)
+      return(data.frame())
     }
     else {
-      return(idx)
+      return(self$records[idx,])
     }
   },
 
   hasDuplicateRecords = function() {
-    return(ifelse(self$countDuplicateRecords() > 0, TRUE, FALSE))
+    return(self$countDuplicateRecords() > 0)
   },
 
   dropDuplicateRecords = function(keep = "first") {
-    idx = self$findDuplicateRecords(keep)
-    if (!is.null(idx)) {
+    idx = private$.get_duplicate_index(keep)
+
+    if (!is.integer0(idx)) {
       self$records = self$records[-idx, ]
       rownames(self$records) <- NULL
     }
@@ -1967,31 +1950,11 @@ b = "boolean"
   },
 
   .linkDomainCategories = function() {
-    # if ((!is.null(self$records)) &&(!inherits(self, "Alias"))) {
-
       private$.records[, 1:self$dimension] = lapply(1:self$dimension, function(n) {
         i  = self$domain[[n]]
         return(factor(private$.records[, n], 
         levels = levels(i$records[, 1]), ordered = TRUE))
       })
-      # for (n in seq_along(self$domain)) {
-      #   i  = self$domain[[n]]
-        # if (((inherits(i, c("Alias", "Set"))) )
-        # && (!is.null(i$records))) {
-        #   if (i$isValid()) {
-            # private$.records[, n] = factor(private$.records[, n], levels = levels(i$records[, 1]), ordered = TRUE)
-          # }
-          # else {
-          #   private$.records[, n] = factor(private$.records[, n], 
-          #   levels = unique(private$.records[, n]), ordered = TRUE)
-          # }
-        # }
-        # else {
-        #   private$.records[, n] = factor(private$.records[, n], 
-        #   levels = unique(private$.records[, n]), ordered = TRUE)
-        # }
-      # }
-    # }
   }
   ),
 
@@ -2006,9 +1969,6 @@ b = "boolean"
         if (!is.null(self$records)) {
           if (self$domainForwarding == TRUE) {
             private$domain_forwarding()
-            # if (inherits(self$refContainer, "Container")) {
-            #   self$refContainer$.linkDomainCategories()
-            # }
 
             for (i in self$refContainer$listSymbols()) {
               self$refContainer$data[[i]]$.requiresStateCheck = TRUE
@@ -2443,6 +2403,32 @@ b = "boolean"
         self$refContainer$data[[i]]$records = recs
       }
     }
+  },
+
+  .get_duplicate_index = function(keep) {
+    if (keep != FALSE && keep != "first" && keep != "last") {
+      stop("The argument `keep` must be one of the following:
+      `first`, `last`, or FALSE\n")
+    }
+
+    if (keep == "first") {
+      fl = FALSE
+      idx = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =fl) == TRUE)
+    }
+    else if (keep == "last") {
+      fl = TRUE
+      idx = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =fl) == TRUE)
+    }
+    else {
+      idx_first = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =FALSE) == TRUE)
+      idx_last = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =TRUE) == TRUE)
+      idx = append(idx_last, idx_first)
+    }
+    return(idx)
   }
   )
 )
@@ -3882,10 +3868,10 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
 
-      return(self$aliasWith$findDuplicateRecords())
+      return(self$aliasWith$findDuplicateRecords(keep))
     },
 
-    hasDuplicateRecords = function(keep="first") {
+    hasDuplicateRecords = function() {
       super$.testRefContainer()
       private$.testParentSet()
 
@@ -3896,7 +3882,7 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
 
-      return(self$aliasWith$dropDuplicateRecords())
+      return(self$aliasWith$dropDuplicateRecords(keep))
     },
 
     #' main convenience method to set standard dataframe formatted records

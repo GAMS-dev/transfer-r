@@ -2,6 +2,7 @@ GAMS Transfer R
 ==================
 - `removeSymbols` removes symbol links in other symbols
 - added `symbols` argument to Container methods `renameUELs` and `removeUELs`
+- `findDuplicateRecords` now returns a data frame instead of row indices
 
 GAMS Transfer R v1.6.0
 ==================
