@@ -210,6 +210,7 @@ Container <- R6::R6Class (
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
         self$data$remove(sym$name)
+        self$.lc_data$remove(tolower(sym$name))
         return()
       })
 
@@ -1350,7 +1351,7 @@ b = "boolean"
     self$refContainer$.requiresStateCheck = TRUE
     #' @field name name of the symbol
     self$name <- name
-    container$data$set(name, self)
+    container[name] = self
 
     self$records = NULL
 
@@ -2174,6 +2175,7 @@ b = "boolean"
 
             refcontainer[name_input] = refcontainer[private$.name]
             refcontainer$data$remove(private$.name)
+            refcontainer$.lc_data$remove(tolower(private$.name))
           }
           private$.name = name_input
         }
@@ -4347,6 +4349,9 @@ ConstContainer <- R6::R6Class (
       # reset data
       self$data = collections::dict()
 
+      # reset lower case data
+      self$.lc_data = collections::dict()
+
       aliasList = list()
       aliasCount = 0
       for (m in readData) {
@@ -4936,6 +4941,7 @@ is.integer0 <- function(x)
   public = list(
     systemDirectory = NULL,
     data = NULL,
+    .lc_data = NULL,
     acronyms = NULL,
     #' @description
     #' Create a new ConstContainer simply by initializing an object.
@@ -4961,6 +4967,8 @@ is.integer0 <- function(x)
 
       self$acronyms = list()
       self$data = collections::dict()
+      # another dict for lowercase names to original case
+      self$.lc_data = collections::dict()
     },
 
     `[` = function(key) {
@@ -4972,8 +4980,9 @@ is.integer0 <- function(x)
       }
     },
 
-    `[<-` = function(key, value) {
-      self$data$set(key, value)
+    `[<-` = function(key, values) {
+      self$data$set(key, values)
+      self$.lc_data$set(tolower(key), key)
       return(invisible(self))
     },
 
@@ -4984,29 +4993,15 @@ is.integer0 <- function(x)
       if (!is.character(names)) {
         stop("The argument `names` must be type character\n")
       }
-      # return(unlist(lapply(names, function(x) m$data$has(x)), use.names=FALSE))
-      sym_names = unlist(self$data$keys(), use.names = FALSE)
-      bool = unlist(lapply(names, function(x) {
-        return(any(tolower(x) == tolower(sym_names)))
-        }), use.names = FALSE)
-      return(bool)
+
+      return(unlist(lapply(names, function(x) self$.lc_data$has(tolower(x))), use.names=FALSE))
     },
 
     getSymbolNames = function(names) {
       if (!is.character(names)) {
         stop("The argument `names` must be type character\n")
       }
-      sym_names = unlist(self$data$keys(), use.names = FALSE)
-      syms = unlist(lapply(names, function(x){
-        idx = which(tolower(sym_names) == tolower(x))
-        if (is.integer0(idx)) {
-          stop("Symbol ", x, " does not exist in the container\n")
-        }
-        else {
-          return(sym_names[idx])
-        }
-      }), use.names = FALSE)
-      return(syms)
+      return(unlist(lapply(names, function(x) self$.lc_data$get(tolower(x))), use.names = FALSE))
     },
 
     #' @description list all symbols in the container if isValid = NULL
@@ -5906,4 +5901,4 @@ DomainViolation <- R6::R6Class (
 
 
 `[..BaseContainer` <- function(obj, ...) obj$`[`(...)
-`[<-..BaseContainer` <- function(obj, ...) obj$`[<-`(...)
+`[<-..BaseContainer` <- function(obj, ..., value) obj$`[<-`(..., value)
