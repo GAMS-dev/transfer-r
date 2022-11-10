@@ -2751,9 +2751,9 @@ test_that("test_num_6", {
 
   m2 = Container$new(testthat::test_path("uels.gdx"))
   expect_true(inherits(m2, "Container"))
-  expect_true(is.data.frame(m2$data$foo$records))
+  expect_true(is.data.frame(m2["foo"]$records))
 
-  expect_equal(as.character(m$getUniverseSet()), as.character(m2$data$foo$records$uni_1))
+  expect_equal(as.character(m$getUniverseSet()), as.character(m2["foo"]$records$uni_1))
 }
 )
 
@@ -2791,9 +2791,9 @@ test_that("test_num_7", {
 
   m2 = Container$new(testthat::test_path("uels.gdx"))
   expect_true(inherits(m2, "Container"))
-  expect_true(is.data.frame(m2$data$foo$records))
+  expect_true(is.data.frame(m2["foo"]$records))
 
-  expect_equal(c("a", "c", "b"), as.character(m2$data$foo$records$uni_1))
+  expect_equal(c("a", "c", "b"), as.character(m2["foo"]$records$uni_1))
   
 }
 )
@@ -2919,10 +2919,10 @@ test_that("test_num_13", {
   b = Parameter$new(m, "b", j, records=data.frame("j"=c("e","f"),"val"=c(1, 2) ))
 
   m$removeSymbols("i")
-  expect_equal(names(m$data), c("j", "a", "b"))
+  expect_equal(unlist(m$data$keys()), c("j", "a", "b"))
 
   m$removeSymbols(c("a", "b"))
-  expect_equal(names(m$data), c("j"))
+  expect_equal(unlist(m$data$keys()), c("j"))
 
   m$write("out.gdx")
 }
@@ -2933,10 +2933,10 @@ test_that("test_num_14", {
   m  = Container$new()
   i = Set$new(m, "i", records=c("a", "b", "c"))
 
-  expect_equal(names(m$data), c("i"))
+  expect_equal(unlist(m$data$keys()), c("i"))
 
   m$renameSymbol("i", "h")
-  expect_equal(names(m$data), c("h"))
+  expect_equal(unlist(m$data$keys()), c("h"))
 
   m$write("out.gdx")
 }
@@ -2965,10 +2965,10 @@ test_that("test_num_16", {
   expect_equal(m$isValid(), TRUE)
   expect_equal(m$.requiresStateCheck, FALSE)
 
-  expect_equal(as.character(m$data[["l"]]$records$k_1), c("c", "aa"))
-  expect_equal(as.character(m$data[["k"]]$records$uni_1), c("c", "aa"))
-  expect_equal(as.character(m$data[["j"]]$records$i_1), c("a", "b"))
-  expect_equal(as.character(m$data[["i"]]$records$uni_1), c("a", "b"))
+  expect_equal(as.character(m["l"]$records$k_1), c("c", "aa"))
+  expect_equal(as.character(m["k"]$records$uni_1), c("c", "aa"))
+  expect_equal(as.character(m["j"]$records$i_1), c("a", "b"))
+  expect_equal(as.character(m["i"]$records$uni_1), c("a", "b"))
 
   expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
   expect_equal(a$isValid(), TRUE)
@@ -2979,21 +2979,21 @@ test_that("test_num_16", {
 test_that("test_num_17", {
   m  = Container$new()
   m$addSet("i")
-  m$addSet("j", m$data[["i"]], records = c("a", "b"), domainForwarding = TRUE)
+  m$addSet("j", m["i"], records = c("a", "b"), domainForwarding = TRUE)
   m$addSet("k")
-  m$addSet("l", m$data[["k"]], records = c("c"), domainForwarding = TRUE)
+  m$addSet("l", m["k"], records = c("c"), domainForwarding = TRUE)
 
-  m$addParameter("a", m$data[["l"]], records = data.frame(c("aa", "c"), c(1, 2)), domainForwarding = TRUE)
+  m$addParameter("a", m["l"], records = data.frame(c("aa", "c"), c(1, 2)), domainForwarding = TRUE)
 
   # check container
   expect_equal(m$.requiresStateCheck, TRUE)
   expect_equal(m$isValid(), TRUE)
   expect_equal(m$.requiresStateCheck, FALSE)
 
-  expect_equal(as.character(m$data[["l"]]$records$k_1), c("c", "aa"))
-  expect_equal(as.character(m$data[["k"]]$records$uni_1), c("c", "aa"))
-  expect_equal(as.character(m$data[["j"]]$records$i_1), c("a", "b"))
-  expect_equal(as.character(m$data[["i"]]$records$uni_1), c("a", "b"))
+  expect_equal(as.character(m["l"]$records$k_1), c("c", "aa"))
+  expect_equal(as.character(m["k"]$records$uni_1), c("c", "aa"))
+  expect_equal(as.character(m["j"]$records$i_1), c("a", "b"))
+  expect_equal(as.character(m["i"]$records$uni_1), c("a", "b"))
 
   expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
 
@@ -3087,22 +3087,22 @@ test_that("test_num_18", {
     varname = paste0("a_", i)
     m$addVariable(varname, i, "*", records = df)
 
-    expect_equal(colnames(m$data[[varname]]$records),
+    expect_equal(colnames(m[varname]$records),
     c("uni_1", "level", "marginal", "lower", "upper", "scale"))
 
-    expect_equal(m$data[[varname]]$records[1, "level"], 
+    expect_equal(m[varname]$records[1, "level"], 
     default_values[[i]][["level"]])
 
-    expect_equal(m$data[[varname]]$records[1, "marginal"], 
+    expect_equal(m[varname]$records[1, "marginal"], 
     default_values[[i]][["marginal"]])
 
-    expect_equal(m$data[[varname]]$records[1, "lower"], 
+    expect_equal(m[varname]$records[1, "lower"], 
     default_values[[i]][["lower"]])
 
-    expect_equal(m$data[[varname]]$records[1, "upper"], 
+    expect_equal(m[varname]$records[1, "upper"], 
     default_values[[i]][["upper"]])
 
-    expect_equal(m$data[[varname]]$records[1, "scale"], 
+    expect_equal(m[varname]$records[1, "scale"], 
     default_values[[i]][["scale"]])
   }
 }
@@ -3173,22 +3173,22 @@ test_that("test_num_19", {
     eqname = paste0("a_", i)
     m$addEquation(eqname, i, "*", records = df)
 
-    expect_equal(colnames(m$data[[eqname]]$records),
+    expect_equal(colnames(m[eqname]$records),
     c("uni_1", "level", "marginal", "lower", "upper", "scale"))
 
-    expect_equal(m$data[[eqname]]$records[1, "level"], 
+    expect_equal(m[eqname]$records[1, "level"], 
     default_values[[i]][["level"]])
 
-    expect_equal(m$data[[eqname]]$records[1, "marginal"], 
+    expect_equal(m[eqname]$records[1, "marginal"], 
     default_values[[i]][["marginal"]])
 
-    expect_equal(m$data[[eqname]]$records[1, "lower"], 
+    expect_equal(m[eqname]$records[1, "lower"], 
     default_values[[i]][["lower"]])
 
-    expect_equal(m$data[[eqname]]$records[1, "upper"], 
+    expect_equal(m[eqname]$records[1, "upper"], 
     default_values[[i]][["upper"]])
 
-    expect_equal(m$data[[eqname]]$records[1, "scale"], 
+    expect_equal(m[eqname]$records[1, "scale"], 
     default_values[[i]][["scale"]])
   }
 }
@@ -3214,7 +3214,7 @@ test_that("test_num_20", {
   for (i in type) {
     varname = paste0("a_", i)
     m$addVariable(varname, i, "*", records = df)
-    expect_equal(colnames(m$data[[varname]]$records),
+    expect_equal(colnames(m[varname]$records),
     c("uni_1", "level", "marginal", "lower", "upper", "scale"))
   }
 }
@@ -3232,7 +3232,7 @@ test_that("test_num_21", {
   for (i in type) {
     eqname = paste0("a_", i)
     m$addEquation(eqname, i, "*", records = df)
-    expect_equal(colnames(m$data[[eqname]]$records),
+    expect_equal(colnames(m[eqname]$records),
     c("uni_1", "level", "marginal", "lower", "upper", "scale"))
   }
 }
@@ -3296,8 +3296,8 @@ test_that("test_num_22", {
   m = Container$new()
   m$read(testthat::test_path("data.gdx"), records = FALSE)
 
-  for (i in m$data) {
-    expect_equal(m$data[[i$name]]$records, NULL)
+  for (i in m$data$values()) {
+    expect_equal(m[i$name]$records, NULL)
   }
 }
 )
@@ -3360,9 +3360,9 @@ test_that("test_num_23", {
   m = Container$new()
   m$read(testthat::test_path("data.gdx"), c("i", "j", "x"))
 
-  expect_equal(m$data[["i"]]$domainType, "none")
-  expect_equal(m$data[["j"]]$domainType, "none")
-  expect_equal(m$data[["x"]]$domainType, "regular")
+  expect_equal(m["i"]$domainType, "none")
+  expect_equal(m["j"]$domainType, "none")
+  expect_equal(m["x"]$domainType, "regular")
 }
 )
 
@@ -3423,8 +3423,8 @@ test_that("test_num_24", {
   m = Container$new()
   m$read(testthat::test_path("data.gdx"), c("x"))
 
-  expect_equal(names(m$data), "x")
-  expect_equal(m$data[["x"]]$domainType, "relaxed")
+  expect_equal(unlist(m$data$keys()), "x")
+  expect_equal(m["x"]$domainType, "relaxed")
 }
 )
 
@@ -3441,9 +3441,9 @@ test_that("test_num_25", {
 
   m = Container$new(testthat::test_path("data.gdx"))
 
-  expect_equal(names(m$data), "i")
-  expect_equal(m$data[["i"]]$domain, c("i"))
-  expect_equal(m$data[["i"]]$domainType, "relaxed")
+  expect_equal(unlist(m$data$keys()), "i")
+  expect_equal(m["i"]$domain, c("i"))
+  expect_equal(m["i"]$domainType, "relaxed")
 }
 )
 
@@ -3721,8 +3721,8 @@ test_that("test_num_40", {
   stdout = TRUE, stderr = TRUE)
 
   m = Container$new(testthat::test_path("data.gdx"))
-  expect_true(m$data$a$domainType == "regular")
-  expect_true(is.null(m$data$a$records))
+  expect_true(m["a"]$domainType == "regular")
+  expect_true(is.null(m["a"]$records))
 }
 )
 
@@ -3898,12 +3898,12 @@ test_that("test_num_44", {
   stdout = TRUE, stderr = TRUE)
 
   m = Container$new(testthat::test_path("data.gdx"))
-  expect_true(m$data$i$type == "free")
+  expect_true(m["i"]$type == "free")
 
   m$write("out.gdx")
 
   m2 = Container$new(testthat::test_path("out.gdx"))
-  expect_true(m2$data$i$type == "free")
+  expect_true(m2["i"]$type == "free")
 }
 )
 
@@ -3915,7 +3915,7 @@ test_that("test_num_45", {
   m$removeSymbols("i")
 
   expect_true(is.null(i$refContainer))
-  expect_true(names(m$data) == c("j"))
+  expect_true(unlist(m$data$keys()) == c("j"))
   expect_true(j$isValid())
   expect_equal(j$domain, "*")
 
@@ -6414,8 +6414,8 @@ parameter a(i,j) //;
   stdout = TRUE, stderr = TRUE)
 
   m = ConstContainer$new(testthat::test_path("data.gdx"))
-  expect_true(m$data$a$domainType == "regular")
-  expect_true(is.null(m$data$a$records))
+  expect_true(m["a"]$domainType == "regular")
+  expect_true(is.null(m["a"]$records))
 }
 )
 
@@ -6429,15 +6429,15 @@ test_that("test_num_48", {
 
   m = ConstContainer$new("data.gdx")
 
-  expect_true(m$data$i$domainType == "relaxed")
-  expect_true(m$data$j$domainType == "none")
-  expect_true(m$data$k$domainType == "relaxed")
-  expect_true(m$data$l$domainType == "regular")
+  expect_true(m["i"]$domainType == "relaxed")
+  expect_true(m["j"]$domainType == "none")
+  expect_true(m["k"]$domainType == "relaxed")
+  expect_true(m["l"]$domainType == "regular")
 
-  expect_true(is.null(m$data$i$records))
-  expect_true(is.null(m$data$j$records))
-  expect_true(is.null(m$data$k$records))
-  expect_true(is.null(m$data$l$records))
+  expect_true(is.null(m["i"]$records))
+  expect_true(is.null(m["j"]$records))
+  expect_true(is.null(m["k"]$records))
+  expect_true(is.null(m["l"]$records))
 }
 )
 
@@ -6454,7 +6454,7 @@ set i(i) / i1, i2 /;
   stdout = TRUE, stderr = TRUE)
 
   m = ConstContainer$new(testthat::test_path("data.gdx"))
-  expect_equal(m$data$i$domainType, "relaxed")
+  expect_equal(m["i"]$domainType, "relaxed")
 }
 )
 
@@ -6469,12 +6469,12 @@ test_that("test_num_50", {
 
   m = ConstContainer$new()
   m$read(testthat::test_path("data.gdx"), symbols="i")
-  expect_true(!is.null(m$data$i))
+  expect_true(!is.null(m["i"]))
 
   m = ConstContainer$new()
   m$read(testthat::test_path("data.gdx"), symbols= c("i", "j"))
-  expect_true(!is.null(m$data$i))
-  expect_true(!is.null(m$data$j))
+  expect_true(!is.null(m["i"]))
+  expect_true(!is.null(m["j"]))
 
   m = ConstContainer$new()
   expect_error(m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy")))
@@ -6581,8 +6581,8 @@ solve transport using lp minimizing z;
 
   m = Container$new(testthat::test_path("data.gdx"))
 
-  for (i in names(m$data)) {
-    expect_true(is.list(m$data[[i]]$summary))
+  for (i in unlist(m$data$keys())) {
+    expect_true(is.list(m[i]$summary))
   }
 
   expect_true(is.vector(m$listSymbols()))
@@ -6667,15 +6667,15 @@ solve transport using lp minimizing z;
   stdout = TRUE, stderr = TRUE)
 
   m = ConstContainer$new("data.gdx")
-  old_names = names(m$data)
-  for (i in names(m$data)) {
-    expect_true(is.null(m$data[[i]]$records))
+  old_names = unlist(m$data$keys())
+  for (i in unlist(m$data$keys())) {
+    expect_true(is.null(m[i]$records))
   }
 
   m = ConstContainer$new()
   m$read("data.gdx")
-  for (i in names(m$data)) {
-    expect_true(is.data.frame(m$data[[i]]$records))
+  for (i in unlist(m$data$keys())) {
+    expect_true(is.data.frame(m[i]$records))
   }
 
    gams_text = "
@@ -6734,9 +6734,9 @@ solve transport using lp minimizing z;
   stdout = TRUE, stderr = TRUE)
 
   m = ConstContainer$new("data.gdx")
-  new_names = names(m$data)
-  for (i in names(m$data)) {
-    expect_true(is.null(m$data[[i]]$records))
+  new_names = unlist(m$data$keys)
+  for (i in unlist(m$data$keys())) {
+    expect_true(is.null(m[i]$records))
   }
 
   expect_true(!identical(old_names, new_names))
@@ -6800,8 +6800,8 @@ solve transport using lp minimizing z;
   m = ConstContainer$new()
   m$read("data.gdx")
 
-  for (i in names(m$data)) {
-    expect_true(is.data.frame(m$data$i$records))
+  for (i in unlist(m$data$keys())) {
+    expect_true(is.data.frame(m[i]$records))
   }
 }
 )
@@ -6967,7 +6967,7 @@ expect_error(Container$new(m))
 
 m2 = Container$new()
 m2$read(m, c("i", "j"))
-expect_equal(names(m2$data), c("i", "j"))
+expect_equal(unlist(m2$data$keys()), c("i", "j"))
 expect_error(m2$read(m, "a"))
 }
 )
@@ -7361,11 +7361,11 @@ test_that("test_num_70", {
 
   m = Container$new(testthat::test_path("data.gdx"))
 
-  e = eigen(m$data$a$toDense())
+  e = eigen(m["a"]$toDense())
   val = e$values
   vec = e$vectors
-  eval = Parameter$new(m, "eval", m$data$i, records = val)
-  evec = Parameter$new(m, "evec", c(m$data$i, m$data$j), records = vec)
+  eval = Parameter$new(m, "eval", m["i"], records = val)
+  evec = Parameter$new(m, "evec", c(m["i"], m["j"]), records = vec)
 
   expect_true(m$isValid())
 }
@@ -7434,10 +7434,10 @@ test_that("test_num_72", {
 
   m = Container$new(testthat::test_path("data.gdx"))
 
-  expect_equal(m$data$dim0$shape(), dim(m$data$dim0$toDense()))
-  expect_equal(m$data$dim1$shape(), dim(m$data$dim1$toDense()))
-  expect_equal(m$data$dim2$shape(), dim(m$data$dim2$toDense()))
-  expect_equal(m$data$dim3$shape(), dim(m$data$dim3$toDense()))
+  expect_equal(m["dim0"]$shape(), dim(m["dim0"]$toDense()))
+  expect_equal(m["dim1"]$shape(), dim(m["dim1"]$toDense()))
+  expect_equal(m["dim2"]$shape(), dim(m["dim2"]$toDense()))
+  expect_equal(m["dim3"]$shape(), dim(m["dim3"]$toDense()))
 }
 )
 
@@ -7455,9 +7455,9 @@ ProfitM(t) = uniformInt(1,10);
   stdout = TRUE, stderr = TRUE)
 
   m = Container$new(testthat::test_path("data.gdx"))
-  m$data$ProfitA$setRecords(cumsum(m$data$ProfitM$toDense()))
+  m["ProfitA"]$setRecords(cumsum(m["ProfitM"]$toDense()))
 
-  expect_equal(m$data$ProfitA$numberRecords, m$data$t$numberRecords)
+  expect_equal(m["ProfitA"]$numberRecords, m["t"]$numberRecords)
 
 }
 )
@@ -7490,17 +7490,17 @@ e = Parameter$new(m, "e")
 
 # case insensitive remove
 m$removeSymbols("D")
-expect_equal(names(m$data), "e")
+expect_equal(unlist(m$data$keys()), "e")
 
 d = Parameter$new(m, "d")
 
 # case insensitive rename
 m$renameSymbol("D", "d_new")
-expect_equal(names(m$data), c("e","d_new"))
+expect_equal(unlist(m$data$keys()), c("e","d_new"))
 
 # change case using rename
 expect_error(m$renameSymbol("d_new","D_neW"))
-expect_equal(tolower(names(m$data)), tolower(c("e", "D_neW")))
+expect_equal(tolower(unlist(m$data$keys())), tolower(c("e", "D_neW")))
 
 }
 )
@@ -7867,9 +7867,9 @@ expect_true(inherits(m$addSet("i", records=c("f","b","c")), "Set"))
 expect_error(m$addSet("i","a",records=c("f","b","c")))
 expect_true(inherits(m$addSet("i",records=c("f","b","c"), description="hamburger"), "Set"))
 
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 expect_true(inherits(m$addSet("i",records=c("f","b","c")), "Set"))
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 
 expect_error(Set$new(m, "i", records=c("f","b","c")))
 }
@@ -7884,9 +7884,9 @@ expect_true(inherits(m$addParameter("i", "*", records=data.frame(paste0("i",1:5)
 expect_error(m$addParameter("i","a",records=data.frame(paste0("i",1:5), 1:5)))
 expect_true(inherits(m$addParameter("i","*",records=data.frame(paste0("i",1:5), 1:5), description="hamburger"), "Parameter"))
 
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 expect_true(inherits(m$addParameter("i","*",records=data.frame(paste0("i",1:5), 1:5)), "Parameter"))
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 
 expect_error(Parameter$new(m, "i", records=data.frame(paste0("i",1:5), 1:5)))
 
@@ -7918,9 +7918,9 @@ expect_true(inherits(m$addVariable("i", "free", "*", records=recs), "Variable"))
 expect_error(m$addVariable("i", "free","a",records=recs))
 expect_true(inherits(m$addVariable("i", "free","*",records=recs, description="hamburger"), "Variable"))
 
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 expect_true(inherits(m$addVariable("i", "free","*",records=recs), "Variable"))
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 
 expect_error(Variable$new(m, "i", "free", records=recs))
 }
@@ -7937,9 +7937,9 @@ expect_true(inherits(m$addEquation("i", "eq", "*", records=recs), "Equation"))
 expect_error(m$addEquation("i", "eq","a",records=recs))
 expect_true(inherits(m$addEquation("i", "eq","*",records=recs, description="hamburger"), "Equation"))
 
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 expect_true(inherits(m$addEquation("i", "eq","*",records=recs), "Equation"))
-expect_equal(m$data$i$description, "hamburger")
+expect_equal(m["i"]$description, "hamburger")
 
 expect_error(Equation$new(m, "i", "eq", records=recs))
 }
@@ -8108,9 +8108,9 @@ alias(h,*);
   # write everything
   m$write(testthat::test_path("gt.gdx"))
 
-  expect_true(inherits(m$data$h, "UniverseAlias"))
-  expect_true(inherits(m$data$ip, "Alias"))
-  expect_true(inherits(m$data$i, "Set"))
+  expect_true(inherits(m["h"], "UniverseAlias"))
+  expect_true(inherits(m["ip"], "Alias"))
+  expect_true(inherits(m["i"], "Set"))
 
   expect_equal(m$listSets(), "i")
   expect_equal(m$listAliases(), c("ip", "h"))
@@ -8146,9 +8146,9 @@ alias(h,*);
   # write everything
   m2$write(testthat::test_path("gt.gdx"))
 
-  expect_true(inherits(m2$data$h, "UniverseAlias"))
-  expect_true(inherits(m2$data$ip, "Alias"))
-  expect_true(inherits(m2$data$i, "Set"))
+  expect_true(inherits(m2["h"], "UniverseAlias"))
+  expect_true(inherits(m2["ip"], "Alias"))
+  expect_true(inherits(m2["i"], "Set"))
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("data.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -8246,7 +8246,7 @@ expect_equal(j$domain, "*")
 ii = Alias$new(m, "ii", i)
 m$removeSymbols("i")
 
-expect_true(is.null(m$data[["ii"]]))
+expect_true(is.null(m["ii"]))
 expect_equal(j$domain, "*")
 }
 )
@@ -8367,7 +8367,7 @@ test_that("test_num_101", {
 
   m = Container$new()
   m$read(testthat::test_path("data.gdx"))
-  expect_equal(m$data$i$summary, list(
+  expect_equal(m["i"]$summary, list(
     name = "i",
     isSingleton = FALSE,
     domainObjects = "*",
@@ -8378,10 +8378,10 @@ test_that("test_num_101", {
     domainType = "none"
   ))
 
-  expect_equal(m$data$d$summary, list(
+  expect_equal(m["d"]$summary, list(
     name = "d",
     isScalar = FALSE,
-    domainObjects = c(m$data$i, m$data$j),
+    domainObjects = c(m["i"], m["j"]),
     domainNames = c("i","j"),
     dimension = 2,
     description = "distance in thousands of miles",
@@ -8389,10 +8389,10 @@ test_that("test_num_101", {
     domainType = "regular"
   ))
 
-  expect_equal(m$data$x$summary, list(
+  expect_equal(m["x"]$summary, list(
     name = "x",
     type = "positive",
-    domainObjects = c(m$data$i, m$data$j),
+    domainObjects = c(m["i"], m["j"]),
     domainNames = c("i","j"),
     dimension = 2,
     description = "shipment quantities in cases",
@@ -8400,10 +8400,10 @@ test_that("test_num_101", {
     domainType = "regular"
   ))
 
-  expect_equal(m$data$demand$summary, list(
+  expect_equal(m["demand"]$summary, list(
     name = "demand",
     type = "geq",
-    domainObjects = list(m$data$j),
+    domainObjects = list(m["j"]),
     domainNames = "j",
     dimension = 1,
     description = "satisfy demand at market j",
@@ -8411,9 +8411,9 @@ test_that("test_num_101", {
     domainType = "regular"
   ))
 
-  expect_equal(m$data$ip$summary, list(
+  expect_equal(m["ip"]$summary, list(
     name = "ip",
-    aliasWith = m$data$i,
+    aliasWith = m["i"],
     aliasWith_name = "i",
     isSingleton = FALSE,
     domainObjects = "*",
@@ -8430,7 +8430,7 @@ test_that("test_num_101", {
 
   m = ConstContainer$new()
   m$read(testthat::test_path("data.gdx"))
-  expect_equal(m$data$i$summary, list(
+  expect_equal(m["i"]$summary, list(
     name = "i",
     isSingleton = FALSE,
     domainNames = "*",
@@ -8440,7 +8440,7 @@ test_that("test_num_101", {
     domainType = "none"
   ))
 
-  expect_equal(m$data$d$summary, list(
+  expect_equal(m["d"]$summary, list(
     name = "d",
     isScalar = FALSE,
     domainNames = c("i","j"),
@@ -8450,7 +8450,7 @@ test_that("test_num_101", {
     domainType = "regular"
   ))
 
-  expect_equal(m$data$x$summary, list(
+  expect_equal(m["x"]$summary, list(
     name = "x",
     type = "positive",
     domainNames = c("i","j"),
@@ -8460,7 +8460,7 @@ test_that("test_num_101", {
     domainType = "regular"
   ))
 
-  expect_equal(m$data$demand$summary, list(
+  expect_equal(m["demand"]$summary, list(
     name = "demand",
     type = "geq",
     domainNames = "j",
@@ -8470,7 +8470,7 @@ test_that("test_num_101", {
     domainType = "regular"
   ))
 
-  expect_equal(m$data$ip$summary, list(
+  expect_equal(m["ip"]$summary, list(
     name = "ip",
     aliasWith_name = "i",
     isSingleton = FALSE,

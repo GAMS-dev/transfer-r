@@ -160,9 +160,9 @@ Container <- R6::R6Class (
     getUniverseSet = function() {
       uni = c()
       for (i in self$listSymbols(isValid = TRUE)) {
-        if (!is.null(self$data[[i]]$records)) {
-          if (self$data[[i]]$dimension > 0) {
-            df = self$data[[i]]$records[, (1:self$data[[i]]$dimension)]
+        if (!is.null(self[i]$records)) {
+          if (self[i]$dimension > 0) {
+            df = self[i]$records[, (1:self[i]$dimension)]
             if (is.factor(df)) {
               uni = append(uni, levels(df))
             }
@@ -209,23 +209,23 @@ Container <- R6::R6Class (
         sym = self$getSymbols(n)
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
-        self$data[[sym$name]] <- NULL
+        self$data$remove(sym$name)
         return()
       })
 
 
       # remove alias if parent set is removed
-      lapply(self$data, function(s) {
-        if (inherits(s, "Alias")) {
-          if (any(identical(setOrAliasObj, s$aliasWith))) {
-            self$removeSymbols(s$name)
+      lapply(self$data$keys(), function(s) {
+        if (inherits(self[s], "Alias")) {
+          if (any(identical(setOrAliasObj, self[s]$aliasWith))) {
+            self$removeSymbols(self[s]$name)
           }
         }
       })
 
       # remove domain references
-      lapply(self$data, function(s) {
-        new_dom = unlist(lapply(s$domain, function(d) {
+      lapply(self$data$keys(), function(s) {
+        new_dom = unlist(lapply(self[s]$domain, function(d) {
           if (any(identical(setOrAliasObj, d))) {
             return("*")
           }
@@ -233,14 +233,14 @@ Container <- R6::R6Class (
             return(d)
           }
         }), use.names = FALSE)
-        s$domain = new_dom
+        self[s]$domain = new_dom
       })
 
       # if there were any sets or aliases removed from the data list
       # then reset check flag for all symbols
       if (length(setOrAlias) != 0) {
         lapply(self$listSymbols(), function(x) {
-          self$data[[x]]$.requiresStateCheck = TRUE
+          self[x]$.requiresStateCheck = TRUE
         })
       }
 
@@ -266,7 +266,6 @@ Container <- R6::R6Class (
 
       if (oldName != newName) {
         sym = self$getSymbols(oldName)
-        # sym = self$data[[self$getSymbolNames(oldName)]]
         sym$name = newName
         self$.requiresStateCheck = TRUE
       }
@@ -601,12 +600,12 @@ Container <- R6::R6Class (
       }
 
       if (length(symbols) == 1) {
-        return(self$data[[self$getSymbolNames(symbols)]])
+        return(self[self$getSymbolNames(symbols)])
       }
       else {
         # all symbols exist in the container
         return(unlist(lapply(symbols, function(x) {
-          return(self$data[[self$getSymbolNames(x)]])
+          return(self[self$getSymbolNames(x)])
         }),
         use.names = FALSE))
       }
@@ -664,7 +663,7 @@ Container <- R6::R6Class (
       }
 
       if (is.null(uelPriority)) {
-        CPP_gdxWriteSuper(self$data, self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data$as_list(), self$systemDirectory, 
         gdxout, NA, FALSE, compress)
       }
       else {
@@ -680,7 +679,7 @@ Container <- R6::R6Class (
         reorder = append(reorder, universe)
         reorder = unique(reorder)
 
-        CPP_gdxWriteSuper(self$data, self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data$as_list(), self$systemDirectory, 
         gdxout, unlist(reorder), TRUE, compress)
       }
     },
@@ -688,7 +687,9 @@ Container <- R6::R6Class (
     #' @description reorder symbols in order to avoid domain violations
     reorderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
-      self$data = self$data[orderedSymbols]
+      l1 = lapply(orderedSymbols, function(s) self[s])
+      names(l1) = orderedSymbols
+      self$data = collections::dict(l1)
     },
 
     #' @description TRUE if all the symbols is in the Container are 
@@ -730,15 +731,15 @@ Container <- R6::R6Class (
 
     .linkDomainCategories = function() {
       for (i in self$listSymbols()) {
-        if (!inherits(self$data[[i]], "Alias")) {
-          self$data[[i]]$.linkDomainCategories()
+        if (!inherits(self[i], "Alias")) {
+          self[i]$.linkDomainCategories()
         }
       }
     },
 
     getUELs = function(symbols=NULL, ignoreUnused = FALSE) {
       if (is.null(symbols)) {
-        symbols = self$data
+        symbols = self$data$as_list()
       }
       else {
         symbols = self$getSymbols(symbols)
@@ -754,7 +755,7 @@ Container <- R6::R6Class (
 
     removeUELs = function(uels = NULL, symbols=NULL) {
       if (is.null(symbols)) {
-        symbols = self$data
+        symbols = self$data$as_list()
       }
       else {
         symbols = self$getSymbols(symbols)
@@ -771,7 +772,7 @@ Container <- R6::R6Class (
 
     renameUELs = function(uels, symbols=NULL, allowMerge=FALSE) {
       if (is.null(symbols)) {
-        symbols = self$data
+        symbols = self$data$as_list()
       }
       else {
         symbols = self$getSymbols(symbols)
@@ -787,16 +788,14 @@ Container <- R6::R6Class (
     },
 
     getDomainViolations = function() {
-      n_dim = unlist(lapply(self$data, function(s) s$dimension), 
+      n_dim = unlist(lapply(self$data$values(), function(s) s$dimension), 
       use.names = FALSE)
 
-      cont_dom_violations = list(replicate(length(self$data) * sum(n_dim), NA))
+      cont_dom_violations = list(replicate(self$data$size() * sum(n_dim), NA))
       dom_violation_count = 0
-      syms = self$data
 
-
-      for (s in syms) {
-        dom_violations = s$getDomainViolations()
+      for (s in unlist(self$data$keys())) {
+        dom_violations = self[s]$getDomainViolations()
         if (is.null(dom_violations)) next
         cont_dom_violations[(dom_violation_count+1):(dom_violation_count + 
         length(dom_violations))] = dom_violations
@@ -811,34 +810,37 @@ Container <- R6::R6Class (
     },
 
     hasDomainViolations = function() {
-      return(any(unlist(lapply(self$data, 
-      function(s) {s$hasDomainViolations()}), use.names=FALSE) == TRUE))
+      return(any(unlist(lapply(self$data$keys(), 
+      function(s) {self[s]$hasDomainViolations()}), use.names=FALSE) == TRUE))
     },
 
     countDomainViolations = function() {
-      dv = lapply(self$data, function(s) s$countDomainViolations())
+      dv = lapply(self$data$as_list(), 
+      function(s) s$countDomainViolations())
       return(dv[dv != 0])
     },
 
     dropDomainViolations = function() {
       lapply(names(self$countDomainViolations()), 
-      function(s) self$data[[s]]$dropDomainViolations())
+      function(s) self[s]$dropDomainViolations())
       return(invisible(NULL))
     },
 
     countDuplicateRecords = function() {
-      dups = lapply(self$data, function(x) return(x$countDuplicateRecords()))
+      dups = lapply(self$data$as_list(), 
+      function(x) return(x$countDuplicateRecords()))
       dups = dups[dups > 0]
       return(dups)
     },
 
     hasDuplicateRecords = function() {
-      has_dups = lapply(self$data, function(x) return(x$hasDuplicateRecords()))
+      has_dups = lapply(self$data$keys(), 
+      function(x) return(self[x]$hasDuplicateRecords()))
       return(any(has_dups==TRUE))
     },
 
     dropDuplicateRecords = function(keep = "first") {
-      lapply(self$data, function(x) {x$dropDuplicateRecords(keep)})
+      lapply(self$data$keys(), function(x) {self[x]$dropDuplicateRecords(keep)})
     }
 
   ),
@@ -940,16 +942,16 @@ Container <- R6::R6Class (
                 UniverseAlias$new(self, m$name)
           }
           else {
-            if (!any(symbolsToRead == self$data[[m$aliasfor]]$name)) {
+            if (!any(symbolsToRead == self[m$aliasfor]$name)) {
               stop(paste0("Cannot create the Alias symbol ", m, " because 
-              the parent set (", self$data[[m$aliasfor]], ") is not 
+              the parent set (", self[m$aliasfor], ") is not 
               being read into the in the Container. Alias symbols 
               require the parent set object to exist in the Container. Add ",
-              self$data[[m$aliasfor]], " to the list of symbols to read."))
+              self[m$aliasfor], " to the list of symbols to read."))
             }
             else {
               Alias$new(
-              self, m$name, self$data[[m$aliasfor]])
+              self, m$name, self[m$aliasfor])
             }
           }
 
@@ -957,23 +959,23 @@ Container <- R6::R6Class (
 
         if (records == TRUE) {
           for (s in readData) {
-            if (is.null(s$records) || inherits(self$data[[s$name]], 
+            if (is.null(s$records) || inherits(self[s$name], 
             c(".BaseAlias"))) {
               next
             }
 
-            self$data[[s$name]]$setRecords(data.frame(s$records))
+            self[s$name]$setRecords(data.frame(s$records))
 
             # map acronyms to NA
             if (!is.null(self$acronyms)) {
-              if (inherits(self$data[[s$name]], c("Parameter", 
+              if (inherits(self[s$name], c("Parameter", 
               "Variable", "Equation"))) {
-                records = self$data[[s$name]]$records
+                records = self[s$name]$records
                 for (a in self$acronyms) {
                   records[(records 
                   == a * 1e301)] = SpecialValues[["NA"]]
                 }
-                self$data[[s$name]]$records = records
+                self[s$name]$records = records
               }
             }
           }
@@ -985,7 +987,7 @@ Container <- R6::R6Class (
     },
 
     .containerRead = function(loadFrom, symbols, records) {
-      syms = names(loadFrom$data)
+      syms = unlist(loadFrom$data$keys())
 
       if (is.null(symbols)) {
           symbolsToRead = syms
@@ -1020,7 +1022,7 @@ Container <- R6::R6Class (
       if (inherits(loadFrom, "Container")) {
         sym_is_valid = lapply(symbolsToRead, 
         function(x) {
-          s_loadfrom = loadFrom$data[[x]]
+          s_loadfrom = loadFrom[x]
           return(s_loadfrom$isValid())
         })
         if (any(sym_is_valid == FALSE)) {
@@ -1031,7 +1033,7 @@ Container <- R6::R6Class (
       }
 
         for (s in symbolsToRead) {
-          s_loadfrom = loadFrom$data[[s]]
+          s_loadfrom = loadFrom[s]
           if (length(s_loadfrom$domainNames) == 1 
           && is.na(s_loadfrom$domainNames)) {
             dnames = NULL
@@ -1079,7 +1081,7 @@ Container <- R6::R6Class (
             }
             else {
               Alias$new(
-                self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith]])
+                self, s_loadfrom$name, self[s_loadfrom$aliasWith])
             }
           }
           else if (inherits(s_loadfrom, "Alias")) {
@@ -1092,7 +1094,7 @@ Container <- R6::R6Class (
             }
             else {
               Alias$new(
-                self, s_loadfrom$name, self$data[[s_loadfrom$aliasWith$name]])
+                self, s_loadfrom$name, self[s_loadfrom$aliasWith$name])
             }
           }
           else if (inherits(s_loadfrom, c("UniverseAlias", 
@@ -1106,23 +1108,23 @@ Container <- R6::R6Class (
 
     .linkDomainObjects = function(symbols) {
       symbol_is_alias = unlist(lapply(symbols, function(s) {
-        inherits(self$data[[s]], ".BaseAlias")}), use.names=FALSE)
+        inherits(self[s], ".BaseAlias")}), use.names=FALSE)
       symbol_not_alias = symbols[!symbol_is_alias]
 
       lapply(symbol_not_alias, function(s) {
-        d = unlist(lapply(self$data[[s]]$domain, function(j) {
+        d = unlist(lapply(self[s]$domain, function(j) {
           if (is.character(j) && (any(symbol_not_alias == j)) && (j != s)) {
-               return(self$data[[j]])
+               return(self[j])
           }
           else {
             return(j)
           }
         }), use.names = FALSE)
-        if (self$data[[s]]$dimension == 1) {
-          self$data[[s]]$domain = d[[1]]
+        if (self[s]$dimension == 1) {
+          self[s]$domain = d[[1]]
         }
         else {
-          self$data[[s]]$domain = d
+          self[s]$domain = d
         }
 
       })
@@ -1136,16 +1138,16 @@ Container <- R6::R6Class (
          private$validSymbolOrder()
 
         # make sure that all symbols have consistent naming
-        lapply(names(self$data), function(n) {
-          if (n != self$data[[n]]$name) {
+        lapply(self$data$keys(), function(n) {
+          if (n != self[n]$name) {
             stop(paste0("Container `data` field is inconsistent with the symbol 
-            object name (", n, " != ", self$data[[n]]$name, "). Update 
+            object name (", n, " != ", self[n]$name, "). Update 
             symbol name with <symbol>$name = <name from `data` field> \n"))
           }
           })
 
         # make sure that all symbols reference the correct Container instance
-        lapply(self$data, function(n) {
+        lapply(self$data$values(), function(n) {
           if (!identical(self, n$refContainer)) {
             stop(paste0("Symbol ", self$name, " has a broken container 
             reference. Update symbol reference with <symbol>$refContainer 
@@ -1172,9 +1174,9 @@ Container <- R6::R6Class (
       while (length(symbolsToSort) != 0) {
         sym = symbolsToSort[[idx]]
         # special 1D sets (universe domain & relaxed sets)
-        if (inherits(self$data[[sym]], "Set") &&
-        self$data[[sym]]$dimension == 1 &&
-        is.character(self$data[[sym]]$domain[[1]])
+        if (inherits(self[sym], "Set") &&
+        self[sym]$dimension == 1 &&
+        is.character(self[sym]$domain[[1]])
         ) {
           orderedSymCount = orderedSymCount + 1
           orderedSymbols[orderedSymCount] = sym
@@ -1182,11 +1184,12 @@ Container <- R6::R6Class (
           idx = 1
         }
         else {
-          doi = unlist(lapply(self$data[[sym]]$domain, function(i) {
+          doi = unlist(lapply(self[sym]$domain, function(i) {
             if (is.character(i)) {
              return(TRUE)
             }
-            else if ((inherits(i, c("Set", ".BaseAlias"))) &
+            else if ((orderedSymCount != 0) && 
+            (inherits(i, c("Set", ".BaseAlias"))) &&
             any(orderedSymbols[1:orderedSymCount] == i$name)) {
                return(TRUE)
             }
@@ -1209,7 +1212,7 @@ Container <- R6::R6Class (
 
         if (idx == length(symbolsToSort) + 1 & length(symbolsToSort) != 0) {
           inherits_set = unlist(lapply(symbolsToSort, 
-           function(s) inherits(self$data[[s]], "Set")), use.names = FALSE)
+           function(s) inherits(self[s], "Set")), use.names = FALSE)
 
           symString = symbolsToSort[inherits_set]
           symString = paste(symString)
@@ -1223,10 +1226,10 @@ Container <- R6::R6Class (
 
     isValidSymbolOrder = function() {
       validOrder = private$validSymbolOrder()
-      currentOrder = names(self$data)
+      currentOrder = unlist(self$data$keys())
       h = c()
       isSetAlias = unlist(lapply(currentOrder, function(s) {
-        return(inherits(self$data[[s]], c("Set", "Alias")))
+        return(inherits(self[s], c("Set", "Alias")))
       }), use.names = FALSE)
 
       set_alias_index = which(isSetAlias)
@@ -1330,7 +1333,6 @@ b = "boolean"
   inherit = .BaseSymbol,
   public = list(
   .requiresStateCheck = NULL,
-
   initialize = function(container, name,
                         type, subtype, 
                         domain,
@@ -1348,7 +1350,7 @@ b = "boolean"
     self$refContainer$.requiresStateCheck = TRUE
     #' @field name name of the symbol
     self$name <- name
-    self$refContainer$data[[name]] = self
+    container$data$set(name, self)
 
     self$records = NULL
 
@@ -1971,7 +1973,7 @@ b = "boolean"
             private$domain_forwarding()
 
             for (i in self$refContainer$listSymbols()) {
-              self$refContainer$data[[i]]$.requiresStateCheck = TRUE
+              self$refContainer[i]$.requiresStateCheck = TRUE
             }
 
             self$refContainer$.requiresStateCheck = TRUE
@@ -2170,9 +2172,8 @@ b = "boolean"
 
             refcontainer = private$.ref_container
 
-            datalist = refcontainer$data
-            names(datalist)[names(datalist)== private$.name] = name_input
-            refcontainer$data = datalist
+            refcontainer[name_input] = refcontainer[private$.name]
+            refcontainer$data$remove(private$.name)
           }
           private$.name = name_input
         }
@@ -2268,7 +2269,7 @@ b = "boolean"
               self$name, "\n"))
 
             }
-            if (!identical(i, self$refContainer$data[[i$name]])) {
+            if (!identical(i, self$refContainer[i$name])) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the symbol with name ", i$name, 
               " in the container is different. Seems to be a broken link.
@@ -2372,11 +2373,11 @@ b = "boolean"
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$refContainer$data[[i]]$domainLabels)[1]
-        if (!is.null(self$refContainer$data[[i]]$records)) {
-          recs = self$refContainer$data[[i]]$records
+        dim = (self$refContainer[i]$domainLabels)[1]
+        if (!is.null(self$refContainer[i]$records)) {
+          recs = self$refContainer[i]$records
 
-          if (self$refContainer$data[[i]]$dimension > 1) {
+          if (self$refContainer[i]$dimension > 1) {
             stop("attempting to forward a domain set that has dimension > 1\n")
           }
 
@@ -2400,7 +2401,7 @@ b = "boolean"
           recs = recs[!duplicated(recs[[dim]]),]
           rownames(recs) <- NULL
         }
-        self$refContainer$data[[i]]$records = recs
+        self$refContainer[i]$records = recs
       }
     }
   },
@@ -3620,7 +3621,7 @@ Equation <- R6Class(
       self$refContainer = container
       self$name = name
       refcontainer = self$refContainer
-      refcontainer$data[[name]] = self
+      refcontainer[name] = self
       self$.gams_type = GMS_DT_ALIAS
       self$.gams_subtype = 1
     }
@@ -3779,7 +3780,7 @@ Alias <- R6Class(
     getCardinality = function() {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$getCardinality())
+      return(self$refContainer[self$aliasWith$name]$getCardinality())
     },
 
 
@@ -3788,7 +3789,7 @@ Alias <- R6Class(
     getSparsity = function() {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$getSparsity())
+      return(self$refContainer[self$aliasWith$name]$getSparsity())
     },
 
     #' @description TRUE if the symbol is in a valid format, 
@@ -3890,7 +3891,7 @@ Alias <- R6Class(
     setRecords = function(records) {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$setRecords(records))
+      return(self$refContainer[self$aliasWith$name]$setRecords(records))
     }
   ),
 
@@ -3934,12 +3935,12 @@ Alias <- R6Class(
       private$.testParentSet()
       if (missing(is_singleton)) {
         refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
+        sym = refcontainer[self$aliasWith$name]
         return(sym$isSingleton)
       }
       else {
         refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
+        sym = refcontainer[self$aliasWith$name]
         sym$isSingleton = is_singleton
       }
     },
@@ -3950,13 +3951,13 @@ Alias <- R6Class(
       if (missing(description_input)) {
         refcontainer = self$refContainer
         aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
+        sym = refcontainer[aliaswithname]
         return(sym$description)
       }
       else {
         refcontainer = self$refContainer
         aliaswithname = self$aliasWith$name
-        sym = refcontainer$data[[aliaswithname]]
+        sym = refcontainer[aliaswithname]
         sym$description = description_input
       }
     },
@@ -3965,11 +3966,11 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
       if (missing(dimension_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$dimension)
+        return(self$refContainer[self$aliasWith$name]$dimension)
       }
       else {
         refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
+        sym = refcontainer[self$aliasWith$name]
         sym$dimension = dimension_input
       }
     },
@@ -3978,10 +3979,10 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
       if (missing(records_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$records)
+        return(self$refContainer[self$aliasWith$name]$records)
       }
       else {
-        self$refContainer$data[[self$aliasWith$name]]$records = records_input
+        self$refContainer[self$aliasWith$name]$records = records_input
       }
 
     },
@@ -3990,11 +3991,11 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
       if (missing(domain_input)) {
-        return(self$refContainer$data[[self$aliasWith$name]]$domain)
+        return(self$refContainer[self$aliasWith$name]$domain)
       }
       else {
         refcontainer = self$refContainer
-        sym = refcontainer$data[[self$aliasWith$name]]
+        sym = refcontainer[self$aliasWith$name]
         sym$domain = domain_input
       }
     },
@@ -4002,25 +4003,25 @@ Alias <- R6Class(
     numberRecords = function() {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$numberRecords)
+      return(self$refContainer[self$aliasWith$name]$numberRecords)
     },
 
     domainType = function() {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$domainType)
+      return(self$refContainer[self$aliasWith$name]$domainType)
     },
 
     domainNames = function() {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$domainNames)
+      return(self$refContainer[self$aliasWith$name]$domainNames)
     },
 
     domainLabels = function() {
       super$.testRefContainer()
       private$.testParentSet()
-      return(self$refContainer$data[[self$aliasWith$name]]$domainLabels)
+      return(self$refContainer[self$aliasWith$name]$domainLabels)
     },
 
     summary = function() {
@@ -4049,7 +4050,7 @@ Alias <- R6Class(
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
-        if (self$refContainer$data[[self$aliasWith$name]]$isValid() == FALSE) {
+        if (self$refContainer[self$aliasWith$name]$isValid() == FALSE) {
           stop(paste0("Alias is not valid because parent set ", self$aliasWith$name,
           "is not valid\n"))
         }
@@ -4344,7 +4345,7 @@ ConstContainer <- R6::R6Class (
       readData = readlist[-1]
       symbolsToRead = unlist(lapply(readData, "[[", 1))
       # reset data
-      self$data = list()
+      self$data = collections::dict()
 
       aliasList = list()
       aliasCount = 0
@@ -4422,13 +4423,13 @@ ConstContainer <- R6::R6Class (
           if (is.null(s$records)) {
             next
           }
-          self$data[[s$name]]$setRecords(s$records)
+          self[s$name]$setRecords(s$records)
 
           if (!is.null(self$acronyms)) {
-            if (inherits(self$data[[s$name]], c(".ConstParameter", 
+            if (inherits(self[s$name], c(".ConstParameter", 
             ".ConstVariable", ".ConstEquation"))) {
               for (a in self$acronyms) {
-                self$data[[s$name]]$records[(self$data[[s$name]]$records 
+                self[s$name]$records[(self[s$name]$records 
                 == a * 1e301)] = SpecialValues[["NA"]]
               }
             }
@@ -4466,7 +4467,7 @@ ConstContainer <- R6::R6Class (
 
     self$name = name
     lockBinding("name", self)
-    container$data[[name]] = self
+    container[name] = self
 
     self$domain = domain
     lockBinding("domain", self)
@@ -4501,7 +4502,7 @@ ConstContainer <- R6::R6Class (
           }
           card = 1
           for (n in self$domainNames) {
-            domainSym = self$refContainer$data[[self$refContainer$getSymbolNames(n)]]
+            domainSym = self$refContainer[self$refContainer$getSymbolNames(n)]
             card = card * domainSym$numberRecords
           }
           return(card)
@@ -4807,11 +4808,11 @@ ConstContainer <- R6::R6Class (
     },
 
     getCardinality = function() {
-      return(self$refContainer$data[[self$aliasWith]]$getCardinality())
+      return(self$refContainer[self$aliasWith]$getCardinality())
     },
 
     getSparsity = function() {
-      return(self$refContainer$data[[self$aliasWith]]$getSparsity())
+      return(self$refContainer[self$aliasWith]$getSparsity())
     },
 
     setRecords = function(records) {
@@ -4959,7 +4960,21 @@ is.integer0 <- function(x)
       }
 
       self$acronyms = list()
-      self$data = list()
+      self$data = collections::dict()
+    },
+
+    `[` = function(key) {
+      if (self$data$has(key)) {
+        return(self$data$get(key))
+      }
+      else {
+        return(invisible(NULL))
+      }
+    },
+
+    `[<-` = function(key, value) {
+      self$data$set(key, value)
+      return(invisible(self))
     },
 
     format = function(...) paste0("GAMS Transfer: R6 object of class ", 
@@ -4969,8 +4984,8 @@ is.integer0 <- function(x)
       if (!is.character(names)) {
         stop("The argument `names` must be type character\n")
       }
-
-      sym_names = names(self$data)
+      # return(unlist(lapply(names, function(x) m$data$has(x)), use.names=FALSE))
+      sym_names = unlist(self$data$keys(), use.names = FALSE)
       bool = unlist(lapply(names, function(x) {
         return(any(tolower(x) == tolower(sym_names)))
         }), use.names = FALSE)
@@ -4981,8 +4996,7 @@ is.integer0 <- function(x)
       if (!is.character(names)) {
         stop("The argument `names` must be type character\n")
       }
-
-      sym_names = names(self$data)
+      sym_names = unlist(self$data$keys(), use.names = FALSE)
       syms = unlist(lapply(names, function(x){
         idx = which(tolower(sym_names) == tolower(x))
         if (is.integer0(idx)) {
@@ -5009,15 +5023,16 @@ is.integer0 <- function(x)
           stop("The argument 'isValid' must be type logical\n")
         }
 
-        actual_isvalid = unlist(lapply(self$data, function(x) {
-          return(x$isValid())
+        correct_validity_data = unlist(lapply(unlist(self$data$keys()), function(x) {
+          if (self[x]$isValid() == isValid) {
+            return(x)
+          }
         }), use.names = FALSE)
 
-        correct_validity_data = self$data[actual_isvalid == isValid]
-        return(unlist(lapply(correct_validity_data, function(x) x$name), use.names = FALSE))
+        return(correct_validity_data)
       }
       else {
-        return(names(self$data))
+        return(unlist(self$data$keys()))
       }
     },
 
@@ -5035,7 +5050,7 @@ is.integer0 <- function(x)
       }
       sets = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Set", ".ConstSet")) ) {
+        if (inherits(self[s], c("Set", ".ConstSet")) ) {
           if (is.null(sets)) {
             sets = s
           }
@@ -5061,7 +5076,7 @@ is.integer0 <- function(x)
       }
       parameters = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Parameter",".ConstParameter"))) {
+        if (inherits(self[s], c("Parameter",".ConstParameter"))) {
           if (is.null(parameters)) {
             parameters = s
           }
@@ -5087,7 +5102,7 @@ is.integer0 <- function(x)
       }
       aliases = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c(".BaseAlias", ".ConstAlias", 
+        if (inherits(self[s], c(".BaseAlias", ".ConstAlias", 
         ".ConstUniverseAlias"))) {
           if (is.null(aliases)) {
             aliases = s
@@ -5138,8 +5153,8 @@ is.integer0 <- function(x)
 
       variables = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Variable", ".ConstVariable"))
-        && any(types == self$data[[s]]$type)) {
+        if (inherits(self[s], c("Variable", ".ConstVariable"))
+        && any(types == self[s]$type)) {
           if (is.null(variables)) {
             variables = s
           }
@@ -5188,8 +5203,8 @@ is.integer0 <- function(x)
 
       equations = NULL
       for (s in self$listSymbols(isValid)) {
-        if (inherits(self$data[[s]], c("Equation", ".ConstEquation"))
-        && any(types == self$data[[s]]$type)) {
+        if (inherits(self[s], c("Equation", ".ConstEquation"))
+        && any(types == self[s]$type)) {
           if (is.null(equations)) {
             equations = s
           }
@@ -5240,13 +5255,13 @@ is.integer0 <- function(x)
         if (any(self$listSets() == i)|| any(self$listAliases() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
+            self[i]$isSingleton,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getCardinality(),
+            self[i]$getSparsity()
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -5262,17 +5277,17 @@ is.integer0 <- function(x)
         for (i in nrow(df)) {
           name =df[i, 1]
           is_alias = append(is_alias, 
-          inherits(self$data[[name]], c(".BaseAlias", ".ConstAlias")))
+          inherits(self[name], c(".BaseAlias", ".ConstAlias")))
           if (inherits(self, "Container")) {
-            if (inherits(self$data[[name]], "Alias")) {
-             alias_with = append(alias_with, self$data[[name]]$aliasWith$name)
+            if (inherits(self[name], "Alias")) {
+             alias_with = append(alias_with, self[name]$aliasWith$name)
             }
-            else if (inherits(self$data[[name]], "UniverseAlias")) {
-              alias_with = append(alias_with, self$data[[name]]$aliasWith)
+            else if (inherits(self[name], "UniverseAlias")) {
+              alias_with = append(alias_with, self[name]$aliasWith)
             }
           }
           else if (inherits(self, "ConstContainer")) {
-            alias_with = append(alias_with, self$data[[name]]$aliasWith)
+            alias_with = append(alias_with, self[name]$aliasWith)
           }
         }
         df$isAlias = is_alias
@@ -5329,26 +5344,26 @@ is.integer0 <- function(x)
       for (i in symbols) {
         if (any(self$listAliases() == i)) {
           if(inherits(self, "Container")) {
-            if (inherits(self$data[[name]], "Alias")) {
-             alias_with = append(alias_with, self$data[[name]]$aliasWith$name)
+            if (inherits(self[name], "Alias")) {
+             alias_with = append(alias_with, self[name]$aliasWith$name)
             }
-            else if (inherits(self$data[[name]], "UniverseAlias")) {
-              alias_with = append(alias_with, self$data[[name]]$aliasWith)
+            else if (inherits(self[name], "UniverseAlias")) {
+              alias_with = append(alias_with, self[name]$aliasWith)
             }
           }
           else if (inherits(self, "ConstContainer")) {
-            aliasName = self$data[[i]]$aliasWith
+            aliasName = self[i]$aliasWith
           }
           symDescription = list(
             i,
             aliasName,
-            self$data[[i]]$isSingleton,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
+            self[i]$isSingleton,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getCardinality(),
+            self[i]$getSparsity()
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -5414,21 +5429,21 @@ is.integer0 <- function(x)
         if (any(self$listParameters() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$isScalar,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getMinValue("value"),
-            self$data[[i]]$getMeanValue("value"),
-            self$data[[i]]$getMaxValue("value"),
-            self$data[[i]]$whereMin("value"),
-            self$data[[i]]$whereMax("value"),
-            self$data[[i]]$countEps("value"),
-            self$data[[i]]$countNA("value"),
-            self$data[[i]]$countUndef("value"),
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity()
+            self[i]$isScalar,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getMinValue("value"),
+            self[i]$getMeanValue("value"),
+            self[i]$getMaxValue("value"),
+            self[i]$whereMin("value"),
+            self[i]$whereMax("value"),
+            self[i]$countEps("value"),
+            self[i]$countNA("value"),
+            self[i]$countUndef("value"),
+            self[i]$getCardinality(),
+            self[i]$getSparsity()
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -5496,23 +5511,23 @@ is.integer0 <- function(x)
         if (any(self$listVariables() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
+            self[i]$type,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getCardinality(),
+            self[i]$getSparsity(),
+            self[i]$getMinValue("level"),
+            self[i]$getMeanValue("level"),
+            self[i]$getMaxValue("level"),
+            self[i]$whereMaxAbs("level"),
+            self[i]$countEps("level"),
+            self[i]$getMinValue("marginal"),
+            self[i]$getMeanValue("marginal"),
+            self[i]$getMaxValue("marginal"),
+            self[i]$whereMaxAbs("marginal"),
+            self[i]$countEps("marginal")
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -5579,23 +5594,23 @@ is.integer0 <- function(x)
         if (any(self$listEquations() == i)) {
           symDescription = list(
             i,
-            self$data[[i]]$type,
-            paste(self$data[[i]]$domainNames, sep = "", collapse = " "),
-            self$data[[i]]$domainType,
-            self$data[[i]]$dimension,
-            self$data[[i]]$numberRecords,
-            self$data[[i]]$getCardinality(),
-            self$data[[i]]$getSparsity(),
-            self$data[[i]]$getMinValue("level"),
-            self$data[[i]]$getMeanValue("level"),
-            self$data[[i]]$getMaxValue("level"),
-            self$data[[i]]$whereMaxAbs("level"),
-            self$data[[i]]$countEps("level"),
-            self$data[[i]]$getMinValue("marginal"),
-            self$data[[i]]$getMeanValue("marginal"),
-            self$data[[i]]$getMaxValue("marginal"),
-            self$data[[i]]$whereMaxAbs("marginal"),
-            self$data[[i]]$countEps("marginal")
+            self[i]$type,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getCardinality(),
+            self[i]$getSparsity(),
+            self[i]$getMinValue("level"),
+            self[i]$getMeanValue("level"),
+            self[i]$getMaxValue("level"),
+            self[i]$whereMaxAbs("level"),
+            self[i]$countEps("level"),
+            self[i]$getMinValue("marginal"),
+            self[i]$getMeanValue("marginal"),
+            self[i]$getMaxValue("marginal"),
+            self[i]$whereMaxAbs("marginal"),
+            self[i]$countEps("marginal")
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -5888,3 +5903,7 @@ DomainViolation <- R6::R6Class (
     }
   )
 )
+
+
+`[..BaseContainer` <- function(obj, ...) obj$`[`(...)
+`[<-..BaseContainer` <- function(obj, ...) obj$`[<-`(...)
