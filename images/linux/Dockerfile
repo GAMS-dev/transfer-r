@@ -8,6 +8,7 @@ RUN R -e "install.packages('R6',dependencies=TRUE)"
 RUN R -e "install.packages('Rcpp',dependencies=TRUE)"
 RUN R -e "install.packages('assertthat',dependencies=TRUE)"
 RUN R -e "install.packages('R.utils',dependencies=TRUE)"
+RUN R -e "install.packages('collections',dependencies=TRUE)"
 
 # install gitlab release-cli
 RUN curl -L --output /usr/local/bin/release-cli \
