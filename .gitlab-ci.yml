@@ -38,9 +38,9 @@ image_windows:
     - windows-shell
   before_script:
     # this is to be able to pull and push images
-    - New-Item -ItemType Directory -Force -Path %USERPROFILE%/.docker
-    - $env:DOCKER_AUTH_CONFIG > %USERPROFILE%/.docker/config.json
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    #- New-Item -ItemType Directory -Force -Path %USERPROFILE%/.docker
+    #- $env:DOCKER_AUTH_CONFIG > %USERPROFILE%/.docker/config.json
+    #- docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker build -t $CI_REGISTRY_IMAGE/windows/builder images/windows
     - docker push $CI_REGISTRY_IMAGE/windows/builder
