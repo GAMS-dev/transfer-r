@@ -135,7 +135,9 @@ test_r_linux:
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
-        - Rscript -e "devtools::check('gamstransfer')"
+        - echo $PATH
+        - R CMD check ./gamstransfer --no-manual
+        - Rscript -e "testthat::test_dir('tests')"
     only:
         - merge_requests
         - main
