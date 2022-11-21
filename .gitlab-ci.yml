@@ -34,7 +34,10 @@ variables:
 
 fetch-ci-scripts:
   stage: fetch-scripts
-  when: always
+  only:
+    - merge_requests
+    - main
+    - tags
   tags: [linux]
   dependencies: []
   image:
@@ -50,7 +53,10 @@ fetch-ci-scripts:
 
 install-gamsdist-leg:
   stage: install-gams
-  when: on_success
+  only:
+    - merge_requests
+    - main
+    - tags
   tags: [linux]
   dependencies: [fetch-ci-scripts]
   image:
@@ -194,21 +200,25 @@ test_r_linux:
     script:
         - PATH=$PWD/gamsdist:$PATH
         - echo $PATH
-        - R CMD check ./gamstransfer --no-manual
-        - Rscript -e "testthat::test_dir('tests')"
+        - R CMD check ./gamstransfer --no-manual --no-tests
+        - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
+        - Rscript -e "testthat::test_dir('gamstransfer/tests')"
     only:
         - merge_requests
         - main
         - tags
-    # needs: [install-gamsdist-leg]
 
 test_r_macos:
     stage: test
     tags:
         - macos
     script:
-        - PATH=/opt/gams:$PATH
-        - Rscript -e "devtools::check('gamstransfer')"
+        - PATH=$PWD/gamsdist:$PATH
+        - echo $PATH
+        - R CMD check ./gamstransfer --no-manual # --no-tests
+
+        # - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
+        # - Rscript -e "testthat::test_dir('gamstransfer/tests')"
     only:
         - merge_requests
         - main
@@ -221,8 +231,11 @@ test_r_windows:
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
-        - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD check ./gamstransfer --no-manual
-        - C:\'Program Files'\R\R-4.2.1\bin\Rscript.exe -e "testthat::test_dir('tests')"
+        - set PATH="%PATH%;gamsdist"
+        - echo $PATH
+        - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD check ./gamstransfer --no-manual --no-tests --no-examples
+        - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
+        - C:\'Program Files'\R\R-4.2.1\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"
     only:
         - merge_requests
         - main
