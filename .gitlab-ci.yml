@@ -214,6 +214,7 @@ test_r_macos:
         - macos
     script:
         - PATH=$PWD/gamsdist:$PATH
+        - DYLD_LIBRARY_PATH=$PWD/gamsdist:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD check ./gamstransfer --no-manual # --no-tests
 
