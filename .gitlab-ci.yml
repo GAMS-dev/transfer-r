@@ -292,11 +292,12 @@ test_r_windows:
         - $GAMS_PATH = ($(pwd), '\gamsdist') -join ""
         - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
         - echo $env:PATH
-        - $ErrorActionPreference = "SilentlyContinue"
-        - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD check ./gamstransfer --no-manual --no-tests --no-examples; $null
-        - cat C:/builds/devel/gams-transfer-r/gamstransfer.Rcheck/00install.out
-        - cat C:/builds/devel/gams-transfer-r/gamstransfer.Rcheck/00check.log
-        - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"; $null
+        # - $ErrorActionPreference = "SilentlyContinue"
+        # - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD check ./gamstransfer --no-manual --no-tests --no-examples; $null
+        # - cat C:/builds/devel/gams-transfer-r/gamstransfer.Rcheck/00install.out
+        # - cat C:/builds/devel/gams-transfer-r/gamstransfer.Rcheck/00check.log
+        - mv gamstransfer_r_windows.zip gamstransfer.zip
+        - Rscript -e "install.packages('gamstransfer.zip', type='binary')"; $null
         - C:\'Program Files'\R\R-4.2.1\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
     only:
         - merge_requests
