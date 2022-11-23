@@ -154,11 +154,6 @@ image_windows:
   stage: images
   tags:
     - windows-shell
-#   before_script:
-#     # this is to be able to pull and push images
-#     - New-Item -ItemType Directory -Force -Path %USERPROFILE%/.docker
-#     - $env:DOCKER_AUTH_CONFIG > %USERPROFILE%/.docker/config.json
-#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker build -t $CI_REGISTRY_IMAGE/windows/builder images/windows
     - docker push $CI_REGISTRY_IMAGE/windows/builder
@@ -271,10 +266,7 @@ test_r_macos:
         - PATH=$PWD/gamsdist:$PATH
         - DYLD_LIBRARY_PATH=$PWD/gamsdist:$DYLD_LIBRARY_PATH
         - echo $PATH
-        - R CMD check ./gamstransfer --no-manual # --no-tests
-
-        # - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
-        # - Rscript -e "testthat::test_dir('gamstransfer/tests')"
+        - R CMD check ./gamstransfer --no-manual
     needs: [install-gamsdist-deg,build_r_macos,build_r_source]
     only:
         - merge_requests
@@ -292,10 +284,6 @@ test_r_windows:
         - $GAMS_PATH = ($(pwd), '\gamsdist') -join ""
         - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
         - echo $env:PATH
-        # - $ErrorActionPreference = "SilentlyContinue"
-        # - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD check ./gamstransfer --no-manual --no-tests --no-examples; $null
-        # - cat C:/builds/devel/gams-transfer-r/gamstransfer.Rcheck/00install.out
-        # - cat C:/builds/devel/gams-transfer-r/gamstransfer.Rcheck/00check.log
         - mv gamstransfer_r_windows.zip gamstransfer.zip
         - Rscript -e "install.packages('gamstransfer.zip', type='binary')"; $null
         - C:\'Program Files'\R\R-4.2.1\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
