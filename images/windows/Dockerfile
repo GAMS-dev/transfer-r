@@ -17,6 +17,8 @@ RUN choco install R ; \
 RUN Rscript -e \"install.packages('R6', repos='http://cran.us.r-project.org')\" ; \
     Rscript -e \"install.packages('Rcpp', repos='http://cran.us.r-project.org')\" ; \
     Rscript -e \"install.packages('assertthat', repos='http://cran.us.r-project.org')\" ; \
-    Rscript -e \"install.packages('R.utils', repos='http://cran.us.r-project.org')\"
+    Rscript -e \"install.packages('R.utils', repos='http://cran.us.r-project.org')\" ; \
+    Rscript -e \"install.packages('testthat', repos='http://cran.us.r-project.org')\" ; \
+    Rscript -e \"install.packages('collections', repos='http://cran.us.r-project.org')\"
 
 CMD ["powershell"]

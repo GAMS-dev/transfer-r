@@ -54,10 +54,8 @@ std::string elemText, std::string sym_name) {
   else if (VarType == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
       int txtnr;
-      if (VarType == GMS_DT_SET) {
-        if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr)) {
-          stop("WriteData:gdxAddSetText GDX error (gdxAddSetText)");
-        }
+      if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr)) {
+        stop("WriteData:gdxAddSetText GDX error (gdxAddSetText)");
       }
       Values[GMS_VAL_LEVEL] = txtnr;
       Values[GMS_VAL_MARGINAL] = 0;
