@@ -690,7 +690,7 @@ Container <- R6::R6Class (
       orderedSymbols = private$validSymbolOrder()
       l1 = lapply(orderedSymbols, function(s) self[s])
       names(l1) = orderedSymbols
-      self$data = collections::dict(l1)
+      self$data = collections::ordered_dict(l1)
     },
 
     #' @description TRUE if all the symbols is in the Container are 
@@ -4347,7 +4347,7 @@ ConstContainer <- R6::R6Class (
       readData = readlist[-1]
       symbolsToRead = unlist(lapply(readData, "[[", 1))
       # reset data
-      self$data = collections::dict()
+      self$data = collections::ordered_dict()
 
       # reset lower case data
       self$.lc_data = collections::dict()
@@ -4966,7 +4966,7 @@ is.integer0 <- function(x)
       }
 
       self$acronyms = list()
-      self$data = collections::dict()
+      self$data = collections::ordered_dict()
       # another dict for lowercase names to original case
       self$.lc_data = collections::dict()
     },
