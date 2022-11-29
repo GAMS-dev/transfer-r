@@ -117,7 +117,7 @@ return L;
 }
 
 // [[Rcpp::export]]
-void CPP_gdxWriteSuper(List data, CharacterVector sysDir, 
+void CPP_gdxWriteSuper(List data, LogicalVector enable, CharacterVector sysDir, 
 CharacterVector fileName, CharacterVector uel_priority, 
 bool is_uel_priority, bool compress) {
 
@@ -175,13 +175,17 @@ bool is_uel_priority, bool compress) {
 
   DataFrame df;
   List domain;
-  int Dim;
+  int Dim, sym_nr;
   std::vector<double> values;
   std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
 
-  for (int d=0; d < data.length(); d++){
+  sym_nr = 0;
+  for (int d=0; d < data.length(); d++) {
+
+    if (!enable[d]) continue;
+    sym_nr++;
     Environment symname = data[d];
     std::string mysym = symname["name"];
     varType = symname[".gams_type"];
@@ -230,12 +234,16 @@ bool is_uel_priority, bool compress) {
     if (domaintype == "regular") {
       rc = gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
       if (!rc) {
-        gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
-        stop("CPP_gdxWriteSuper:gdxSymbolSetDomain GDX error: %s",Msg);
+        gdxGetLastError(PGX); // clears last error
+        rc = gdxSymbolSetDomainX(PGX, sym_nr, (const char **)domains_ptr);
+        if (!rc) {
+          gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+          stop("CPP_gdxWriteSuper:gdxSymbolSetDomain GDX error: %s",Msg);
+        }
       }
     }
     else if (domaintype == "relaxed") {
-      rc = gdxSymbolSetDomainX(PGX, d + 1, (const char **)domains_ptr);
+      rc = gdxSymbolSetDomainX(PGX, sym_nr, (const char **)domains_ptr);
       if (!rc) {
         gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
         stop("CPP_gdxWriteSuper:gdxSymbolSetDomainX GDX error: %s",Msg);

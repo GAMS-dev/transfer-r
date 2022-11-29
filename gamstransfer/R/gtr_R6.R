@@ -621,7 +621,27 @@ Container <- R6::R6Class (
     #' ordering follows that dictated by the data. As a convenience, it 
     #' is possible to prepend the UEL list with a user specified order 
     #' using the uel_priority argument.
-    write = function(gdxout, compress = FALSE, uelPriority = NULL) {
+    write = function(gdxout, symbols=NULL, 
+    compress = FALSE, uelPriority = NULL) {
+      if (is.null(symbols)) {
+        symbols = unlist(self$data$keys())
+        enable = replicate(length(symbols), TRUE)
+      }
+      else {
+        enable = replicate(length(self$listSymbols()), FALSE)
+
+        allSymbols = as.list(1:length(self$listSymbols()))
+        names(allSymbols) = self$listSymbols()
+
+        allSymDict = collections::dict(allSymbols)
+
+        symbols = self$getSymbolNames(symbols)
+        idx=unlist(lapply(symbols, function(s) {
+          allSymDict$get(s)
+        }), use.names = FALSE)
+        enable[idx] = TRUE
+      }
+
       if (!is.logical(compress)) {
         stop("'compress' must be of type logical; 
         default False (no compression)\n")
@@ -664,7 +684,7 @@ Container <- R6::R6Class (
       }
 
       if (is.null(uelPriority)) {
-        CPP_gdxWriteSuper(self$data$as_list(), self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
         gdxout, NA, FALSE, compress)
       }
       else {
@@ -680,7 +700,7 @@ Container <- R6::R6Class (
         reorder = append(reorder, universe)
         reorder = unique(reorder)
 
-        CPP_gdxWriteSuper(self$data$as_list(), self$systemDirectory, 
+        CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
         gdxout, unlist(reorder), TRUE, compress)
       }
     },
