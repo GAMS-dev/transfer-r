@@ -5,7 +5,8 @@ GAMS Transfer R
 - `findDuplicateRecords` now returns a data frame instead of row indices
 - Breaking: `Container` `data` field is now an ordered dictionary from `collections` package instead of named list. Instead of `m$data$<symbolname>`, use `m[<symbolname>]`.
 - performance improvement to `Container` method `hasSymbols`. This results in significant speed-ups when adding multiple symbols to the Container.
-- added `symbols` argument to `Container` method `write` to support partial writing
+- added `symbols` argument to `Container` methods `getDomainViolations`, `hasDomainViolations`, `countDomainViolations`, `dropDomainViolations`, `hasDuplicateRecords`, `countDuplicateRecords`, `dropDuplicateRecords`, `isValid`, and `write` for partial operation.
+- `Container` method `getSymbols` now always returns a list
 
 GAMS Transfer R v1.6.0
 ==================

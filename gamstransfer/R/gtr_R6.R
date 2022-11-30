@@ -198,15 +198,13 @@ Container <- R6::R6Class (
         }
       }
 
-      setOrAliasBool = unlist(lapply(symbols, function(x) {
-        return(inherits(self$getSymbols(x), c("Set", ".BaseAlias")))
+      symbols = self$getSymbols(symbols)
+      setOrAliasBool = unlist(lapply(symbols, function(s) {
+        return(inherits(s, c("Set", ".BaseAlias")))
       }), use.names = FALSE)
-      setOrAlias = symbols[setOrAliasBool]
+      setOrAliasObj = symbols[setOrAliasBool]
 
-      setOrAliasObj = self$getSymbols(setOrAlias)
-
-      lapply(symbols, function(n) {
-        sym = self$getSymbols(n)
+      lapply(symbols, function(sym) {
         sym$refContainer <- NULL
         sym$.requiresStateCheck <- TRUE
         self$data$remove(sym$name)
@@ -218,7 +216,10 @@ Container <- R6::R6Class (
       # remove alias if parent set is removed
       lapply(self$data$keys(), function(s) {
         if (inherits(self[s], "Alias")) {
-          if (any(identical(setOrAliasObj, self[s]$aliasWith))) {
+          identical_bool = unlist(lapply(setOrAliasObj, 
+          function(x) return(identical(x, self[s]$aliasWith))), use.names=FALSE)
+
+          if (any(identical_bool)) {
             self$removeSymbols(self[s]$name)
           }
         }
@@ -227,7 +228,10 @@ Container <- R6::R6Class (
       # remove domain references
       lapply(self$data$keys(), function(s) {
         new_dom = unlist(lapply(self[s]$domain, function(d) {
-          if (any(identical(setOrAliasObj, d))) {
+          identical_bool = unlist(lapply(setOrAliasObj, 
+          function(x) return(identical(x, d))), use.names=FALSE)
+
+          if (any(identical_bool)) {
             return("*")
           }
           else {
@@ -239,7 +243,7 @@ Container <- R6::R6Class (
 
       # if there were any sets or aliases removed from the data list
       # then reset check flag for all symbols
-      if (length(setOrAlias) != 0) {
+      if (length(setOrAliasObj) != 0) {
         lapply(self$listSymbols(), function(x) {
           self[x]$.requiresStateCheck = TRUE
         })
@@ -266,7 +270,7 @@ Container <- R6::R6Class (
       }
 
       if (oldName != newName) {
-        sym = self$getSymbols(oldName)
+        sym = self$getSymbols(oldName)[[1]]
         sym$name = newName
         self$.requiresStateCheck = TRUE
       }
@@ -308,7 +312,7 @@ Container <- R6::R6Class (
         }
         )
 
-        symobj = self$getSymbols(name)
+        symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "Set")
         && identical(symobj$domain, domain)
         && symobj$isSingleton == isSingleton
@@ -367,7 +371,7 @@ Container <- R6::R6Class (
         }
         )
 
-        symobj = self$getSymbols(name)
+        symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "Parameter")
         && identical(symobj$domain, domain)
         && symobj$domainForwarding == domainForwarding
@@ -428,7 +432,7 @@ Container <- R6::R6Class (
         }
         )
 
-        symobj = self$getSymbols(name)
+        symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "Variable")
         && symobj$type == type
         && identical(symobj$domain, domain)
@@ -490,7 +494,7 @@ Container <- R6::R6Class (
         }
         )
 
-        symobj = self$getSymbols(name)
+        symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "Equation")
         && symobj$type == type
         && identical(symobj$domain, domain)
@@ -543,7 +547,7 @@ Container <- R6::R6Class (
           alias_with_input = parent
         }
 
-        symobj = self$getSymbols(name)
+        symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "Alias")) {
           symobj$aliasWith = aliasWith
           return(symobj)
@@ -566,7 +570,7 @@ Container <- R6::R6Class (
       }
       else {
 
-        symobj = self$getSymbols(name)
+        symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "UniverseAlias")) {
           return(symobj)
         }
@@ -600,16 +604,11 @@ Container <- R6::R6Class (
         stop(paste0("Symbol ", i, " does not appear in the container \n"))
       }
 
-      if (length(symbols) == 1) {
-        return(self[self$getSymbolNames(symbols)])
-      }
-      else {
-        # all symbols exist in the container
-        return(unlist(lapply(symbols, function(x) {
-          return(self[self$getSymbolNames(x)])
-        }),
-        use.names = FALSE))
-      }
+      # all symbols exist in the container
+      return(unlist(lapply(symbols, function(x) {
+        return(self[self$getSymbolNames(x)])
+      }),
+      use.names = FALSE))
     },
 
     #' @description a write method to write to a gdxout GDX file
@@ -718,7 +717,16 @@ Container <- R6::R6Class (
     #' force=TRUE.
     #' @param verbose type logical
     #' @param force type logical
-    isValid = function(verbose=FALSE, force=FALSE) {
+    isValid = function(symbols=NULL, verbose=FALSE, force=FALSE) {
+      if (is.null(symbols)) {
+        symbols = self$data$as_list()
+      }
+      else {
+        symNames = self$getSymbolNames(symbols)
+        symbols = self$getSymbols(symbols)
+        names(symbols) = symNames
+      }
+
       if (!is.logical(verbose)) {
         stop("Argument 'verbose' must be logical\n")
       }
@@ -734,7 +742,7 @@ Container <- R6::R6Class (
       if (self$.requiresStateCheck == TRUE) {
       tryCatch(
         {
-          private$check()
+          private$check(symbols)
           return(TRUE)
         },
         error = function(e) {
@@ -765,7 +773,7 @@ Container <- R6::R6Class (
       else {
         symbols = self$getSymbols(symbols)
       }
-      uel_all_symbols = lapply(c(symbols), function(s) {
+      uel_all_symbols = lapply(symbols, function(s) {
         if (!inherits(s, "UniverseAlias")) {
           s$getUELs(ignoreUnused=ignoreUnused)
         }
@@ -808,15 +816,22 @@ Container <- R6::R6Class (
       return(invisible(NULL))
     },
 
-    getDomainViolations = function() {
-      n_dim = unlist(lapply(self$data$values(), function(s) s$dimension), 
+    getDomainViolations = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$values()
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+
+      n_dim = unlist(lapply(symbols, function(s) s$dimension), 
       use.names = FALSE)
 
-      cont_dom_violations = list(replicate(self$data$size() * sum(n_dim), NA))
+      cont_dom_violations = list(replicate(length(symbols) * sum(n_dim), NA))
       dom_violation_count = 0
 
-      for (s in unlist(self$data$keys())) {
-        dom_violations = self[s]$getDomainViolations()
+      for (s in symbols) {
+        dom_violations = s$getDomainViolations()
         if (is.null(dom_violations)) next
         cont_dom_violations[(dom_violation_count+1):(dom_violation_count + 
         length(dom_violations))] = dom_violations
@@ -830,38 +845,72 @@ Container <- R6::R6Class (
       }
     },
 
-    hasDomainViolations = function() {
-      return(any(unlist(lapply(self$data$keys(), 
-      function(s) {self[s]$hasDomainViolations()}), use.names=FALSE) == TRUE))
+    hasDomainViolations = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$values()
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+
+      return(any(unlist(lapply(symbols, 
+      function(s) {s$hasDomainViolations()}), use.names=FALSE) == TRUE))
     },
 
-    countDomainViolations = function() {
-      dv = lapply(self$data$as_list(), 
+    countDomainViolations = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$as_list()
+      }
+      else {
+        symNames = self$getSymbolNames(symbols)
+        symbols = self$getSymbols(symbols)
+        names(symbols) = symNames
+      }
+
+      dv = lapply(symbols, 
       function(s) s$countDomainViolations())
       return(dv[dv != 0])
     },
 
-    dropDomainViolations = function() {
-      lapply(names(self$countDomainViolations()), 
+    dropDomainViolations = function(symbols=NULL) {
+      lapply(names(self$countDomainViolations(symbols)), 
       function(s) self[s]$dropDomainViolations())
       return(invisible(NULL))
     },
 
-    countDuplicateRecords = function() {
-      dups = lapply(self$data$as_list(), 
-      function(x) return(x$countDuplicateRecords()))
+    countDuplicateRecords = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$as_list()
+      }
+      else {
+        symNames = self$getSymbolNames(symbols)
+        symbols = self$getSymbols(symbols)
+        names(symbols) = symNames
+      }
+
+      dups = lapply(symbols, 
+      function(s) return(s$countDuplicateRecords()))
       dups = dups[dups > 0]
       return(dups)
     },
 
-    hasDuplicateRecords = function() {
-      has_dups = lapply(self$data$keys(), 
-      function(x) return(self[x]$hasDuplicateRecords()))
+    hasDuplicateRecords = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$values()
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+
+      has_dups = lapply(symbols, 
+      function(s) return(s$hasDuplicateRecords()))
       return(any(has_dups==TRUE))
     },
 
-    dropDuplicateRecords = function(keep = "first") {
-      lapply(self$data$keys(), function(x) {self[x]$dropDuplicateRecords(keep)})
+    dropDuplicateRecords = function(symbols=NULL, keep = "first") {
+      lapply(names(self$countDuplicateRecords(symbols)), 
+      function(s) {self[s]$dropDuplicateRecords(keep)})
+      return(invisible(NULL))
     }
 
   ),
@@ -1153,13 +1202,17 @@ Container <- R6::R6Class (
       return(invisible(NULL))
     },
 
-    check = function() {
+    check = function(symbols) {
       if (self$.requiresStateCheck == TRUE) {
-        # check for cycles
-         private$validSymbolOrder()
+
+        # check for cycles only when all symbols are checked
+        # skip this check when user passes a subset of symbols
+        if (length(symbols) == self$data$size()) {
+           private$validSymbolOrder()
+        }
 
         # make sure that all symbols have consistent naming
-        lapply(self$data$keys(), function(n) {
+        lapply(names(symbols), function(n) {
           if (n != self[n]$name) {
             stop(paste0("Container `data` field is inconsistent with the symbol 
             object name (", n, " != ", self[n]$name, "). Update 
@@ -1168,19 +1221,24 @@ Container <- R6::R6Class (
           })
 
         # make sure that all symbols reference the correct Container instance
-        lapply(self$data$values(), function(n) {
+        lapply(symbols, function(n) {
           if (!identical(self, n$refContainer)) {
             stop(paste0("Symbol ", self$name, " has a broken container 
             reference. Update symbol reference with <symbol>$refContainer 
             = <new_container>\n"))
           }
           })
-        if (!is.null(self$listSymbols(isValid=FALSE))) {
+
+        sym_valid = unlist(lapply(symbols, function(s) 
+        return(s$isValid())), use.names = FALSE)
+
+        if (any(sym_valid == FALSE)) {
           stop("Container contains invalid symbols; ",
           "invalid symbols can be found with the $listSymbols() ",
           "method. Debug invalid symbol(s) by running .",
           "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n")
         }
+
         self$.requiresStateCheck = FALSE
       }
     },
@@ -5021,7 +5079,14 @@ is.integer0 <- function(x)
       if (!is.character(names)) {
         stop("The argument `names` must be type character\n")
       }
-      return(unlist(lapply(names, function(x) self$.lc_data$get(tolower(x))), use.names = FALSE))
+      return(unlist(lapply(names, function(x) {
+        if (!self$.lc_data$has(tolower(x))) {
+          stop(paste0("Symbol ", x, " does not exist\n"))
+        }
+        else {
+          self$.lc_data$get(tolower(x))
+        }
+      }), use.names = FALSE))
     },
 
     #' @description list all symbols in the container if isValid = NULL
