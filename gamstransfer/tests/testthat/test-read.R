@@ -1832,10 +1832,10 @@ expect_true(inherits(symbolobjects[[2]], "Parameter"))
 expect_error(m$getSymbols("f"))
 
 symobject = m$getSymbols("d")
-expect_true(inherits(symobject, "Parameter"))
+expect_true(inherits(symobject[[1]], "Parameter"))
 
 symobject = m$getSymbols("D")
-expect_true(inherits(symobject, "Parameter"))
+expect_true(inherits(symobject[[1]], "Parameter"))
 
 expect_error(m$getSymbols(200))
 
@@ -2472,7 +2472,7 @@ test_that("test_num_97", {
 )
 
 # UniverseAlias as domain
-test_that("test_num_97", {
+test_that("test_num_98", {
   m = Container$new()
   i = Set$new(m, "i", records=paste0("i", 1:5))
   ip = UniverseAlias$new(m, "ip")
@@ -2522,7 +2522,7 @@ test_that("test_num_97", {
 )
 
 # remove symbols including alias
-test_that("test_num_98", {
+test_that("test_num_99", {
 m = Container$new()
 i = Set$new(m, "i")
 ii = Alias$new(m, "ii", i)
@@ -2541,7 +2541,7 @@ expect_equal(j$domain, "*")
 )
 
 # GDX read errors
-test_that("test_num_99", {
+test_that("test_num_100", {
   m = Container$new()
   i = Set$new(m, "i")
 
@@ -2573,7 +2573,7 @@ test_that("test_num_99", {
 )
 
 # alias duplicaterecords
-test_that("test_num_100", {
+test_that("test_num_101", {
 m = Container$new()
 i = Set$new(m, "i", records=replicate(5, "i1"))
 ip = Alias$new(m, "ip", i)
@@ -2587,7 +2587,7 @@ expect_equal(nrow(i$records), 1)
 )
 
 #summary test
-test_that("test_num_101", {
+test_that("test_num_102", {
   m = Container$new()
   expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
 
@@ -2706,5 +2706,54 @@ test_that("test_num_101", {
     numberRecords = 2,
     domainType = "none"
   ))
+}
+)
+
+#test partial write
+test_that("test_num_103", {
+m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
+m$write("partial_write.gdx", symbols="a")
+
+m1 = Container$new("partial_write.gdx")
+expect_equal(m1["a"]$domain, "i")
+expect_equal(m1["a"]$domainType, "relaxed")
+}
+)
+
+#test symbols argument container methods
+test_that("test_num_104", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:10))
+j = Set$new(m, "j", records=paste0("j", 1:5))
+p_dv = Parameter$new(m, "p_dv", domain=c(i, j), records = data.frame(c("i1","i12","i0","i5"), c("j2", "j6", "j1", "j0"), 11:14))
+p_dup = Parameter$new(m, "p_dup", domain=c(i, j), records = data.frame(c("i1","i1","i3","i5"), c("j2", "j2", "j1", "j2"), c(11, 13, 12, 14)))
+dv = m$getDomainViolations(symbols="p_dv")
+expect_equal(length(dv), 2)
+
+expect_true(m$hasDomainViolations())
+expect_true(!m$hasDomainViolations(symbols="p_dup"))
+expect_true(m$hasDomainViolations(symbols="p_dv"))
+
+expect_true(m$hasDuplicateRecords())
+expect_true(!m$hasDuplicateRecords(symbols="p_dv"))
+expect_true(m$hasDuplicateRecords(symbols="p_dup"))
+
+m$dropDomainViolations(symbols="p_dup") # should do nothing
+expect_true(m$hasDomainViolations())
+dv = m$getDomainViolations(symbols="p_dv")
+expect_equal(length(dv), 2)
+
+m$dropDuplicateRecords(symbols="p_dv") # should do nothing
+dups = m$countDuplicateRecords(symbols="p_dup")
+expect_equal(dups, list(p_dup=1))
+
+m$dropDomainViolations(symbols="p_dv")
+expect_true(!m$hasDomainViolations())
+dv = m$getDomainViolations(symbols="p_dv")
+expect_true(is.null(dv))
+
+m$dropDuplicateRecords(symbols="p_dv") # should do nothing
+dups = m$countDuplicateRecords(symbols="p_dup")
+expect_equal(dups, list(p_dup=1))
 }
 )
