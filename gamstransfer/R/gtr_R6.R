@@ -611,8 +611,8 @@ Container <- R6::R6Class (
       use.names = FALSE))
     },
 
-    #' @description a write method to write to a gdxout GDX file
-    #' @param gdxout name of the GDX file to write to
+    #' @description a write method to write to a writeTo GDX file
+    #' @param writeTo name of the GDX file to write to
     #' @param compress write tge GDX file in compressed format by setting
     #' compress = TRUE.
     #' @param uelPriority Advanced users might want to specify an order 
@@ -620,7 +620,7 @@ Container <- R6::R6Class (
     #' ordering follows that dictated by the data. As a convenience, it 
     #' is possible to prepend the UEL list with a user specified order 
     #' using the uel_priority argument.
-    write = function(gdxout, symbols=NULL, 
+    write = function(writeTo, symbols=NULL, 
     compress = FALSE, uelPriority = NULL) {
       if (is.null(symbols)) {
         symbols = unlist(self$data$keys())
@@ -646,17 +646,17 @@ Container <- R6::R6Class (
         default False (no compression)\n")
       }
 
-      if (!is.character(gdxout)) {
-        stop("The argument gdxout must be of type string\n")
+      if (!is.character(writeTo)) {
+        stop("The argument writeTo must be of type string\n")
       }
       else {
-        namesplit = strsplit(gdxout, "\\.")
+        namesplit = strsplit(writeTo, "\\.")
         ext = tail(unlist(namesplit), 1)
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx\n")
         }
 
-        gdxout = R.utils::getAbsolutePath(path.expand(gdxout))
+        writeTo = R.utils::getAbsolutePath(path.expand(writeTo))
       }
 
       if (!is.null(uelPriority)) {
@@ -684,7 +684,7 @@ Container <- R6::R6Class (
 
       if (is.null(uelPriority)) {
         CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
-        gdxout, NA, FALSE, compress)
+        writeTo, NA, FALSE, compress)
       }
       else {
         universe = self$getUniverseSet()
@@ -700,7 +700,7 @@ Container <- R6::R6Class (
         reorder = unique(reorder)
 
         CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
-        gdxout, unlist(reorder), TRUE, compress)
+        writeTo, unlist(reorder), TRUE, compress)
       }
     },
 
