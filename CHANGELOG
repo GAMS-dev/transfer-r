@@ -11,6 +11,7 @@ GAMS Transfer R
 - bug fix in `SpecialValues$isNA`
 - bug fix in `getUELs` for scalar symbols
 - bug fix in `Symbol` method `isValid` for symbols containing only NA
+- added `equals` method for `Container` and `ConstContainer`
 
 GAMS Transfer R v1.6.0
 ==================

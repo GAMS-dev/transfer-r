@@ -2964,3 +2964,22 @@ expect_true(u$equals(up, checkMetaData=FALSE))
 expect_false(u$equals(up))
 }
 )
+
+# test equals for container and constcontainer
+test_that("test_num_107", {
+m = Container$new()
+i = Set$new(m, "i")
+
+m1 = Container$new()
+i1 = Set$new(m1, "i")
+
+expect_true(m$equals(m1))
+j = Set$new(m1, "j")
+expect_false(m$equals(m1))
+expect_error(m$equals(m1, verbose=TRUE))
+
+k = Set$new(m, "k")
+expect_false(m$equals(m1))
+expect_error(m$equals(m1,verbose=TRUE))
+}
+)

@@ -916,6 +916,53 @@ Container <- R6::R6Class (
       lapply(names(self$countDuplicateRecords(symbols)), 
       function(s) {self[s]$dropDuplicateRecords(keep)})
       return(invisible(NULL))
+    },
+
+    equals = function(other, verbose=FALSE) {
+
+      if (!inherits(other, ".BaseContainer")) {
+        if (verbose) {
+          stop("The argument `other` is not a Container\n")
+        }
+        else {
+          return(FALSE)
+        }
+      }
+
+      if (self$data$size() != other$data$size()) {
+        if (verbose) {
+          stop(paste0("Containers contain different number ",
+          "of symbols.\n self: ", 
+          self$data$size(), "\n other :", other$data$size(), "\n"))
+        }
+        else {
+          return(FALSE)
+        }
+      }
+
+      self_data_keys = unlist(self$data$keys(), use.names = FALSE)
+      other_data_keys = unlist(other$data$keys(), use.names = FALSE)
+      diff_keys = setdiff(self_data_keys, other_data_keys)
+      if (length(diff_keys) != 0) {
+        if (verbose) {
+          stop(paste0("Container `data` field keys do not match.",
+          " Keys not present in `other` :", 
+          toString(diff_keys)))
+        }
+        else {
+          return(FALSE)
+        }
+      }
+
+      for (s in self$data$keys()) {
+        selfsym = self[s]
+        othersym = other[s]
+        if (!selfsym$equals(othersym, verbose=verbose)) {
+          return(FALSE)
+        }
+      }
+      # if didn't return false until here then its true
+      return(TRUE)
     }
 
   ),
@@ -5010,7 +5057,61 @@ ConstContainer <- R6::R6Class (
           }
         }
       }
+    },
+
+    equals = function(other, verbose=FALSE) {
+
+      if (!inherits(other, ".BaseContainer")) {
+        if (verbose) {
+          stop("The argument `other` is not a Container\n")
+        }
+        else {
+          return(FALSE)
+        }
+      }
+
+      if (self$data$size() != other$data$size()) {
+        if (verbose) {
+          stop(paste0("Containers contain different number ",
+          "of symbols.\n self: ", 
+          self$data$size(), "\n other :", other$data$size(), "\n"))
+        }
+        else {
+          return(FALSE)
+        }
+      }
+
+      self_data_keys = unlist(self$data$keys(), use.names = FALSE)
+      other_data_keys = unlist(other$data$keys(), use.names = FALSE)
+      diff_keys = setdiff(self_data_keys, other_data_keys)
+      if (length(diff_keys) != 0) {
+        if (verbose) {
+          stop(paste0("Container `data` field keys do not match.",
+          " Keys not present in `other` :", 
+          toString(diff_keys)))
+        }
+        else {
+          return(FALSE)
+        }
+      }
+
+      for (s in self$data$keys()) {
+        selfsym = self[s]
+        othersym = other[s]
+        if (!identical(selfsym, othersym)) {
+          if (verbose) {
+            stop("Symbols named `", s, "` in both containers are not identical")
+          }
+          else {
+            return(FALSE)
+          }
+        }
+      }
+
+      # if didn't return false until here then its true
+      return(TRUE)
     }
+
   )
   )
 
