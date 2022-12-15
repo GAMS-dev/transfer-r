@@ -60,7 +60,12 @@ SpecialValues = list(
   "POSINF" = Inf,
   "NEGINF" = -Inf,
   "isNA" = function(x) return(is.na(x) & !is.nan(x)),
-  "isEps" = function(x) return((x == 0) & (sign(1/x) == -1)),
+  "isEps" = function(x) {
+    isna = is.na(x)
+    iseps_logical = ((x == 0) & (sign(1/x) == -1))
+    iseps_logical[isna] = FALSE
+    return(iseps_logical)
+    },
   "isUndef" = function(x) return(is.nan(x)),
   "isPosInf" = function(x) return(is.infinite(x) & sign(x) == 1),
   "isNegInf" = function(x) return(is.infinite(x) & sign(x) == -1)
@@ -1033,7 +1038,6 @@ Container <- R6::R6Class (
             c(".BaseAlias"))) {
               next
             }
-
             self[s$name]$setRecords(data.frame(s$records))
 
             # map acronyms to NA
@@ -1441,6 +1445,7 @@ b = "boolean"
   },
 
   getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
+    if (self$dimension == 0) return(c())
     if (is.null(dimension)) {
       if (!is.null(codes)) {
         stop("User must specify `dimension` if retrieving UELs with the 
@@ -1452,8 +1457,8 @@ b = "boolean"
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
     any(dimension < 1) || any(dimension > self$dimension)) {
-      stop(paste0("All elements of the argument 
-      `dimension` must be integers in [1, ", 
+      stop(paste0("All elements of the argument ", 
+      " `dimension` must be integers in [1, ", 
       self$dimension, "]\n"))
     }
 
@@ -1463,8 +1468,8 @@ b = "boolean"
 
     if (!is.null(codes) && (!(is.numeric(codes) || is.integer(codes)) || 
     !all(codes %% 1 == 0) || !all(codes >= 1))) {
-      stop("The argument `codes` must be integers or 
-      a vector of integers >= 1\n")
+      stop(paste0("The argument `codes` must be integers ", 
+      " or a vector of integers >= 1\n"))
     }
 
     if (!self$isValid()) {
@@ -2030,6 +2035,28 @@ b = "boolean"
     }
   },
 
+  equals = function(other, checkUELs=TRUE, 
+  checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL,
+  verbose=FALSE) {
+    if (inherits(other, "Alias")) {
+      other = other$aliasWith
+    }
+
+    tryCatch(
+      {
+        private$.check_equal(other, checkUELs, 
+        checkElementText, checkMetaData, rtol, atol)
+        return(TRUE)
+      },
+      error = function(e) {
+        if (verbose == TRUE) {
+          message(e)
+        }
+        return(FALSE)
+      }
+    )
+  },
+
   .linkDomainCategories = function() {
       private$.records[, 1:self$dimension] = lapply(1:self$dimension, function(n) {
         i  = self$domain[[n]]
@@ -2337,6 +2364,337 @@ b = "boolean"
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
+    .check_equal = function(other, checkUELs=TRUE, 
+      checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL) {
+
+      if (self$dimension != other$dimension) {
+        stop(paste0("Symbol dimension do not match ", self$dimension, 
+        " != ", other$dimension, "\n"))
+      }
+
+      if (self$domainType != other$domainType) {
+        stop(paste0("Symbol domain types do not match `", self$domainType, 
+        "`` != `", other$domainType, "`\n"))
+      }
+
+      if (!identical(self$domain, other$domain)) {
+        stop(paste0("Symbol domains do not match \n"))
+      }
+
+      if (self$numberRecords != other$numberRecords) {
+        stop(paste0("Symbols do not have same number of records ", 
+        self$numberRecords, " != ", other$numberRecords, "\n"))
+      }
+
+      # check metadata
+      if (checkMetaData) {
+        if (self$name != other$name) {
+          stop("Symbol names do not match ", 
+          self$name, " != ", other$name, "\n" )
+        }
+
+        if (self$description != other$description) {
+          stop("Symbol descriptions do not match ", 
+          self$description, " != ", other$description, "\n" )
+        }
+
+        if (class(self)[1] != class(other)[1]) {
+          stop("Symbol types do not match ", 
+          class(self)[1], " != ", class(other)[1], "\n" )
+        }
+      }
+
+      # check UELs
+      if (checkUELs) {
+        if (self$numberRecords != 0) {
+          selfUELs = self$getUELs()
+          otherUELs = other$getUELs()
+          if (length(setdiff(selfUELs, otherUELs)) != 0) {
+            stop(paste0("Symbol UELs do not match \n",
+            "self: ", toString(selfUELs), "\n",
+            "other: ", toString(otherUELs), "\n"))
+          }
+        }
+      }
+
+      if (inherits(self, c("Set", "Alias"))) {
+        private$.check_set_records_equal(other, checkElementText)
+      }
+      else if (inherits(self, c("Parameter", "Variable", 
+      "Equation"))) {
+        private$.check_numeric_records_equal(other, rtol, atol)
+      }
+    },
+
+    .check_equals_common_args = function(other, checkUELs, checkMetaData, verbose) {
+      # mandatory checks
+      if (!self$isValid()) {
+        stop(paste0("Cannot compare objects because ", s$name, " is not valid. 
+        Use ", s$name, "$isValid(verbose=TRUE) to get more details\n"))
+      }
+
+      if (!inherits(other, c(".Symbol", ".BaseAlias"))) {
+        stop("The argument `other` must be a Symbol object")
+      }
+
+      if (!other$isValid()) {
+        stop(paste0("Cannot compare objects because ", other$name, " is invalid. Use ",
+        other$name, "$isValid(verbose=TRUE) to debug.\n"))
+      }
+
+      if (!is.logical(checkUELs)) {
+        stop("The argument `checkUELs` must be type logical")
+      }
+
+      if (!is.logical(checkMetaData)) {
+        stop("The argument `checkMetaData` must be type logical")
+      }
+
+      if (!is.logical(verbose)) {
+        stop("The argument `verbose` must be type logical")
+      }
+    },
+
+    .check_equals_numeric_args = function(atol, rtol) {
+
+
+      if (!is.numeric(atol)) {
+        stop("The argument `atol` must be type numeric \n")
+      }
+
+      if (!is.null(names(atol))) {
+        if (inherits(self, c("Variable", "Equation"))) {
+          diff = setdiff(names(atol), private$.attr())
+          if (length(diff) != 0) {
+            stop(paste0("User entered named vector `atol` with names (", 
+            toString(names(atol)), ") must be a subset of valid numeric columns ", 
+            toString(private$.attr()), "\n"))
+          }
+        }
+        else {
+          # parameter
+          if (length(atol) != 1) {
+            stop("Inconsistent length of the argument `atol`. Must be 1 for parameters")
+          }
+        }
+      }
+
+
+
+      if (!is.numeric(rtol)) {
+        stop("The argument `rtol` must be type numeric")
+      }
+
+      if (!is.null(names(rtol))) {
+        if (inherits(self, c("Variable", "Equation"))) {
+          diff = setdiff(names(rtol), private$.attr())
+          if (length(diff) != 0) {
+            stop(paste0("User entered named vector `rtol` with names (", 
+            toString(names(rtol)), ") must be a subset of valid numeric columns ", 
+            toString(private$.attr()), "\n"))
+          }
+        }
+        else {
+          # parameter
+          if (length(rtol) != 1) {
+            stop("Inconsistent length of the argument `rtol`. Must be 1 for parameters\n")
+          }
+        }
+      }
+
+      # if both atol and rtol are named vectors, their names should be equal
+      if (!is.null(names(atol)) && !is.null(names(rtol))) {
+        atol_names = names(atol)
+        rtol_names = names(rtol)
+        if (length(atol_names) != length(rtol_names)) {
+          stop(paste0("When passing a named vector to the arguments `atol` and `rtol`, length of `atol` ",
+          length(atol_names), " should be same as the length of `rtol` ", length(rtol_names), "\n"))
+        }
+        if (length(setdiff(atol_names, rtol_names) != 0)) {
+          stop(paste0("When passing a named vector to the arguments `atol` and `rtol`, names of `atol` ",
+          toString(atol_names), " should be same as the names of `rtol` ", toString(rtol_names), "\n"))
+        }
+      }
+    },
+
+    .check_set_records_equal = function(other, checkElementText) {
+      if (self$numberRecords == 0) return()
+      #merge both dataframes by column_names
+      merged = merge(self$records, other$records, 
+      by.x=self$domainLabels, by.y=other$domainLabels,
+      all=TRUE)
+
+      isna_check = is.na(merged[(self$dimension+1):length(merged)])
+
+      if (any(isna_check)) {
+        error_df = head(merged[as.logical(
+        rowSums(isna_check)),][1:self$dimension])
+        strmsg="symbol records do not match. Unmatched rows below\n"
+        strdf = paste0(capture.output(error_df), collapse="\n")
+        stop(paste0(strmsg, strdf, "\n"))
+      }
+
+      if (checkElementText) {
+        el_text_mismatch = (merged[, "element_text.x"] != merged[, "element_text.y"])
+
+        if (any(el_text_mismatch)) {
+          error_df = head(merged[el_text_mismatch, ])
+          strmsg="symbol element_text does not match. Unmatched rows below\n"
+          strdf = paste0(capture.output(error_df), collapse="\n")
+          stop(paste0(strmsg, strdf, "\n"))
+        }
+      }
+
+
+    },
+
+    .check_numeric_records_equal = function(other, rtol, atol) {
+      if (self$numberRecords == 0) return()
+
+      columns = unique(append(names(rtol), names(atol)))
+      if (is.null(columns)) {
+        if (inherits(self, c("Variable", "Equation"))) {
+          columns = private$.attr()
+        }
+        else {
+          #parameter
+          columns = "value"
+        }
+      }
+
+      if (self$dimension == 0) {
+        # now compare numerical records
+        for (attr in columns) {
+          # check for special values
+          count = 0
+          fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
+          is_special = FALSE
+          for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
+          SpecialValues$isUndef, SpecialValues$isPosInf, 
+          SpecialValues$isNegInf)) {
+            count = count + 1
+            is_special_self = f(self$records[, attr])
+            is_special_other = f(other$records[, attr])
+
+            if (any( is_special_self !=  is_special_other)) {
+              stop(paste0("Symbols with ", fnames[count], " special values 
+              do not match in the ", attr, " column.\n"))
+            }
+            is_special = (is_special || is_special_self)
+          }
+          if (is_special) next
+
+          if (!is.null(names(atol))) {
+            atol_attr = atol[[attr]]
+          }
+          else {
+            atol_attr = atol
+          }
+
+          if (!is.null(names(rtol))) {
+              rtol_attr = rtol[[attr]]
+          }
+          else {
+            rtol_attr = rtol
+          }
+          # check numerical equality subject to tolerance
+          lhs = abs(self$records[,attr] - other$records[, attr])
+          rhs = atol_attr + rtol_attr * abs(other$records[, attr])
+
+          if (lhs > rhs) {
+            stop(paste0("Symbol records contain numeric differences in the ", 
+            attr, " attribute that are outside the specified tolerances 
+            rtol=", rtol_attr, ", atol=", atol_attr, "\n"))
+          }
+        }
+      }
+      else {
+        #merge both dataframes by column_names
+        merged = merge(self$records, other$records, 
+        by.x=self$domainLabels, by.y=other$domainLabels,
+        all=TRUE)
+        error_df = head(merged[as.logical(
+          rowSums(is.na(merged[(self$dimension+1):length(merged)]))),][1:self$dimension])
+
+        strmsg="symbol records do not match. Unmatched rows below\n"
+        strdf = paste0(capture.output(error_df), collapse="\n")
+        if (any(is.na(merged[,self$dimension:length(merged)]))) {
+          stop(paste0(strmsg, strdf, "\n"))
+        }
+
+        # now compare numerical records
+        for (attr in columns) {
+          attrs_x = paste0(attr, ".x")
+          attrs_y = paste0(attr, ".y")
+          small_merged = merged[1:self$dimension]
+          small_merged[, c(attrs_x, attrs_y)] = 
+          merged[c(attrs_x, attrs_y)]
+
+          # check for special values
+          count = 0
+          fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
+          for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
+            SpecialValues$isUndef, SpecialValues$isPosInf, 
+            SpecialValues$isNegInf)) {
+            count = count + 1
+            idx_self = f(small_merged[, attrs_x])
+            idx_other = f(small_merged[, attrs_y])
+            if (any(idx_self != idx_other)) {
+              stop(paste0("Symbols with ", fnames[count], " special values 
+              do not match in the ", attr, " column.\n"))
+            }
+
+            if (any(idx_self)) {
+              # drop special values
+              small_merged = small_merged[-which(idx_self),]
+            }
+            if (nrow(small_merged) == 0) break
+          }
+
+
+          if (nrow(small_merged) == 0) next
+
+          if (!is.null(names(atol))) {
+            if (!is.null(atol[[attr]])) {
+              atol_attr = atol[[attr]]
+            }
+            else {
+              stop(paste0("User passed a named vector for the argument `atol` but the attribute ", 
+              attr, " is missing\n"))
+            }
+          }
+          else {
+            atol_attr = atol
+          }
+
+          if (!is.null(names(rtol))) {
+            if (!is.null(rtol[[attr]])) {
+              rtol_attr = rtol[[attr]]
+            }
+            else {
+              stop(paste0("User passed a named vector for the argument `rtol` but the attribute ", 
+              attr, " is missing\n"))
+            }
+          }
+          else {
+            rtol_attr = rtol
+          }
+
+          # check numerical equality subject to tolerance
+          lhs = abs(small_merged[,paste0(attr, ".x")] - small_merged[, paste0(attr, ".y")])
+          rhs = atol_attr + rtol_attr * abs(small_merged[, paste0(attr, ".y")])
+
+          if (any(lhs > rhs)) {
+            stop(paste0("Symbol records contain numeric differences in the ", 
+            attr, " attribute that are outside the specified tolerances 
+            rtol=", rtol_attr, ", atol=", atol_attr, "\n"))
+          }
+        }
+
+      }
+    },
+
+
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         # if regular domain, symbols in domain must be valid
@@ -2425,9 +2783,9 @@ b = "boolean"
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
             for (i in (self$dimension + 1):length(self$records)) {
-              if (!is.numeric(self$records[, i])) {
-              # if (!all(inherits(self$records[, i], "numeric"))) {
-                stop("Data in column ", i, " must be numeric\n")
+              if (!(is.numeric(self$records[, i]) || 
+              all(SpecialValues$isNA(self$records[, i])))) {
+                stop("Data in column ", i, " must be numeric or NA\n")
               }
             }
           }
@@ -2620,6 +2978,22 @@ Set <- R6Class(
 
       colnames(records) = columnNames
       self$records = records
+    },
+
+    # set/alias
+    equals = function(other, checkUELs=TRUE, 
+    checkElementText=TRUE, checkMetaData=TRUE,
+    verbose=FALSE) {
+      if (!is.logical(checkElementText)) {
+        stop("The argument `checkElementText` must be type logical")
+      }
+
+      super$.check_equals_common_args(other, checkUELs,
+      checkMetaData, verbose)
+
+      super$equals(other, checkUELs=checkUELs,
+      checkElementText=checkElementText, checkMetaData=checkMetaData,
+      verbose=verbose)
     }
   ),
 
@@ -2812,9 +3186,10 @@ Parameter <- R6Class(
         columnNames = append(columnNames, "value")
 
         #if records "value" is not numeric, stop.
-        if (any(!is.numeric(records[,length(records)]))) {
-          stop("All entries in the 'values' column of a parameter 
-          must be numeric.\n")
+        val_column = records[,length(records)]
+        if (!(is.numeric(val_column) || all(SpecialValues$isNA(val_column)))) {
+            stop("All entries in the 'values' column of a parameter 
+            must be numeric.\n")
         }
 
         if (self$dimension == 0) {
@@ -2840,6 +3215,20 @@ Parameter <- R6Class(
         colnames(records) = columnNames
         self$records = records
       }
+    },
+
+    # par
+    equals = function(other, checkUELs=TRUE, 
+    checkMetaData=TRUE, rtol=0, atol=0,
+    verbose=FALSE) {
+      super$.check_equals_common_args(other, checkUELs,
+      checkMetaData, verbose)
+
+      super$.check_equals_numeric_args(atol, rtol)
+
+      super$equals(other, checkUELs=checkUELs,
+      checkMetaData=checkMetaData,rtol=rtol, atol=atol,
+      verbose=verbose)
     }
   ),
 
@@ -2955,7 +3344,7 @@ Variable <- R6Class(
           }
           # check if elements of the list are arrays or numerics
           for (i in length(records)) {
-            if (!(is.numeric(records[[i]]))) {
+            if (!(is.numeric(records[[i]]) || all(SpecialValues$isNA(records[[i]])))) {
               stop("All elements of the named list `records` must 
               be type numeric.\n")
             }
@@ -3131,6 +3520,15 @@ Variable <- R6Class(
           "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
 
+        # check if numeric
+        for (i in (self$dimension + 1):length(records)) {
+          if (!(is.numeric(records[[i]]) || 
+          all(SpecialValues$isNA(records[[i]])))) {
+            stop(paste0("All elements of the, `" , colnames(records)[i], 
+            "` column of `records` not type numeric or NA.\n"))
+          }
+        }
+
         # reorder columns
         correct_order = c()
         if (self$dimension > 0) {
@@ -3167,6 +3565,20 @@ Variable <- R6Class(
         # self$.linkDomainCategories()
 
       }
+    },
+
+    # var.equ
+    equals = function(other, checkUELs=TRUE, 
+    checkMetaData=TRUE, rtol=0, atol=0,
+    verbose=FALSE) {
+      super$.check_equals_common_args(other, checkUELs,
+      checkMetaData, verbose)
+
+      super$.check_equals_numeric_args(atol, rtol)
+
+      super$equals(other, checkUELs=checkUELs,
+      checkMetaData=checkMetaData,rtol=rtol, atol=atol,
+      verbose=verbose)
     }
 
   ),
@@ -3366,7 +3778,7 @@ Equation <- R6Class(
           }
           # check if elements of the list are arrays or numerics
           for (i in length(records)) {
-            if (!(is.numeric(records[[i]]))) {
+            if (!(is.numeric(records[[i]]) || all(SpecialValues$isNA(records[[i]])))) {
               stop("All elements of the named list `records` must 
               be type numeric.\n")
             }
@@ -3548,6 +3960,15 @@ Equation <- R6Class(
           "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
         }
 
+        # check if numeric
+        for (i in (self$dimension + 1):length(records)) {
+          if (!(is.numeric(records[[i]]) || 
+          all(SpecialValues$isNA(records[[i]])))) {
+            stop(paste0("All elements of the, `" , colnames(records)[i], 
+            "` column of `records` not type numeric or NA.\n"))
+          }
+        }
+
         # reorder columns
         correct_order = c()
         if (self$dimension > 0) {
@@ -3583,6 +4004,20 @@ Equation <- R6Class(
         # self$.linkDomainCategories()
 
       }
+    },
+
+    # var.equ
+    equals = function(other, checkUELs=TRUE, 
+    checkMetaData=TRUE, rtol=0, atol=0,
+    verbose=FALSE) {
+      super$.check_equals_common_args(other, checkUELs,
+      checkMetaData, verbose)
+
+      super$.check_equals_numeric_args(atol, rtol)
+
+      super$equals(other, checkUELs=checkUELs,
+      checkMetaData=checkMetaData,rtol=rtol, atol=atol,
+      verbose=verbose)
     }
   ),
 
@@ -3972,6 +4407,18 @@ Alias <- R6Class(
       super$.testRefContainer()
       private$.testParentSet()
       return(self$refContainer[self$aliasWith$name]$setRecords(records))
+    },
+
+    # set/alias
+    equals = function(other, checkUELs=TRUE, 
+    checkElementText=TRUE, checkMetaData=TRUE,
+    verbose=FALSE) {
+      super$.testRefContainer()
+      private$.testParentSet()
+
+      self$aliasWith$equals(other, checkUELs=checkUELs,
+      checkElementText=checkElementText,
+      checkMetaData=checkMetaData, verbose=verbose)
     }
   ),
 
@@ -4244,6 +4691,50 @@ UniverseAlias <- R6Class(
       else {
         return(TRUE)
       }
+    },
+
+    equals = function(other,checkMetaData=TRUE,
+    verbose=FALSE) {
+      # mandatory checks
+      if (!self$isValid()) {
+        stop(paste0("Cannot compare objects because ", s$name, " is not valid. 
+        Use ", s$name, "$isValid(verbose=TRUE) to get more details\n"))
+      }
+
+      if (!inherits(other, c(".Symbol", ".BaseAlias"))) {
+        stop("The argument `other` must be a Symbol object")
+      }
+
+      if (!other$isValid()) {
+        stop(paste0("Cannot compare objects because ", other$name, " is invalid. Use ",
+        other$name, "$isValid(verbose=TRUE) to debug.\n"))
+      }
+
+      if (inherits(other, "Alias")) {
+        other = other$aliasWith
+      }
+
+      if (!is.logical(checkMetaData)) {
+        stop("The argument `checkMetaData` must be type logical")
+      }
+
+      tryCatch(
+        {
+          if (checkMetaData) {
+            if (self$name != other$name) {
+              stop("Symbol names do not match ", 
+              self$name, " != ", other$name, "\n" )
+            }
+          }
+          return(TRUE)
+        },
+        error = function(e) {
+          if (verbose == TRUE) {
+            message(e)
+          }
+          return(FALSE)
+        }
+      )
     }
   ),
 
