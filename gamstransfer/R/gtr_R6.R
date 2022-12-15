@@ -2082,7 +2082,7 @@ b = "boolean"
     }
   },
 
-  equals = function(other, checkUELs=TRUE, 
+  equals = function(other, columns=NULL, checkUELs=TRUE, 
   checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL,
   verbose=FALSE) {
     if (inherits(other, "Alias")) {
@@ -2091,7 +2091,7 @@ b = "boolean"
 
     tryCatch(
       {
-        private$.check_equal(other, checkUELs, 
+        private$.check_equal(other, columns, checkUELs, 
         checkElementText, checkMetaData, rtol, atol)
         return(TRUE)
       },
@@ -2411,7 +2411,7 @@ b = "boolean"
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
-    .check_equal = function(other, checkUELs=TRUE, 
+    .check_equal = function(other, columns= NULL, checkUELs=TRUE, 
       checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL) {
 
       if (self$dimension != other$dimension) {
@@ -2469,7 +2469,7 @@ b = "boolean"
       }
       else if (inherits(self, c("Parameter", "Variable", 
       "Equation"))) {
-        private$.check_numeric_records_equal(other, rtol, atol)
+        private$.check_numeric_records_equal(other, columns, rtol, atol)
       }
     },
 
@@ -2503,64 +2503,12 @@ b = "boolean"
     },
 
     .check_equals_numeric_args = function(atol, rtol) {
-
-
-      if (!is.numeric(atol)) {
-        stop("The argument `atol` must be type numeric \n")
+      if (!(is.numeric(atol) && length(atol) == 1)) {
+        stop("The argument `atol` must be type numeric of length 1 \n")
       }
 
-      if (!is.null(names(atol))) {
-        if (inherits(self, c("Variable", "Equation"))) {
-          diff = setdiff(names(atol), private$.attr())
-          if (length(diff) != 0) {
-            stop(paste0("User entered named vector `atol` with names (", 
-            toString(names(atol)), ") must be a subset of valid numeric columns ", 
-            toString(private$.attr()), "\n"))
-          }
-        }
-        else {
-          # parameter
-          if (length(atol) != 1) {
-            stop("Inconsistent length of the argument `atol`. Must be 1 for parameters")
-          }
-        }
-      }
-
-
-
-      if (!is.numeric(rtol)) {
-        stop("The argument `rtol` must be type numeric")
-      }
-
-      if (!is.null(names(rtol))) {
-        if (inherits(self, c("Variable", "Equation"))) {
-          diff = setdiff(names(rtol), private$.attr())
-          if (length(diff) != 0) {
-            stop(paste0("User entered named vector `rtol` with names (", 
-            toString(names(rtol)), ") must be a subset of valid numeric columns ", 
-            toString(private$.attr()), "\n"))
-          }
-        }
-        else {
-          # parameter
-          if (length(rtol) != 1) {
-            stop("Inconsistent length of the argument `rtol`. Must be 1 for parameters\n")
-          }
-        }
-      }
-
-      # if both atol and rtol are named vectors, their names should be equal
-      if (!is.null(names(atol)) && !is.null(names(rtol))) {
-        atol_names = names(atol)
-        rtol_names = names(rtol)
-        if (length(atol_names) != length(rtol_names)) {
-          stop(paste0("When passing a named vector to the arguments `atol` and `rtol`, length of `atol` ",
-          length(atol_names), " should be same as the length of `rtol` ", length(rtol_names), "\n"))
-        }
-        if (length(setdiff(atol_names, rtol_names) != 0)) {
-          stop(paste0("When passing a named vector to the arguments `atol` and `rtol`, names of `atol` ",
-          toString(atol_names), " should be same as the names of `rtol` ", toString(rtol_names), "\n"))
-        }
+      if (!(is.numeric(rtol) && length(rtol) == 1)) {
+        stop("The argument `rtol` must be type numeric of length 1 \n")
       }
     },
 
@@ -2595,10 +2543,10 @@ b = "boolean"
 
     },
 
-    .check_numeric_records_equal = function(other, rtol, atol) {
+    .check_numeric_records_equal = function(other, columns, rtol, atol) {
       if (self$numberRecords == 0) return()
 
-      columns = unique(append(names(rtol), names(atol)))
+      # columns = unique(append(names(rtol), names(atol)))
       if (is.null(columns)) {
         if (inherits(self, c("Variable", "Equation"))) {
           columns = private$.attr()
@@ -3615,15 +3563,17 @@ Variable <- R6Class(
     },
 
     # var.equ
-    equals = function(other, checkUELs=TRUE, 
+    equals = function(other, columns=NULL, checkUELs=TRUE, 
     checkMetaData=TRUE, rtol=0, atol=0,
     verbose=FALSE) {
       super$.check_equals_common_args(other, checkUELs,
       checkMetaData, verbose)
 
+      super$.checkColumnsArgument(columns)
+
       super$.check_equals_numeric_args(atol, rtol)
 
-      super$equals(other, checkUELs=checkUELs,
+      super$equals(other, columns=columns, checkUELs=checkUELs,
       checkMetaData=checkMetaData,rtol=rtol, atol=atol,
       verbose=verbose)
     }
@@ -4054,15 +4004,17 @@ Equation <- R6Class(
     },
 
     # var.equ
-    equals = function(other, checkUELs=TRUE, 
+    equals = function(other, columns=NULL, checkUELs=TRUE, 
     checkMetaData=TRUE, rtol=0, atol=0,
     verbose=FALSE) {
       super$.check_equals_common_args(other, checkUELs,
       checkMetaData, verbose)
 
+      super$.checkColumnsArgument(columns)
+
       super$.check_equals_numeric_args(atol, rtol)
 
-      super$equals(other, checkUELs=checkUELs,
+      super$equals(other, columns=columns, checkUELs=checkUELs,
       checkMetaData=checkMetaData,rtol=rtol, atol=atol,
       verbose=verbose)
     }
