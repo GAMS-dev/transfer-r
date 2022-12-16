@@ -2456,7 +2456,7 @@ b = "boolean"
         if (self$numberRecords != 0) {
           selfUELs = self$getUELs()
           otherUELs = other$getUELs()
-          if (length(setdiff(selfUELs, otherUELs)) != 0) {
+          if (!all(selfUELs == otherUELs)) {
             stop(paste0("Symbol UELs do not match \n",
             "self: ", toString(selfUELs), "\n",
             "other: ", toString(otherUELs), "\n"))
@@ -3326,7 +3326,7 @@ Variable <- R6Class(
       # if list containing array or just an array
       # exclude data frame accept everything else
       if (inherits(records, c("list", "array", "numeric", "integer"))) {
-        if (is.array(records)){
+        if (is.array(records) || inherits(records, "numeric")){
           records= list(level = records) # default to level
         }
 
@@ -3762,7 +3762,7 @@ Equation <- R6Class(
     setRecords = function(records) {
       if (inherits(records, c("list", "array", "numeric", "integer"))) {
 
-        if (is.array(records)){
+        if (is.array(records) || inherits(records, "numeric")){
           records= list(level = records) # default to level
         }
 
