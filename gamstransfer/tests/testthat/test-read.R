@@ -2757,3 +2757,224 @@ dups = m$countDuplicateRecords(symbols="p_dup")
 expect_equal(dups, list(p_dup=1))
 }
 )
+
+# test equals
+test_that("test_num_105", {
+# set comparison
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+expect_false(i$equals(j))
+expect_true(i$equals(j, checkMetaData = FALSE))
+expect_error(i$equals(j, checkMetaData = FALSE, verbose=10))
+
+# error because of domain type mismatch
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j", i)
+expect_false(i$equals(j, checkMetaData = FALSE))
+expect_error(v1$equals(v2, checkMetaData = FALSE, checkElementText=6))
+
+# error because of validity
+j$records = data.frame(i=c("j1","j2"), j= c("k1","k2"), k = c("l1","l2"))
+expect_error(i$equals(j, checkMetaData = FALSE))
+expect_error(j$equals(i, checkMetaData = FALSE))
+
+# other type error
+expect_error(i$equals(2))
+
+#columns arg
+p1 = Parameter$new(m, "p1")
+p2 = Parameter$new(m, "p2")
+
+v1 = Variable$new(m, "v1")
+v2 = Variable$new(m, "v2")
+
+expect_error(v1$equals(v2, checkUELs=2, checkMetaData=FALSE))
+expect_error(v1$equals(v2, checkMetaData=6))
+
+expect_error(v1$equals(v2, checkMetaData=FALSE, atol=TRUE))
+expect_error(v1$equals(v2, checkMetaData=FALSE, rtol=TRUE))
+
+expect_error(v1$equals(v2, checkMetaData=FALSE, atol= c(1, 2)))
+
+expect_error(v1$equals(v2, columns=c("blah1", "blah2"), checkMetaData=FALSE, rtol= 0))
+
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2"))
+j = Set$new(m, "j", records=c("j1","j2"))
+
+e0 = Equation$new(m, "e0", type = "eq", description="empty eq from m")
+e1 = Equation$new(m, "e1", type = "eq", domain=c(i, j))
+e2 = Equation$new(m, "e2", type = "eq", domain= i)
+e2a = Equation$new(m, "e2a", type = "eq", domain= i, records=data.frame(i_1="i1", level=1))
+e2b = Equation$new(m, "e2b", type = "eq", domain= i)
+e3 = Equation$new(m, "e3", type = "eq", domain = j)
+
+expect_false(e2$equals(e3))
+expect_false(e2$equals(e2a))
+expect_false(e2$equals(e2b))
+expect_true(e2$equals(e2b, checkMetaData=FALSE))
+
+m2 = Container$new()
+e02 = Equation$new(m2, "e0", type="eq", description="empty eq from m2")
+expect_true(e02$equals(e0, checkMetaData=FALSE))
+expect_false(e02$equals(e0, checkMetaData=TRUE))
+
+m2$removeSymbols("e0")
+v02 = Variable$new(m2, "e0", description="empty var from m2")
+expect_true(v02$equals(e0, checkMetaData=FALSE))
+expect_false(v02$equals(e0, checkMetaData=TRUE))
+
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2"))
+i$setUELs(c("i1","i2","i3","i4"))
+
+m2 = Container$new()
+i2 = Set$new(m2, "i", records=c("i1","i2"))
+expect_false(i$equals(i2, checkUELs=TRUE))
+expect_true(i$equals(i2, checkUELs=FALSE))
+
+# element text
+m = Container$new()
+i = Set$new(m, "i", records=data.frame(c("i1","i2")))
+
+m2 = Container$new()
+i2 = Set$new(m2, "i", records=data.frame(c("i1","i2"), c("first elemnt", "second element")))
+
+expect_true(i$equals(i2, checkElementText=FALSE))
+expect_false(i$equals(i2))
+
+# compare records
+m = Container$new()
+i1 = Set$new(m, "i1", records=data.frame(c("i1","i2")))
+i2 = Set$new(m, "i2", records=data.frame(c("i2","i3")))
+expect_false(i1$equals(i2, checkMetaData=FALSE))
+
+#parameter records comparison
+m = Container$new()
+p1 = Parameter$new(m, "p1", records=SpecialValues[["NA"]])
+p2 = Parameter$new(m, "p2", records=SpecialValues[["NA"]])
+p3 = Parameter$new(m, "p3", records=SpecialValues[["EPS"]])
+expect_true(p1$equals(p2, checkMetaData=FALSE))
+expect_false(p1$equals(p3, checkMetaData=FALSE))
+
+m = Container$new()
+p1 = Parameter$new(m, "p1", records=SpecialValues[["EPS"]])
+p2 = Parameter$new(m, "p2", records=SpecialValues[["EPS"]])
+p3 = Parameter$new(m, "p3", records=SpecialValues[["UNDEF"]])
+expect_true(p1$equals(p2, checkMetaData=FALSE))
+expect_false(p1$equals(p3, checkMetaData=FALSE))
+
+m = Container$new()
+p1 = Parameter$new(m, "p1", records=SpecialValues[["UNDEF"]])
+p2 = Parameter$new(m, "p2", records=SpecialValues[["UNDEF"]])
+p3 = Parameter$new(m, "p3", records=SpecialValues[["NA"]])
+expect_true(p1$equals(p2, checkMetaData=FALSE))
+expect_false(p1$equals(p3, checkMetaData=FALSE))
+
+#scalar
+m = Container$new()
+p1 = Parameter$new(m, "p1", records=10)
+p2 = Parameter$new(m, "p2", records=10)
+p3 = Parameter$new(m, "p3", records=5)
+expect_true(p1$equals(p2, checkMetaData=FALSE))
+expect_false(p1$equals(p3, checkMetaData=FALSE))
+
+# 1D param
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2","i3"))
+p1 = Parameter$new(m, "p1", domain=i, records=data.frame(c("i1","i2","i3"), c(2,4,5)))
+p2 = Parameter$new(m, "p2", domain=i, records=data.frame(c("i1","i2","i3"), c(3,5,5)))
+expect_false(p1$equals(p2, checkMetaData=FALSE))
+
+# 2D param with special values
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2","i3"))
+j = Set$new(m, "j", records=c("j1","j2","j3"))
+p1 = Parameter$new(m, "p1", domain=c(i, j), records=data.frame(c("i1","i2","i3"),c("j1","j2","j3"), c(SpecialValues[["NA"]],4,SpecialValues$UNDEF)))
+p2 = Parameter$new(m, "p2", domain=c(i, j), records=data.frame(c("i1","i2","i3"),c("j1","j2","j3"), c(SpecialValues$UNDEF,4,SpecialValues[["NA"]])))
+p3 = Parameter$new(m, "p3", domain=c(i, j), records=data.frame(c("i1","i2","i3"),c("j1","j2","j3"), c(SpecialValues[["NA"]],5,SpecialValues$UNDEF)))
+
+expect_false(p1$equals(p2, checkMetaData=FALSE))
+expect_false(p1$equals(p3, checkMetaData=FALSE))
+
+# variable
+m = Container$new()
+v0 = Variable$new(m, "v0", records=data.frame(level=3))
+v0p = Variable$new(m, "v0p", records=data.frame(level=2.99))
+expect_true(v0$equals(v0p, checkMetaData=FALSE, atol=0.1))
+expect_true(v0$equals(v0p, columns="level",checkMetaData=FALSE, atol=0.1))
+expect_true(v0$equals(v0p, checkMetaData=FALSE, atol=0.1))
+expect_true(v0$equals(v0p,columns=c("level", "marginal"), checkMetaData=FALSE, atol=0.1))
+expect_false(v0$equals(v0p, columns=c("level", "marginal"), checkMetaData=FALSE, atol=0))
+expect_error(v0$equals(v0p, checkMetaData=FALSE, atol=c(level=0, scale=0.1), rtol=c(marginal=0, scale=0.1)))
+expect_error(v0$equals(v0p, checkMetaData=FALSE, atol=c(level=0, scale=0.1), verbose=TRUE))
+
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+v1 = Variable$new(m, "v1", domain=i, records=data.frame(c("i1","i4","i5"), level=c(3, 4, 5)))
+v1p = Variable$new(m, "v1p",domain=i, records=data.frame(c("i1","i4","i5"), level=c(2.95, 4.03, 5.09)))
+expect_true(v1$equals(v1p, columns="level", checkMetaData=FALSE, atol=0.1))
+expect_true(v1$equals(v1p, checkMetaData=FALSE, atol=0.1))
+expect_false(v1$equals(v1p, columns=c("level", "marginal"), checkMetaData=FALSE, atol=0))
+expect_error(v1$equals(v1p, checkMetaData=FALSE, atol=c(level=0, scale=0.1), rtol=c(marginal=0, scale=0.1)))
+expect_error(v1$equals(v1p, checkMetaData=FALSE, atol=c(level=0, scale=0.1), verbose=TRUE))
+
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+j = Set$new(m, "j", records=paste0("j",1:5))
+v2 = Variable$new(m, "v2", domain=c(i, j), records=data.frame(c("i1","i4","i5"), c("j2","j4","j1"), level=c(3, NA, 5), marginal=c(NaN, 4, 5)))
+v2p = Variable$new(m, "v2p",domain=c(i, j), records=data.frame(c("i1","i4","i5"), c("j2","j4","j1"), level=c(2.95, NA, 5.09), marginal=c(NaN, 4, 5)))
+
+expect_true(v1$equals(v1p, columns="level", checkMetaData=FALSE, atol=0.1))
+expect_true(v1$equals(v1p, checkMetaData=FALSE, atol=0.1))
+expect_true(v1$equals(v1p, columns=c("level", "marginal"), checkMetaData=FALSE, atol=0.1))
+expect_false(v1$equals(v1p, columns=c("level", "marginal"), checkMetaData=FALSE, atol=0))
+expect_error(v1$equals(v1p, checkMetaData=FALSE, atol=c(level=0, scale=0.1), rtol=c(marginal=0, scale=0.1)))
+expect_error(v1$equals(v1p, checkMetaData=FALSE, atol=c(level=0, scale=0.1), verbose=TRUE))
+
+}
+)
+
+# test equals for alias and unialias
+test_that("test_num_106", {
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2","i3"))
+j = Set$new(m, "j", records=c("i1","i2","i3"))
+
+ip = Alias$new(m, "ip", i)
+jp = Alias$new(m, "jp", j)
+
+expect_true(i$equals(j, checkMetaData=FALSE))
+expect_true(ip$equals(jp, checkMetaData=FALSE))
+expect_false(ip$equals(jp, checkMetaData=TRUE))
+expect_true(ip$equals(j, checkMetaData=FALSE))
+expect_true(i$equals(jp, checkMetaData=FALSE))
+
+u = UniverseAlias$new(m, "u")
+up = UniverseAlias$new(m, "up")
+
+expect_true(u$equals(up, checkMetaData=FALSE))
+expect_false(u$equals(up))
+}
+)
+
+# test equals for container and constcontainer
+test_that("test_num_107", {
+m = Container$new()
+i = Set$new(m, "i")
+
+m1 = Container$new()
+i1 = Set$new(m1, "i")
+
+expect_true(m$equals(m1))
+j = Set$new(m1, "j")
+expect_false(m$equals(m1))
+expect_error(m$equals(m1, verbose=TRUE))
+
+k = Set$new(m, "k")
+expect_false(m$equals(m1))
+expect_error(m$equals(m1,verbose=TRUE))
+}
+)

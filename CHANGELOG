@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.8.0
 ==================
 - `removeSymbols` removes symbol links in other symbols
 - added `symbols` argument to Container methods `renameUELs` and `removeUELs`
@@ -7,6 +7,12 @@ GAMS Transfer R
 - performance improvement to `Container` method `hasSymbols`. This results in significant speed-ups when adding multiple symbols to the Container.
 - added `symbols` argument to `Container` methods `getDomainViolations`, `hasDomainViolations`, `countDomainViolations`, `dropDomainViolations`, `hasDuplicateRecords`, `countDuplicateRecords`, `dropDuplicateRecords`, `isValid`, and `write` for partial operation.
 - `Container` method `getSymbols` now always returns a list
+- added `equals` method to `Symbols` to check if symbols are equal
+- bug fix in `SpecialValues$isNA`
+- bug fix in `getUELs` for scalar symbols
+- bug fix in `Symbol` method `isValid` for symbols containing only NA
+- bug fix in `Variable` and `Equation` set records for numeric inputs
+- added `equals` method for `Container` and `ConstContainer`
 
 GAMS Transfer R v1.6.0
 ==================
