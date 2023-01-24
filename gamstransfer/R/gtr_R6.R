@@ -321,7 +321,7 @@ Container <- R6::R6Class (
         if (inherits(symobj, "Set")
         && identical(symobj$domain, domain)
         && symobj$isSingleton == isSingleton
-        && symobj$domainForwarding == domainForwarding
+        && all(symobj$domainForwarding == domainForwarding)
         ) {
           symobj$setRecords(records)
 
@@ -379,7 +379,7 @@ Container <- R6::R6Class (
         symobj = self$getSymbols(name)[[1]]
         if (inherits(symobj, "Parameter")
         && identical(symobj$domain, domain)
-        && symobj$domainForwarding == domainForwarding
+        && all(symobj$domainForwarding == domainForwarding)
         ) {
           symobj$setRecords(records)
 
@@ -441,7 +441,7 @@ Container <- R6::R6Class (
         if (inherits(symobj, "Variable")
         && symobj$type == type
         && identical(symobj$domain, domain)
-        && symobj$domainForwarding == domainForwarding
+        && all(symobj$domainForwarding == domainForwarding)
         ) {
           symobj$setRecords(records)
 
@@ -503,7 +503,7 @@ Container <- R6::R6Class (
         if (inherits(symobj, "Equation")
         && symobj$type == type
         && identical(symobj$domain, domain)
-        && symobj$domainForwarding == domainForwarding
+        && all(symobj$domainForwarding == domainForwarding)
         ) {
           symobj$setRecords(records)
 
@@ -2122,8 +2122,8 @@ b = "boolean"
       else {
         private$.records = records_input
         if (!is.null(self$records)) {
-          if (self$domainForwarding == TRUE) {
-            private$domain_forwarding()
+          if (any(self$domainForwarding == TRUE)) {
+            private$domain_forwarding(self$domainForwarding)
 
             for (i in self$refContainer$listSymbols()) {
               self$refContainer[i]$.requiresStateCheck = TRUE
@@ -2147,7 +2147,11 @@ b = "boolean"
       }
       else {
         if (!is.logical(domain_forwarding_input)) {
-          stop("Argument 'domain_forwarding' must be type logical\n")
+          stop("Argument 'domainForwarding' must be type logical\n")
+
+          if (!any(c(1, self$dimension) == length(domain_forwarding) )) {
+            stop("The argument `domainForwarding` must be of length 1 or <symbol>$dimension \n")
+          }
         }
         else {
           private$.domain_forwarding = domain_forwarding_input
@@ -2790,9 +2794,18 @@ b = "boolean"
       self$.requiresStateCheck = FALSE
     },
 
-    domain_forwarding = function() {
+    domain_forwarding = function(dom_forwarding) {
+    if (length(dom_forwarding) == 1) {
+      dim_enabled = replicate(self$dimension, TRUE)
+    }
+    else {
+      dim_enabled = dom_forwarding
+    }
+
+    dim_to_forward = seq_len(self$dimension)
+    dim_to_forward = dim_to_forward[dim_enabled]
     # find symbols to grow
-    for (diter in seq_len(self$dimension)) {
+    for (diter in dim_to_forward) {
       d = self$domain[[diter]]
       dl = self$domainLabels[diter]
       to_grow = list()
