@@ -989,6 +989,7 @@ Container <- R6::R6Class (
         else {
           cpp_syminput = symbols
         }
+
         readlist = CPP_readSuper(cpp_syminput, loadFrom, 
         self$systemDirectory, records, is.null(symbols))
 
@@ -1102,7 +1103,6 @@ Container <- R6::R6Class (
           }
 
           private$.linkDomainObjects(symbolsToRead)
-          # self$.linkDomainCategories()
         }
 
     },

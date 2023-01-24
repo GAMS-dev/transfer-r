@@ -29,6 +29,8 @@ using namespace Rcpp;
 std::string error_message = "Something went wrong. Please "
 "contact support@gams.com with a minimal reproducible example.";
 
+#define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])
+
 void WriteData(gdxHandle_t PGX, StringVector s,
 std::vector<double> V, int VarType, int Dim,
 std::string elemText, std::string sym_name) {
@@ -298,26 +300,35 @@ bool is_uel_priority, bool compress) {
 
 void readInternal(gdxHandle_t PGX, int varNr, bool records, 
   List templistAlias,List templist,List &L1, int l1count,
-  gdxStrIndexPtrs_t Indx, gdxValues_t Values, gdxStrIndexPtrs_t domains_ptr) {
+  gdxUelIndex_t gdx_uel_index, gdxValues_t gdx_values,
+  gdxStrIndexPtrs_t domains_ptr, 
+  std::map<int, std::map<int, int>> &sym_uel_map, int uel_count) {
     std::vector<double> levels, marginals, lower, upper, scale;
     int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
-    domain_type;
-    char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE];
+    domain_type, idx;
+    gdxUelIndex_t dom_symid;
+    char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE], buf[GMS_SSSIZE];
 
     std::vector<std::string> domain, index, elemText;
     std::vector<std::vector<std::string>> indices;
     char aliasForID[GMS_SSSIZE], explText[GMS_SSSIZE];
+
+    std::map<int, int> uel_map; //for each symbol
     // loop over symbols to get metadata
 		if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
       stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+
+
+    int** dom_uel_used =new int*[Dim];
 
     if (!gdxSymbolInfoX(PGX, varNr, &nrecs, &subtype, explText))
       stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
 
     domain_type = gdxSymbolGetDomainX(PGX, varNr, domains_ptr);
     if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
+
     for (int j=0; j < Dim; j++) {
-    domain.push_back(domains_ptr[j]);
+      domain.push_back(domains_ptr[j]);
     }
     if (sym_type == GMS_DT_ALIAS) {
       int parent_set_subtype;
@@ -325,8 +336,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
         // alias to the Universe
         strcpy(aliasForID, "*");
 
-        if (!gdxDataReadStrStart(PGX, varNr, &NrRecs))
-        stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
+        if (!gdxDataReadRawStart(PGX, varNr, &NrRecs))
+        stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
       }
       else {
         // normal Alias
@@ -339,12 +350,9 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
         domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
         if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
 
-        if (!gdxDataReadStrStart(PGX, subtype, &NrRecs))
-        stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
-
+        if (!gdxDataReadRawStart(PGX, subtype, &NrRecs))
+        stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
       }
-
-
       templistAlias["name"] = symbolID;
       templistAlias["type"] = sym_type;
       templistAlias["aliasfor"] = aliasForID;
@@ -373,12 +381,50 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
   if (!records) {
     return;
   }
+  int dom_dim, dom_type, dom_nrecs;
+  // get domain symbol number and read if records is true
+  if (!gdxSymbolGetDomain(PGX, varNr, dom_symid))
+  stop("readInternal:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain)");
 
-  // if we also want records
-  // if (sym_type == GMS_DT_ALIAS) return;
+  int all_dom_nrecs[Dim];
+  for (int D = 0; D < Dim; D++) {
+		// get sym info for domain D
+    if (!gdxSymbolInfo(PGX, dom_symid[D], buf, &dom_dim, &dom_type))
+      stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+    if (!(dom_type == GMS_DT_SET || dom_type == GMS_DT_ALIAS)) {
+      stop("Invalid domain data type.");
+    }
+    if (dom_dim != 1) stop("Invalid domain dimension.");
 
-  if (!gdxDataReadStrStart(PGX, varNr, &NrRecs)) {
-    stop("readInternal:gdxDataReadStrStart GDX error (gdxDataReadStrStart)");
+    // read raw start for domain D
+    if (!gdxDataReadRawStart(PGX, dom_symid[D], &dom_nrecs))
+    stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
+    if (dom_nrecs < 0) stop("Invalid number of symbol records.");
+    all_dom_nrecs[D] = dom_nrecs;
+
+    dom_uel_used[D] = new int[dom_nrecs];
+    std::fill_n(dom_uel_used[D], dom_nrecs, 0); // initialize all to false
+
+    // if domain is not read before store a sym uel map
+    if (dom_symid[D] > 0 || sym_uel_map.count(dom_symid[D]) == 0) {
+      for (int k=0; k < dom_nrecs; k++) {
+        if (!gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &N))
+        stop("readInternal:gdxDataReadRaw GDX error (gdxDataReadRaw)");
+
+        uel_map.insert(std::make_pair(gdx_uel_index[0], k));
+      }
+      sym_uel_map.insert(std::make_pair(dom_symid[D], uel_map));
+      uel_map.clear();
+    }
+
+    // read done for domain
+    if (!gdxDataReadDone(PGX))
+      stop("readInternal:gdxDataReadDone GDX error (gdxDataReadDone)");
+  }
+
+  // start reading the symbol
+  if (!gdxDataReadRawStart(PGX, varNr, &NrRecs)) {
+    stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
   }
 
   if (NrRecs == 0) {
@@ -387,80 +433,121 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       L1[l1count] = clone(templistAlias);
     }
     else {
-      templist["records"]=R_NilValue;
+      templist["records"] = R_NilValue;
       L1[l1count] = clone(templist);
     }
   }
   else {
-    while (gdxDataReadStr(PGX, Indx, Values, &N)) {
+
+    NumericMatrix indx_matrix(NrRecs, Dim);
+    int n_attr;
+    if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
+      n_attr = 5;
+    }
+    else {
+      n_attr = 1;
+    }
+    NumericMatrix record_values(NrRecs, n_attr);
+    CharacterVector elem_text(NrRecs); // for elem_text
+    int rec_nr = -1;
+    while (gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &N)) {
+
+      rec_nr++;
       if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR || sym_type == GMS_DT_ALIAS) {
         if (sym_type == GMS_DT_SET || sym_type == GMS_DT_ALIAS) {
-          rc = gdxGetElemText(PGX, Values[GMS_VAL_LEVEL], Msg, &iDummy);
+          rc = gdxGetElemText(PGX, gdx_values[GMS_VAL_LEVEL], Msg, &iDummy);
           if (rc != 0) {
-            elemText.push_back(Msg);
+            elem_text(rec_nr) = Msg;
           }
           else {
-            elemText.push_back("");
+            elem_text(rec_nr) = "";
           }
         } else {
-          levels.push_back(Values[GMS_VAL_LEVEL]);
+          record_values(rec_nr, 0) = gdx_values[GMS_VAL_LEVEL];
         }
         for (int D = 0; D < Dim; D++) {
-          index.push_back(Indx[D]);
+          indx_matrix(rec_nr, D) = GET_DOM_MAP(D, gdx_uel_index[D]) + 1;
         }
       }
       else if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
-        levels.push_back(Values[GMS_VAL_LEVEL]);
-        marginals.push_back(Values[GMS_VAL_MARGINAL]);
-        upper.push_back(Values[GMS_VAL_UPPER]);
-        lower.push_back(Values[GMS_VAL_LOWER]);
-        scale.push_back(Values[GMS_VAL_SCALE]);
+        record_values(rec_nr, 0) = gdx_values[GMS_VAL_LEVEL];
+        record_values(rec_nr, 1) = gdx_values[GMS_VAL_MARGINAL];
+        record_values(rec_nr, 2) = gdx_values[GMS_VAL_UPPER];
+        record_values(rec_nr, 3) = gdx_values[GMS_VAL_LOWER];
+        record_values(rec_nr, 4) = gdx_values[GMS_VAL_SCALE];
         for (int D = 0; D < Dim; D++) {
-          index.push_back(Indx[D]);
+          indx_matrix(rec_nr, D) = GET_DOM_MAP(D, gdx_uel_index[D]) + 1;
         }
       }
-      indices.push_back(index);
-      index.clear();
+        //store domain labels
+        for (int D = 0; D < Dim; D++) {
+          idx = GET_DOM_MAP(D, gdx_uel_index[D]);
+          dom_uel_used[D][idx] = true; // set used to true
+        }
     }
+
+    // now map the numerical indx_matrix to string using from_codes
+    std::vector<std::string> used_uels;
+
     DataFrame df;
-    std::vector<std::string> index_columns;
+
     for (int D = 0; D < Dim; D++) {
-      for (int i=0; i < NrRecs; i++){
-        index_columns.push_back(indices[i][D]);
+      if (dom_symid[D] < 0) continue;
+
+      // get number of uels used
+      int num_used = 0;
+      for (int k = 0; k < all_dom_nrecs[D]; k++) {
+        if (dom_uel_used[D][k] > 0) {
+          dom_uel_used[D][k] = num_used++;
+        }
+        else {
+          dom_uel_used[D][k] = -1;
+        }
       }
-      if (strcmp(domain[D].c_str(), "*")== 0) {
-        df["uni_"+std::to_string(D)] = index_columns;
+
+      for (int k = 1; k <= uel_count; k++) {
+        if (dom_symid[D] == 0 || sym_uel_map.at((int) dom_symid[D]).count(k) != 0) {
+          idx = GET_DOM_MAP(D, k);
+          if (dom_uel_used[D][idx] < 0) continue; // if not used, continue
+          if (!gdxUMUelGet(PGX, k, Msg, &iDummy)) {
+            stop("readInternal:gdxUMUelGet GDX error(gdxUMUelGet)");
+          }
+          used_uels.push_back(Msg);
+        }
       }
-      else {
-        df[domain[D] + "_" + std::to_string(D)] = index_columns;
+
+      // shift domain indices
+      for (int k = 0; k < nrecs; k++) {
+        indx_matrix(k, D) = dom_uel_used[D][(int) indx_matrix(k, D) - 1] + 1;
       }
-      index_columns.clear();
+
+      // create a factor v
+      IntegerVector v = wrap(indx_matrix(_, D));
+
+      CharacterVector ch = wrap(used_uels);
+      v.attr("class") = "factor";
+      v.attr("levels") = ch;
+      df[std::to_string(D)] = v;
+      used_uels.clear();
     }
-    indices.clear();
+
     if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
-      df["level"] = levels;
-      df["marginal"] = marginals;
-      df["lower"] = lower;
-      df["upper"] = upper;
-      df["scale"] = scale;
+      df["level"] = record_values(_, 0);
+      df["marginal"] = record_values(_, 1);
+      df["lower"] = record_values(_, 2);
+      df["upper"] = record_values(_, 3);
+      df["scale"] = record_values(_, 4);
     }
     else {
       if (sym_type == GMS_DT_PAR) {
-        df["values"] = levels;
+        df["values"] = record_values(_, 0);
       } else {
-        df["element_text"] = elemText;
+        df["element_text"] = elem_text;
       }
     }
-    elemText.clear();
-    levels.clear();
-    marginals.clear();
-    upper.clear();
-    lower.clear();
-    scale.clear();
-    domain.clear();
-    // copy end
+
     if (sym_type == GMS_DT_ALIAS) {
-      templistAlias["records"]=df;
+      templistAlias["records"]= df;
       L1[l1count] = clone(templistAlias);
     }
     else {
@@ -468,6 +555,12 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       L1[l1count] = clone(templist);
     }
   }
+
+  // delete used uel array
+  for (int D = 0; D < Dim; D++) {
+    delete[] dom_uel_used[D];
+  }
+  delete[] dom_uel_used;
 
   if (!gdxDataReadDone(PGX))
     stop("readInternal:gdxDataReadDone GDX error (gdxDataReadDone)");
@@ -486,17 +579,14 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   std::string mygdxName = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
 
-  gdxStrIndexPtrs_t Indx;
-
-  gdxStrIndex_t Indx_labels;
-  gdxValues_t       Values;
-  GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
+  gdxUelIndex_t gdx_uel_index;
+  gdxValues_t gdx_values;
 
   gdxStrIndexPtrs_t domains_ptr;
 	gdxStrIndex_t domains;
 	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
-  int symCount, UelCount;
+  int symCount, uel_count;
 // open GDX file and start reading
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
   if (!rc) stop("CPP_readSuper:gdxCreateD GDX init failed: %s", Msg);
@@ -525,8 +615,10 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   }
 
   // get symbol count
-  if (!gdxSystemInfo(PGX, &symCount, &UelCount))
+  if (!gdxSystemInfo(PGX, &symCount, &uel_count))
     stop("CPP_readSuper:gdxSystemInfo GDX error (gdxSystemInfo)");
+
+std::map<int, std::map<int, int>> sym_uel_map;
 
   // initialize empty lists for metadata
   List templist, templistAlias;
@@ -549,6 +641,23 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   List L1(l1_preallocate_size);
   L1[0] = acronymList;
 
+  int sym_nrs[l1_preallocate_size - 1];
+  if (!symisnull) {
+    for(int symcount=0; symcount < symNames.size(); symcount++) {
+      mysymName = symNames(symcount);
+      if (!gdxFindSymbol(PGX, mysymName.c_str(), &VarNr)) {
+        stop("User specified to read symbol %s, but it does not "
+        "exist in the source file", mysymName);
+      }
+      sym_nrs[symcount] = VarNr;
+    }
+  }
+  else {
+    for (int i=0; i < (l1_preallocate_size - 1); i++) {
+      sym_nrs[i] = i + 1;
+    }
+  }
+
   // if user wants to read all symbols, iterate over gdx symbols
   // otherwise iterate over symbols provided by user
 
@@ -569,31 +678,15 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   }
   int l1count;
   l1count = 1;
-  if (symisnull == 1) {
-    for (int i=1; i <= symCount; i++) {
-      // do something
-      readInternal(PGX, i, records, templistAlias, 
-      templist, L1, l1count, Indx, Values, domains_ptr);
-      l1count += 1;
-    }
-  }
-  else {
-    for(int symcount=0; symcount < symNames.size(); symcount++) {
-      mysymName = symNames(symcount);
-      if (!gdxFindSymbol(PGX, mysymName.c_str(), &VarNr)) {
-        stop("User specified to read symbol %s, but it does not "
-        "exist in the source file", mysymName);
-      }
 
-
-      // do the same something
-      readInternal(PGX, VarNr, records, templistAlias, 
-      templist, L1, l1count, Indx,Values, domains_ptr);
-      l1count += 1;
-    }
+  for (int i : sym_nrs) {
+    readInternal(PGX, i, records, templistAlias, 
+    templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
+    sym_uel_map, uel_count);
+    l1count ++;
   }
+
   // close the file and return
   if (gdxClose(PGX)) stop("CPP_readSuper:gdxClose GDX error (gdxClose)");
   return L1;
-
 }

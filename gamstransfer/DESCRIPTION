@@ -1,8 +1,8 @@
 Package: gamstransfer
 Type: Package
 Title: A package to maintain GAMS data outside a GAMS script
-Version: 1.6
-Date: 2022-10-12
+Version: 1.10
+Date: 2023-01-24
 Author: Atharv Bhosekar
 Maintainer: Atharv Bhosekar <abhosekar@gams.com>
 Description: GAMS Transfer is a package to maintain GAMS data outside a GAMS
