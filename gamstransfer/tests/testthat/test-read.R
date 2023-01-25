@@ -2978,3 +2978,51 @@ expect_false(m$equals(m1))
 expect_error(m$equals(m1,verbose=TRUE))
 }
 )
+
+# test partial domain_forwarding
+test_that("test_num_107", {
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+recs=data.frame(i=c("a","b","c"), j = c("d","e","f"), val=c(1,2,3))
+d = Parameter$new(m, "d",domain=c(i, j), records= recs, domainForwarding=
+c(TRUE, FALSE))
+
+expect_true(is.null(j$records))
+expect_equal(nrow(i$records), 3)
+
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+recs=data.frame(i=c("a","b","c"), j = c("d","e","f"), val=c(1,2,3))
+expect_error(Parameter$new(m, "d1",domain=c(i, j), records= recs, domainForwarding=
+2))
+expect_error(Parameter$new(m, "d2",domain=c(i, j), records= recs, domainForwarding=
+C(TRUE, TRUE, FALSE)))
+
+d = Parameter$new(m, "d",domain=c(i, j), records= recs, domainForwarding=
+c(FALSE, TRUE))
+
+expect_true(is.null(i$records))
+expect_equal(nrow(j$records), 3)
+
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+recs=data.frame(i=c("a","b","c"), j = c("d","e","f"), val=c(1,2,3))
+d = Parameter$new(m, "d",domain=c(i, j), records= recs, domainForwarding=
+TRUE)
+
+expect_equal(nrow(i$records), 3)
+expect_equal(nrow(j$records), 3)
+
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+recs=data.frame(i=c("a","b","c"), j = c("d","e","f"), val=c(1,2,3))
+d = Parameter$new(m, "d",domain=c(i, j), records= recs, domainForwarding=
+FALSE)
+expect_true(is.null(i$records))
+expect_true(is.null(j$records))
+}
+)
