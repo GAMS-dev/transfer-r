@@ -3026,3 +3026,136 @@ expect_true(is.null(i$records))
 expect_true(is.null(j$records))
 }
 )
+
+# test generateRecords
+test_that("test_num_108", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+isub = Set$new(m, "isub", domain=i)
+isub$generateRecords()
+expect_equal(nrow(isub$records), 5)
+
+p = Parameter$new(m, "p",domain=i)
+p$generateRecords(densities=1)
+expect_equal(nrow(p$records), 5)
+
+p$generateRecords(densities=0.5)
+expect_equal(nrow(p$records), 2)
+
+# error because runif expects argument n and not size
+# expect_error(p$generateRecords(densities=1, func=runif))
+
+rg = function(size) {
+	return(runif(size))
+}
+
+p$generateRecords(densities=1, func=rg)
+expect_equal(nrow(p$records), 5)
+
+rg_error = function() {
+	return(1)
+}
+
+# expect_error(p$generateRecords(func=runif))
+
+j = Set$new(m, "j", records=paste0("j",1:3))
+d = Parameter$new(m, "d", domain=c(i, j))
+d$generateRecords()
+expect_equal(nrow(d$records), 15)
+
+}
+)
+
+# test generateRecords for variable and equation
+test_that("test_num_109", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+e = Equation$new(m, "e", "eq", domain=i)
+e$generateRecords()
+expect_equal(nrow(e$records), 5)
+expect_true(all(e$records$marginal == 0))
+expect_true(all(e$records$lower == 0))
+expect_true(all(e$records$upper == 0))
+expect_true(all(e$records$scale == 1))
+
+rg = function(size) {
+        return(runif(n=size))
+}
+e$generateRecords(func=rg)
+expect_equal(nrow(e$records), 5)
+expect_true(all(e$records$marginal == 0))
+expect_true(all(e$records$lower == 0))
+expect_true(all(e$records$upper == 0))
+expect_true(all(e$records$scale == 1))
+
+e$generateRecords(func=list(scale=rg))
+expect_equal(nrow(e$records), 5)
+expect_true(all(e$records$marginal == 0))
+expect_true(all(e$records$lower == 0))
+expect_true(all(e$records$upper == 0))
+expect_true(all(e$records$level == 0))
+
+e$generateRecords(func=list(scale=rg, marginal=rg))
+expect_equal(nrow(e$records), 5)
+expect_true(all(e$records$lower == 0))
+expect_true(all(e$records$upper == 0))
+expect_true(all(e$records$level == 0))
+expect_equal(colnames(e$records), c("i_1", "level", "marginal", "lower", "upper", "scale"))
+
+
+#test the same for variables
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i",1:5))
+v = Variable$new(m, "v", "binary", domain=i)
+v$generateRecords()
+expect_equal(nrow(v$records), 5)
+expect_true(all(v$records$marginal == 0))
+expect_true(all(v$records$lower == 0))
+expect_true(all(v$records$upper == 1))
+expect_true(all(v$records$scale == 1))
+
+rg = function(size) {
+        return(runif(n=size))
+}
+v$generateRecords(func=rg)
+expect_equal(nrow(v$records), 5)
+expect_true(all(v$records$marginal == 0))
+expect_true(all(v$records$lower == 0))
+expect_true(all(v$records$upper == 1))
+expect_true(all(v$records$scale == 1))
+
+v$generateRecords(func=list(scale=rg))
+expect_equal(nrow(v$records), 5)
+expect_true(all(v$records$marginal == 0))
+expect_true(all(v$records$lower == 0))
+expect_true(all(v$records$upper == 1))
+expect_true(all(v$records$level == 0))
+
+v$generateRecords(func=list(scale=rg, marginal=rg))
+expect_equal(nrow(v$records), 5)
+expect_true(all(v$records$lower == 0))
+expect_true(all(v$records$upper == 1))
+expect_true(all(v$records$level == 0))
+expect_equal(colnames(v$records), c("i_1", "level", "marginal", "lower", "upper", "scale"))
+
+# try scalar variables and equations
+m = Container$new()
+e0 = Equation$new(m, "e0", "eq")
+v0 = Variable$new(m, "v0", "binary")
+
+e0$generateRecords()
+expect_equal(colnames(e0$records), c("level", "marginal", "lower", "upper", "scale"))
+expect_true(all(e0$records$marginal == 0))
+expect_true(all(e0$records$lower == 0))
+expect_true(all(e0$records$upper == 0))
+expect_true(all(e0$records$scale == 1))
+
+v0$generateRecords()
+expect_equal(colnames(v0$records), c("level", "marginal", "lower", "upper", "scale"))
+expect_true(all(v0$records$marginal == 0))
+expect_true(all(v0$records$lower == 0))
+expect_true(all(v0$records$upper == 1))
+expect_true(all(v0$records$scale == 1))
+}
+)
+

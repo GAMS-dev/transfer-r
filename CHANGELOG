@@ -2,6 +2,7 @@ GAMS Transfer R v1.10.0
 ==================
 - performance improvement in read
 - Partial domain forwarding is now allowed by passing a logical vector as the `domainForwarding` argument
+- `generateRecords` method for `Symbols` to automatically generate records
 
 GAMS Transfer R v1.8.0
 ==================
