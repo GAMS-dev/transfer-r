@@ -2464,6 +2464,8 @@ b = "boolean"
         colnames(recs) = self$domainLabels
       }
 
+      #reset row indices
+      rownames(recs) <- NULL
       return(recs)
     },
     .check_equal = function(other, columns= NULL, checkUELs=TRUE, 
