@@ -2415,35 +2415,55 @@ b = "boolean"
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
-    .generate_records_index = function(densities) {
-      if (!(is.numeric(densities)) && all(densities >= 0 && densities <= 1)) {
-        stop("The argument `densities` must be numeric in the range [0, 1]\n")
+    .generate_records_index = function(density) {
+      if (!(is.numeric(density)) && all(density >= 0 && density <= 1)) {
+        stop("The argument `density` must be numeric in the range [0, 1]\n")
       }
 
-      if (length(densities) == 1) {
-        densities = replicate(self$dimension, densities)
+      if (!any(c(1,self$dimension) == length(density))) {
+        stop("The argument `density` must be of length: ", 
+        self$dimension, " or 1, the user provided: ", length(density), "\n")
       }
 
-      if (length(densities) != self$dimension) {
-        stop("The argument `densities` must be of length: ", 
-        self$dimension, ", the user provided: ", length(densities), "\n")
-      }
-
+      # get the full cartesian product
       dom_recs = lapply(self$domain, function(d) return(d$records[,1]))
       length_dom_recs = unlist(lapply(dom_recs, function(x) {return(length(x))}), use.names=FALSE)
-      final_nrecs = densities * length_dom_recs
+      final_nrecs = floor(density * length_dom_recs)
       if (any(final_nrecs == 0)) return(data.frame())
-      rec_idx = lapply(1:length(dom_recs), function(i) { 
-        rec = dom_recs[[i]]
-        idx = sample(1:length(rec), floor(densities[i] * length(rec)), replace = FALSE)
-        return(rec[sort(idx)])
-      })
 
-      dom_recs = rec_idx
-      dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+      if (length(density) == 1) {
+        # if the length is 1 then apply density on records dataframe instead
 
-      recs = expand.grid(dom_recs)
-      colnames(recs) = self$domainLabels
+        # drop unused levels from a set
+        dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+
+        # cartesian product
+        recs = expand.grid(dom_recs)
+        colnames(recs) = self$domainLabels
+
+        # sample indices based on density
+        idx = sample(1:nrow(recs), floor(density * nrow(recs)), replace = FALSE)
+
+        # drop rows
+        recs = recs[sort(idx), 1:length(recs), drop = FALSE]
+
+        # drop unused levels
+        recs = droplevels(recs)
+      }
+      else {
+        rec_idx = lapply(1:length(dom_recs), function(i) { 
+          rec = dom_recs[[i]]
+          idx = sample(1:length(rec), floor(density[i] * length(rec)), replace = FALSE)
+          return(rec[sort(idx)])
+        })
+
+        dom_recs = rec_idx
+        dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+
+        recs = expand.grid(dom_recs)
+        colnames(recs) = self$domainLabels
+      }
+
       return(recs)
     },
     .check_equal = function(other, columns= NULL, checkUELs=TRUE, 
@@ -3035,8 +3055,8 @@ Set <- R6Class(
       verbose=verbose)
     },
 
-    generateRecords = function(densities = 1) {
-      recs = super$.generate_records_index(densities)
+    generateRecords = function(density = 1) {
+      recs = super$.generate_records_index(density)
       if (nrow(recs) != 0) {
         recs$element_text = ""
       }
@@ -3279,7 +3299,7 @@ Parameter <- R6Class(
       verbose=verbose)
     },
 
-    generateRecords = function(densities = 1, func=NULL, seed=NULL) {
+    generateRecords = function(density = 1, func=NULL, seed=NULL) {
       if(!((self$domainType == "regular") || (self$dimension == 0))) {
         stop("Cannot generate records for the symbol unless the symbol has 
         domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
@@ -3298,7 +3318,7 @@ Parameter <- R6Class(
       }
 
       if (self$dimension != 0) {
-        recs = super$.generate_records_index(densities)
+        recs = super$.generate_records_index(density)
       }
       else {
         recs = data.frame(1)
@@ -3673,7 +3693,7 @@ Variable <- R6Class(
       verbose=verbose)
     },
 
-    generateRecords = function(densities = 1, func=NULL, seed=NULL) {
+    generateRecords = function(density = 1, func=NULL, seed=NULL) {
       if(!((self$domainType == "regular") || (self$dimension == 0))) {
         stop("Cannot generate records for the symbol unless the symbol has 
         domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
@@ -3714,7 +3734,7 @@ Variable <- R6Class(
       }
 
       if (self$dimension != 0) {
-        recs = super$.generate_records_index(densities)
+        recs = super$.generate_records_index(density)
       }
       else {
         recs = data.frame(1)
@@ -4194,7 +4214,7 @@ Equation <- R6Class(
       verbose=verbose)
     },
 
-    generateRecords = function(densities = 1, func=NULL, seed=NULL) {
+    generateRecords = function(density = 1, func=NULL, seed=NULL) {
       if(!((self$domainType == "regular") || (self$dimension == 0))) {
         stop("Cannot generate records for the symbol unless the symbol has 
         domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
@@ -4235,7 +4255,7 @@ Equation <- R6Class(
       }
 
       if (self$dimension != 0) {
-        recs = super$.generate_records_index(densities)
+        recs = super$.generate_records_index(density)
       }
       else {
         recs = data.frame(1)
@@ -4675,11 +4695,11 @@ Alias <- R6Class(
       checkMetaData=checkMetaData, verbose=verbose)
     },
 
-    generateRecords = function(densities = 1) {
+    generateRecords = function(density = 1) {
       super$.testRefContainer()
       private$.testParentSet()
 
-      self$aliasWith$generateRecords(densities)
+      self$aliasWith$generateRecords(density)
     }
   ),
 

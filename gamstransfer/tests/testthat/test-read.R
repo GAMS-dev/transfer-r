@@ -3036,20 +3036,20 @@ isub$generateRecords()
 expect_equal(nrow(isub$records), 5)
 
 p = Parameter$new(m, "p",domain=i)
-p$generateRecords(densities=1)
+p$generateRecords(density=1)
 expect_equal(nrow(p$records), 5)
 
-p$generateRecords(densities=0.5)
+p$generateRecords(density=0.5)
 expect_equal(nrow(p$records), 2)
 
 # error because runif expects argument n and not size
-# expect_error(p$generateRecords(densities=1, func=runif))
+# expect_error(p$generateRecords(density=1, func=runif))
 
 rg = function(size) {
 	return(runif(size))
 }
 
-p$generateRecords(densities=1, func=rg)
+p$generateRecords(density=1, func=rg)
 expect_equal(nrow(p$records), 5)
 
 rg_error = function() {
@@ -3159,3 +3159,19 @@ expect_true(all(v0$records$scale == 1))
 }
 )
 
+# test generateRecords for multidimensional
+test_that("test_num_110", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:50))
+j = Set$new(m, "j", records=paste0("j", 1:50))
+k = Set$new(m, "k", records=paste0("k", 1:50))
+l = Set$new(m, "l", records=paste0("l", 1:50))
+
+# create and define the symbol `a` with `regular` domains
+a = Set$new(m, "a", c(i, j, k, l))
+
+# generate the records
+a$generateRecords(density = 0.05)
+expect_equal(nrow(a$records), (50**4)/20)
+}
+)
