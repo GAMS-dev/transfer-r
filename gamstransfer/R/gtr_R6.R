@@ -2415,6 +2415,59 @@ b = "boolean"
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
 
+    .generate_records_index = function(density) {
+      if (!(is.numeric(density)) && all(density >= 0 && density <= 1)) {
+        stop("The argument `density` must be numeric in the range [0, 1]\n")
+      }
+
+      if (!any(c(1,self$dimension) == length(density))) {
+        stop("The argument `density` must be of length: ", 
+        self$dimension, " or 1, the user provided: ", length(density), "\n")
+      }
+
+      # get the full cartesian product
+      dom_recs = lapply(self$domain, function(d) return(d$records[,1]))
+      length_dom_recs = unlist(lapply(dom_recs, function(x) {return(length(x))}), use.names=FALSE)
+      final_nrecs = floor(density * length_dom_recs)
+      if (any(final_nrecs == 0)) return(data.frame())
+
+      if (length(density) == 1) {
+        # if the length is 1 then apply density on records dataframe instead
+
+        # drop unused levels from a set
+        dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+
+        # cartesian product
+        recs = expand.grid(dom_recs)
+        colnames(recs) = self$domainLabels
+
+        # sample indices based on density
+        idx = sample(1:nrow(recs), floor(density * nrow(recs)), replace = FALSE)
+
+        # drop rows
+        recs = recs[sort(idx), 1:length(recs), drop = FALSE]
+
+        # drop unused levels
+        recs = droplevels(recs)
+      }
+      else {
+        rec_idx = lapply(1:length(dom_recs), function(i) { 
+          rec = dom_recs[[i]]
+          idx = sample(1:length(rec), floor(density[i] * length(rec)), replace = FALSE)
+          return(rec[sort(idx)])
+        })
+
+        dom_recs = rec_idx
+        dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+
+        recs = expand.grid(dom_recs)
+        colnames(recs) = self$domainLabels
+      }
+
+      #reset row indices
+      rownames(recs) <- NULL
+      return(recs)
+    },
     .check_equal = function(other, columns= NULL, checkUELs=TRUE, 
       checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL) {
 
@@ -3002,6 +3055,15 @@ Set <- R6Class(
       super$equals(other, checkUELs=checkUELs,
       checkElementText=checkElementText, checkMetaData=checkMetaData,
       verbose=verbose)
+    },
+
+    generateRecords = function(density = 1) {
+      recs = super$.generate_records_index(density)
+      if (nrow(recs) != 0) {
+        recs$element_text = ""
+      }
+
+      private$.records = recs
     }
   ),
 
@@ -3237,6 +3299,49 @@ Parameter <- R6Class(
       super$equals(other, checkUELs=checkUELs,
       checkMetaData=checkMetaData,rtol=rtol, atol=atol,
       verbose=verbose)
+    },
+
+    generateRecords = function(density = 1, func=NULL, seed=NULL) {
+      if(!((self$domainType == "regular") || (self$dimension == 0))) {
+        stop("Cannot generate records for the symbol unless the symbol has 
+        domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
+        or the symbol is a scalar\n")
+      }
+
+      if (!is.null(seed)) {
+        if (!(is.numeric(seed) && round(seed) == seed)) {
+          stop("The argument `seed` must be an integer\n")
+        }
+        set.seed(seed)
+      }
+
+      if (!(is.function(func) || is.null(func) || inherits(func, "list"))) {
+        "The argument `func` must be of type function or NULL\n"
+      }
+
+      if (self$dimension != 0) {
+        recs = super$.generate_records_index(density)
+      }
+      else {
+        recs = data.frame(1)
+      }
+
+      tryCatch(
+      {
+        if (is.null(func)) {
+          recs$value = runif(n = nrow(recs))
+        }
+        else {
+          recs$value = func(size = nrow(recs))
+        }
+      },
+      error = function(e) {
+          message(paste0(e, "\n"))
+      }
+      )
+
+      private$.records = recs
+      set.seed(NULL)
     }
   ),
 
@@ -3589,7 +3694,88 @@ Variable <- R6Class(
       super$equals(other, columns=columns, checkUELs=checkUELs,
       checkMetaData=checkMetaData,rtol=rtol, atol=atol,
       verbose=verbose)
+    },
+
+    generateRecords = function(density = 1, func=NULL, seed=NULL) {
+      if(!((self$domainType == "regular") || (self$dimension == 0))) {
+        stop("Cannot generate records for the symbol unless the symbol has 
+        domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
+        or the symbol is a scalar\n")
+      }
+
+      if (!is.null(seed)) {
+        if (!(is.numeric(seed) && round(seed) == seed)) {
+          stop("The argument `seed` must be an integer\n")
+        }
+        set.seed(seed)
+      }
+
+      if (is.function(func)) {
+        func = list("level" = func)
+      }
+      else if (is.null(func)) {
+        temp_fun = function(size) {
+          return(runif(n=size))
+        }
+        func = list("level" = temp_fun)
+      }
+      else if (inherits(func, "list")) {
+        attr_names = names(func)
+        if (length(intersect(attr_names, private$.attr())) != length(attr_names)) {
+          stop(paste0("the names of the named list `func` must be 
+          one of the following: ", toString(private$.attr()), "\n"))
+        }
+
+        lapply(func, function(f) {
+          if (!is.function(f)) {
+            stop("All arguments of the named list `func` must be functions\n")
+          }
+        })
+      }
+      else {
+        "The argument `func` must be of type function, named list, or NULL\n"
+      }
+
+      if (self$dimension != 0) {
+        recs = super$.generate_records_index(density)
+      }
+      else {
+        recs = data.frame(1)
+      }
+
+      tryCatch(
+      {
+        for (attr in names(func)) {
+          recs[[attr]] = func[[attr]](size = nrow(recs))
+        }
+
+        # fill missing attributes with default values
+        missing_attr = setdiff(private$.attr(), names(func))
+        for (m in missing_attr) {
+          recs[[m]] = private$.default_values[[private$.type]][[m]]
+        }
+
+        # rearrange recs
+        all_colnames = colnames(recs)
+        if (self$dimension != 0) {
+          indx_colnames = all_colnames[1:self$dimension]
+          value_colnames = private$.attr()
+          correct_colnames = append(indx_colnames, value_colnames)
+          recs = recs[correct_colnames]
+        }
+        else {
+          recs = recs[private$.attr()]
+        }
+      },
+      error = function(e) {
+          message(paste0(e, "\n"))
+      }
+      )
+
+      private$.records = recs
+      set.seed(NULL)
     }
+
 
   ),
 
@@ -4030,6 +4216,87 @@ Equation <- R6Class(
       super$equals(other, columns=columns, checkUELs=checkUELs,
       checkMetaData=checkMetaData,rtol=rtol, atol=atol,
       verbose=verbose)
+    },
+
+    generateRecords = function(density = 1, func=NULL, seed=NULL) {
+      if(!((self$domainType == "regular") || (self$dimension == 0))) {
+        stop("Cannot generate records for the symbol unless the symbol has 
+        domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
+        or the symbol is a scalar\n")
+      }
+
+      if (!is.null(seed)) {
+        if (!(is.numeric(seed) && round(seed) == seed)) {
+          stop("The argument `seed` must be an integer\n")
+        }
+        set.seed(seed)
+      }
+
+      if (is.function(func)) {
+        func = list("level" = func)
+      }
+      else if (is.null(func)) {
+        temp_fun = function(size) {
+          return(runif(n=size))
+        }
+        func = list("level" = temp_fun)
+      }
+      else if (inherits(func, "list")) {
+        attr_names = names(func)
+        if (length(intersect(attr_names, private$.attr())) != length(attr_names)) {
+          stop(paste0("the names of the named list `func` must be 
+          one of the following: ", toString(private$.attr()), "\n"))
+        }
+
+        lapply(func, function(f) {
+          if (!is.function(f)) {
+            stop("All arguments of the named list `func` must be functions\n")
+          }
+        })
+      }
+      else {
+        "The argument `func` must be of type function, named list, or NULL\n"
+      }
+
+      if (self$dimension != 0) {
+        recs = super$.generate_records_index(density)
+      }
+      else {
+        recs = data.frame(1)
+      }
+
+      tryCatch(
+      {
+        for (attr in names(func)) {
+          recs[[attr]] = func[[attr]](size = nrow(recs))
+        }
+
+        # fill missing attributes with default values
+        missing_attr = setdiff(private$.attr(), names(func))
+        for (m in missing_attr) {
+          recs[[m]] = private$.default_values[[private$.type]][[m]]
+        }
+
+        # rearrange recs
+        # rearrange recs
+        all_colnames = colnames(recs)
+        if (self$dimension != 0) {
+          indx_colnames = all_colnames[1:self$dimension]
+          value_colnames = private$.attr()
+          correct_colnames = append(indx_colnames, value_colnames)
+          recs = recs[correct_colnames]
+        }
+        else {
+          recs = recs[private$.attr()]
+        }
+      },
+      error = function(e) {
+          message(paste0(e, "\n"))
+      }
+      )
+
+      private$.records = recs
+      set.seed(NULL)
     }
   ),
 
@@ -4431,6 +4698,13 @@ Alias <- R6Class(
       self$aliasWith$equals(other, checkUELs=checkUELs,
       checkElementText=checkElementText,
       checkMetaData=checkMetaData, verbose=verbose)
+    },
+
+    generateRecords = function(density = 1) {
+      super$.testRefContainer()
+      private$.testParentSet()
+
+      self$aliasWith$generateRecords(density)
     }
   ),
 
