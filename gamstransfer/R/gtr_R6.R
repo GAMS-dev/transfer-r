@@ -3341,6 +3341,7 @@ Parameter <- R6Class(
       )
 
       private$.records = recs
+      set.seed(NULL)
     }
   ),
 
@@ -3772,6 +3773,7 @@ Variable <- R6Class(
       )
 
       private$.records = recs
+      set.seed(NULL)
     }
 
 
@@ -4294,6 +4296,7 @@ Equation <- R6Class(
       )
 
       private$.records = recs
+      set.seed(NULL)
     }
   ),
 
