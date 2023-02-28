@@ -23,35 +23,60 @@
 # SOFTWARE.
 #
 
-GMS_DT_SET = 0
-GMS_DT_PAR = 1
-GMS_DT_VAR = 2
-GMS_DT_EQU = 3
-GMS_DT_ALIAS = 4
-GMS_DT_MAX = 5
-
-GMS_VARTYPE_BINARY =  1
-GMS_VARTYPE_INTEGER = 2
-GMS_VARTYPE_POSITIVE = 3
-GMS_VARTYPE_NEGATIVE = 4
-GMS_VARTYPE_FREE  =   5
-GMS_VARTYPE_SOS1  =  6
-GMS_VARTYPE_SOS2  =   7
-GMS_VARTYPE_SEMICONT = 8
-GMS_VARTYPE_SEMIINT =  9
-
-GMS_EQUTYPE_E =       0
-GMS_EQUTYPE_G  =      1
-GMS_EQUTYPE_L   =     2
-GMS_EQUTYPE_N   =     3
-GMS_EQUTYPE_X =       4
-GMS_EQUTYPE_C   =     5
-GMS_EQUTYPE_B   =     6
-
-GMS_EQU_USERINFO_BASE = 53
 gams_description_max_length = 255
+.gdxSymbolTypes = function(){
+  return(CPP_getGDXSymbolTypes())
+}
 
-GMS_MAX_INDEX_DIM = 20
+
+.VarTypeSubtype = function() {
+  return(CPP_getGDXVarTypeSubtype())
+}
+
+.EqTypeSubtype = function() {
+  return(CPP_getGDXEqTypeSubtype())
+}
+
+.SetTypeSubtype = function() {
+  return(CPP_getGDXSetTypeSubtype())
+}
+
+.EquationTypes = c(
+eq = "eq",
+E = "eq",
+e = "eq",
+geq = "geq",
+G = "geq",
+g = "geq",
+leq = "leq",
+L = "leq",
+l = "leq",
+nonbinding = "nonbinding",
+N = "nonbinding",
+n = "nonbinding",
+cone = "cone",
+C = "cone",
+c = "cone",
+external = "external",
+X = "external",
+x = "external",
+boolean = "boolean",
+B = "boolean",
+b = "boolean"
+)
+
+.varTypes = c(
+  "binary",
+  "integer",
+  "positive",
+  "negative",
+  "free",
+  "sos1",
+  "sos2",
+  "semicont",
+  "semiint"
+)
+
 
 SpecialValues = list(
   "NA" = NA, # cannot be anything else
@@ -1007,13 +1032,13 @@ Container <- R6::R6Class (
 
         # readData only contains symbols to be read
         for (m in readData) {
-            if (m$type == GMS_DT_PAR) {
+            if (m$type == .gdxSymbolTypes()[["GMS_DT_PAR"]]) {
               Parameter$new(
                 self, m$name, m$domain,
                 domainForwarding=FALSE,
                 description = m$expltext)
             }
-            else if (m$type == GMS_DT_SET) {
+            else if (m$type == .gdxSymbolTypes()[["GMS_DT_SET"]]) {
                 Set$new(
                 self, m$name, m$domain, as.logical(m$subtype),
                 records = NULL,
@@ -1024,26 +1049,26 @@ Container <- R6::R6Class (
                   GAMS Subtype ", m$subtype, "cannot load set ", m$name))
                 }
             }
-            else if (m$type == GMS_DT_VAR) {
-                type = which(VarTypeSubtype() == m$subtype)
+            else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {
+                type = which(.VarTypeSubtype() == m$subtype)
                 if (is.integer0(type)) {
                   type = "free"
                 }
                 else {
-                  type = names(VarTypeSubtype())[[type]]
+                  type = names(.VarTypeSubtype())[[type]]
                 }
                 Variable$new(
                 self, m$name, type, m$domain,
                 domainForwarding = FALSE,
                 description = m$expltext)
             }
-            else if (m$type == GMS_DT_EQU) {
-                type = which(EqTypeSubtype() == m$subtype)
+            else if (m$type == .gdxSymbolTypes()[["GMS_DT_EQU"]]) {
+                type = which(.EqTypeSubtype() == m$subtype)
                 if (is.integer0(type)) {
                   type = "eq"
                 }
                 else {
-                  type = names(EqTypeSubtype())[[type]]
+                  type = names(.EqTypeSubtype())[[type]]
                 }
 
                 Equation$new(
@@ -1051,7 +1076,7 @@ Container <- R6::R6Class (
                 domainForwarding = FALSE,
                 description = m$expltext)
             }
-            else if (m$type == GMS_DT_ALIAS) {
+            else if (m$type == .gdxSymbolTypes()[["GMS_DT_ALIAS"]]) {
                 aliasCount = aliasCount + 1
                 aliasList = append(aliasList, list(m))
             }
@@ -1384,75 +1409,6 @@ Container <- R6::R6Class (
 
   )
   )
-
-VarTypeSubtype = function() {
-  return(list(
-  "binary" = GMS_VARTYPE_BINARY,
-  "integer" = GMS_VARTYPE_INTEGER,
-  "positive" = GMS_VARTYPE_POSITIVE,
-  "negative" = GMS_VARTYPE_NEGATIVE,
-  "free" = GMS_VARTYPE_FREE,
-  "sos1" = GMS_VARTYPE_SOS1,
-  "sos2" = GMS_VARTYPE_SOS2,
-  "semicont" = GMS_VARTYPE_SEMICONT,
-  "semiint" = GMS_VARTYPE_SEMIINT
-  ))
-}
-
-EqTypeSubtype = function() {
-  return(list(
-  "eq" = GMS_EQUTYPE_E + GMS_EQU_USERINFO_BASE,
-  "geq" = GMS_EQUTYPE_G + GMS_EQU_USERINFO_BASE,
-  "leq" = GMS_EQUTYPE_L + GMS_EQU_USERINFO_BASE,
-  "nonbinding" = GMS_EQUTYPE_N + GMS_EQU_USERINFO_BASE,
-  "external" = GMS_EQUTYPE_X + GMS_EQU_USERINFO_BASE,
-  "cone" = GMS_EQUTYPE_C + GMS_EQU_USERINFO_BASE,
-  "boolean" = GMS_EQUTYPE_B + GMS_EQU_USERINFO_BASE
-  ))
-}
-SetTypeSubtype = function() {
-  return(list(
-  "set" = 0,
-  "singleton_set" = 1
-  ))
-}
-
-.EquationTypes = c(
-eq = "eq",
-E = "eq",
-e = "eq",
-geq = "geq",
-G = "geq",
-g = "geq",
-leq = "leq",
-L = "leq",
-l = "leq",
-nonbinding = "nonbinding",
-N = "nonbinding",
-n = "nonbinding",
-cone = "cone",
-C = "cone",
-c = "cone",
-external = "external",
-X = "external",
-x = "external",
-boolean = "boolean",
-B = "boolean",
-b = "boolean"
-)
-
-.varTypes = c(
-  "binary",
-  "integer",
-  "positive",
-  "negative",
-  "free",
-  "sos1",
-  "sos2",
-  "semicont",
-  "semiint"
-)
-
 
 #' @title Symbol Abstract Class
 #' @description An abstract symbol class from 
@@ -2195,9 +2151,9 @@ b = "boolean"
       else {
         if (!((inherits(dimension_input, c("numeric", "integer"))) && 
            (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
-           (dimension_input <= GMS_MAX_INDEX_DIM))) {
+           (dimension_input <= .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]))) {
             stop(paste0("Symbol 'dimension' must be 
-           an integer in [0, ", GMS_MAX_INDEX_DIM, "]\n"))
+           an integer in [0, ", .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "]\n"))
            }
 
         if (length(self$domain) > dimension_input) {
@@ -2233,9 +2189,9 @@ b = "boolean"
           domain_input = list(domain_input)
         }
 
-        if (length(domain_input) > GMS_MAX_INDEX_DIM) {
+        if (length(domain_input) > .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]) {
           stop(paste0("Argument 'domain' length cannot be > ", 
-          GMS_MAX_INDEX_DIM, "\n"))
+          .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "\n"))
         }
         domain_arg_check = unlist(lapply(domain_input, function(d) {
           return((inherits(d, c("Set", ".BaseAlias")) && d$dimension == 1)
@@ -2978,13 +2934,13 @@ Set <- R6Class(
                           domainForwarding = FALSE,
                           description="") {
       self$isSingleton <- isSingleton
+      type = .gdxSymbolTypes()[["GMS_DT_SET"]]
+
       if (!isSingleton) {
-        type = GMS_DT_SET
-        subtype = SetTypeSubtype()[["set"]]
+        subtype = .SetTypeSubtype()[["set"]]
       }
       else {
-        type = GMS_DT_SET
-        subtype = SetTypeSubtype()[["singleton_set"]]
+        subtype = .SetTypeSubtype()[["singleton_set"]]
       }
 
       super$initialize(container, name,
@@ -3144,7 +3100,7 @@ Parameter <- R6Class(
                           domainForwarding = FALSE,
                           description="") {
 
-      type = GMS_DT_PAR
+      type = .gdxSymbolTypes()[["GMS_DT_PAR"]]
       super$initialize(container, name,
                       type, 0, 
                       domain, description, domainForwarding)
@@ -3425,8 +3381,8 @@ Variable <- R6Class(
 
       self$type = type
 
-      symtype = GMS_DT_VAR
-      symsubtype = VarTypeSubtype()[[type]]
+      symtype = .gdxSymbolTypes()[["GMS_DT_VAR"]]
+      symsubtype = .VarTypeSubtype()[[type]]
 
       super$initialize(container, name,
                       symtype, symsubtype, 
@@ -3943,8 +3899,8 @@ Equation <- R6Class(
       # call from outside
       type = .EquationTypes[[type]]
 
-      symtype = GMS_DT_EQU
-      symsubtype = EqTypeSubtype()[[type]]
+      symtype = .gdxSymbolTypes()[["GMS_DT_EQU"]]
+      symsubtype = .EqTypeSubtype()[[type]]
 
 
       super$initialize(container, name,
@@ -4416,7 +4372,7 @@ Equation <- R6Class(
       self$name = name
       refcontainer = self$refContainer
       refcontainer[name] = self
-      self$.gams_type = GMS_DT_ALIAS
+      self$.gams_type = .gdxSymbolTypes()[["GMS_DT_ALIAS"]]
       self$.gams_subtype = 1
     }
   ),
@@ -5210,13 +5166,13 @@ ConstContainer <- R6::R6Class (
       aliasList = list()
       aliasCount = 0
       for (m in readData) {
-        if (m$type == GMS_DT_PAR) {
+        if (m$type == .gdxSymbolTypes()[["GMS_DT_PAR"]]) {
           .ConstParameter$new(
             self, m$name, m$domain, records = NULL,
             description = m$expltext, domaintype= m$domaintype,
             numberRecords=m$numRecs)
         }
-        else if (m$type == GMS_DT_SET) {
+        else if (m$type == .gdxSymbolTypes()[["GMS_DT_SET"]]) {
             dt = m$domaintype
             if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
               dt = 2 # for relaxed domain type
@@ -5231,26 +5187,26 @@ ConstContainer <- R6::R6Class (
               GAMS Subtype ", m$subtype, "cannot load set ", m$name))
             }
         }
-        else if (m$type == GMS_DT_VAR) {
-            type = which(VarTypeSubtype() == m$subtype)
+        else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {
+            type = which(.VarTypeSubtype() == m$subtype)
             if (is.integer0(type)) {
               type = "free"
             }
             else {
-              type = names(VarTypeSubtype())[[type]]
+              type = names(.VarTypeSubtype())[[type]]
             }
             .ConstVariable$new(
             self, m$name, type, m$domain,
             description = m$expltext, domaintype = m$domaintype,
             numberRecords=m$numRecs)
         }
-        else if (m$type == GMS_DT_EQU) {
-            type = which(EqTypeSubtype() == m$subtype)
+        else if (m$type == .gdxSymbolTypes()[["GMS_DT_EQU"]]) {
+            type = which(.EqTypeSubtype() == m$subtype)
             if (is.integer0(type)) {
               type = "eq"
             }
             else {
-              type = names(EqTypeSubtype())[[type]]
+              type = names(.EqTypeSubtype())[[type]]
             }
 
             .ConstEquation$new(
@@ -5258,7 +5214,7 @@ ConstContainer <- R6::R6Class (
             description = m$expltext, domaintype = m$domaintype,
             numberRecords=m$numRecs)
         }
-        else if (m$type == GMS_DT_ALIAS) {
+        else if (m$type == .gdxSymbolTypes()[["GMS_DT_ALIAS"]]) {
             dt = m$domaintype
             if ((length(m$domain) == 1) && (m$name == m$domain[1])) {
               dt = 2 # for relaxed domain type
@@ -5505,13 +5461,12 @@ ConstContainer <- R6::R6Class (
       self$isSingleton = isSingleton
       lockBinding("isSingleton", self)
 
+      type = .gdxSymbolTypes()[["GMS_DT_SET"]]
       if (!isSingleton) {
-        type = GMS_DT_SET
-        subtype = SetTypeSubtype()[["set"]]
+        subtype = .SetTypeSubtype()[["set"]]
       }
       else {
-        type = GMS_DT_SET
-        subtype = SetTypeSubtype()[["singleton_set"]]
+        subtype = .SetTypeSubtype()[["singleton_set"]]
       }
 
       super$initialize(container, name,
@@ -5561,7 +5516,7 @@ ConstContainer <- R6::R6Class (
                           domain=NULL,records = NULL,
                           description="", domaintype=NULL,
                           numberRecords = NULL) {
-      type = GMS_DT_PAR
+      type = .gdxSymbolTypes()[["GMS_DT_PAR"]]
       super$initialize(container, name,
                       type, 0, 
                       domain, description, domaintype,
@@ -5610,8 +5565,8 @@ ConstContainer <- R6::R6Class (
       self$type = type
       lockBinding("type", self)
 
-      symtype = GMS_DT_VAR
-      symsubtype = VarTypeSubtype()[[type]]
+      symtype = .gdxSymbolTypes()[["GMS_DT_VAR"]]
+      symsubtype = .VarTypeSubtype()[[type]]
 
       super$initialize(container, name,
                       symtype, symsubtype, 
@@ -5664,8 +5619,8 @@ ConstContainer <- R6::R6Class (
       # call from outside
       type = .EquationTypes[[type]]
 
-      symtype = GMS_DT_EQU
-      symsubtype = EqTypeSubtype()[[type]]
+      symtype = .gdxSymbolTypes()[["GMS_DT_EQU"]]
+      symsubtype = .EqTypeSubtype()[[type]]
 
       super$initialize(container, name,
                       symtype, symsubtype, 
@@ -5711,7 +5666,7 @@ ConstContainer <- R6::R6Class (
                           domain, isSingleton, 
                           description, domainType, numberRecords
                           ) {
-      super$initialize(container, name, GMS_DT_ALIAS, 
+      super$initialize(container, name, .gdxSymbolTypes()[["GMS_DT_ALIAS"]], 
       isSingleton, domain, description, domainType, numberRecords)
 
       self$aliasWith = aliasFor
@@ -5767,7 +5722,7 @@ ConstContainer <- R6::R6Class (
                           domain, 
                           description, domainType, numberRecords
                           ) {
-      super$initialize(container, name, GMS_DT_ALIAS, 
+      super$initialize(container, name, .gdxSymbolTypes()[["GMS_DT_ALIAS"]], 
       FALSE, domain, description, domainType, numberRecords)
 
       self$aliasWith = aliasFor

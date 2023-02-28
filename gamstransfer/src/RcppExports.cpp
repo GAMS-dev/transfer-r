@@ -10,6 +10,66 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// CPP_getGDXSymbolTypes
+List CPP_getGDXSymbolTypes();
+RcppExport SEXP _gamstransfer_CPP_getGDXSymbolTypes() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(CPP_getGDXSymbolTypes());
+    return rcpp_result_gen;
+END_RCPP
+}
+// CPP_getGDXVarTypes
+List CPP_getGDXVarTypes();
+RcppExport SEXP _gamstransfer_CPP_getGDXVarTypes() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(CPP_getGDXVarTypes());
+    return rcpp_result_gen;
+END_RCPP
+}
+// CPP_getGDXEqTypes
+List CPP_getGDXEqTypes();
+RcppExport SEXP _gamstransfer_CPP_getGDXEqTypes() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(CPP_getGDXEqTypes());
+    return rcpp_result_gen;
+END_RCPP
+}
+// CPP_getGDXVarTypeSubtype
+List CPP_getGDXVarTypeSubtype();
+RcppExport SEXP _gamstransfer_CPP_getGDXVarTypeSubtype() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(CPP_getGDXVarTypeSubtype());
+    return rcpp_result_gen;
+END_RCPP
+}
+// CPP_getGDXEqTypeSubtype
+List CPP_getGDXEqTypeSubtype();
+RcppExport SEXP _gamstransfer_CPP_getGDXEqTypeSubtype() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(CPP_getGDXEqTypeSubtype());
+    return rcpp_result_gen;
+END_RCPP
+}
+// CPP_getGDXSetTypeSubtype
+List CPP_getGDXSetTypeSubtype();
+RcppExport SEXP _gamstransfer_CPP_getGDXSetTypeSubtype() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(CPP_getGDXSetTypeSubtype());
+    return rcpp_result_gen;
+END_RCPP
+}
 // CPP_getSpecialValues
 List CPP_getSpecialValues(CharacterVector gdxName, CharacterVector sysDir);
 RcppExport SEXP _gamstransfer_CPP_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
@@ -55,6 +115,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_gamstransfer_CPP_getGDXSymbolTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXSymbolTypes, 0},
+    {"_gamstransfer_CPP_getGDXVarTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypes, 0},
+    {"_gamstransfer_CPP_getGDXEqTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypes, 0},
+    {"_gamstransfer_CPP_getGDXVarTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypeSubtype, 0},
+    {"_gamstransfer_CPP_getGDXEqTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypeSubtype, 0},
+    {"_gamstransfer_CPP_getGDXSetTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXSetTypeSubtype, 0},
     {"_gamstransfer_CPP_getSpecialValues", (DL_FUNC) &_gamstransfer_CPP_getSpecialValues, 2},
     {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 7},
     {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 5},
