@@ -1,0 +1,1478 @@
+#' @title Symbol Abstract Class
+#' @description An abstract symbol class from 
+#' which the classes Set, Parameter, Variable, 
+#' and Equation are inherited.
+.Symbol <- R6Class(
+  ".Symbol",
+  inherit = .BaseSymbol,
+  public = list(
+  .requiresStateCheck = NULL,
+  initialize = function(container, name,
+                        type, subtype, 
+                        domain,
+                        description,
+                        domainForwarding) {
+
+    super$initialize(type, subtype)
+
+
+    self$.requiresStateCheck = TRUE
+
+    #' @field refContainer reference to the Container that the symbol 
+    #' belongs to. Type Container.
+    self$refContainer = container
+    self$refContainer$.requiresStateCheck = TRUE
+    #' @field name name of the symbol
+    self$name <- name
+    container[name] = self
+
+    self$records = NULL
+
+    self$domain = domain
+
+    self$description = description
+    self$domainForwarding = domainForwarding
+
+  },
+
+  getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
+    if (self$dimension == 0) return(c())
+    if (is.null(dimension)) {
+      if (!is.null(codes)) {
+        stop("User must specify `dimension` if retrieving UELs with the 
+        `codes` argument\n")
+      }
+      dimension = 1:self$dimension
+    }
+
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument ", 
+      " `dimension` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.logical(ignoreUnused)){
+      stop("The argument `ignoreUnused` must be type logical\n")
+    }
+
+    if (!is.null(codes) && (!(is.numeric(codes) || is.integer(codes)) || 
+    !all(codes %% 1 == 0) || !all(codes >= 1))) {
+      stop(paste0("The argument `codes` must be integers ", 
+      " or a vector of integers >= 1\n"))
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol must be valid in order to manage UELs\n")
+    }
+
+    uels = unlist(lapply(dimension, function(d) {
+      if (ignoreUnused) {
+        uels_d = levels(droplevels(self$records[, d]))
+      }
+      else {
+        uels_d = levels(self$records[, d])
+      }
+
+      if (!is.null(codes)) {
+        uels_d = uels_d[codes]
+      }
+      return(uels_d)
+    }), use.names = FALSE)
+
+    return(unique(uels))
+  },
+
+  setUELs = function(uels, dimension = NULL, rename=FALSE) {
+    if (is.null(dimension)) {
+      dimension = 1:self$dimension
+    }
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!is.logical(rename)) {
+      stop("The argument `rename` must be type logical")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to set UELs \n")
+    }
+
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
+
+    for (d in dimension) {
+      if (rename) {
+        levels(private$.records[, d]) = uels
+      }
+      else {
+        private$.records[, d] = 
+        factor(as.character(private$.records[, d]), levels=uels, 
+        ordered = TRUE)
+      }
+    }
+
+  },
+
+  reorderUELs = function(uels, dimension=NULL) {
+    # input check
+    if (is.null(dimension)) dimension =1:self$dimension
+
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument `uels` must be type `character` \n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to reorder UELs \n")
+    }
+
+    for (d in dimension) {
+      if ((length(uels) != length(levels(private$.records[, d])))) {
+        stop("The argument `uels` must 
+        contain all uels that need to be reordered")
+      }
+      else {
+        if (length(setdiff(uels, private$.records[,d])) != 0) {
+          stop("The argument `uels` must 
+          contain all uels that need to be reordered")
+        }
+      }
+      private$.records[, d] = factor(private$.records[, d], levels=uels)
+    }
+  },
+
+  addUELs = function(uels, dimension=NULL) {
+    if (is.null(dimension)) dimension =1:self$dimension
+
+    # input check
+    if (!(is.integer(dimension) || is.numeric(dimension)) || 
+    !all(dimension %% 1 == 0) || 
+    any(dimension < 1) || any(dimension > self$dimension)) {
+      stop(paste0("All elements of the argument 
+      `dim` must be integers in [1, ", 
+      self$dimension, "]\n"))
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to add UELs \n")
+    }
+
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
+
+    for (d in dimension) {
+
+      if (length(setdiff(uels, private$.records[,d])) == 0) {
+        stop("The argument `uels` should not
+        contain existing uels")
+      }
+
+      private$.records[, d] = factor(private$.records[, d], 
+      levels=append(levels(private$.records[, d]), uels))
+    }
+  },
+
+  removeUELs = function(uels=NULL, dimension=NULL) {
+    if (!is.null(dimension)) {
+      # input check
+      if (!(is.integer(dimension) || is.numeric(dimension)) || 
+      !all(dimension %% 1 == 0) || 
+      any(dimension < 1) || any(dimension > self$dimension)) {
+        stop(paste0("All elements of the argument 
+        `dim` must be integers in [1, ", 
+        self$dimension, "]\n"))
+      }
+    }
+    else {
+      dimension = 1:self$dimension
+    }
+
+    if (!is.null(uels)) {
+      if (!is.character(uels)) {
+        stop("The argument `uels`` must be type `character` \n")
+      }
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to remove UELs \n")
+    }
+
+    for (d in dimension) {
+      if (!is.null(uels)) {
+        # remove from values and from levels
+        # private$.records[, d] = 
+        # (private$.records[, d])[private$.records[, d] != uels]
+       private$.records[, d] = 
+        factor(private$.records[, d], 
+        levels = setdiff(levels(private$.records[, d]), uels))
+      }
+      else {
+        # remove unused levels
+        private$.records[, d] = droplevels(private$.records[, d])
+      }
+    }
+  },
+
+  renameUELs = function(uels, dimension=NULL, allowMerge=FALSE) {
+    if (!is.null(dimension)) {
+      # input check
+      if (!(is.integer(dimension) || is.numeric(dimension)) || 
+      !all(dimension %% 1 == 0) || 
+      any(dimension < 1) || any(dimension > self$dimension)) {
+        stop(paste0("All elements of the argument 
+        `dim` must be integers in [1, ", 
+        self$dimension, "]\n"))
+      }
+    }
+    else {
+      dimension = 1:self$dimension
+    }
+
+    if (!is.logical(allowMerge)) {
+      stop("The argument `allowMerge` must be type logical\n")
+    }
+
+    if (!self$isValid()) {
+      stop("The symbol has to be valid to add UELs \n")
+    }
+
+    if (!is.character(uels)) {
+      stop("The argument uels must be type `character` \n")
+    }
+
+    # remove trailing whitespaces from uels
+    uels = trimws(uels, which="right")
+
+    # for list input add names
+    if (is.null(names(uels))) {
+      lapply(dimension, function(d) {
+        if (length(levels(private$.records[, d])) != length(uels)) {
+          stop(paste0("User passed a vector of length ", length(uels), 
+          " which does not match the length of existing uels: ", 
+          length(levels(private$.records[, d])), "\n"))
+        }
+
+        if (allowMerge == TRUE) {
+          levels(private$.records[, d]) = unique(uels)
+        }
+        else {
+          # make sure that the integer mapping is unaltered
+
+          if (any(duplicated(uels) == TRUE)) {
+            stop("Multiple UELs cannot be renamed to a UEL. 
+            Use `allowMerge=TRUE`\n")
+          }
+
+          if (length(intersect(levels(private$.records[, d]), uels)) != 0) {
+            stop("UEL cannot be renamed to an existing UEL. 
+            Use `allowMerge=TRUE`.\n")
+          }
+
+          levels(private$.records[, d]) = uels
+        }
+      })
+    }
+    else {
+      # user has provided a UEL map named vector
+      # no duplicate keys
+      if (any(duplicated(names(uels)) == TRUE)) {
+        stop("A UEL cannot be renamed more than once in a single call. 
+        names(uels) must be unique")
+      }
+      if (allowMerge == TRUE) {
+        # user has provided uelmap
+        old_uels = names(uels)
+
+        lapply(dimension, function(d) {
+          # get current levels
+          cur_uels = levels(private$.records[, d])
+          new_uels = cur_uels
+
+          idx = match(old_uels, cur_uels)
+          isna_idx = is.na(idx)
+          idx = idx[!isna_idx]
+          new_uels[idx] = uels[!isna_idx]
+
+          # set current levels
+          levels(private$.records[, d]) = new_uels
+        })
+      }
+      else {
+        # user has provided uelmap
+        old_uels = names(uels)
+
+        lapply(dimension, function(d) {
+
+          # get current levels
+          cur_uels = levels(private$.records[, d])
+          new_uels = cur_uels
+
+          idx = match(old_uels, cur_uels)
+          isna_idx = is.na(idx)
+          idx = idx[!isna_idx]
+          new_uels[idx] = uels[!isna_idx]
+
+
+          # don't allow more than one uels to be mapped to a same uel
+          if (any(duplicated(new_uels[idx]) == TRUE)) {
+            stop("Multiple UELs cannot be renamed to a UEL. Use `allowMerge=TRUE`\n")
+          }
+
+          # a uel cannot be mapped to an existing uel
+          if (length(intersect(levels(private$.records[, d]), new_uels[idx])) != 0) {
+            stop("UEL cannot be renamed to an existing UEL. Use `allowMerge=TRUE`.\n")
+          }
+
+          # set current levels
+          levels(private$.records[, d]) = new_uels
+        })
+      }
+    }
+  },
+
+  getDomainViolations = function() {
+    if (!self$isValid()) {
+      stop("The object must be valid to get domain violations\n")
+    }
+    if (self$dimension == 0 || is.null(self$records)) return()
+
+    it_vec = 1:self$dimension
+    is_set_alias = unlist(lapply(it_vec, function(x) {
+      inherits(self$domain[[x]], c("Set", ".BaseAlias"))
+    }), use.names = FALSE)
+    it_vec = it_vec[is_set_alias]
+
+    added_uel_all = lapply(it_vec, function(d) {
+      setdiff(tolower(self$getUELs(d, ignoreUnused=TRUE)), 
+      tolower(self$domain[[d]]$getUELs(ignoreUnused=TRUE)))
+    })
+
+    length_added_uel = unlist(lapply(added_uel_all, length), use.names = FALSE)
+    it_vec = it_vec[length_added_uel > 0]
+
+    dom_violations = lapply(it_vec, function(d) {
+      DomainViolation$new(self, d, self$domain[[d]], added_uel_all[[d]])
+    })
+
+    if (length(dom_violations) == 0) return(invisible(NULL))
+
+    return(dom_violations)
+  },
+
+  findDomainViolations = function() {
+    violations = self$getDomainViolations()
+
+    if (is.null(violations)) return(data.frame())
+
+    idx = lapply(violations, function(dv) {
+      set_dv = unique(dv$violations)
+
+      idx = lapply(set_dv, function(v) {
+        return(which(self$records[, dv$dimension] == v, arr.ind = TRUE))
+      })
+      return(unlist(idx, use.names=FALSE))
+    })
+
+    return(self$records[unlist(unique(idx)), ])
+  },
+
+  hasDomainViolations = function() {
+    df = self$findDomainViolations()
+    if ((nrow(df) == 0) && (length(df) == 0)) {
+      return(FALSE)
+    }
+    else {
+      return(TRUE)
+    }
+  },
+
+  countDomainViolations = function() {
+    df = self$findDomainViolations()
+    return(nrow(df))
+  },
+
+  dropDomainViolations = function() {
+    violations = self$getDomainViolations()
+
+    if (is.null(violations)) return()
+
+    idx = lapply(violations, function(dv) {
+      set_dv = unique(dv$violations)
+
+      idx = lapply(set_dv, function(v) {
+        return(which(self$records[, dv$dimension] == v, arr.ind = TRUE))
+      })
+      return(unlist(idx, use.names=FALSE))
+    })
+    private$.records = private$.records[-unlist(unique(idx)), ]
+    rownames(private$.records) <- NULL
+    return(invisible(NULL))
+  },
+
+  countDuplicateRecords = function() {
+    return(nrow(self$findDuplicateRecords()))
+  },
+
+  findDuplicateRecords = function(keep="first") {
+    idx = private$.get_duplicate_index(keep)
+    if (is.integer0(idx)) {
+      return(data.frame())
+    }
+    else {
+      return(self$records[idx,])
+    }
+  },
+
+  hasDuplicateRecords = function() {
+    return(self$countDuplicateRecords() > 0)
+  },
+
+  dropDuplicateRecords = function(keep = "first") {
+    idx = private$.get_duplicate_index(keep)
+
+    if (!is.integer0(idx)) {
+      self$records = self$records[-idx, ]
+      rownames(self$records) <- NULL
+    }
+    return(invisible(NULL))
+  },
+
+  #' @description getCardinality get the full cartesian product of the domain
+  getCardinality = function() {
+    tryCatch(
+      {
+        if (self$domainType == "relaxed" | self$domainType == "none"){
+          return(NA)
+        }
+        else {
+          card = 1
+          for (i in self$domain) {
+            card = card * i$numberRecords
+          }
+          return(card)
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
+  getSparsity = function() {
+    tryCatch(
+      {
+        if (self$domainType == "relaxed" | self$domainType == "none"){
+          return(NA)
+        }
+        else {
+          return(1 - self$numberRecords/self$getCardinality())
+        }
+      },
+      error = function(cond) {
+        return(NA)
+      },
+      warning = function(cond) {
+        return(NA)
+      }
+    )
+  },
+
+  #' @description TRUE if the symbol is in a valid format, 
+  #' throw exceptions if verbose=True, recheck a symbol if force=True
+  #' @param verbose type logical
+  #' @param force type logical
+  isValid = function(verbose=FALSE, force=FALSE) {
+    if (!is.logical(verbose)) {
+      stop("Argument 'verbose' must be logical\n")
+    }
+
+    if (!is.logical(force)) {
+      stop("Argument 'force' must be logical\n")
+    }
+
+    if (force == TRUE) {
+      self$.requiresStateCheck = TRUE
+    }
+
+    if (self$.requiresStateCheck == TRUE) {
+      tryCatch(
+        {
+          private$check()
+          return(TRUE)
+        },
+        error = function(e) {
+          if (verbose == TRUE) {
+            message(e)
+          }
+          return(FALSE)
+        }
+      )
+    }
+    else {
+      return(TRUE)
+    }
+
+  },
+
+  shape = function() {
+    if (self$domainType == "regular") {
+      shapelist = c()
+      for (d in self$domain) {
+        shapelist = append(shapelist, nrow(d$records))
+      }
+      return(shapelist)
+    }
+
+    if (!is.null(self$records)) {
+      if (self$dimension == 0) {
+        return(c())
+      }
+
+      if (self$domainType == "none" || self$domainType == "relaxed") {
+        shapelist = c()
+        for (i in (1:self$dimension)) {
+          shapelist = append(shapelist, length(unique(self$records[, i])))
+        }
+        return(shapelist)
+      }
+    }
+    else {
+      return(NULL)
+    }
+  },
+
+  #' @description toDense convert symbol to a dense matrix/array format
+  #' @param column column to be converted to dense format.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  toDense = function(column = "level") {
+    if (!is.character(column)) {
+      stop("Argument 'column' must be type str\n")
+    }
+    if (inherits(self, "Parameter")) {
+      column = "value"
+    }
+    else {
+      if (!any(private$.attr() == column)) {
+        stop(paste0("Argument 'column' must be one 
+        of the following: ", toString(private$.attr()), "\n"))
+      }
+    }
+
+    if (self$isValid() == FALSE) {
+      stop("Cannot create dense array (i.e., matrix) format because symbol 
+      is invalid -- use .isValid(verbose=TRUE) to debug symbol state.\n")
+    }
+
+    if (!is.null(self$records)) {
+      if (self$dimension  == 0) {
+        return(self$records[[column]])
+      }
+      else {
+        if (self$domainType == "regular") {
+          if (self$hasDomainViolations()) {
+            stop("Cannot create dense array because there are domain violations i.e.,
+             the UELs in the symbol are not a subset of UELs in the domain set/s\n")
+          }
+
+
+          idx = lapply(1:self$dimension, function(d) {
+            return(as.numeric(factor(self$records[,d], levels = levels(self$domain[[d]]$records[, 1]))) )
+          })
+
+        }
+        else {
+          idx = lapply(1:self$dimension, function(d) {
+            return(as.numeric(factor(self$records[,d], levels = levels(self$records[, d]))) )
+          })
+        }
+
+        a = array(0, dim = self$shape())
+        a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
+        return(a)
+
+      }
+    }
+    else {
+      return(NULL)
+    }
+  },
+
+  equals = function(other, columns=NULL, checkUELs=TRUE, 
+  checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL,
+  verbose=FALSE) {
+    if (inherits(other, "Alias")) {
+      other = other$aliasWith
+    }
+
+    tryCatch(
+      {
+        private$.check_equal(other, columns, checkUELs, 
+        checkElementText, checkMetaData, rtol, atol)
+        return(TRUE)
+      },
+      error = function(e) {
+        if (verbose == TRUE) {
+          message(e)
+        }
+        return(FALSE)
+      }
+    )
+  },
+
+  .linkDomainCategories = function() {
+      private$.records[, 1:self$dimension] = lapply(1:self$dimension, function(n) {
+        i  = self$domain[[n]]
+        return(factor(private$.records[, n], 
+        levels = levels(i$records[, 1]), ordered = TRUE))
+      })
+  }
+  ),
+
+  active = list(
+
+    records = function(records_input) {
+      if (missing(records_input)) {
+        return(private$.records)
+      }
+      else {
+        private$.records = records_input
+        if (!is.null(self$records)) {
+          if (any(self$domainForwarding == TRUE)) {
+            private$domain_forwarding(self$domainForwarding)
+
+            for (i in self$refContainer$listSymbols()) {
+              self$refContainer[i]$.requiresStateCheck = TRUE
+            }
+
+            self$refContainer$.requiresStateCheck = TRUE
+          }
+          else {
+              self$.requiresStateCheck = TRUE
+              if (inherits(self$refContainer, "Container")) {
+                self$refContainer$.requiresStateCheck = TRUE
+              }
+          }
+        }
+      }
+    },
+
+    domainForwarding = function(domain_forwarding_input) {
+      if (missing(domain_forwarding_input)) {
+        return(private$.domain_forwarding)
+      }
+      else {
+        if (!is.logical(domain_forwarding_input)) {
+          stop("Argument 'domainForwarding' must be type logical\n")
+
+          if (!any(c(1, self$dimension) == length(domain_forwarding) )) {
+            stop("The argument `domainForwarding` must be of length 1 or <symbol>$dimension \n")
+          }
+        }
+        else {
+          private$.domain_forwarding = domain_forwarding_input
+        }
+      }
+    },
+
+    description = function(description_input) {
+      if (missing(description_input)) {
+        return(private$.description)
+      }
+      else {
+        if (!is.character(description_input)) {
+          stop("Symbol 'description' must be type character\n")
+        }
+
+        if (length(description_input) >= gams_description_max_length) {
+          stop(paste0("Symbol 'description' must have length ",
+          gams_description_max_length, " or smaller\n"))
+        }
+
+        if (!is.null(private$.description)) {
+          if (private$.description != description_input) {
+            self$.requiresStateCheck = TRUE
+            self$refContainer$.requiresStateCheck = TRUE
+          }
+          private$.description = description_input
+        }
+        else {
+          self$.requiresStateCheck = TRUE
+          self$refContainer$.requiresStateCheck = TRUE
+          private$.description = description_input
+        }
+      }
+    },
+
+    dimension = function(dimension_input) {
+      if (missing(dimension_input)) {
+        return(length(self$domain))
+      }
+      else {
+        if (!((inherits(dimension_input, c("numeric", "integer"))) && 
+           (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
+           (dimension_input <= .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]))) {
+            stop(paste0("Symbol 'dimension' must be 
+           an integer in [0, ", .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "]\n"))
+           }
+
+        if (length(self$domain) > dimension_input) {
+          if (dimension_input == 0) {
+            self$domain = list()
+          }
+          else {
+            self$domain = self$domain[1:dimension_input]
+          }
+        }
+        else if (length(self$domain) < dimension_input) {
+           new = self$domain
+           new = append(new, replicate(dimension_input - 
+           length(self$domain), "*"))
+           self$domain = new
+        }
+        else {
+        }
+      }
+    },
+
+    domain = function(domain_input) {
+
+      if (missing(domain_input)) {
+        return(private$.domain)
+      }
+      else {
+        if (is.null(domain_input)) {
+          domain_input = list()
+        }
+
+        if (!(is.list(domain_input) || is.vector(domain_input))) {
+          domain_input = list(domain_input)
+        }
+
+        if (length(domain_input) > .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]) {
+          stop(paste0("Argument 'domain' length cannot be > ", 
+          .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "\n"))
+        }
+        domain_arg_check = unlist(lapply(domain_input, function(d) {
+          return((inherits(d, c("Set", ".BaseAlias")) && d$dimension == 1)
+        || is.character(d))}), use.names = FALSE)
+        if (any(domain_arg_check == FALSE)) {
+          stop("All 'domain' elements must be either one dimensional Set/Alias/UniverseAlias
+          , or must be type Character\n")
+        }
+
+        # check change of domain
+        if (!identical(private$.domain, domain_input)) {
+            self$.requiresStateCheck = TRUE
+            if (inherits(self$refContainer, "Container")) {
+              self$refContainer$.requiresStateCheck = TRUE
+            }
+            private$.domain = domain_input
+            if (self$dimension == 0) return()
+
+            if (!is.null(self$records)) {
+              temp_colnames=colnames(self$records)
+              temp_colnames[1:self$dimension] = self$domainLabels
+              colnames(private$.records) = temp_colnames
+            }
+        }
+
+      }
+    },
+
+    refContainer = function(ref_container_input) {
+      if (missing(ref_container_input)) {
+        return(private$.ref_container)
+      }
+      else {
+        if (is.null(ref_container_input)) {
+          private$.ref_container = NULL
+          self$.requiresStateCheck = TRUE
+          return()
+        }
+
+        if (!inherits(ref_container_input, "Container")) {
+          stop("Symbol 'container' must be type Container\n")
+        }
+        if (is.null(self$refContainer)){
+          if (!identical(self$refContainer, ref_container_input)) {
+            self$.requiresStateCheck = TRUE
+          }
+          private$.ref_container = ref_container_input
+        }
+        else {
+          self$.requiresStateCheck = TRUE
+          private$.ref_container = ref_container_input
+        }
+      }
+    },
+    name = function(name_input) {
+      if (missing(name_input)) {
+        return(private$.name)
+      }
+      else {
+        if (!is.character(name_input)) {
+          stop("GAMS symbol 'name' must be type chracter\n")
+        }
+
+        if (nchar(name_input) > private$symbolMaxLength) {
+          stop(paste0("GAMS symbol 'name' is too long,",
+          " max is ", private$symbolMaxLength, " characters\n"))
+        }
+
+        if (self$refContainer$hasSymbols(name_input)) {
+          stop(paste0("A symbol with the name ", name_input, 
+          " already exists in the container\n"))
+        }
+
+        if (substr(name_input, 1, 1) == "_") {
+          stop("Valid GAMS names cannot begin with a `_`character.\n")
+        }
+
+        if (grepl("^[a-zA-Z0-9_]+$", name_input) == FALSE) {
+          stop("Detected an invalid GAMS symbol name. GAMS names can only 
+          contain alphanumeric characters (letters and numbers) and 
+          the `_` character.\n")
+        }
+
+        if (is.null(private$.name)) {
+          self$.requiresStateCheck = TRUE
+          private$.name = name_input
+        }
+        else {
+          if (private$.name != name_input) {
+            self$.requiresStateCheck = TRUE
+
+            refcontainer = private$.ref_container
+
+            refcontainer[name_input] = refcontainer[private$.name]
+            refcontainer$data$remove(private$.name)
+            refcontainer$.lc_data$remove(tolower(private$.name))
+          }
+          private$.name = name_input
+        }
+      }
+    },
+
+    numberRecords = function() {
+      if (self$isValid() == TRUE) {
+        if (!is.null(self$records)) {
+          return(nrow(self$records))
+        }
+        else {
+          return(0)
+        }
+      }
+      else {
+        return(NA)
+      }
+    },
+
+    domainType = function() {
+      regularCheck = unlist(lapply(self$domain, function(d) {
+        return(inherits(d, c("Set", ".BaseAlias")))
+       }), use.names = FALSE)
+
+      if (all(regularCheck == TRUE) && self$dimension != 0) {
+          return("regular")
+      }
+      else if (all(self$domain == "*")) {
+        return("none")
+      }
+      else if (self$dimension == 0) {
+        return("none")
+      }
+      else {
+        return("relaxed")
+      }
+    },
+
+    domainNames = function() {
+      if (self$dimension == 0) return(NA)
+
+      d = unlist(lapply(self$domain, function(i) {
+        if (inherits(i, c("Set", ".BaseAlias"))) {
+          return(i$name)
+        }
+        else {
+          return(i)
+        }
+      }), use.names = FALSE)
+      return(d)
+    },
+
+    domainLabels = function() {
+
+      dom_is_univ = (self$domain == "*")
+      dom_temp = self$domain
+      dom_temp[dom_is_univ] = "uni"
+      column_names = lapply(seq_along(dom_temp), function(i) {
+        if (is.character(dom_temp[[i]])) {
+          return(paste0(dom_temp[[i]], "_", i))
+        }
+        else {
+          return(paste0(dom_temp[[i]]$name, "_", i))
+        }
+
+      })
+
+      return(unlist(column_names, use.names=FALSE))
+    }
+
+  ),
+
+  private = list(
+    .domain_forwarding = NULL,
+    .description = NULL,
+    .domain = NULL,
+    .ref_container = NULL,
+    .name = NULL,
+    .records = NULL,
+    symbolMaxLength = 63,
+    descriptionMaxLength = 255,
+
+    .generate_records_index = function(density) {
+      if (!(is.numeric(density)) && all(density >= 0 && density <= 1)) {
+        stop("The argument `density` must be numeric in the range [0, 1]\n")
+      }
+
+      if (!any(c(1,self$dimension) == length(density))) {
+        stop("The argument `density` must be of length: ", 
+        self$dimension, " or 1, the user provided: ", length(density), "\n")
+      }
+
+      # get the full cartesian product
+      dom_recs = lapply(self$domain, function(d) return(d$records[,1]))
+      length_dom_recs = unlist(lapply(dom_recs, function(x) {return(length(x))}), use.names=FALSE)
+      final_nrecs = floor(density * length_dom_recs)
+      if (any(final_nrecs == 0)) return(data.frame())
+
+      if (length(density) == 1) {
+        # if the length is 1 then apply density on records dataframe instead
+
+        # drop unused levels from a set
+        dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+
+        # cartesian product
+        recs = expand.grid(dom_recs)
+        colnames(recs) = self$domainLabels
+
+        # sample indices based on density
+        idx = sample(1:nrow(recs), floor(density * nrow(recs)), replace = FALSE)
+
+        # drop rows
+        recs = recs[sort(idx), 1:length(recs), drop = FALSE]
+
+        # drop unused levels
+        recs = droplevels(recs)
+      }
+      else {
+        rec_idx = lapply(1:length(dom_recs), function(i) { 
+          rec = dom_recs[[i]]
+          idx = sample(1:length(rec), floor(density[i] * length(rec)), replace = FALSE)
+          return(rec[sort(idx)])
+        })
+
+        dom_recs = rec_idx
+        dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
+
+        recs = expand.grid(dom_recs)
+        colnames(recs) = self$domainLabels
+      }
+
+      #reset row indices
+      rownames(recs) <- NULL
+      return(recs)
+    },
+    .check_equal = function(other, columns= NULL, checkUELs=TRUE, 
+      checkElementText=TRUE, checkMetaData=TRUE, rtol=NULL, atol=NULL) {
+
+      if (self$dimension != other$dimension) {
+        stop(paste0("Symbol dimension do not match ", self$dimension, 
+        " != ", other$dimension, "\n"))
+      }
+
+      if (self$domainType != other$domainType) {
+        stop(paste0("Symbol domain types do not match `", self$domainType, 
+        "`` != `", other$domainType, "`\n"))
+      }
+
+      if (!identical(self$domain, other$domain)) {
+        stop(paste0("Symbol domains do not match \n"))
+      }
+
+      if (self$numberRecords != other$numberRecords) {
+        stop(paste0("Symbols do not have same number of records ", 
+        self$numberRecords, " != ", other$numberRecords, "\n"))
+      }
+
+      # check metadata
+      if (checkMetaData) {
+        if (self$name != other$name) {
+          stop("Symbol names do not match ", 
+          self$name, " != ", other$name, "\n" )
+        }
+
+        if (self$description != other$description) {
+          stop("Symbol descriptions do not match ", 
+          self$description, " != ", other$description, "\n" )
+        }
+
+        if (class(self)[1] != class(other)[1]) {
+          stop("Symbol types do not match ", 
+          class(self)[1], " != ", class(other)[1], "\n" )
+        }
+      }
+
+      # check UELs
+      if (checkUELs) {
+        if (self$numberRecords != 0) {
+          selfUELs = self$getUELs()
+          otherUELs = other$getUELs()
+          if (!all(selfUELs == otherUELs)) {
+            stop(paste0("Symbol UELs do not match \n",
+            "self: ", toString(selfUELs), "\n",
+            "other: ", toString(otherUELs), "\n"))
+          }
+        }
+      }
+
+      if (inherits(self, c("Set", "Alias"))) {
+        private$.check_set_records_equal(other, checkElementText)
+      }
+      else if (inherits(self, c("Parameter", "Variable", 
+      "Equation"))) {
+        private$.check_numeric_records_equal(other, columns, rtol, atol)
+      }
+    },
+
+    .check_equals_common_args = function(other, checkUELs, checkMetaData, verbose) {
+      # mandatory checks
+      if (!self$isValid()) {
+        stop(paste0("Cannot compare objects because ", s$name, " is not valid. 
+        Use ", s$name, "$isValid(verbose=TRUE) to get more details\n"))
+      }
+
+      if (!inherits(other, c(".Symbol", ".BaseAlias"))) {
+        stop("The argument `other` must be a Symbol object")
+      }
+
+      if (!other$isValid()) {
+        stop(paste0("Cannot compare objects because ", other$name, " is invalid. Use ",
+        other$name, "$isValid(verbose=TRUE) to debug.\n"))
+      }
+
+      if (!is.logical(checkUELs)) {
+        stop("The argument `checkUELs` must be type logical")
+      }
+
+      if (!is.logical(checkMetaData)) {
+        stop("The argument `checkMetaData` must be type logical")
+      }
+
+      if (!is.logical(verbose)) {
+        stop("The argument `verbose` must be type logical")
+      }
+    },
+
+    .check_equals_numeric_args = function(atol, rtol) {
+      if (!(is.numeric(atol) && length(atol) == 1)) {
+        stop("The argument `atol` must be type numeric of length 1 \n")
+      }
+
+      if (!(is.numeric(rtol) && length(rtol) == 1)) {
+        stop("The argument `rtol` must be type numeric of length 1 \n")
+      }
+    },
+
+    .check_set_records_equal = function(other, checkElementText) {
+      if (self$numberRecords == 0) return()
+      #merge both dataframes by column_names
+      merged = merge(self$records, other$records, 
+      by.x=self$domainLabels, by.y=other$domainLabels,
+      all=TRUE)
+
+      isna_check = is.na(merged[(self$dimension+1):length(merged)])
+
+      if (any(isna_check)) {
+        error_df = head(merged[as.logical(
+        rowSums(isna_check)),][1:self$dimension])
+        strmsg="symbol records do not match. Unmatched rows below\n"
+        strdf = paste0(capture.output(error_df), collapse="\n")
+        stop(paste0(strmsg, strdf, "\n"))
+      }
+
+      if (checkElementText) {
+        el_text_mismatch = (merged[, "element_text.x"] != merged[, "element_text.y"])
+
+        if (any(el_text_mismatch)) {
+          error_df = head(merged[el_text_mismatch, ])
+          strmsg="symbol element_text does not match. Unmatched rows below\n"
+          strdf = paste0(capture.output(error_df), collapse="\n")
+          stop(paste0(strmsg, strdf, "\n"))
+        }
+      }
+
+
+    },
+
+    .check_numeric_records_equal = function(other, columns, rtol, atol) {
+      if (self$numberRecords == 0) return()
+
+      # columns = unique(append(names(rtol), names(atol)))
+      if (is.null(columns)) {
+        if (inherits(self, c("Variable", "Equation"))) {
+          columns = private$.attr()
+        }
+        else {
+          #parameter
+          columns = "value"
+        }
+      }
+
+      if (self$dimension == 0) {
+        # now compare numerical records
+        for (attr in columns) {
+          # check for special values
+          count = 0
+          fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
+          is_special = FALSE
+          for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
+          SpecialValues$isUndef, SpecialValues$isPosInf, 
+          SpecialValues$isNegInf)) {
+            count = count + 1
+            is_special_self = f(self$records[, attr])
+            is_special_other = f(other$records[, attr])
+
+            if (any( is_special_self !=  is_special_other)) {
+              stop(paste0("Symbols with ", fnames[count], " special values 
+              do not match in the ", attr, " column.\n"))
+            }
+            is_special = (is_special || is_special_self)
+          }
+          if (is_special) next
+
+          if (!is.null(names(atol))) {
+            atol_attr = atol[[attr]]
+          }
+          else {
+            atol_attr = atol
+          }
+
+          if (!is.null(names(rtol))) {
+              rtol_attr = rtol[[attr]]
+          }
+          else {
+            rtol_attr = rtol
+          }
+          # check numerical equality subject to tolerance
+          lhs = abs(self$records[,attr] - other$records[, attr])
+          rhs = atol_attr + rtol_attr * abs(other$records[, attr])
+
+          if (lhs > rhs) {
+            stop(paste0("Symbol records contain numeric differences in the ", 
+            attr, " attribute that are outside the specified tolerances 
+            rtol=", rtol_attr, ", atol=", atol_attr, "\n"))
+          }
+        }
+      }
+      else {
+        #merge both dataframes by column_names
+        merged = merge(self$records, other$records, 
+        by.x=self$domainLabels, by.y=other$domainLabels,
+        all=TRUE)
+        error_df = head(merged[as.logical(
+          rowSums(is.na(merged[(self$dimension+1):length(merged)]))),][1:self$dimension])
+
+        strmsg="symbol records do not match. Unmatched rows below\n"
+        strdf = paste0(capture.output(error_df), collapse="\n")
+        if (any(is.na(merged[,self$dimension:length(merged)]))) {
+          stop(paste0(strmsg, strdf, "\n"))
+        }
+
+        # now compare numerical records
+        for (attr in columns) {
+          attrs_x = paste0(attr, ".x")
+          attrs_y = paste0(attr, ".y")
+          small_merged = merged[1:self$dimension]
+          small_merged[, c(attrs_x, attrs_y)] = 
+          merged[c(attrs_x, attrs_y)]
+
+          # check for special values
+          count = 0
+          fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
+          for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
+            SpecialValues$isUndef, SpecialValues$isPosInf, 
+            SpecialValues$isNegInf)) {
+            count = count + 1
+            idx_self = f(small_merged[, attrs_x])
+            idx_other = f(small_merged[, attrs_y])
+            if (any(idx_self != idx_other)) {
+              stop(paste0("Symbols with ", fnames[count], " special values 
+              do not match in the ", attr, " column.\n"))
+            }
+
+            if (any(idx_self)) {
+              # drop special values
+              small_merged = small_merged[-which(idx_self),]
+            }
+            if (nrow(small_merged) == 0) break
+          }
+
+
+          if (nrow(small_merged) == 0) next
+
+          if (!is.null(names(atol))) {
+            if (!is.null(atol[[attr]])) {
+              atol_attr = atol[[attr]]
+            }
+            else {
+              stop(paste0("User passed a named vector for the argument `atol` but the attribute ", 
+              attr, " is missing\n"))
+            }
+          }
+          else {
+            atol_attr = atol
+          }
+
+          if (!is.null(names(rtol))) {
+            if (!is.null(rtol[[attr]])) {
+              rtol_attr = rtol[[attr]]
+            }
+            else {
+              stop(paste0("User passed a named vector for the argument `rtol` but the attribute ", 
+              attr, " is missing\n"))
+            }
+          }
+          else {
+            rtol_attr = rtol
+          }
+
+          # check numerical equality subject to tolerance
+          lhs = abs(small_merged[,paste0(attr, ".x")] - small_merged[, paste0(attr, ".y")])
+          rhs = atol_attr + rtol_attr * abs(small_merged[, paste0(attr, ".y")])
+
+          if (any(lhs > rhs)) {
+            stop(paste0("Symbol records contain numeric differences in the ", 
+            attr, " attribute that are outside the specified tolerances 
+            rtol=", rtol_attr, ", atol=", atol_attr, "\n"))
+          }
+        }
+
+      }
+    },
+
+
+    check = function() {
+      if (self$.requiresStateCheck == TRUE) {
+        # if regular domain, symbols in domain must be valid
+        if (self$domainType == "regular") {
+          for (i in self$domain) {
+            if (!self$refContainer$hasSymbols(i$name)) {
+              stop(paste0("symbol defined over domain symbol ",
+              i$name, " however, the object referenced is not in the", 
+              " Container anymore -- must reset domain for symbol ", 
+              self$name, "\n"))
+
+            }
+            if (!identical(i, self$refContainer[i$name])) {
+              stop(paste0("symbol defined over domain symbol ",
+              i$name, " however, the symbol with name ", i$name, 
+              " in the container is different. Seems to be a broken link.
+               -- must reset domain for symbol ",
+              self$name))
+            }
+          }
+
+          for (i in self$domain) {
+            if (i$isValid() != TRUE) {
+              stop(paste0("symbol defined over domain symbol ",
+              i$name, " however, this object is not a valid object ",
+              "in the Container -- all domain objects must be valid.\n"))
+            }
+          }
+        }
+        # if records exist, check consistency
+        if (!is.null(self$records)) {
+          if (inherits(self, "Set")){
+            if (length(self$records) != self$dimension + 1) {
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns (<symbol dimension> + 1)\n"))
+            }
+          }
+          if (inherits(self, "Parameter")) {
+            if (length(self$records) != self$dimension + 1) {
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns (<symbol dimension> + 1)\n"))
+
+              if (self$dimension == 0 && nrow(self$records != 1)) {
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns (<symbol dimension> + 1)\n"))
+              }
+            }
+          }
+
+          if (inherits(self, c("Variable", "Equation"))) {
+            if (length(self$records) != 
+            self$dimension + length(private$.attr())) {
+              stop(paste0("Symbol 'records' does not have", 
+              " the correct number of columns ", 
+              self$dimension + length(private$.attr()), "\n"))
+            }
+          }
+
+          # check if records are dataframe
+          if (!is.data.frame(self$records)){
+            stop("Symbol 'records' must be type dataframe\n")
+          }
+
+          # check column names and order
+          cols = self$domainLabels
+          if (inherits(self, "Set")) {
+            cols = append(cols, "element_text")
+          }
+          else if(inherits(self, "Parameter")) {
+            cols = append(cols, "value")
+          }
+          else if (inherits(self, c("Variable", "Equation"))) {
+            cols = append(cols, private$.attr())
+          }
+
+          if (!identical(cols, colnames(self$records))) {
+            stop(paste0("Records columns must be named 
+            and ordered as: ", toString(cols),"\n"))
+          }
+
+          if (!is.character(cols)) {
+            stop("Domain columns in symbol 
+            'records' must be of type character\n")
+          }
+
+          # check if all data columns are float
+          if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
+            for (i in (self$dimension + 1):length(self$records)) {
+              if (!(is.numeric(self$records[, i]) || 
+              all(SpecialValues$isNA(self$records[, i])))) {
+                stop("Data in column ", i, " must be numeric or NA\n")
+              }
+            }
+          }
+        }
+
+      }
+      self$.requiresStateCheck = FALSE
+    },
+
+    domain_forwarding = function(dom_forwarding) {
+    if (length(dom_forwarding) == 1) {
+      dim_enabled = replicate(self$dimension, TRUE)
+    }
+    else {
+      dim_enabled = dom_forwarding
+    }
+
+    dim_to_forward = seq_len(self$dimension)
+    dim_to_forward = dim_to_forward[dim_enabled]
+    # find symbols to grow
+    for (diter in dim_to_forward) {
+      d = self$domain[[diter]]
+      dl = self$domainLabels[diter]
+      to_grow = list()
+      while (inherits(d, "Set")) {
+        to_grow = append(to_grow, d$name)
+        d = d$domain[[1]]
+      }
+      # reverse the to_grow list because when the records are set, we check domain
+      # domain_forwarding for domain sets is FALSE until specified explicitly 
+      # so we should grow parent sets first and then children
+      to_grow = rev(to_grow)
+
+      for (i in to_grow) {
+        dim = (self$refContainer[i]$domainLabels)[1]
+        if (!is.null(self$refContainer[i]$records)) {
+          recs = self$refContainer[i]$records
+
+          if (self$refContainer[i]$dimension > 1) {
+            stop("attempting to forward a domain set that has dimension > 1\n")
+          }
+
+          df = self$records[dl]
+          colnames(df) = dim
+          df[["element_text"]] = ""
+          recs1 = factor(append(as.character(recs[, 1]), as.character(df[,dim])),
+          levels = unique(append(levels(recs[, 1]), levels(df[,dim]))))
+          recs2 = append(recs[, 2], df$element_text)
+          cnames =colnames(recs)
+          recs= data.frame(recs1, recs2)
+          colnames(recs) = cnames
+          # recs = rbind(recs, df)
+          recs = recs[!duplicated(recs[[dim]]),]
+          rownames(recs) <- NULL
+        }
+        else {
+          recs = self$records[dl]
+          colnames(recs) = dim
+          recs[["element_text"]] = ""
+          recs = recs[!duplicated(recs[[dim]]),]
+          rownames(recs) <- NULL
+        }
+        self$refContainer[i]$records = recs
+      }
+    }
+  },
+
+  .get_duplicate_index = function(keep) {
+    if (keep != FALSE && keep != "first" && keep != "last") {
+      stop("The argument `keep` must be one of the following:
+      `first`, `last`, or FALSE\n")
+    }
+
+    if (keep == "first") {
+      fl = FALSE
+      idx = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =fl) == TRUE)
+    }
+    else if (keep == "last") {
+      fl = TRUE
+      idx = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =fl) == TRUE)
+    }
+    else {
+      idx_first = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =FALSE) == TRUE)
+      idx_last = which(duplicated(data.frame(lapply(1:self$dimension, 
+      function(d) tolower(self$records[[d]]))), fromLast =TRUE) == TRUE)
+      idx = append(idx_last, idx_first)
+    }
+    return(idx)
+  }
+  )
+)

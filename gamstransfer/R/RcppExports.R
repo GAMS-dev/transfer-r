@@ -5,11 +5,35 @@ CPP_getSpecialValues <- function(gdxName, sysDir) {
     .Call(`_gamstransfer_CPP_getSpecialValues`, gdxName, sysDir)
 }
 
-CPP_gdxWriteSuper <- function(data, enable, sysDir, fileName, uel_priority, is_uel_priority, compress) {
-    invisible(.Call(`_gamstransfer_CPP_gdxWriteSuper`, data, enable, sysDir, fileName, uel_priority, is_uel_priority, compress))
-}
-
 CPP_readSuper <- function(symNames, gdxName, sysDir, records, symisnull) {
     .Call(`_gamstransfer_CPP_readSuper`, symNames, gdxName, sysDir, records, symisnull)
+}
+
+CPP_getGDXSymbolTypes <- function() {
+    .Call(`_gamstransfer_CPP_getGDXSymbolTypes`)
+}
+
+CPP_getGDXVarTypes <- function() {
+    .Call(`_gamstransfer_CPP_getGDXVarTypes`)
+}
+
+CPP_getGDXEqTypes <- function() {
+    .Call(`_gamstransfer_CPP_getGDXEqTypes`)
+}
+
+CPP_getGDXVarTypeSubtype <- function() {
+    .Call(`_gamstransfer_CPP_getGDXVarTypeSubtype`)
+}
+
+CPP_getGDXEqTypeSubtype <- function() {
+    .Call(`_gamstransfer_CPP_getGDXEqTypeSubtype`)
+}
+
+CPP_getGDXSetTypeSubtype <- function() {
+    .Call(`_gamstransfer_CPP_getGDXSetTypeSubtype`)
+}
+
+CPP_gdxWriteSuper <- function(data, enable, sysDir, fileName, uel_priority, is_uel_priority, compress) {
+    invisible(.Call(`_gamstransfer_CPP_gdxWriteSuper`, data, enable, sysDir, fileName, uel_priority, is_uel_priority, compress))
 }
 
