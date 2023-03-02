@@ -611,7 +611,7 @@ Container <- R6::R6Class (
         }
       }
 
-      isempty = (length(self$listSymbols) == 0)
+      isempty = (length(self$listSymbols()) == 0)
       if (!isempty) {
         if (is.null(symbols)) {
           symbols = unlist(self$data$keys())
@@ -662,7 +662,9 @@ Container <- R6::R6Class (
         }
       }
       else {
+        is_uel_priority = FALSE
         enable = NA
+        reorder = NA
       }
       CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
       writeTo, reorder, is_uel_priority, compress)

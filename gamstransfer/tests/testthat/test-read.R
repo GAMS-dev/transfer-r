@@ -3175,3 +3175,11 @@ a$generateRecords(density = 0.05)
 expect_equal(nrow(a$records), (50**4)/20)
 }
 )
+
+# write empty gdx
+test_that("test_num_111", {
+m = Container$new()
+expect_true(is.null(m$write("empty.gdx")))
+
+}
+)
