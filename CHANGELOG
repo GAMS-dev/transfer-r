@@ -1,3 +1,7 @@
+GAMS Transfer R
+==================
+- bug fix in writing empty container
+
 GAMS Transfer R v1.10.0
 ==================
 - performance improvement in read

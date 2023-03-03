@@ -579,24 +579,6 @@ Container <- R6::R6Class (
     #' using the uel_priority argument.
     write = function(writeTo, symbols=NULL, 
     compress = FALSE, uelPriority = NULL) {
-      if (is.null(symbols)) {
-        symbols = unlist(self$data$keys())
-        enable = replicate(length(symbols), TRUE)
-      }
-      else {
-        enable = replicate(length(self$listSymbols()), FALSE)
-
-        allSymbols = as.list(1:length(self$listSymbols()))
-        names(allSymbols) = self$listSymbols()
-
-        allSymDict = collections::dict(allSymbols)
-
-        symbols = self$getSymbolNames(symbols)
-        idx=unlist(lapply(symbols, function(s) {
-          allSymDict$get(s)
-        }), use.names = FALSE)
-        enable[idx] = TRUE
-      }
 
       if (!is.logical(compress)) {
         stop("'compress' must be of type logical; 
@@ -629,36 +611,63 @@ Container <- R6::R6Class (
         }
       }
 
-      if (!identical(self$listSymbols(), self$listSymbols(isValid=TRUE) )) {
-        stop(paste0("There are symbol(s) in Container that are not valid;",
-         "all symbols must be valid before writing",
-         " (i.e., <symbol object>$isValid() == TRUE)\n"))
-      }
+      isempty = (length(self$listSymbols()) == 0)
+      if (!isempty) {
+        if (is.null(symbols)) {
+          symbols = unlist(self$data$keys())
+          enable = replicate(length(symbols), TRUE)
+        }
+        else {
+          enable = replicate(length(self$listSymbols()), FALSE)
 
-      if (private$isValidSymbolOrder() == FALSE) {
-        self$reorderSymbols()
-      }
+          allSymbols = as.list(1:length(self$listSymbols()))
+          names(allSymbols) = self$listSymbols()
 
-      if (is.null(uelPriority)) {
-        CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
-        writeTo, NA, FALSE, compress)
-      }
-      else {
-        universe = self$getUniverseSet()
-        if ((is.null(universe)) ||
-        (!setequal(intersect(uelPriority, universe), uelPriority))) {
-          stop("uelPriority must be a subset of the universe, check 
-          spelling of an element in uelPriority? Also check 
-          getUniverseSet() method for the assumed Universe Set.\n")
+          allSymDict = collections::dict(allSymbols)
+
+          symbols = self$getSymbolNames(symbols)
+          idx=unlist(lapply(symbols, function(s) {
+            allSymDict$get(s)
+          }), use.names = FALSE)
+          enable[idx] = TRUE
         }
 
-        reorder = uelPriority
-        reorder = append(reorder, universe)
-        reorder = unique(reorder)
+        if (!identical(self$listSymbols(), self$listSymbols(isValid=TRUE) )) {
+          stop(paste0("There are symbol(s) in Container that are not valid;",
+          "all symbols must be valid before writing",
+          " (i.e., <symbol object>$isValid() == TRUE)\n"))
+        }
 
-        CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
-        writeTo, unlist(reorder), TRUE, compress)
+        if (private$isValidSymbolOrder() == FALSE) {
+          self$reorderSymbols()
+        }
+
+        if (is.null(uelPriority)) {
+          reorder = NA
+          is_uel_priority = FALSE
+        }
+        else {
+          universe = self$getUniverseSet()
+          if ((is.null(universe)) ||
+          (!setequal(intersect(uelPriority, universe), uelPriority))) {
+            stop("uelPriority must be a subset of the universe, check 
+            spelling of an element in uelPriority? Also check 
+            getUniverseSet() method for the assumed Universe Set.\n")
+          }
+
+          reorder = uelPriority
+          reorder = append(reorder, universe)
+          reorder = unlist(unique(reorder))
+          is_uel_priority = TRUE
+        }
       }
+      else {
+        is_uel_priority = FALSE
+        enable = NA
+        reorder = NA
+      }
+      CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
+      writeTo, reorder, is_uel_priority, compress)
     },
 
     #' @description reorder symbols in order to avoid domain violations
