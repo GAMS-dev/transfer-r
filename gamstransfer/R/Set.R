@@ -129,6 +129,13 @@ Set <- R6Class(
       }
 
       private$.records = recs
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+      newsym = private$.copy(destination, overwrite)
+      if (is.null(newsym)) return(invisible(NULL))
+
+      newsym$isSingleton = self$isSingleton
     }
   ),
 

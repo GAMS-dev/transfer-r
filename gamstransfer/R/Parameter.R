@@ -267,7 +267,7 @@ Parameter <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
-    }
+    },
   ),
 
   active = list(
