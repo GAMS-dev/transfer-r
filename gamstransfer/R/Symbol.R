@@ -654,6 +654,11 @@
         return(factor(private$.records[, n], 
         levels = levels(i$records[, 1]), ordered = TRUE))
       })
+  },
+
+  copy = function(destination = NULL, overwrite = FALSE) {
+    private$.copy(destination, overwrite)
+    return(invisible(NULL))
   }
   ),
 
@@ -1473,6 +1478,57 @@
       idx = append(idx_last, idx_first)
     }
     return(idx)
+  },
+
+  .copy = function(destination = NULL, overwrite = FALSE) {
+    if (!inherits(destination, "Container")) {
+      stop("The argument `destination` must be of type `Container`\n")
+    }
+
+    if (!(is.logical(overwrite) && (length(overwrite) == 1))) {
+      stop("The argument `overwrite` must be of type `logical`\n")
+    }
+
+    if (is.null(destination[self$name])){
+      # symbol doesn't exist in the destination container
+      destination$read(self$refContainer, self$name)
+      return(NULL)
+    }
+    else {
+      # symbol exists in the destination container
+      if (!overwrite) {
+        stop(paste0("Symbol ", self$name, " already exists in `destination`\n"))
+      }
+      newsym = destination[self$name]
+
+      if (class(newsym)[1] != class(self)[1]) {
+        stop(paste0("Cannot copy a symbol of type ", class(self)[1], 
+        " to `destination` symbol type ", class(newsym)[1], 
+        ". To overwrite, the symbols must be of same type"))
+      }
+
+      # copy all fields of one symbol to another
+      newsym$records = self$records
+      newsym$description = self$description
+      newsym$domain = self$domain
+      newsym$domainForwarding = self$domainForwarding
+      if (self$dimension == 0) return(NULL)
+
+      for (d in 1:self$dimension) {
+        if (!inherits(self$domain[[d]], c("Set", "Alias"))) {
+          next
+        }
+
+        if ( !is.null(destination[self$domain[[d]]$name]) &&
+          self$domain[[d]]$equals(destination[self$domain[[d]]])) {
+            newsym$domain[[i]] = destination[self$domain[[d]]$name]
+        }
+        else {
+          newsym$domain[[i]] = self$domain[[i]]$name
+        }
+      }
+      return(newsym)
+    }
   }
   )
 )

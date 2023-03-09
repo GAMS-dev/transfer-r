@@ -138,6 +138,13 @@ UniverseAlias <- R6Class(
           return(FALSE)
         }
       )
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+
+      # copy alias
+      private$.copy(destination, overwrite)
+      return(invisible(NULL))
     }
   ),
 

@@ -400,9 +400,14 @@ Variable <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+      newsym = private$.copy(destination, overwrite)
+      if (is.null(newsym)) return(invisible(NULL))
+
+      newsym$type = self$type
     }
-
-
   ),
 
   active = list(

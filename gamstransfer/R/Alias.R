@@ -235,6 +235,17 @@ Alias <- R6Class(
       private$.testParentSet()
 
       self$aliasWith$generateRecords(density)
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+      super$.testRefContainer()
+      private$.testParentSet()
+
+      # copy parent sets
+      self$aliasWith$copy(destination, overwrite)
+
+      # copy alias
+      private$.copy(destination, overwrite)
     }
   ),
 
