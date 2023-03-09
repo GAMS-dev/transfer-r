@@ -1512,13 +1512,15 @@
       newsym$description = self$description
       newsym$domain = self$domain
       newsym$domainForwarding = self$domainForwarding
+      if (self$dimension == 0) return(NULL)
+
       for (d in 1:self$dimension) {
-        if (inherits(self$domain[[d]], c("Set", "Alias"))) {
+        if (!inherits(self$domain[[d]], c("Set", "Alias"))) {
           next
         }
 
-        if ( !is.null(destination[domain[[d]]$name]) &&
-          self$domain[[d]]$equals(destination[self$domain[[d]]$name])) {
+        if ( !is.null(destination[self$domain[[d]]$name]) &&
+          self$domain[[d]]$equals(destination[self$domain[[d]]])) {
             newsym$domain[[i]] = destination[self$domain[[d]]$name]
         }
         else {

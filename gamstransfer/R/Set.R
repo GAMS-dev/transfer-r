@@ -136,6 +136,7 @@ Set <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$isSingleton = self$isSingleton
+      return(invisible(NULL))
     }
   ),
 

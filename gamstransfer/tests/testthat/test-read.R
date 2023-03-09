@@ -3183,3 +3183,88 @@ expect_true(is.null(m$write("empty.gdx")))
 
 }
 )
+
+# test copy
+test_that("test_num_112", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:50))
+p = Parameter$new(m, "p")
+v = Variable$new(m, "v")
+e = Equation$new(m, "e", type="eq")
+
+m2 = Container$new()
+i$copy(m2)
+p$copy(m2)
+v$copy(m2)
+e$copy(m2)
+
+m3 = Container$new()
+i = Set$new(m3, "i")
+p = Parameter$new(m3, "p")
+v = Variable$new(m3, "v")
+e = Equation$new(m3, "e", type="eq")
+
+expect_error(i$copy(m2))
+expect_true(is.null(i$copy(m2, overwrite=TRUE )))
+expect_error(p$copy(m2))
+expect_true(is.null(p$copy(m2, overwrite=TRUE )))
+expect_error(v$copy(m2))
+expect_true(is.null(v$copy(m2, overwrite=TRUE )))
+expect_error(e$copy(m2))
+expect_true(is.null(e$copy(m2, overwrite=TRUE )))
+
+m = Container$new()
+i = Set$new(m, "i")
+m2 = Container$new()
+i1 = Parameter$new(m2, "i")
+p = Parameter$new(m2, "p")
+expect_error(i$copy(m2))
+expect_error(i$copy(i))
+expect_error(p$copy(m, overwrite="true"))
+
+m = Container$new()
+i = Set$new(m, "i")
+p = Parameter$new(m, "p", domain=i)
+
+m2 = Container$new()
+p$copy(m2)
+
+expect_equal(m2["p"]$domain[[1]], "i")
+expect_equal(m2["p"]$domainType, "relaxed")
+
+i2 = Set$new(m2, "i", domain=c("*","*"))
+i2$copy(m, overwrite=TRUE)
+
+expect_equal(p$domain[[1]]$dimension, 2)
+
+# todo
+#expect_equal(p$isValid(), FALSE)
+
+m = Container$new()
+i = Set$new(m, "i", records=c("i1","i2"))
+m2 = Container$new()
+i2 = Set$new(m2, "i", records=c("newi_1", "newi_2"))
+i2$copy(m, overwrite=TRUE)
+expect_equal(as.character(i$records[[1]]), c("newi_1", "newi_2"))
+
+
+}
+)
+
+# test copy for alias and universe alias
+test_that("test_num_113", {
+  m = Container$new()
+  i = Set$new(m, "i")
+  ii = Alias$new(m, "ii", i)
+
+  m2 = Container$new()
+  # ii$copy(m2)
+  # expect_equal(m2$listSymbols(), c("i","ii"))
+
+  u = UniverseAlias$new(m, "u")
+  u$copy(m2)
+
+  # expect_equal(m2$listSymbols(), c("i","ii","u"))
+  expect_equal(m2$listSymbols(), c("u"))
+}
+)
