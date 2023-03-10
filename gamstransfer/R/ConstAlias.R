@@ -46,11 +46,21 @@
     },
 
     getCardinality = function() {
-      return(self$refContainer[self$aliasWith]$getCardinality())
+      if (private$.is_parent_set()) {
+        return(self$refContainer[self$aliasWith]$getCardinality())
+      }
+      else {
+        return(NA)
+      }
     },
 
     getSparsity = function() {
-      return(self$refContainer[self$aliasWith]$getSparsity())
+      if (private$.is_parent_set()) {
+        return(self$refContainer[self$aliasWith]$getSparsity())
+      }
+      else {
+        return(NA)
+      }
     },
 
     setRecords = function(records) {
@@ -64,9 +74,16 @@
 
   active = list(
     summary = function() {
+    if (private$.is_parent_set()) {
+      alias_with_name = self$aliasWith$name
+    }
+    else {
+      alias_with_name = self$aliasWith
+    }
+
     return(list(
       "name" = self$name,
-      "aliasWith_name" = self$aliasWith,
+      "aliasWith_name" = alias_with_name,
       "isSingleton" = self$isSingleton,
       "domainNames" = self$domainNames,
       "dimension" = self$dimension,
@@ -75,5 +92,12 @@
       "domainType" = self$domainType
     ))
     }
+  ),
+
+  private = list(
+    .is_parent_set = function() {
+      return(inherits(self$aliasWith, ".ConstSet"))
+    }
   )
+
 )
