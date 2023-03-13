@@ -924,6 +924,19 @@ Container <- R6::R6Class (
       }
       # if didn't return false until here then its true
       return(TRUE)
+    },
+
+    copy = function(destination, symbols=NULL, overwrite=FALSE) {
+      if (is.null(symbols)) {
+        symbols = self$data$values()
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+
+      for (s in symbols) {
+        s$copy(destination, overwrite)
+      }
     }
 
   ),
