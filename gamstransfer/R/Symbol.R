@@ -1521,10 +1521,10 @@
 
         if ( !is.null(destination[self$domain[[d]]$name]) &&
           self$domain[[d]]$equals(destination[self$domain[[d]]])) {
-            newsym$domain[[i]] = destination[self$domain[[d]]$name]
+            newsym$domain[[d]] = destination[self$domain[[d]]$name]
         }
         else {
-          newsym$domain[[i]] = self$domain[[i]]$name
+          newsym$domain[[d]] = self$domain[[d]]$name
         }
       }
       return(newsym)
