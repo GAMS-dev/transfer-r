@@ -2,6 +2,7 @@ GAMS Transfer R
 ==================
 - bug fix in writing empty container
 - added `Symbol` method `copy` to copy symbol from one `Container` to another
+- added `Container` method `copy` to copy symbols from to another
 - bug fix in using ConstContainer Alias methods when the aliased parent set is absent
 
 GAMS Transfer R v1.10.0
