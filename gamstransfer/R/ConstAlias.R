@@ -69,6 +69,17 @@
       columnNames = append(columnNames, "element_text")
       colnames(records) = columnNames
       super$.set_records(records)
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+
+      if (private$.is_parent_set()) {
+        # copy parent sets
+        self$aliasWith$copy(destination, overwrite)
+      }
+
+      # copy alias
+      private$.copy(destination, overwrite)
     }
   ),
 

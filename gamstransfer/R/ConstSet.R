@@ -61,6 +61,14 @@
       columnNames = append(columnNames, "element_text")
       colnames(records) = columnNames
       super$.set_records(records)
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+      newsym = private$.copy(destination, overwrite)
+      if (is.null(newsym)) return(invisible(NULL))
+
+      newsym$isSingleton = self$isSingleton
+      return(invisible(NULL))
     }
   ),
 

@@ -64,6 +64,13 @@
       columnNames = "*"
       colnames(records) = columnNames
       super$.set_records(records)
+    },
+
+    copy = function(destination = NULL, overwrite = FALSE) {
+
+      # copy alias
+      private$.copy(destination, overwrite)
+      return(invisible(NULL))
     }
   ),
 

@@ -264,6 +264,22 @@ ConstContainer <- R6::R6Class (
 
       # if didn't return false until here then its true
       return(TRUE)
+    },
+
+    copy = function(destination, symbols=NULL, overwrite=FALSE) {
+      if (is.null(symbols)) {
+        symbols = unlist(self$data$keys(), use.names = FALSE)
+      }
+
+      has_symbols = self$hasSymbols(symbols)
+      if (any(has_symbols == FALSE)) {
+        sym_not_present = symbols[!has_symbols]
+        stop(paste0("Symbol ", sym_not_present[1], 
+        " not present in the Container\n"))
+      }
+      for (s in symbols) {
+        self[s]$copy(destination, overwrite)
+      }
     }
 
   )
