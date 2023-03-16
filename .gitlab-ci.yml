@@ -108,6 +108,23 @@ install-gamsdist-deg:
     expire_in: 1 hour
     paths: [gamsdist/*]
 
+install-gamsdist-arm64:
+  stage: install-gams
+  only:
+    - merge_requests
+    - main
+    - tags
+  when: on_success
+  tags: [macos-arm64]
+  dependencies: [fetch-ci-scripts]
+  script:
+    - python3 ci/fetch_gams.py fetch_deg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
+    - GAMS_LICENSE=$GAMS_LICENSE python3 ci/fetch_gams.py install
+  artifacts:
+    name: gamsdist-arm64
+    expire_in: 1 hour
+    paths: [gamsdist/*]
+
 install-gamsdist-wei:
   stage: install-gams
   when: on_success
@@ -222,6 +239,23 @@ build_r_macos:
         paths: [gamstransfer_r_macos.tgz]
         expire_in: 1 day
 
+build_r_macos-arm64:
+    stage: build
+    tags:
+        - macos-arm64
+    script:
+        - mkdir -p $CI_PROJECT_DIR/myinstalldir
+        - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
+        - mv gamstransfer_*.tgz gamstransfer_r_macos_arm64.tgz
+    only:
+        - merge_requests
+        - main
+        - tags
+    artifacts:
+        name: gams_transfer_r_macos_arm64
+        paths: [gamstransfer_r_macos_arm64.tgz]
+        expire_in: 1 day
+
 build_r_windows:
     stage: build
     tags: [windows]
@@ -273,6 +307,20 @@ test_r_macos:
         - main
         - tags
 
+test_r_macos_arm64:
+    stage: test
+    tags:
+        - macos-arm64
+    script:
+        - PATH=$PWD/gamsdist:$PATH
+        - DYLD_LIBRARY_PATH=$PWD/gamsdist:$DYLD_LIBRARY_PATH
+        - echo $PATH
+        - R CMD check ./gamstransfer --no-manual
+    needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
+    only:
+        - merge_requests
+        - main
+        - tags
 
 test_r_windows:
     stage: test
