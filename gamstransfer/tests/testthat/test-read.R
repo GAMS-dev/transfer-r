@@ -3268,3 +3268,58 @@ test_that("test_num_113", {
   expect_equal(m2$listSymbols(), c("u"))
 }
 )
+
+# test copy container method
+test_that("test_num_113", {
+  m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
+
+  m2 = Container$new()
+  m$copy(m2)
+
+  expect_equal(m2$listSymbols(), m$listSymbols())
+
+
+  m2 = Container$new()
+  m$copy(m2, symbols=c("f","d"))
+
+  expect_equal(m2$listSymbols(), c("f","d"))
+
+  expect_error(m$copy(m2, "d"))
+  m$copy(m2, "d", overwrite=TRUE)
+  expect_equal(m2$listSymbols(), c("f","d"))
+}
+)
+
+# test copy ConstContainer method
+test_that("test_num_114", {
+  m = ConstContainer$new(testthat::test_path("testdata", "trnsport.gdx"))
+
+  m2 = Container$new()
+  m$copy(m2)
+
+  expect_equal(m2$listSymbols(), m$listSymbols())
+
+
+  m2 = Container$new()
+  m$copy(m2, symbols=c("f","d"))
+
+  expect_equal(m2$listSymbols(), c("f","d"))
+
+  expect_error(m$copy(m2, "d"))
+  m$copy(m2, "d", overwrite=TRUE)
+  expect_equal(m2$listSymbols(), c("f","d"))
+}
+)
+
+# test copy for constalias and constuniverse alias
+test_that("test_num_115", {
+  m = ConstContainer$new(testthat::test_path("testdata", "test95.gdx"))
+
+  m2 = Container$new()
+
+  m["h"]$copy(m2)
+
+  # expect_equal(m2$listSymbols(), c("i","ii","u"))
+  expect_equal(m2$listSymbols(), c("h"))
+}
+)
