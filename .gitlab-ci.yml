@@ -118,7 +118,7 @@ install-gamsdist-arm64:
   tags: [macos-arm64]
   dependencies: [fetch-ci-scripts]
   script:
-    - python3 ci/fetch_gams.py fetch_dac $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
+    - python3 ci/fetch_gams.py fetch_dac "master" $SSH_KEY_PORTING
     - GAMS_LICENSE=$GAMS_LICENSE python3 ci/fetch_gams.py install
   artifacts:
     name: gamsdist-arm64
