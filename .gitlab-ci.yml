@@ -239,7 +239,7 @@ build_r_macos:
         paths: [gamstransfer_r_macos.tgz]
         expire_in: 1 day
 
-build_r_macos-arm64:
+build_r_macos_arm64:
     stage: build
     tags:
         - macos-arm64
