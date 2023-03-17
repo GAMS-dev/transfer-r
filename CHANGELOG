@@ -1,5 +1,6 @@
-GAMS Transfer R
+GAMS Transfer R v1.12.0
 ==================
+- released for MacOS ARM64
 - bug fix in writing empty container
 - added `Symbol` method `copy` to copy symbol from one `Container` or `ConstContainer` to another `Container`
 - added `Container` and `ConstContainer` method `copy` to copy symbols from to another
