@@ -360,6 +360,8 @@ package:
 
         - |
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos.tgz ${PACKAGE_REGISTRY_URL}
+        - |
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos_arm64.tgz ${PACKAGE_REGISTRY_URL}
     only:
         - tags
 
@@ -380,6 +382,7 @@ release_job:
                 --assets-link "{\"name\":\"gamstransfer_r.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r.tar.gz\"}" \
                 --assets-link "{\"name\":\"gamstransfer_r_linux.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_linux.tar.gz\"}" \
                 --assets-link "{\"name\":\"gamstransfer_r_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_windows.zip\"}" \
-                --assets-link "{\"name\":\"gamstransfer_r_macos.tgz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_macos.tgz\"}"
+                --assets-link "{\"name\":\"gamstransfer_r_macos.tgz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_macos.tgz\"}" \
+                --assets-link "{\"name\":\"gamstransfer_r_macos_arm64.tgz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_macos_arm64.tgz\"}"
     only:
         - tags
