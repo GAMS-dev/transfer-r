@@ -27,7 +27,7 @@
 using namespace Rcpp;
 
 void WriteData(gdxHandle_t PGX, StringVector s,
-std::vector<double> V, int VarType, int Dim,
+NumericVector V, int VarType, int Dim,
 std::string elemText, std::string sym_name) {
 
   gdxStrIndexPtrs_t Indx;
@@ -97,7 +97,6 @@ std::string elemText, std::string sym_name) {
 void CPP_gdxWriteSuper(List data, LogicalVector enable, CharacterVector sysDir, 
 CharacterVector fileName, CharacterVector uel_priority, 
 bool is_uel_priority, bool compress) {
-
   std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
@@ -107,7 +106,6 @@ bool is_uel_priority, bool compress) {
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
-
 
   rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
   if (!rc) stop("CPP_gdxWriteSuper:gdxCreateD GDX init failed: %s", Msg);
@@ -149,18 +147,14 @@ bool is_uel_priority, bool compress) {
     if (!gdxUELRegisterDone(PGX))
       stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
   }
-
   DataFrame df;
   List domain;
   int Dim, sym_nr;
-  std::vector<double> values;
-  std::string elemText;
   StringVector colString, colElemText;
   NumericVector colDouble;
 
   sym_nr = 0;
   for (int d=0; d < data.length(); d++) {
-
     if (!enable[d]) continue;
     sym_nr++;
     Environment symname = data[d];
@@ -191,12 +185,10 @@ bool is_uel_priority, bool compress) {
     Dim = symname["dimension"];
     StringVector names(Dim);
     df = symname["records"];
-
     domain = symname["domain"];
     List domainstr;
     if (Dim != 0) {
       domainstr = symname["domainNames"];
-      std::string blah = domainstr[0];
     }
     std::string expltxt = symname["description"];
     if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
@@ -228,38 +220,45 @@ bool is_uel_priority, bool compress) {
     }
     int nrows = df.nrows();
     int ncols = df.size();
+    if (nrows == 0) {
+      if (!gdxDataWriteDone(PGX)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+    }
+    else {
+      StringMatrix rec_domain(nrows, Dim);
 
-    for (int i =0; i < nrows; i++) {
-      for (int j=0; j < ncols; j++) {
-        if (j < Dim) {
-          colString = df[j];
-          names[j] = colString[i];
-        }
-        else {
-          if (varType != GMS_DT_SET){
-            colDouble = df[j];
-            values.push_back(colDouble[i]);
-          }
-          else {
-            colElemText = df[j];
-            values.push_back(0);
-            elemText = colElemText[i];
-          }
-        }
+      StringVector tempcol(Dim);
+      for (int d = 0; d < Dim; d++) {
+        tempcol = df[d];
+        rec_domain(_, d) = tempcol;
       }
 
+      StringVector elem_text(nrows);
+      NumericMatrix rec_vals(nrows, ncols-Dim);
 
-      if (varType != GMS_DT_SET){
-        WriteData(PGX, names, values, varType, Dim, elemText, mysym);
+      if (varType == GMS_DT_SET) {
+        elem_text = df[Dim];
       }
       else {
-        WriteData(PGX, names, values, varType, Dim, elemText, mysym);
+        NumericVector temp_num_col(Dim);
+        for (int d = Dim; d < ncols; d++) {
+          temp_num_col = df[d];
+          rec_vals(_, d-Dim) = temp_num_col;
+        }
       }
-      elemText.clear();
-      values.clear();
-    }
+      for (int i =0; i < nrows; i++) {
+        if (varType != GMS_DT_SET){
+          names = rec_domain(i, _);
+          WriteData(PGX, names, rec_vals(i, _), varType, Dim, "", mysym);
+        }
+        else {
+          names = rec_domain(i, _);
+          NumericVector zero_vec = {0};
+          WriteData(PGX, names, zero_vec, varType, Dim, Rcpp::as<std::string>(elem_text[i]), mysym);
+        }
+      }
+      if (!gdxDataWriteDone(PGX)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
 
-    if (!gdxDataWriteDone(PGX)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+    }
 
   // get the error count
    if (gdxDataErrorCount(PGX)) {
