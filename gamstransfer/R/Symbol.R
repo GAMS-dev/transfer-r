@@ -605,7 +605,7 @@
 
 
           idx = lapply(1:self$dimension, function(d) {
-            return(as.numeric(factor(self$records[,d], levels = levels(self$domain[[d]]$records[, 1]))) )
+            return(as.numeric(factor(self$records[,d], levels = self$domain[[d]]$records[, 1])) )
           })
 
         }

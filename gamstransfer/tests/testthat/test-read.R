@@ -1399,7 +1399,7 @@ a = Parameter$new(m, "a", c(hrs, mins, secs))
 # set records directly
 a$records = df
 
-# expect_true(!a$isValid())
+expect_true(a$isValid())
 }
 )
 
@@ -1453,7 +1453,7 @@ df$s_3 = factor(df$s_3, levels=levels(secs$records$uni_1), ordered = TRUE)
 # set records directly
 a$records = df
 
-# expect_true(!a$isValid())
+expect_true(a$isValid())
 }
 )
 
@@ -1849,7 +1849,7 @@ m  = Container$new()
 i = Set$new(m, "i", records=c("a", "b", "c"))
 a = Parameter$new(m, "a", i, records=data.frame(c("aa", "c"), c(1, 2)))
 
-# expect_equal(a$isValid(), FALSE)
+expect_equal(a$isValid(), TRUE)
 # expect_equal(m$listSymbols(isValid=TRUE), "i")
 # expect_equal(m$listSymbols(isValid=FALSE), "a")
 }
@@ -3321,5 +3321,20 @@ test_that("test_num_115", {
 
   # expect_equal(m2$listSymbols(), c("i","ii","u"))
   expect_equal(m2$listSymbols(), c("h"))
+}
+)
+
+
+# test reading symbols with unused uels from gdx
+test_that("test_num_115", {
+  m = Container$new()
+  i = Set$new(m, "i", records=paste0("i", 1:5))
+  isub = Set$new(m, "isub", domain=i, records=c("i1","i2"))
+  isub$setUELs(paste0("i",1:5))
+  m$write("gt.gdx")
+
+  m2 = Container$new(testthat::test_path("gt.gdx"))
+
+  expect_equal(m["isub"]$getUELs(), paste0("i",1:5))
 }
 )
