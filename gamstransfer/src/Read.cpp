@@ -136,6 +136,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     std::fill_n(dom_uel_used[D], dom_nrecs, 0); // initialize all to false
 
     // if domain is not read before store a sym uel map
+    // sym uel map gives the place of a given uel in given domain sym id.
     if (dom_symid[D] > 0 || sym_uel_map.count(dom_symid[D]) == 0) {
       for (int k=0; k < dom_nrecs; k++) {
         if (!gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &N))
@@ -168,7 +169,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     }
   }
   else {
-
+    // indx_matrix stores positions of UELs in the domain set
     NumericMatrix indx_matrix(NrRecs, Dim);
     int n_attr;
     if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
@@ -210,6 +211,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
         }
       }
         //store domain labels
+        //dom_uel_used is true if idx positioned UEL for domain D, 
+        // is used in the symbol
         for (int D = 0; D < Dim; D++) {
           idx = GET_DOM_MAP(D, gdx_uel_index[D]);
           dom_uel_used[D][idx] = true; // set used to true
@@ -224,15 +227,10 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     for (int D = 0; D < Dim; D++) {
       if (dom_symid[D] < 0) continue;
 
-      // get number of uels used
+      // change dom_uel_used from true/false to position in the symbol records
       int num_used = 0;
       for (int k = 0; k < all_dom_nrecs[D]; k++) {
-        if (dom_uel_used[D][k] > 0) {
           dom_uel_used[D][k] = num_used++;
-        }
-        else {
-          dom_uel_used[D][k] = -1;
-        }
       }
 
       for (int k = 1; k <= uel_count; k++) {
@@ -253,7 +251,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 
       // create a factor v
       IntegerVector v = wrap(indx_matrix(_, D));
-
+      // Rcout << "integer vector : " << v << "\n";
       CharacterVector ch = wrap(used_uels);
       v.attr("class") = "factor";
       v.attr("levels") = ch;
