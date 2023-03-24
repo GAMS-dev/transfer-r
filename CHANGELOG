@@ -2,6 +2,7 @@ GAMS Transfer R
 ==================
 - Significant performance improvements to Container write method
 - bug fix in Container read when reading a `Symbol` with unused UELs
+- bug fix in `todense` method for `Symbol`
 
 GAMS Transfer R v1.12.0
 ==================
