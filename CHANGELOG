@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.14.0
 ==================
 - Significant performance improvements to Container write method
 - bug fix in Container read when reading a `Symbol` with unused UELs
