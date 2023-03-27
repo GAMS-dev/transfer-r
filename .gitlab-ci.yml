@@ -186,6 +186,7 @@ build_r_linux_binary:
     stage: build
     tags:
         - linux
+    needs: [install-gamsdist-leg]
     image: 
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
@@ -206,6 +207,7 @@ build_r_source:
     stage: build
     tags:
         - linux
+    needs: [install-gamsdist-leg]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
@@ -226,6 +228,7 @@ build_r_macos:
     stage: build
     tags:
         - macos
+    needs: [install-gamsdist-deg]
     script:
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
@@ -243,6 +246,7 @@ build_r_macos_arm64:
     stage: build
     tags:
         - macos-arm64
+    needs: [install-gamsdist-arm64]
     script:
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
@@ -259,6 +263,7 @@ build_r_macos_arm64:
 build_r_windows:
     stage: build
     tags: [windows]
+    needs: [install-gamsdist-wei]
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
