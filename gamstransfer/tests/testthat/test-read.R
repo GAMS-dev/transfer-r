@@ -3238,7 +3238,7 @@ i2$copy(m, overwrite=TRUE)
 expect_equal(p$domain[[1]]$dimension, 2)
 
 # todo
-#expect_equal(p$isValid(), FALSE)
+expect_equal(p$isValid(force=TRUE), FALSE)
 
 m = Container$new()
 i = Set$new(m, "i", records=c("i1","i2"))

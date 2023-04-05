@@ -1326,13 +1326,22 @@
                -- must reset domain for symbol ",
               self$name))
             }
-          }
 
-          for (i in self$domain) {
             if (i$isValid() != TRUE) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, this object is not a valid object ",
               "in the Container -- all domain objects must be valid.\n"))
+            }
+
+            if (i$dimension != 1) {
+              stop(paste0("Dimensionality of all domain symbols must be 1. ",
+              "The domain symbol ", i$name, " has dimension = ", 
+              i$dimension, ".\n"))
+            }
+
+            if (i$isSingleton) {
+              stop(paste0("Singleton sets cannot be used as domain sets. ",
+              "The domain symbol ", i$name, " is a singleton set.\n"))
             }
           }
         }
