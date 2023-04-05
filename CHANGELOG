@@ -1,3 +1,9 @@
+GAMS Transfer R
+==================
+- added checks for singleton and multidimensional checksin `Symbol` method `isValid()`
+- changed the default domain labels. User-specified domain labels are preserved if unique
+- performance improvement in `Container` method `read`
+
 GAMS Transfer R v1.14.0
 ==================
 - Significant performance improvements to Container write method
