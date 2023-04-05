@@ -65,6 +65,12 @@ Set <- R6Class(
     #' main convenience method to set standard dataframe formatted records
     #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
+      # check if named list
+      no_label = FALSE # assume column labels exist
+      if (is.null(names(records))) {
+        no_label = TRUE
+      }
+
       # check if records is a dataframe and make if not
       records = data.frame(records)
       c = length(records)
@@ -80,14 +86,15 @@ Set <- R6Class(
         stop(paste0("The argument 'records' is of length ",
         c, " Expecting ", self$dimension + 1, "\n"))
       }
-      columnNames = self$domainLabels
-      columnNames = append(columnNames, "element_text")
 
-      if (self$dimension == 0) {
-        colnames(records) = columnNames
-        self$records = records
-        return()
+      if (no_label) {
+        columnNames = super$.get_default_domain_labels()
       }
+      else {
+        columnNames = colnames(records)[1:self$dimension]
+      }
+
+      columnNames = append(columnNames, "element_text")
 
       records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
         if (is.factor(records[, d])) {

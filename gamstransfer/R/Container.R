@@ -1060,7 +1060,29 @@ Container <- R6::R6Class (
             c(".BaseAlias"))) {
               next
             }
-            self[s$name]$setRecords(data.frame(s$records))
+
+            recs = data.frame(s$records)
+            common_attr = colnames(recs)[(self[s$name]$dimension+1):length(recs)]
+
+            if (self[s$name]$dimension == 0) {
+              dlabels = c()
+            }
+            else {
+              dnames = self[s$name]$domainNames
+              dnames[dnames == "*"] = "uni"
+              is_dup = duplicated(dnames)
+
+              if (any(is_dup)) {
+                dlabels = paste0(dnames, 1:self[s$name]$dimension)
+              }
+              else {
+                dlabels = dnames
+              }
+            }
+
+            columnNames = append(dlabels, common_attr)
+            colnames(recs) = columnNames
+            self[s$name]$setRecords(recs)
 
             # map acronyms to NA
             if (!is.null(self$acronyms)) {

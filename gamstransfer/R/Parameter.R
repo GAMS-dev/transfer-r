@@ -143,7 +143,9 @@ Parameter <- R6Class(
           listOfDomains[[i]] = d$records[,1]
         }
         df = rev(expand.grid(rev(listOfDomains), stringsAsFactors = FALSE)) # ij is a dataframe
-        colnames(df) = self$domainLabels
+        columnNames = super$.get_default_domain_labels()
+
+        colnames(df) = columnNames
         attr(df, "out.attrs") <- NULL
 
         df["value"] = values
@@ -164,6 +166,11 @@ Parameter <- R6Class(
         }
       }
       else {
+
+        no_label = FALSE # assume column labels exist
+        if (is.null(names(records))) {
+          no_label = TRUE
+        }
         # check if records is a dataframe and make if not
         records = data.frame(records)
 
@@ -177,7 +184,17 @@ Parameter <- R6Class(
           self$dimension))
         }
 
-        columnNames = self$domainLabels
+        if (no_label) {
+          columnNames = super$.get_default_domain_labels()
+        }
+        else {
+          if (self$dimension == 0) {
+            columnNames = c()
+          }
+          else {
+            columnNames = colnames(records)[1:self$dimension]
+          }
+        }
         columnNames = append(columnNames, "value")
 
         #if records "value" is not numeric, stop.

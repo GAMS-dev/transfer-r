@@ -153,14 +153,15 @@
     },
 
     .get_domain_labels = function() {
-      dom_is_univ = (self$domain == "*")
-      dom_temp = self$domain
-      dom_temp[dom_is_univ] = "uni"
-      column_names = lapply(seq_along(dom_temp), function(i) {
-        return(paste0(dom_temp[[i]], "_", i))
-      })
+      if (self$dimension == 0) return(c())
+      domain_label_input = self$domainNames
+      domain_label_input[domain_label_input == "*"] = "uni"
+      dup_labels = duplicated(domain_label_input)
+      if (any(dup_labels)) {
+        domain_label_input = paste0(domain_label_input, 1:self$dimension)
+      }
 
-      return(column_names)
+      return(domain_label_input)
     },
 
     .copy = function(destination = NULL, overwrite = FALSE) {

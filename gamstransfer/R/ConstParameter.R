@@ -45,8 +45,12 @@
     },
 
     setRecords = function(records) {
+
       records = data.frame(records)
-      columnNames = self$domainLabels
+      columnNames = c()
+      if (self$dimension != 0) {
+        columnNames = self$domainLabels
+      }
       columnNames = append(columnNames, "value")
       colnames(records) = columnNames
       super$.set_records(records)
