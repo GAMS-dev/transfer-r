@@ -65,6 +65,7 @@
 
     setRecords = function(records) {
       records = data.frame(records)
+
       columnNames = self$domainLabels
       columnNames = append(columnNames, "element_text")
       colnames(records) = columnNames

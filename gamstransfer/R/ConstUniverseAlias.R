@@ -46,7 +46,7 @@
       lockBinding("isSingleton", self)
 
       unlockBinding("domainLabels", self)
-      self$domainLabels = "*"
+      self$domainLabels = "uni"
       lockBinding("domainLabels", self)
     },
 
@@ -61,7 +61,7 @@
     setRecords = function(records) {
       records = data.frame(records)
       records = subset(records, select=-2)
-      columnNames = "*"
+      columnNames = "uni"
       colnames(records) = columnNames
       super$.set_records(records)
     },

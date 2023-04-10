@@ -171,7 +171,7 @@ UniverseAlias <- R6Class(
     records = function(records_input) {
       if (!self$isValid()) return(NULL)
       df = data.frame(self$refContainer$getUELs())
-      colnames(df) = "*"
+      colnames(df) = "uni"
       return(df)
     },
 
@@ -194,7 +194,7 @@ UniverseAlias <- R6Class(
     },
 
     domainLabels = function() {
-      return("*")
+      return("uni")
     },
 
     summary = function() {

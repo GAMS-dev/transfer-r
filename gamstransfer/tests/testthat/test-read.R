@@ -60,10 +60,10 @@ test_that("test_num_2", {
   a <- Parameter$new(m, "a", c(i, j), recs, domainForwarding = TRUE)
 
   expect_true(is.data.frame(i$records))
-  expect_equal(as.character(i$records$uni_1), c("a", "b"))
+  expect_equal(as.character(i$records$uni), c("a", "b"))
 
   expect_true(is.data.frame(j$records))
-  expect_equal(as.character(j$records$uni_1), c("c", "d"))
+  expect_equal(as.character(j$records$uni), c("c", "d"))
 
   m$write("gt.gdx")
 
@@ -90,10 +90,10 @@ test_that("test_num_3", {
   a <- Parameter$new(m, "a", c(i, j), recs, domainForwarding = TRUE)
 
   expect_true(is.data.frame(i$records))
-  expect_equal(as.character(i$records$uni_1), c("a", "b"))
+  expect_equal(as.character(i$records$uni), c("a", "b"))
 
   expect_true(is.data.frame(j$records))
-  expect_equal(as.character(j$records$uni_1), c("a", "b"))
+  expect_equal(as.character(j$records$uni), c("a", "b"))
   expect_equal(nrow(a$records), 2)
 
   m$write("gt.gdx")
@@ -120,16 +120,16 @@ test_that("test_num_4", {
 
   l = Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE )
   expect_true(is.data.frame(i$records))
-  expect_equal(as.character(i$records$uni_1), c("a", "b"))
+  expect_equal(as.character(i$records$uni), c("a", "b"))
 
   expect_true(is.data.frame(j$records))
-  expect_equal(as.character(j$records$i_1), c("a", "b"))
+  expect_equal(as.character(j$records$i), c("a", "b"))
 
   expect_true(is.data.frame(k$records))
-  expect_equal(as.character(k$records$j_1), c("a", "b"))
+  expect_equal(as.character(k$records$j), c("a", "b"))
 
   expect_true(is.data.frame(l$records))
-  expect_equal(as.character(l$records$k_1), c("a", "b"))
+  expect_equal(as.character(l$records$k), c("a", "b"))
 
   m$write("gt.gdx")
 
@@ -151,28 +151,28 @@ test_that("test_num_5", {
   recs <- data.frame(list("i" = "c", "element_text" = "desc for elem 'c'"))
   j <- Set$new(m, "j", i, records = recs, domainForwarding = TRUE)
   expect_true(is.data.frame(i$records))
-  expect_equal(as.character(i$records$uni_1), c("c"))
+  expect_equal(as.character(i$records$uni), c("c"))
   expect_true(is.data.frame(j$records))
-  expect_equal(as.character(j$records$i_1), c("c"))
+  expect_equal(as.character(j$records$i), c("c"))
 
   k <- Set$new(m, "k", j)
   expect_true(is.data.frame(i$records))
-  expect_equal(as.character(i$records$uni_1), c("c"))
+  expect_equal(as.character(i$records$uni), c("c"))
   expect_true(is.data.frame(j$records))
-  expect_equal(as.character(j$records$i_1), c("c"))
+  expect_equal(as.character(j$records$i), c("c"))
   expect_true(is.null(k$records))
 
   l <- Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE)
   expect_true(is.data.frame(i$records))
-  expect_equal(as.character(i$records$uni_1), c("c", "a", "b"))
+  expect_equal(as.character(i$records$uni), c("c", "a", "b"))
   expect_true(is.data.frame(j$records))
-  expect_equal(as.character(j$records$i_1), c("c", "a", "b"))
+  expect_equal(as.character(j$records$i), c("c", "a", "b"))
 
   expect_true(is.data.frame(k$records))
-  expect_equal(as.character(k$records$j_1), c("a", "b"))
+  expect_equal(as.character(k$records$j), c("a", "b"))
 
   expect_true(is.data.frame(l$records))
-  expect_equal(as.character(l$records$k_1), c("a", "b"))
+  expect_equal(as.character(l$records$k), c("a", "b"))
 
   m$write("gt.gdx")
 
@@ -196,7 +196,7 @@ test_that("test_num_6", {
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2["foo"]$records))
 
-  expect_equal(as.character(m$getUniverseSet()), as.character(m2["foo"]$records$uni_1))
+  expect_equal(as.character(m$getUniverseSet()), as.character(m2["foo"]$records$uni))
 }
 )
 
@@ -213,7 +213,7 @@ test_that("test_num_7", {
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2["foo"]$records))
 
-  expect_equal(c("a", "c", "b"), as.character(m2["foo"]$records$uni_1))
+  expect_equal(c("a", "c", "b"), as.character(m2["foo"]$records$uni))
   
 }
 )
@@ -223,14 +223,14 @@ test_that("test_num_8", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i", records = c("a", "b"))
-  expect_equal(as.character(i$records$uni_1), c("a", "b"))
+  expect_equal(as.character(i$records$uni), c("a", "b"))
 
   j <- Alias$new(m, "j", i)
-  expect_equal(as.character(j$records$uni_1), c("a", "b"))
+  expect_equal(as.character(j$records$uni), c("a", "b"))
   expect_equal(j$aliasWith$name, "i")
 
   k <- Alias$new(m, "k", j)
-  expect_equal(as.character(k$records$uni_1), c("a", "b"))
+  expect_equal(as.character(k$records$uni), c("a", "b"))
   expect_equal(j$aliasWith$name, "i")
 
   #try writing
@@ -247,8 +247,8 @@ test_that("test_num_9", {
 
   j <- Parameter$new(m, "j", "*", records = 
   data.frame(list("col1" = c("e", "f"), "col2" = c(1, 1))))
-  expect_equal(as.character(i$records$uni_1), c("a", "b"))
-  expect_equal(as.character(i$records$uni_2), c("c", "d"))
+  expect_equal(as.character(i$records$col1), c("a", "b"))
+  expect_equal(as.character(i$records$col2), c("c", "d"))
 
   expect_equal(as.character(m$getUniverseSet()), c("a", "c", "b", "d", "e", "f"))
 
@@ -269,13 +269,13 @@ test_that("test_num_10", {
 
   a <- Parameter$new(m, "a", list(i, j), domainForwarding=TRUE)
 
-  df <- data.frame(list("i_1"= c("a", "b"),
-  "j_2" = c("c", "d"), "value" = c(1, 1)))
+  df <- data.frame(list("i"= c("a", "b"),
+  "j" = c("c", "d"), "value" = c(1, 1)))
 
   a$records <- df
 
-  expect_equal(as.character(i$records$uni_1), c("a", "b"))
-  expect_equal(as.character(j$records$uni_1), c("c", "d"))
+  expect_equal(as.character(i$records$uni), c("a", "b"))
+  expect_equal(as.character(j$records$uni), c("c", "d"))
 
   #try writing
   m$write("out.gdx")
@@ -287,12 +287,12 @@ test_that("test_num_11", {
   expect_true(inherits(m, "Container"))
 
   i <- Set$new(m, "i", records = c("a", "b", "c"))
-  expect_equal(as.character(i$records$uni_1), c("a", "b", "c"))
+  expect_equal(as.character(i$records$uni), c("a", "b", "c"))
 
 
   j <- Parameter$new(m, "j", i, 
   records = data.frame("j"=c("a", "c"), "val" = c(1, 2)))
-  expect_equal(as.character(j$records$i_1), c("a", "c"))
+  expect_equal(as.character(j$records$j), c("a", "c"))
   expect_equal(j$records$value, c(1, 2))
 
   m$removeSymbols(c("i", "j"))
@@ -364,10 +364,10 @@ test_that("test_num_16", {
   expect_equal(m$isValid(), TRUE)
   expect_equal(m$.requiresStateCheck, FALSE)
 
-  expect_equal(as.character(m["l"]$records$k_1), c("c", "aa"))
-  expect_equal(as.character(m["k"]$records$uni_1), c("c", "aa"))
-  expect_equal(as.character(m["j"]$records$i_1), c("a", "b"))
-  expect_equal(as.character(m["i"]$records$uni_1), c("a", "b"))
+  expect_equal(as.character(m["l"]$records$k), c("c", "aa"))
+  expect_equal(as.character(m["k"]$records$uni), c("c", "aa"))
+  expect_equal(as.character(m["j"]$records$i), c("a", "b"))
+  expect_equal(as.character(m["i"]$records$uni), c("a", "b"))
 
   expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
   expect_equal(a$isValid(), TRUE)
@@ -389,10 +389,10 @@ test_that("test_num_17", {
   expect_equal(m$isValid(), TRUE)
   expect_equal(m$.requiresStateCheck, FALSE)
 
-  expect_equal(as.character(m["l"]$records$k_1), c("c", "aa"))
-  expect_equal(as.character(m["k"]$records$uni_1), c("c", "aa"))
-  expect_equal(as.character(m["j"]$records$i_1), c("a", "b"))
-  expect_equal(as.character(m["i"]$records$uni_1), c("a", "b"))
+  expect_equal(as.character(m["l"]$records$k), c("c", "aa"))
+  expect_equal(as.character(m["k"]$records$uni), c("c", "aa"))
+  expect_equal(as.character(m["j"]$records$i), c("a", "b"))
+  expect_equal(as.character(m["i"]$records$uni), c("a", "b"))
 
   expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
 
@@ -487,7 +487,7 @@ test_that("test_num_18", {
     m$addVariable(varname, i, "*", records = df)
 
     expect_equal(colnames(m[varname]$records),
-    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+    c("domain", "level", "marginal", "lower", "upper", "scale"))
 
     expect_equal(m[varname]$records[1, "level"], 
     default_values[[i]][["level"]])
@@ -573,7 +573,7 @@ test_that("test_num_19", {
     m$addEquation(eqname, i, "*", records = df)
 
     expect_equal(colnames(m[eqname]$records),
-    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+    c("domain", "level", "marginal", "lower", "upper", "scale"))
 
     expect_equal(m[eqname]$records[1, "level"], 
     default_values[[i]][["level"]])
@@ -614,7 +614,7 @@ test_that("test_num_20", {
     varname = paste0("a_", i)
     m$addVariable(varname, i, "*", records = df)
     expect_equal(colnames(m[varname]$records),
-    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+    c("domain", "level", "marginal", "lower", "upper", "scale"))
   }
 }
 )
@@ -632,7 +632,7 @@ test_that("test_num_21", {
     eqname = paste0("a_", i)
     m$addEquation(eqname, i, "*", records = df)
     expect_equal(colnames(m[eqname]$records),
-    c("uni_1", "level", "marginal", "lower", "upper", "scale"))
+    c("domain", "level", "marginal", "lower", "upper", "scale"))
   }
 }
 )
@@ -684,14 +684,14 @@ test_that("test_num_26", {
   expect_equal(i$domainType, "relaxed")
 
   j = Set$new(m, "j", i, records = 
-  data.frame(c("c"), c("desc for elem 'c'")), domainForwarding=TRUE)
+  data.frame(i=c("c"), c("desc for elem 'c'")), domainForwarding=TRUE)
 
-  df = data.frame("p_1" =c("c"), "element_text" = c(""))
-  df$p_1 = factor(df$p_1, ordered = TRUE)
+  df = data.frame("p" =c("c"), "element_text" = c(""))
+  df$p = factor(df$p, ordered = TRUE)
   expect_equal(i$records, df)
 
-  df = data.frame("i_1" =c("c"), "element_text" = c("desc for elem 'c'"))
-  df$i_1 = factor(df$i_1, ordered = TRUE)
+  df = data.frame("i" =c("c"), "element_text" = c("desc for elem 'c'"))
+  df$i = factor(df$i, ordered = TRUE)
   expect_equal(j$records, df)
 
   k = Set$new(m ,"k", "j")
@@ -700,23 +700,23 @@ test_that("test_num_26", {
   l = Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE)
 
   # test l
-  df = data.frame("k_1"=c("a", "b"), "element_text"=c("", ""))
-  df$k_1 = factor(df$k_1, ordered=TRUE)
+  df = data.frame("k"=c("a", "b"), "element_text"=c("", ""))
+  df$k = factor(df$k, ordered=TRUE)
   expect_equal(l$records, df)
 
   # test k
-  df = data.frame("j_1"=c("a", "b"), "element_text"=c("",""))
-  df$j_1 = factor(df$j_1, ordered = TRUE)
+  df = data.frame("j"=c("a", "b"), "element_text"=c("",""))
+  df$j = factor(df$j, ordered = TRUE)
   expect_equal(k$records, df)
 
   # test j
-  df = data.frame("i_1"=c("c"), "element_text"=c("desc for elem 'c'"))
-  df$i_1 = factor(df$i_1, ordered = TRUE)
+  df = data.frame("i"=c("c"), "element_text"=c("desc for elem 'c'"))
+  df$i = factor(df$i, ordered = TRUE)
   expect_equal(j$records, df)
 
   # test i
-  df = data.frame("p_1"=c("c"), "element_text"=c(""))
-  df$p_1 = factor(df$p_1, ordered = TRUE)
+  df = data.frame("p"=c("c"), "element_text"=c(""))
+  df$p = factor(df$p, ordered = TRUE)
   expect_equal(i$records, df)
 
 }
@@ -827,8 +827,8 @@ test_that("test_num_34", {
   i = Set$new(m, "i")
   j = Alias$new(m, "j", i)
   j$setRecords(c("a", "b"))
-  df = data.frame("uni_1"=c("a", "b"), "element_text"=c("",""))
-  df$uni_1 = factor(df$uni_1, ordered=TRUE)
+  df = data.frame("uni"=c("a", "b"), "element_text"=c("",""))
+  df$uni = factor(df$uni, ordered=TRUE)
 
   expect_equal(i$records, df)
 }
@@ -930,8 +930,8 @@ test_that("test_num_41", {
   recs = matrix(c(1:6), nrow = 2, ncol=3)
   d = Parameter$new(m, "d", c(i, j), records = recs)
 
-  df = data.frame(i_1 = c("a","a", "a", "b","b","b"), 
-  j_2 = c("x", "y", "z", "x", "y", "z"),
+  df = data.frame(i = c("a","a", "a", "b","b","b"), 
+  j = c("x", "y", "z", "x", "y", "z"),
   value = c(1,3,5,2,4,6))
   df[,1] = factor(df[,1], ordered = TRUE)
   df[,2] = factor(df[,2], ordered = TRUE)
@@ -950,9 +950,9 @@ test_that("test_num_41", {
   k = Set$new(m, "k", records = c("alpha", "beta"))
   d3 = Parameter$new(m, "d3", c(i, j, k), records = recs)
 
-  df = data.frame(i_1 = c("a","a", "a", "a","a","a", "b", "b","b","b", "b", "b"), 
-  j_2 = c("x", "x", "y", "y", "z", "z", "x", "x", "y", "y", "z", "z"),
-  k_3 = c("alpha","beta","alpha","beta","alpha","beta",
+  df = data.frame(i = c("a","a", "a", "a","a","a", "b", "b","b","b", "b", "b"), 
+  j = c("x", "x", "y", "y", "z", "z", "x", "x", "y", "y", "z", "z"),
+  k = c("alpha","beta","alpha","beta","alpha","beta",
   "alpha","beta","alpha","beta","alpha","beta"),
   value = c(1,7,3,9,5,11,2,8,4,10,6,12))
   df[,1] = factor(df[,1], ordered = TRUE)
@@ -974,8 +974,8 @@ test_that("test_num_42", {
 
   v = Variable$new(m, "v", domain=c(i, j), records = list("level"=a$toDense()))
 
-  df = data.frame(i_1=i$records[,1], 
-  j_2=j$records[,1],
+  df = data.frame(i=i$records[,1], 
+  j=j$records[,1],
   level= c(1,1,1,1,1),
   marginal=c(0,0,0,0,0),
   lower = replicate(5, -Inf),
@@ -1005,8 +1005,8 @@ test_that("test_num_42", {
   )
   )
 
-  df = data.frame(i_1=i$records[,1], 
-  j_2=j$records[,1],
+  df = data.frame(i=i$records[,1], 
+  j=j$records[,1],
   level= c(1,1,1,1,1),
   marginal = replicate(5, 1),
   lower = replicate(5, 1),
@@ -1053,8 +1053,8 @@ test_that("test_num_43", {
   cols = v$domainLabels
   cols = append(cols, c("level", "marginal", "lower", "upper", "scale"))
 
-  recs=data.frame("i_1"=c("i1","i2","i3","i4","i5"), 
-  "j_2"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
+  recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
   "marginal"=replicate(5, SpecialValues$EPS),
   "lower" = replicate(5, SpecialValues$NEGINF),
   "upper" = replicate(5, SpecialValues$POSINF),
@@ -1066,8 +1066,8 @@ test_that("test_num_43", {
 
   expect_equal(v$records, recs)
 
-  recs=data.frame("i_1"=c("i1","i2","i3","i4","i5"), 
-  "j_2"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
+  recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
+  "j"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
   "marginal"=replicate(5, SpecialValues$EPS),
   "lower" = replicate(5, 0),
   "upper" = replicate(5, 0),
@@ -1281,7 +1281,7 @@ m = Container$new()
 t = Parameter$new(m, "t", domain=replicate(4, "*"))
 t$records = df
 
-expect_true(!t$isValid())
+expect_true(t$isValid())
 }
 )
 
@@ -1357,8 +1357,8 @@ test_that("test_num_61", {
   )
   )
 
-  df = data.frame(i_1=i$records[,1], 
-  j_2=j$records[,1],
+  df = data.frame(i=i$records[,1], 
+  j=j$records[,1],
   level= c(0,1,0,SpecialValues$EPS,0),
   marginal=replicate(5, SpecialValues$EPS),
   lower = replicate(5, -Inf),
@@ -1368,8 +1368,8 @@ test_that("test_num_61", {
 
   expect_equal(v$records, df)
 
-  df = data.frame(i_1=i$records[,1], 
-  j_2=j$records[,1],
+  df = data.frame(i=i$records[,1], 
+  j=j$records[,1],
   level= c(0,1,0,SpecialValues$EPS,0),
   marginal = replicate(5, SpecialValues$EPS),
   lower = replicate(5, 0),
@@ -1419,9 +1419,9 @@ secs = Set$new(m, "s", records = unique(df$s_3))
 
 a = Parameter$new(m, "a", c(hrs, mins, secs))
 
-df$h_1 = factor(df$h_1, levels=levels(hrs$records$uni_1), ordered = TRUE)
-df$m_2 = factor(df$m_2, levels=levels(mins$records$uni_1), ordered = TRUE)
-df$s_3 = factor(df$s_3, levels=levels(secs$records$uni_1), ordered = TRUE)
+df$h_1 = factor(df$h_1, levels=levels(hrs$records$uni), ordered = TRUE)
+df$m_2 = factor(df$m_2, levels=levels(mins$records$uni), ordered = TRUE)
+df$s_3 = factor(df$s_3, levels=levels(secs$records$uni), ordered = TRUE)
 # set records directly
 a$records = df
 
@@ -1448,8 +1448,8 @@ a = Parameter$new(m, "a", c(hrs, mins, secs))
 dumb_set = append(levels(df$h_1), "new_element")
 
 df$h_1 = factor(df$h_1, levels=dumb_set, ordered = TRUE)
-df$m_2 = factor(df$m_2, levels=levels(mins$records$uni_1), ordered = TRUE)
-df$s_3 = factor(df$s_3, levels=levels(secs$records$uni_1), ordered = TRUE)
+df$m_2 = factor(df$m_2, levels=levels(mins$records$uni), ordered = TRUE)
+df$s_3 = factor(df$s_3, levels=levels(secs$records$uni), ordered = TRUE)
 # set records directly
 a$records = df
 
@@ -1507,7 +1507,7 @@ i = Set$new(m, "i", records = paste0("i", 1:10))
 j = Set$new(m, "j", records = paste0("j", 1:10))
 
 a0 = Parameter$new(m, "a0", records=10)
-a1 = Parameter$new(m, "a1", i, records=data.frame(paste0("i", 1:10), 1:10))
+a1 = Parameter$new(m, "a1", i, records=data.frame(i=paste0("i", 1:10), 1:10))
 
 
 df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
@@ -1589,7 +1589,7 @@ i = Set$new(m, "i", records = paste0("i", 1:10))
 j = Set$new(m, "j", records = paste0("j", 1:10))
 
 a0 = Parameter$new(m, "a0", records=10)
-a1 = Parameter$new(m, "a1", i, records=data.frame(paste0("i", 1:10), 1:10))
+a1 = Parameter$new(m, "a1", i, records=data.frame(i=paste0("i", 1:10), 1:10))
 
 
 df = data.frame(rev(expand.grid(rev(list(paste0("i", 1:10), 
@@ -2123,7 +2123,7 @@ expect_equal(as.character(df[[1]]), " seattle")
 expect_true(jp$hasDomainViolations())
 expect_equal(jp$countDomainViolations(), 1)
 jp$dropDomainViolations()
-expect_equal(as.character(j$records$i_1), "Hamburg")
+expect_equal(as.character(j$records$i), "Hamburg")
 
 }
 )
@@ -2209,8 +2209,8 @@ j = Set$new(m, "j", records=paste0("j",1:5))
 d = Parameter$new(m, "d", domain=c(i, j), records=diag(5))
 
 # test filtering zeros
-expect_equal(as.character(d$records$i_1), paste0("i",1:5))
-expect_equal(as.character(d$records$j_2), paste0("j",1:5))
+expect_equal(as.character(d$records$i), paste0("i",1:5))
+expect_equal(as.character(d$records$j), paste0("j",1:5))
 expect_equal(as.numeric(d$records$value),replicate(5, 1))
 
 # overwriting
@@ -2280,7 +2280,7 @@ test_that("test_num_92", {
 m = Container$new()
 i = Set$new(m, "i", records=paste0("i",1:5))
 
-a = Parameter$new(m, "a", c(i,i), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
+a = Parameter$new(m, "a", c(i,i), records=data.frame(p_1=paste0("i",1:5), p_2=paste0("i",1:5), 1:5))
 a$domain = c("p","p")
 expect_equal(a$domain, c("p","p"))
 expect_true(a$isValid())
@@ -2290,7 +2290,7 @@ m = Container$new()
 i = Set$new(m, "i", records=paste0("i",1:5))
 ip = Alias$new(m, "ip", i)
 
-a = Parameter$new(m, "a", c(i,ip), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
+a = Parameter$new(m, "a", c(i,ip), records=data.frame(p_1=paste0("i",1:5), p_2=paste0("i",1:5), 1:5))
 a$domain = c("p","p")
 expect_equal(a$domain, c("p","p"))
 expect_true(a$isValid())
@@ -2300,7 +2300,7 @@ m = Container$new()
 i = Set$new(m, "i", records=paste0("i",1:5))
 r = Set$new(m, "r", records=paste0("r",1:5))
 
-a = Parameter$new(m, "a", c(i,i), records=data.frame(paste0("i",1:5), paste0("i",1:5), 1:5))
+a = Parameter$new(m, "a", c(i,i), records=data.frame(r_1=paste0("i",1:5), r_2=paste0("i",1:5), 1:5))
 a$domain = c(r,r)
 expect_equal(a$domain, c(r,r))
 expect_true(a$isValid())
@@ -2310,31 +2310,31 @@ expect_equal(colnames(a$records), c("r_1","r_2","value"))
 
 # white space removal and user category survival
 test_that("test_num_93", {
-recs = data.frame(uni_1=paste0("i",1:3), stringsAsFactors = TRUE)
+recs = data.frame(uni=paste0("i",1:3), stringsAsFactors = TRUE)
 levels(recs[,1]) = append(levels(recs[,1]), "j1")
 expect_equal(levels(recs[,1]), c("i1","i2","i3","j1"))
 
 m = Container$new()
 i = Set$new(m, "i", records=recs)
 
-expect_equal(levels(i$records$uni_1), c("i1","i2","i3","j1"))
+expect_equal(levels(i$records$uni), c("i1","i2","i3","j1"))
 
-recs= data.frame(uni_1=paste0("i",1:3), value=1:3, stringsAsFactors = TRUE)
+recs= data.frame(uni=paste0("i",1:3), value=1:3, stringsAsFactors = TRUE)
 levels(recs[,1]) = append(levels(recs[,1]), "j1")
 expect_equal(levels(recs[,1]), c("i1","i2","i3","j1"))
 
 a = Parameter$new(m, "a", i, records=recs)
-expect_equal(levels(a$records$i_1), c("i1","i2","i3","j1"))
+expect_equal(levels(a$records$uni), c("i1","i2","i3","j1"))
 
-recs= data.frame(uni_1=paste0("i",1:3), level=1:3, stringsAsFactors = TRUE)
+recs= data.frame(uni=paste0("i",1:3), level=1:3, stringsAsFactors = TRUE)
 levels(recs[,1]) = append(levels(recs[,1]), "j1")
 expect_equal(levels(recs[,1]), c("i1","i2","i3","j1"))
 
 v = Variable$new(m, "v", "free", i, records=recs)
-expect_equal(levels(v$records$i_1), c("i1","i2","i3","j1"))
+expect_equal(levels(v$records$uni), c("i1","i2","i3","j1"))
 
 e = Equation$new(m, "e", "eq", i, records=recs)
-expect_equal(levels(e$records$i_1), c("i1","i2","i3","j1"))
+expect_equal(levels(e$records$uni), c("i1","i2","i3","j1"))
 
 }
 )
@@ -2807,7 +2807,7 @@ j = Set$new(m, "j", records=c("j1","j2"))
 e0 = Equation$new(m, "e0", type = "eq", description="empty eq from m")
 e1 = Equation$new(m, "e1", type = "eq", domain=c(i, j))
 e2 = Equation$new(m, "e2", type = "eq", domain= i)
-e2a = Equation$new(m, "e2a", type = "eq", domain= i, records=data.frame(i_1="i1", level=1))
+e2a = Equation$new(m, "e2a", type = "eq", domain= i, records=data.frame(i="i1", level=1))
 e2b = Equation$new(m, "e2b", type = "eq", domain= i)
 e3 = Equation$new(m, "e3", type = "eq", domain = j)
 
@@ -3100,7 +3100,7 @@ expect_equal(nrow(e$records), 5)
 expect_true(all(e$records$lower == 0))
 expect_true(all(e$records$upper == 0))
 expect_true(all(e$records$level == 0))
-expect_equal(colnames(e$records), c("i_1", "level", "marginal", "lower", "upper", "scale"))
+expect_equal(colnames(e$records), c("i", "level", "marginal", "lower", "upper", "scale"))
 
 
 #test the same for variables
@@ -3136,7 +3136,7 @@ expect_equal(nrow(v$records), 5)
 expect_true(all(v$records$lower == 0))
 expect_true(all(v$records$upper == 1))
 expect_true(all(v$records$level == 0))
-expect_equal(colnames(v$records), c("i_1", "level", "marginal", "lower", "upper", "scale"))
+expect_equal(colnames(v$records), c("i", "level", "marginal", "lower", "upper", "scale"))
 
 # try scalar variables and equations
 m = Container$new()
@@ -3238,14 +3238,14 @@ i2$copy(m, overwrite=TRUE)
 expect_equal(p$domain[[1]]$dimension, 2)
 
 # todo
-#expect_equal(p$isValid(), FALSE)
+expect_equal(p$isValid(force=TRUE), FALSE)
 
 m = Container$new()
 i = Set$new(m, "i", records=c("i1","i2"))
 m2 = Container$new()
-i2 = Set$new(m2, "i", records=c("newi_1", "newi_2"))
+i2 = Set$new(m2, "i", records=c("newi", "newi_1"))
 i2$copy(m, overwrite=TRUE)
-expect_equal(as.character(i$records[[1]]), c("newi_1", "newi_2"))
+expect_equal(as.character(i$records[[1]]), c("newi", "newi_1"))
 
 
 }
@@ -3270,7 +3270,7 @@ test_that("test_num_113", {
 )
 
 # test copy container method
-test_that("test_num_113", {
+test_that("test_num_114", {
   m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
 
   m2 = Container$new()
@@ -3291,7 +3291,7 @@ test_that("test_num_113", {
 )
 
 # test copy ConstContainer method
-test_that("test_num_114", {
+test_that("test_num_115", {
   m = ConstContainer$new(testthat::test_path("testdata", "trnsport.gdx"))
 
   m2 = Container$new()
@@ -3312,7 +3312,7 @@ test_that("test_num_114", {
 )
 
 # test copy for constalias and constuniverse alias
-test_that("test_num_115", {
+test_that("test_num_116", {
   m = ConstContainer$new(testthat::test_path("testdata", "test95.gdx"))
 
   m2 = Container$new()
@@ -3326,7 +3326,7 @@ test_that("test_num_115", {
 
 
 # test reading symbols with unused uels from gdx
-test_that("test_num_115", {
+test_that("test_num_117", {
   m = Container$new()
   i = Set$new(m, "i", records=paste0("i", 1:5))
   isub = Set$new(m, "isub", domain=i, records=c("i1","i2"))

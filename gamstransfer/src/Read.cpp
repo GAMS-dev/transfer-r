@@ -244,14 +244,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
         }
       }
 
-      // shift domain indices
-      for (int k = 0; k < nrecs; k++) {
-        indx_matrix(k, D) = dom_uel_used[D][(int) indx_matrix(k, D) - 1] + 1;
-      }
-
       // create a factor v
       IntegerVector v = wrap(indx_matrix(_, D));
-      // Rcout << "integer vector : " << v << "\n";
       CharacterVector ch = wrap(used_uels);
       v.attr("class") = "factor";
       v.attr("levels") = ch;

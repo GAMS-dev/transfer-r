@@ -207,7 +207,7 @@ Equation <- R6Class(
           listOfDomains[[i]] = d$records[,1]
         }
         df = expand.grid(listOfDomains, stringsAsFactors = FALSE) # ij is a dataframe
-        colnames(df) = self$domainLabels
+        colnames(df) = super$.get_default_domain_labels()
         attr(df, "out.attrs") <- NULL
         for (i in seq_along(values)) {
           df[valuenames[[i]]] = values[[i]]
@@ -230,7 +230,7 @@ Equation <- R6Class(
         else {
           usr_colnames = colnames(df)
 
-          columnNames = self$domainLabels
+          columnNames = super$.get_default_domain_labels()
           if (self$dimension +  1 > length(usr_colnames)) {
             usr_attr = NULL
           }
@@ -264,7 +264,16 @@ Equation <- R6Class(
         records = data.frame(records)
 
         usr_colnames = colnames(records)
-        columnNames = self$domainLabels
+        if (self$dimension == 0) {
+          columnNames = c()
+        }
+        else {
+          columnNames = usr_colnames[1:self$dimension]
+        }
+        if (any(duplicated(columnNames))) {
+          columnNames = super$.get_default_domain_labels()
+        }
+        # columnNames = self$domainLabels
 
         if (self$dimension +  1 > length(usr_colnames)) {
           usr_attr = NULL

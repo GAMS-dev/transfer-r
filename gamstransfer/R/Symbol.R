@@ -802,12 +802,6 @@
             }
             private$.domain = domain_input
             if (self$dimension == 0) return()
-
-            if (!is.null(self$records)) {
-              temp_colnames=colnames(self$records)
-              temp_colnames[1:self$dimension] = self$domainLabels
-              colnames(private$.records) = temp_colnames
-            }
         }
 
       }
@@ -934,22 +928,27 @@
       return(d)
     },
 
-    domainLabels = function() {
+    domainLabels = function(domain_label_input) {
+      if (missing(domain_label_input)) {
+        if (self$dimension == 0) return(NULL)
 
-      dom_is_univ = (self$domain == "*")
-      dom_temp = self$domain
-      dom_temp[dom_is_univ] = "uni"
-      column_names = lapply(seq_along(dom_temp), function(i) {
-        if (is.character(dom_temp[[i]])) {
-          return(paste0(dom_temp[[i]], "_", i))
+        return(colnames(self$records)[1:self$dimension])
+      }
+      else {
+        if (length(domain_label_input) != self$dimension) {
+          stop(paste0("Length of `domainLabels` (", length(domain_label_input),
+          ") not equal to symbol dimension (", self$dimension, ").\n"))
+        }
+
+        dup_labels = duplicated(domain_label_input)
+        if (!any(dup_labels)) {
+          colnames(self$records) = domain_label_input
         }
         else {
-          return(paste0(dom_temp[[i]]$name, "_", i))
+          domain_label_input = paste0(domain_label_input, 1:self$dimension)
         }
-
-      })
-
-      return(unlist(column_names, use.names=FALSE))
+        colnames(self$records) = domain_label_input
+      }
     }
 
   ),
@@ -963,6 +962,18 @@
     .records = NULL,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
+
+    .get_default_domain_labels = function() {
+      if (self$dimension == 0) return(c())
+
+      domain_label_input = self$domainNames
+      domain_label_input[domain_label_input == "*"] = "uni"
+      dup_labels = duplicated(domain_label_input)
+      if (any(dup_labels)) {
+        domain_label_input = paste0(domain_label_input, "_", 1:self$dimension)
+      }
+      return(domain_label_input)
+    },
 
     .generate_records_index = function(density) {
       if (!(is.numeric(density)) && all(density >= 0 && density <= 1)) {
@@ -988,7 +999,7 @@
 
         # cartesian product
         recs = expand.grid(dom_recs)
-        colnames(recs) = self$domainLabels
+        colnames(recs) = private$.get_default_domain_labels()
 
         # sample indices based on density
         idx = sample(1:nrow(recs), floor(density * nrow(recs)), replace = FALSE)
@@ -1010,7 +1021,7 @@
         dom_recs = lapply(dom_recs, function(x) return(droplevels(x)))
 
         recs = expand.grid(dom_recs)
-        colnames(recs) = self$domainLabels
+        colnames(recs) = private$.get_default_domain_labels()
       }
 
       #reset row indices
@@ -1315,13 +1326,22 @@
                -- must reset domain for symbol ",
               self$name))
             }
-          }
 
-          for (i in self$domain) {
             if (i$isValid() != TRUE) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, this object is not a valid object ",
               "in the Container -- all domain objects must be valid.\n"))
+            }
+
+            if (i$dimension != 1) {
+              stop(paste0("Dimensionality of all domain symbols must be 1. ",
+              "The domain symbol ", i$name, " has dimension = ", 
+              i$dimension, ".\n"))
+            }
+
+            if (i$isSingleton) {
+              stop(paste0("Singleton sets cannot be used as domain sets. ",
+              "The domain symbol ", i$name, " is a singleton set.\n"))
             }
           }
         }
@@ -1357,6 +1377,11 @@
           # check if records are dataframe
           if (!is.data.frame(self$records)){
             stop("Symbol 'records' must be type dataframe\n")
+          }
+
+          # check if domainLabels are unique
+          if (any(duplicated(self$domainLabels))) {
+            stop("Symbol domainLabels must be unique\n")
           }
 
           # check column names and order
@@ -1409,7 +1434,6 @@
     # find symbols to grow
     for (diter in dim_to_forward) {
       d = self$domain[[diter]]
-      dl = self$domainLabels[diter]
       to_grow = list()
       while (inherits(d, "Set")) {
         to_grow = append(to_grow, d$name)
@@ -1421,7 +1445,8 @@
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$refContainer[i]$domainLabels)[1]
+        dim = (self$refContainer[i]$domainNames)[1]
+        if (dim == "*") dim = "uni"
         if (!is.null(self$refContainer[i]$records)) {
           recs = self$refContainer[i]$records
 
@@ -1429,7 +1454,7 @@
             stop("attempting to forward a domain set that has dimension > 1\n")
           }
 
-          df = self$records[dl]
+          df = self$records[diter]
           colnames(df) = dim
           df[["element_text"]] = ""
           recs1 = factor(append(as.character(recs[, 1]), as.character(df[,dim])),
@@ -1443,7 +1468,7 @@
           rownames(recs) <- NULL
         }
         else {
-          recs = self$records[dl]
+          recs = self$records[diter]
           colnames(recs) = dim
           recs[["element_text"]] = ""
           recs = recs[!duplicated(recs[[dim]]),]
