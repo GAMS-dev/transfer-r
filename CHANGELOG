@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.16.0
 ==================
 - added checks for singleton and multidimensional checksin `Symbol` method `isValid()`
 - changed the default domain labels. User-specified domain labels are preserved if unique
