@@ -3338,3 +3338,56 @@ test_that("test_num_117", {
   expect_equal(m["isub"]$getUELs(), paste0("i",1:5))
 }
 )
+
+# test isScalar for symbols
+test_that("test_num_118", {
+  m = Container$new()
+  p = Parameter$new(m, "p")
+  expect_true(p$isScalar)
+
+  v = Variable$new(m, "v", type="free")
+  expect_true(v$isScalar)
+
+  e = Equation$new(m, "e", type="eq")
+  expect_true(e$isScalar)
+
+  m$write("gt.gdx")
+  m2 = ConstContainer$new()
+  m2$read(testthat::test_path("gt.gdx"))
+
+  expect_true(m2["p"]$isScalar)
+  expect_true(m2["v"]$isScalar)
+  expect_true(m2["e"]$isScalar)
+}
+)
+
+# test Scalars with more records isvalid
+test_that("test_num_119", {
+  m = Container$new()
+  p = Parameter$new(m, "p")
+  p$setRecords(data.frame(value=c(1,2)))
+  expect_false(p$isValid())
+
+  v = Variable$new(m, "v", type="free")
+  v$setRecords(data.frame(level=c(1,2)))
+  expect_false(v$isValid())
+
+  e = Equation$new(m, "e", type="eq")
+  e$setRecords(data.frame(level=c(1,2)))
+  expect_false(e$isValid())
+}
+)
+
+# test description of length > 255
+test_that("test_num_119", {
+  m = Container$new()
+  i = Set$new(m, "i")
+  a = paste0(rep("m",255), collapse = "")
+  i$description = a
+
+  a = paste0(rep("m",256), collapse = "")
+
+
+  expect_error({i$description = a})
+}
+)

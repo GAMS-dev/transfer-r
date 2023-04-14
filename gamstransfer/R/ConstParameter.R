@@ -41,6 +41,7 @@
       if (!is.null(records)) {
         self$setRecords(records)
       }
+
       self$isScalar = (self$dimension == 0)
     },
 

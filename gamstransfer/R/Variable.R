@@ -312,6 +312,7 @@ Variable <- R6Class(
         # self$.linkDomainCategories()
 
       }
+      return(invisible(NULL))
     },
 
     # var.equ
@@ -419,6 +420,10 @@ Variable <- R6Class(
   ),
 
   active = list(
+    isScalar = function() {
+      return(self$dimension == 0)
+    },
+
     type = function(type_input) {
       if (missing(type_input)) {
         return(private$.type)

@@ -28,6 +28,7 @@
   inherit = .ConstSymbol,
   public = list(
     type = NULL,
+    isScalar = NULL,
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = NULL, records = NULL,
@@ -46,6 +47,8 @@
       if (!is.null(records)) {
         self$setRecords(records)
       }
+
+      self$isScalar = (self$dimension == 0)
     },
 
     setRecords = function(records) {

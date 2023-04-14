@@ -717,7 +717,12 @@
           stop("Symbol 'description' must be type character\n")
         }
 
-        if (length(description_input) >= gams_description_max_length) {
+        if (length(description_input) != 1) {
+          stop(paste0("Symbol `description` cannot be a",
+          " character vector of length greater than 1\n"))
+        }
+
+        if (nchar(description_input) > gams_description_max_length) {
           stop(paste0("Symbol 'description' must have length ",
           gams_description_max_length, " or smaller\n"))
         }
@@ -1347,21 +1352,17 @@
         }
         # if records exist, check consistency
         if (!is.null(self$records)) {
-          if (inherits(self, "Set")){
+          if (inherits(self, "Set")) {
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
               " the correct number of columns (<symbol dimension> + 1)\n"))
             }
           }
+
           if (inherits(self, "Parameter")) {
             if (length(self$records) != self$dimension + 1) {
               stop(paste0("Symbol 'records' does not have", 
               " the correct number of columns (<symbol dimension> + 1)\n"))
-
-              if (self$dimension == 0 && nrow(self$records != 1)) {
-              stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns (<symbol dimension> + 1)\n"))
-              }
             }
           }
 
@@ -1377,6 +1378,13 @@
           # check if records are dataframe
           if (!is.data.frame(self$records)){
             stop("Symbol 'records' must be type dataframe\n")
+          }
+
+          # check if scalars have only 1 record
+          if (inherits(self, c("Parameter", "Variable", "Equation"))) {
+            if (self$isScalar && nrow(self$records) > 1) {
+              stop("Scalar symbols cannot have more than one record entry\n")
+            }
           }
 
           # check if domainLabels are unique
