@@ -50,10 +50,6 @@
       lockBinding("domainLabels", self)
     },
 
-    getCardinality = function() {
-      return(self$numberRecords)
-    },
-
     getSparsity = function() {
       return(0)
     },

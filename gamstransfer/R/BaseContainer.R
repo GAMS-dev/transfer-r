@@ -356,7 +356,6 @@ SpecialValues = list(
             "domainType",
             "dim",
             "numberRecs",
-            "cardinality",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -373,7 +372,6 @@ SpecialValues = list(
             self[i]$domainType,
             self[i]$dimension,
             self[i]$numberRecords,
-            self[i]$getCardinality(),
             self[i]$getSparsity()
           )
           rowCount = rowCount + 1
@@ -447,7 +445,6 @@ SpecialValues = list(
             "domainType",
             "dim",
             "numberRecs",
-            "cardinality",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -475,7 +472,6 @@ SpecialValues = list(
             self[i]$domainType,
             self[i]$dimension,
             self[i]$numberRecords,
-            self[i]$getCardinality(),
             self[i]$getSparsity()
           )
           rowCount = rowCount + 1
@@ -530,7 +526,6 @@ SpecialValues = list(
             "countEps",
             "countNa",
             "countUndef",
-            "cardinality",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -555,7 +550,6 @@ SpecialValues = list(
             self[i]$countEps("value"),
             self[i]$countNA("value"),
             self[i]$countUndef("value"),
-            self[i]$getCardinality(),
             self[i]$getSparsity()
           )
           rowCount = rowCount + 1
@@ -602,7 +596,6 @@ SpecialValues = list(
             "domainType",
             "dim",
             "numRecs",
-            "cardinality",
             "sparsity",
             "minLevel",
             "meanLevel",
@@ -629,7 +622,6 @@ SpecialValues = list(
             self[i]$domainType,
             self[i]$dimension,
             self[i]$numberRecords,
-            self[i]$getCardinality(),
             self[i]$getSparsity(),
             self[i]$getMinValue("level"),
             self[i]$getMeanValue("level"),
@@ -685,7 +677,6 @@ SpecialValues = list(
             "domainType",
             "dim",
             "numRecs",
-            "cardinality",
             "sparsity",
             "minLevel",
             "meanLevel",
@@ -712,7 +703,6 @@ SpecialValues = list(
             self[i]$domainType,
             self[i]$dimension,
             self[i]$numberRecords,
-            self[i]$getCardinality(),
             self[i]$getSparsity(),
             self[i]$getMinValue("level"),
             self[i]$getMeanValue("level"),

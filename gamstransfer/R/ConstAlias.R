@@ -45,15 +45,6 @@
       lockBinding("isSingleton", self)
     },
 
-    getCardinality = function() {
-      if (private$.is_parent_set()) {
-        return(self$refContainer[self$aliasWith]$getCardinality())
-      }
-      else {
-        return(NA)
-      }
-    },
-
     getSparsity = function() {
       if (private$.is_parent_set()) {
         return(self$refContainer[self$aliasWith]$getSparsity())

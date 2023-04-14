@@ -70,35 +70,6 @@
     lockBinding("domainLabels", self)
   },
 
-  getCardinality = function() {
-    tryCatch(
-      {
-        if (length(self$domainNames) == 0) {
-          return(NA)
-        }
-        else {
-          for (n in self$domainNames) {
-            if (!self$refContainer$hasSymbols(n)) {
-              return(NA)
-            }
-          }
-          card = 1
-          for (n in self$domainNames) {
-            domainSym = self$refContainer[self$refContainer$getSymbolNames(n)]
-            card = card * domainSym$numberRecords
-          }
-          return(card)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
   getSparsity = function() {
     tryCatch(
       {
@@ -111,10 +82,13 @@
               return(NA)
             }
           }
-
-          for (n in self$domainNames) {
-            return(1 - self$numberRecords/self$getCardinality())
+          dense = 1
+          for (i in self$domainNames) {
+            domainSym = self$refContainer[self$refContainer$getSymbolNames(i)]
+            dense = dense * domainSym$numberRecords
           }
+
+          return(1 - self$numberRecords/dense)
         }
       },
       error = function(cond) {
