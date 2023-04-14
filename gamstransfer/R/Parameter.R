@@ -227,6 +227,7 @@ Parameter <- R6Class(
         colnames(records) = columnNames
         self$records = records
       }
+      return(invisible(NULL))
     },
 
     # par
@@ -288,15 +289,8 @@ Parameter <- R6Class(
   ),
 
   active = list(
-    isScalar = function(isScalar_input) {
-      if (missing(isScalar_input)) {
-        if (length(self$domain) == 0) {
-          return(TRUE)
-        }
-        else {
-          return(FALSE)
-        }
-      }
+    isScalar = function() {
+      return(self$dimension == 0)
     },
 
     summary = function() {

@@ -111,6 +111,7 @@ Set <- R6Class(
 
       colnames(records) = columnNames
       self$records = records
+      return(invisible(NULL))
     },
 
     # set/alias
