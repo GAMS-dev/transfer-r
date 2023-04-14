@@ -1,3 +1,9 @@
+GAMS Transfer R
+==================
+- Symbol method `isValid` now checks also for scalars with more than one record entries
+- bug fix in symbol `description`
+- added `isScalar` property for the symbols of type `Variable` and `Equation`
+
 GAMS Transfer R v1.16.0
 ==================
 - added checks for singleton and multidimensional checksin `Symbol` method `isValid()`
