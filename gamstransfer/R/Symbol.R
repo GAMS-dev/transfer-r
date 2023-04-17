@@ -154,13 +154,13 @@
       }
       else {
         if ((length(uels) != length(levels(private$.records[, d])))) {
-          stop("The argument `uels` must 
-          contain all uels that need to be reordered")
+          stop(paste0("The argument `uels` must ",
+          "contain all uels that need to be reordered"))
         }
         else {
-          if (length(setdiff(uels, private$.records[,d])) != 0) {
-            stop("The argument `uels` must 
-            contain all uels that need to be reordered")
+          if (length(setdiff(uels, levels(private$.records[,d]))) != 0) {
+            stop(paste0("The argument `uels` must ",
+            "contain all uels that need to be reordered"))
           }
         }
       }
@@ -577,41 +577,70 @@
 
     if (self$isValid() == FALSE) {
       stop("Cannot create dense array (i.e., matrix) format because symbol 
-      is invalid -- use .isValid(verbose=TRUE) to debug symbol state.\n")
+      is invalid -- use $isValid(verbose=TRUE) to debug symbol state.\n")
     }
 
-    if (!is.null(self$records)) {
-      if (self$dimension  == 0) {
-        return(self$records[[column]])
+    if (is.null(self$records)) return(NULL)
+    if (self$dimension  == 0) return(self$records[[column]])
+
+    if (self$domainType == "regular") {
+      if (self$hasDomainViolations()) {
+        stop(paste0("Cannot create dense array because there are",
+        " domain violations i.e., the UELs in the symbol"),
+          " are not a subset of UELs in the domain set/s\n")
       }
-      else {
-        if (self$domainType == "regular") {
-          if (self$hasDomainViolations()) {
-            stop("Cannot create dense array because there are domain violations i.e.,
-             the UELs in the symbol are not a subset of UELs in the domain set/s\n")
-          }
 
+      # check if the symbol has unused levels
+      has_unused = unlist(lapply(1:self$dimension, function(d) {
+        unique_recs = unique(as.character(self$domain[[d]]$records[ ,1]))
+        all_levels = levels(self$domain[[d]]$records[ ,1])
+        # unused uels at the end are okay.
+        diff = setdiff(all_levels[1:length(unique_recs)], unique_recs)
+        return(length(diff) != 0)
+      }), use.names = FALSE)
 
-          idx = lapply(1:self$dimension, function(d) {
-            return(as.numeric(factor(self$records[,d], levels = self$domain[[d]]$records[, 1])) )
-          })
-
-        }
-        else {
-          idx = lapply(1:self$dimension, function(d) {
-            return(as.numeric(factor(self$records[,d], levels = levels(self$records[, d]))) )
-          })
-        }
-
-        a = array(0, dim = self$shape())
-        a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
-        return(a)
-
+      if (any(has_unused)) {
+        dim = which(has_unused == TRUE)[1]
+        stop(paste0("Cannot create dense array because there ",
+        "are unused UELs in the domain symbol ",
+          self$domain[[dim]]$name, ". Use ", 
+          self$domain[[dim]]$name, "$removeUELs()", 
+          " to remove the unused UELs or ",  self$domain[[dim]]$name, 
+          "$reorderUELs() to move them to the end.\n"))
       }
+
+      # check if the order of the uels is the same as records
+      is_unsorted = unlist(lapply(1:self$dimension, function(d) {
+        return(is.unsorted(as.integer(self$domain[[d]]$records[ ,1])))
+      }), use.names = FALSE)
+
+      if (any(is_unsorted)) {
+        dim = which(is_unsorted == TRUE)[1]
+        stop(paste0("Cannot create dense array because the order ", 
+        "of the symbol UELs for the domain symbol ", 
+        self$domain[[dim]]$name, " is not the same ",
+        "as that of symbol records. Use ", 
+        self$domain[[dim]]$name, "$reorderUELs() to ",
+        "reorder the UELs according to the records\n"))
+      }
+
+      idx = lapply(1:self$dimension, function(d) {
+        return(as.numeric(factor(self$records[,d], 
+        levels = self$domain[[d]]$records[, 1])) )
+      })
+
     }
     else {
-      return(NULL)
+      idx = lapply(1:self$dimension, function(d) {
+        return(as.numeric(factor(self$records[,d], 
+        levels = levels(self$records[, d]))) )
+      })
     }
+
+    a = array(0, dim = self$shape())
+    a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
+    return(a)
+
   },
 
   equals = function(other, columns=NULL, checkUELs=TRUE, 
