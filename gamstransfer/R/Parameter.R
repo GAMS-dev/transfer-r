@@ -86,18 +86,20 @@ Parameter <- R6Class(
       if (inherits(records, c("array", "numeric", "integer"))) { # checks for matrix + arrays + vectors + numbers
         if ((length(records) > 1) && (self$domainType != "regular")) {
           stop(paste0(
-            "Data conversion for non-scalar array (i.e., matrix) format into 
-            records is only possible for symbols where 
-            self$domainType = 'regular'. 
-            Must define symbol with specific domain set objects, 
-            symbol domainType is currently ",self$domainType,".\n" ))
+            "Data conversion for non-scalar array (i.e., matrix) format into ",
+            "records is only possible for symbols where ",
+            "self$domainType = 'regular'. ",
+            "Must define symbol with specific domain set objects, ",
+            "symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
           if (i$isValid() == FALSE) {
             stop(paste0(
-              "Domain set ", i$name, " is invalid and cannot be used to convert array-to-records.
-               Use $isValid(verbose = TRUE) to debug this domain set symbol before proceeding.\n"
+              "Domain set ", i$name, 
+              " is invalid and cannot be used to convert array-to-records. ",
+               "Use $isValid(verbose = TRUE) to debug this domain set ",
+               "symbol before proceeding.\n"
             ))
           }
         }
@@ -108,9 +110,10 @@ Parameter <- R6Class(
 
         if (self$dimension >= 1) {
           if (!all(dim(records) == self$shape())) {
-            stop(paste0("User passed array/matrix/numeric with shape ", toString(dim(records)), " but anticipated 
-            shape was ", toString(self$shape()), " based on domain set information -- 
-            must reconcile before array-to-records conversion is possible.\n"))
+            stop(paste0("User passed array/matrix/numeric with shape ", 
+            toString(dim(records)), " but anticipated shape was ", 
+            toString(self$shape()), " based on domain set information -- ",
+            "must reconcile before array-to-records conversion is possible.\n"))
           }
         }
 
@@ -200,8 +203,8 @@ Parameter <- R6Class(
         #if records "value" is not numeric, stop.
         val_column = records[,length(records)]
         if (!(is.numeric(val_column) || all(SpecialValues$isNA(val_column)))) {
-            stop("All entries in the 'values' column of a parameter 
-            must be numeric.\n")
+            stop("All entries in the 'values' column of a parameter ",
+            "must be numeric.\n")
         }
 
         if (self$dimension == 0) {
@@ -246,9 +249,9 @@ Parameter <- R6Class(
 
     generateRecords = function(density = 1, func=NULL, seed=NULL) {
       if(!((self$domainType == "regular") || (self$dimension == 0))) {
-        stop("Cannot generate records for the symbol unless the symbol has 
-        domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
-        or the symbol is a scalar\n")
+        stop("Cannot generate records for the symbol unless the symbol has ",
+        "domain objects for all dimension, i.e., <symbol>$domainType == ",
+        "'regular' or the symbol is a scalar\n")
       }
 
       if (!is.null(seed)) {

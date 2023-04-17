@@ -77,13 +77,15 @@ Variable <- R6Class(
         if (inherits(records, "list")) {
           #check if user attributes are valid
           if (length(intersect(private$.attr(), names(records))) == 0) {
-            stop(paste0("Unrecognized user attribute detected in `records`. 
-            The attributes must be one of the following", toString(private$.attr()),
+            stop(paste0("Unrecognized user attribute detected in `records`. ",
+            "The attributes must be one of the following", 
+            toString(private$.attr()),
             "and must be passed as names of a named list.\n"))
           }
           # check if elements of the list are arrays or numerics
           for (i in length(records)) {
-            if (!(is.numeric(records[[i]]) || all(SpecialValues$isNA(records[[i]])))) {
+            if (!(is.numeric(records[[i]]) || 
+            all(SpecialValues$isNA(records[[i]])))) {
               stop("All elements of the named list `records` must 
               be type numeric.\n")
             }
@@ -111,18 +113,19 @@ Variable <- R6Class(
 
         if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
           stop(paste0(
-            "Data conversion for non-scalar array (i.e., matrix) format into 
-            records is only possible for symbols where 
-            self$domainType = 'regular'. 
-            Must define symbol with specific domain set objects, 
-            symbol domainType is currently ",self$domainType,".\n" ))
+            "Data conversion for non-scalar array (i.e., matrix) format into ",
+            "records is only possible for symbols where ",
+            "self$domainType = 'regular'. ",
+            "Must define symbol with specific domain set objects, ",
+            "symbol domainType is currently ",self$domainType,".\n" ))
         }
 
         for (i in self$domain) {
           if (i$isValid() == FALSE) {
             stop(paste0(
-              "Domain set ", i$name, " is invalid and cannot be used to convert array-to-records.
-               Use $isValid(verbose = TRUE) to debug this domain set symbol before proceeding.\n"
+              "Domain set ", i$name, " is invalid and cannot be used ",
+              "to convert array-to-records. Use $isValid(verbose = TRUE) ",
+              "to debug this domain set symbol before proceeding.\n"
             ))
           }
         }
@@ -131,9 +134,11 @@ Variable <- R6Class(
           for (i in names(records)) {
             recs = records[[i]]
             if (!all(dim(recs) == self$shape())) {
-              stop(paste0("User passed array/matrix with shape ", toString(dim(recs)), " but anticipated 
-              shape was ", toString(self$shape()), " based on domain set information -- 
-              must reconcile before array-to-records conversion is possible.\n"))
+              stop(paste0("User passed array/matrix with shape ", 
+              toString(dim(recs)), " but anticipated shape was ", 
+              toString(self$shape()), " based on domain set information ",
+              "-- must reconcile before ",
+              "array-to-records conversion is possible.\n"))
             }
           }
         }
@@ -257,21 +262,23 @@ Variable <- R6Class(
 
         #check dimensionality
         if (length(records) != self$dimension + length(private$.attr())) {
-          stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
+          stop(cat(paste0("Dimensionality of records ", 
+          (length(records)-length(private$.attr())),
           " is inconsistent with the variable domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
           "NOTE:",
           "columns not named ", toString(private$.attr()),
-          " will be interpreted as domain columns, check that the data.frame conforms ",
-          "to the required notation.\n",
-          "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
+          " will be interpreted as domain columns, check that the ",
+          "data.frame conforms to the required notation.\n",
+          "User passed data.frame with columns: ", 
+          toString(usr_colnames), "\n")))
         }
 
         # check if numeric
         for (i in (self$dimension + 1):length(records)) {
           if (!(is.numeric(records[[i]]) || 
           all(SpecialValues$isNA(records[[i]])))) {
-            stop(paste0("All elements of the, `" , colnames(records)[i], 
+            stop(paste0("All elements of the, `", colnames(records)[i], 
             "` column of `records` not type numeric or NA.\n"))
           }
         }
@@ -333,9 +340,9 @@ Variable <- R6Class(
 
     generateRecords = function(density = 1, func=NULL, seed=NULL) {
       if(!((self$domainType == "regular") || (self$dimension == 0))) {
-        stop("Cannot generate records for the symbol unless the symbol has 
-        domain objects for all dimension, i.e., <symbol>$domainType == 'regular'
-        or the symbol is a scalar\n")
+        stop("Cannot generate records for the symbol unless the symbol has ",
+        "domain objects for all dimension, i.e., <symbol>$domainType ",
+        "== 'regular' or the symbol is a scalar\n")
       }
 
       if (!is.null(seed)) {
@@ -356,9 +363,10 @@ Variable <- R6Class(
       }
       else if (inherits(func, "list")) {
         attr_names = names(func)
-        if (length(intersect(attr_names, private$.attr())) != length(attr_names)) {
-          stop(paste0("the names of the named list `func` must be 
-          one of the following: ", toString(private$.attr()), "\n"))
+        if (length(intersect(attr_names, private$.attr())) 
+        != length(attr_names)) {
+          stop(paste0("the names of the named list `func` must be ",
+          "one of the following: ", toString(private$.attr()), "\n"))
         }
 
         lapply(func, function(f) {
@@ -368,7 +376,7 @@ Variable <- R6Class(
         })
       }
       else {
-        "The argument `func` must be of type function, named list, or NULL\n"
+        stop("The argument `func` must be of type function, named list, or NULL\n")
       }
 
       if (self$dimension != 0) {

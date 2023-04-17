@@ -94,8 +94,9 @@ UniverseAlias <- R6Class(
     verbose=FALSE) {
       # mandatory checks
       if (!self$isValid()) {
-        stop(paste0("Cannot compare objects because ", s$name, " is not valid. 
-        Use ", s$name, "$isValid(verbose=TRUE) to get more details\n"))
+        stop(paste0("Cannot compare objects because ", s$name, 
+        " is not valid. Use ", s$name, 
+        "$isValid(verbose=TRUE) to get more details\n"))
       }
 
       if (!inherits(other, c(".Symbol", ".BaseAlias"))) {
@@ -103,8 +104,8 @@ UniverseAlias <- R6Class(
       }
 
       if (!other$isValid()) {
-        stop(paste0("Cannot compare objects because ", other$name, " is invalid. Use ",
-        other$name, "$isValid(verbose=TRUE) to debug.\n"))
+        stop(paste0("Cannot compare objects because ", other$name, 
+        " is invalid. Use ", other$name, "$isValid(verbose=TRUE) to debug.\n"))
       }
 
       if (inherits(other, "Alias")) {
@@ -219,8 +220,8 @@ UniverseAlias <- R6Class(
     .testParentSet = function() {
       if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
         stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-        self$name, " is no longer in the container and cannot 
-        be referenced\n"))
+        self$name, " is no longer in the container and cannot ",
+        "be referenced\n"))
       }
     }
   )

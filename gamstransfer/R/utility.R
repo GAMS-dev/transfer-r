@@ -41,7 +41,8 @@ find_gams <- function() {
     }
   }
   if (is.null(sysDirPath)) {
-  stop("Could not find a GAMS installation, must manually specify system directory\n")
+  stop("Could not find a GAMS installation, ",
+  "must manually specify system directory\n")
   }
   return(sysDirPath)
 }

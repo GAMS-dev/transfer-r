@@ -39,8 +39,8 @@
     if (self$dimension == 0) return(c())
     if (is.null(dimension)) {
       if (!is.null(codes)) {
-        stop("User must specify `dimension` if retrieving UELs with the 
-        `codes` argument\n")
+        stop("User must specify `dimension` if retrieving UELs with the ",
+        "`codes` argument\n")
       }
       dimension = 1:self$dimension
     }
@@ -92,8 +92,8 @@
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
     any(dimension < 1) || any(dimension > self$dimension)) {
-      stop(paste0("All elements of the argument 
-      `dim` must be integers in [1, ", 
+      stop(paste0("All elements of the argument ",
+      "`dim` must be integers in [1, ", 
       self$dimension, "]\n"))
     }
 
@@ -132,8 +132,8 @@
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
     any(dimension < 1) || any(dimension > self$dimension)) {
-      stop(paste0("All elements of the argument 
-      `dim` must be integers in [1, ", 
+      stop(paste0("All elements of the argument ",
+      "`dim` must be integers in [1, ", 
       self$dimension, "]\n"))
     }
 
@@ -175,8 +175,8 @@
     if (!(is.integer(dimension) || is.numeric(dimension)) || 
     !all(dimension %% 1 == 0) || 
     any(dimension < 1) || any(dimension > self$dimension)) {
-      stop(paste0("All elements of the argument 
-      `dim` must be integers in [1, ", 
+      stop(paste0("All elements of the argument ",
+      "`dim` must be integers in [1, ", 
       self$dimension, "]\n"))
     }
 
@@ -194,8 +194,8 @@
     for (d in dimension) {
 
       if (length(setdiff(uels, private$.records[,d])) == 0) {
-        stop("The argument `uels` should not
-        contain existing uels")
+        stop("The argument `uels` should not ",
+        "contain existing uels")
       }
 
       private$.records[, d] = factor(private$.records[, d], 
@@ -209,8 +209,8 @@
       if (!(is.integer(dimension) || is.numeric(dimension)) || 
       !all(dimension %% 1 == 0) || 
       any(dimension < 1) || any(dimension > self$dimension)) {
-        stop(paste0("All elements of the argument 
-        `dim` must be integers in [1, ", 
+        stop(paste0("All elements of the argument ",
+        "`dim` must be integers in [1, ", 
         self$dimension, "]\n"))
       }
     }
@@ -250,8 +250,8 @@
       if (!(is.integer(dimension) || is.numeric(dimension)) || 
       !all(dimension %% 1 == 0) || 
       any(dimension < 1) || any(dimension > self$dimension)) {
-        stop(paste0("All elements of the argument 
-        `dim` must be integers in [1, ", 
+        stop(paste0("All elements of the argument ",
+        "`dim` must be integers in [1, ", 
         self$dimension, "]\n"))
       }
     }
@@ -290,8 +290,8 @@
           # make sure that the integer mapping is unaltered
 
           if (any(duplicated(uels) == TRUE)) {
-            stop("Multiple UELs cannot be renamed to a UEL. 
-            Use `allowMerge=TRUE`\n")
+            stop("Multiple UELs cannot be renamed to a UEL. ",
+            "Use `allowMerge=TRUE`\n")
           }
 
           if (length(intersect(levels(private$.records[, d]), uels)) != 0) {
@@ -570,14 +570,14 @@
     }
     else {
       if (!any(private$.attr() == column)) {
-        stop(paste0("Argument 'column' must be one 
-        of the following: ", toString(private$.attr()), "\n"))
+        stop(paste0("Argument 'column' must be one ",
+        "of the following: ", toString(private$.attr()), "\n"))
       }
     }
 
     if (self$isValid() == FALSE) {
-      stop("Cannot create dense array (i.e., matrix) format because symbol 
-      is invalid -- use $isValid(verbose=TRUE) to debug symbol state.\n")
+      stop("Cannot create dense array (i.e., matrix) format because symbol ",
+      "is invalid -- use $isValid(verbose=TRUE) to debug symbol state.\n")
     }
 
     if (is.null(self$records)) return(NULL)
@@ -767,8 +767,8 @@
         if (!((inherits(dimension_input, c("numeric", "integer"))) && 
            (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
            (dimension_input <= .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]))) {
-            stop(paste0("Symbol 'dimension' must be 
-           an integer in [0, ", .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "]\n"))
+            stop(paste0("Symbol 'dimension' must be ",
+           "an integer in [0, ", .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "]\n"))
            }
 
         if (length(self$domain) > dimension_input) {
@@ -812,8 +812,8 @@
           return((inherits(d, c("Set", ".BaseAlias")) && d$dimension == 1)
         || is.character(d))}), use.names = FALSE)
         if (any(domain_arg_check == FALSE)) {
-          stop("All 'domain' elements must be either one dimensional Set/Alias/UniverseAlias
-          , or must be type Character\n")
+          stop("All 'domain' elements must be either one dimensional ", 
+          "Set/Alias/UniverseAlias, or must be type Character\n")
         }
 
         # check change of domain
@@ -879,9 +879,9 @@
         }
 
         if (grepl("^[a-zA-Z0-9_]+$", name_input) == FALSE) {
-          stop("Detected an invalid GAMS symbol name. GAMS names can only 
-          contain alphanumeric characters (letters and numbers) and 
-          the `_` character.\n")
+          stop("Detected an invalid GAMS symbol name. GAMS names can only ",
+          "contain alphanumeric characters (letters and numbers) and ",
+          "the `_` character.\n")
         }
 
         if (is.null(private$.name)) {
@@ -1115,8 +1115,9 @@
     .check_equals_common_args = function(other, checkUELs, checkMetaData, verbose) {
       # mandatory checks
       if (!self$isValid()) {
-        stop(paste0("Cannot compare objects because ", s$name, " is not valid. 
-        Use ", s$name, "$isValid(verbose=TRUE) to get more details\n"))
+        stop(paste0("Cannot compare objects because ", s$name, 
+        " is not valid. Use ", s$name,
+        "$isValid(verbose=TRUE) to get more details\n"))
       }
 
       if (!inherits(other, c(".Symbol", ".BaseAlias"))) {
@@ -1124,8 +1125,9 @@
       }
 
       if (!other$isValid()) {
-        stop(paste0("Cannot compare objects because ", other$name, " is invalid. Use ",
-        other$name, "$isValid(verbose=TRUE) to debug.\n"))
+        stop(paste0("Cannot compare objects because ", other$name, 
+        " is invalid. Use ", other$name, 
+        "$isValid(verbose=TRUE) to debug.\n"))
       }
 
       if (!is.logical(checkUELs)) {
@@ -1237,8 +1239,8 @@
 
           if (lhs > rhs) {
             stop(paste0("Symbol records contain numeric differences in the ", 
-            attr, " attribute that are outside the specified tolerances 
-            rtol=", rtol_attr, ", atol=", atol_attr, "\n"))
+            attr, " attribute that are outside the specified tolerances rtol=", 
+            rtol_attr, ", atol=", atol_attr, "\n"))
           }
         }
       }
@@ -1274,8 +1276,8 @@
             idx_self = f(small_merged[, attrs_x])
             idx_other = f(small_merged[, attrs_y])
             if (any(idx_self != idx_other)) {
-              stop(paste0("Symbols with ", fnames[count], " special values 
-              do not match in the ", attr, " column.\n"))
+              stop(paste0("Symbols with ", fnames[count], " special values ",
+              "do not match in the ", attr, " column.\n"))
             }
 
             if (any(idx_self)) {
@@ -1293,7 +1295,8 @@
               atol_attr = atol[[attr]]
             }
             else {
-              stop(paste0("User passed a named vector for the argument `atol` but the attribute ", 
+              stop(paste0("User passed a named vector for the ", 
+              "argument `atol` but the attribute ", 
               attr, " is missing\n"))
             }
           }
@@ -1306,8 +1309,8 @@
               rtol_attr = rtol[[attr]]
             }
             else {
-              stop(paste0("User passed a named vector for the argument `rtol` but the attribute ", 
-              attr, " is missing\n"))
+              stop(paste0("User passed a named vector for the argument ", 
+              "`rtol` but the attribute ", attr, " is missing\n"))
             }
           }
           else {
@@ -1315,13 +1318,14 @@
           }
 
           # check numerical equality subject to tolerance
-          lhs = abs(small_merged[,paste0(attr, ".x")] - small_merged[, paste0(attr, ".y")])
+          lhs = abs(small_merged[,paste0(attr, ".x")] - 
+          small_merged[, paste0(attr, ".y")])
           rhs = atol_attr + rtol_attr * abs(small_merged[, paste0(attr, ".y")])
 
           if (any(lhs > rhs)) {
             stop(paste0("Symbol records contain numeric differences in the ", 
-            attr, " attribute that are outside the specified tolerances 
-            rtol=", rtol_attr, ", atol=", atol_attr, "\n"))
+            attr, " attribute that are outside the specified tolerances rtol="
+            , rtol_attr, ", atol=", atol_attr, "\n"))
           }
         }
 
@@ -1344,8 +1348,8 @@
             if (!identical(i, self$refContainer[i$name])) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the symbol with name ", i$name, 
-              " in the container is different. Seems to be a broken link.
-               -- must reset domain for symbol ",
+              " in the container is different. Seems to be a broken link.",
+               "-- must reset domain for symbol ",
               self$name))
             }
 
