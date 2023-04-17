@@ -3391,3 +3391,32 @@ test_that("test_num_119", {
   expect_error({i$description = a})
 }
 )
+
+# reorderUELs with null argument
+test_that("test_num_120", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", c(1,2,4,3)))
+  i$setUELs(paste0("i", 1:5))
+
+  expect_equal(i$getUELs(), paste0("i", 1:5))
+
+  i$reorderUELs()
+  expect_equal(i$getUELs(), paste0("i", c(1,2,4,3, 5)))
+
+  a = Parameter$new(m, "p", domain=c(i, i), records=data.frame(i=c("i1","i5","i3"), i=c("i2","i4","i1"), value=c(1,3,4)))
+  expect_equal(a$getUELs(1), c("i1","i5","i3"))
+  expect_equal(a$getUELs(2), c("i2","i4","i1"))
+
+  a$setUELs(uels=paste0("i", 1:5), dimension=1)
+  a$setUELs(uels=paste0("i", 1:5), dimension=2)
+
+  expect_equal(a$getUELs(1), paste0("i", 1:5))
+  expect_equal(a$getUELs(2), paste0("i", 1:5))
+
+  a$reorderUELs(dimension=1)
+  expect_equal(a$getUELs(1), c("i1","i5","i3", "i2","i4"))
+
+  a$reorderUELs(dimension=2)
+  expect_equal(a$getUELs(2), c("i2","i4","i1", "i3","i5"))
+}
+)

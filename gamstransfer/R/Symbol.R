@@ -125,7 +125,7 @@
 
   },
 
-  reorderUELs = function(uels, dimension=NULL) {
+  reorderUELs = function(uels = NULL, dimension = NULL) {
     # input check
     if (is.null(dimension)) dimension =1:self$dimension
 
@@ -137,7 +137,7 @@
       self$dimension, "]\n"))
     }
 
-    if (!is.character(uels)) {
+    if (!(is.null(uels) || is.character(uels))) {
       stop("The argument `uels` must be type `character` \n")
     }
 
@@ -145,15 +145,23 @@
       stop("The symbol has to be valid to reorder UELs \n")
     }
 
+
     for (d in dimension) {
-      if ((length(uels) != length(levels(private$.records[, d])))) {
-        stop("The argument `uels` must 
-        contain all uels that need to be reordered")
+      if (is.null(uels)) {
+        unique_used = unique(private$.records[, d])
+        unused_uels = setdiff(levels(private$.records[, d]), unique_used)
+        uels = c(as.character(unique_used), unused_uels)
       }
       else {
-        if (length(setdiff(uels, private$.records[,d])) != 0) {
+        if ((length(uels) != length(levels(private$.records[, d])))) {
           stop("The argument `uels` must 
           contain all uels that need to be reordered")
+        }
+        else {
+          if (length(setdiff(uels, private$.records[,d])) != 0) {
+            stop("The argument `uels` must 
+            contain all uels that need to be reordered")
+          }
         }
       }
       private$.records[, d] = factor(private$.records[, d], levels=uels)
