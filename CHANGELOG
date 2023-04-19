@@ -4,6 +4,9 @@ GAMS Transfer R
 - bug fix in symbol `description`
 - added `isScalar` property for the symbols of type `Variable` and `Equation`
 - Symbol method `getCardinality` is removed
+- Updated symbol method `reorderUELs()`. If the argument `uels` is not passed UELs are reordered based on the records
+- Symbol method `toDense()` now requires domain UELs and domain records to be in the same order and unused UELs in the domain (if any) at the end of the UEL list
+- Fixed the display of long error messages
 
 GAMS Transfer R v1.16.0
 ==================
