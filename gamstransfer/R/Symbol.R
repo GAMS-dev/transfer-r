@@ -460,30 +460,6 @@
     return(invisible(NULL))
   },
 
-  #' @description getCardinality get the full cartesian product of the domain
-  getCardinality = function() {
-    tryCatch(
-      {
-        if (self$domainType == "relaxed" | self$domainType == "none"){
-          return(NA)
-        }
-        else {
-          card = 1
-          for (i in self$domain) {
-            card = card * i$numberRecords
-          }
-          return(card)
-        }
-      },
-      error = function(cond) {
-        return(NA)
-      },
-      warning = function(cond) {
-        return(NA)
-      }
-    )
-  },
-
   #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
   getSparsity = function() {
     tryCatch(
@@ -492,7 +468,11 @@
           return(NA)
         }
         else {
-          return(1 - self$numberRecords/self$getCardinality())
+          dense = 1
+          for (i in self$domain) {
+            dense = dense * i$numberRecords
+          }
+          return(1 - self$numberRecords/dense)
         }
       },
       error = function(cond) {

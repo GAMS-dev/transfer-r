@@ -48,12 +48,6 @@ UniverseAlias <- R6Class(
       }
     },
 
-    #' @description getCardinality get the full cartesian product of the domain
-    getCardinality = function() {
-      return(nrow(self$records))
-    },
-
-
     #' @description getSparsity get the sparsity of the symbol 
     #' w.r.t the cardinality
     getSparsity = function() {

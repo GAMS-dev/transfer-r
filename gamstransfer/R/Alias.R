@@ -100,14 +100,6 @@ Alias <- R6Class(
       self$aliasWith$renameUELs(uels, dimension, allowMerge)
     },
 
-    #' @description getCardinality get the full cartesian product of the domain
-    getCardinality = function() {
-      super$.testRefContainer()
-      private$.testParentSet()
-      return(self$refContainer[self$aliasWith$name]$getCardinality())
-    },
-
-
     #' @description getSparsity get the sparsity of the symbol 
     #' w.r.t the cardinality
     getSparsity = function() {

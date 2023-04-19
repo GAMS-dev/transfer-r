@@ -3,6 +3,7 @@ GAMS Transfer R
 - Symbol method `isValid` now checks also for scalars with more than one record entries
 - bug fix in symbol `description`
 - added `isScalar` property for the symbols of type `Variable` and `Equation`
+- Symbol method `getCardinality` is removed
 
 GAMS Transfer R v1.16.0
 ==================

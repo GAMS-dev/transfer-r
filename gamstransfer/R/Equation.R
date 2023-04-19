@@ -27,7 +27,7 @@
 #' @description A class for Equation objects. This class inherits from an abstract 
 #' symbol class.The documentation for methods common to all symbols can be
 #' accessed via help(Symbol) or help(BaseSymbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef, getCardinality,
+#' countEPS, countNA, countNegInf, countPosInf, countUndef,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.
 #' @field description description of symbol
