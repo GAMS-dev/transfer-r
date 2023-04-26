@@ -71,8 +71,8 @@ SpecialValues = list(
           self$systemDirectory = systemDirectory
         }
         else {
-          stop("must enter valid full (absolute) path to 
-          GAMS system directory\n")
+          stop(paste0("must enter valid full (absolute) path to the",
+          "GAMS system directory\n"))
         }
       }
 
@@ -339,8 +339,8 @@ SpecialValues = list(
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
         }
       }
 
@@ -427,8 +427,8 @@ SpecialValues = list(
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
         }
       }
 
@@ -500,8 +500,8 @@ SpecialValues = list(
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
         }
       }
 
@@ -579,8 +579,8 @@ SpecialValues = list(
       }
       else {
         if (!(is.list(symbols) || is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
         }
       }
 
@@ -660,8 +660,8 @@ SpecialValues = list(
       }
       else {
         if (!(is.list(symbols) ||is.character(symbols))) {
-          stop("Argument `symbols` must be type character, 
-          list, vector, or NULL \n")
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
         }
       }
 
@@ -964,8 +964,9 @@ SpecialValues = list(
 
           diff = setdiff(columns, private$.attr())
           if (length(diff) != 0) {
-            stop(paste0("User entered columns (", toString(columns), ") must be a subset
-            of valid numeric columns ", toString(private$.attr()), "\n"))
+            stop(paste0("User entered columns (", toString(columns), 
+            ") must be a subset of valid numeric columns ", 
+            toString(private$.attr()), "\n"))
           }
         }
         else {

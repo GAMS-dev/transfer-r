@@ -142,8 +142,9 @@ ConstContainer <- R6::R6Class (
             records = NULL,
             m$expltext,dt, m$numRecs)
             if (!any(c(0,1) == m$subtype)) {
-              stop(paste0("Unknown set classification with 
-              GAMS Subtype ", m$subtype, "cannot load set ", m$name))
+              stop(paste0("Unknown set classification with ",
+              "GAMS Subtype ", m$subtype, ". Cannot load set ", 
+              m$name, "\n"))
             }
         }
         else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {

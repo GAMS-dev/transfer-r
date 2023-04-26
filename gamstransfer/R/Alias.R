@@ -76,7 +76,7 @@ Alias <- R6Class(
       self$aliasWith$setUELs(uels, dimension, rename)
     },
 
-    reorderUELs = function(uels, dimension=NULL) {
+    reorderUELs = function(uels=NULL, dimension=NULL) {
       super$.testRefContainer()
       private$.testParentSet()
       self$aliasWith$reorderUELs(uels, dimension)

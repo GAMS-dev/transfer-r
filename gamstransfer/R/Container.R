@@ -107,9 +107,9 @@ Container <- R6::R6Class (
         private$.containerRead(loadFrom, symbols, records)
       }
       else {
-        stop("Argument `loadFrom` must be type character, 
-        an instance of another Container, or an instance of a 
-        ConstContainer. \n")
+        stop(paste0("Argument `loadFrom` must be type character, ",
+        "an instance of another Container, or an instance of a ",
+        "ConstContainer. \n"))
       }
     },
 
@@ -284,12 +284,12 @@ Container <- R6::R6Class (
         }
         else {
             stop(paste0("Attempting to add symbol ", 
-            name, ", however,
-             one already exists in the Container. Symbol replacement
-             is only possible if the symbol is first removed from the 
-            Container with the removeSymbols() method. Overwriting symbol
-            `records` and `description` are possible if all other fields have
-             not changed\n"))
+            name, ", however, ",
+             "one already exists in the Container. Symbol replacement ",
+             "is only possible if the symbol is first removed from the ",
+            "Container with the removeSymbols() method. Overwriting symbol ",
+            "`records` and `description` are possible if all other fields ",
+             "have not changed\n"))
         }
       }
     },
@@ -342,12 +342,12 @@ Container <- R6::R6Class (
         }
         else {
             stop(paste0("Attempting to add symbol ", 
-            name, ", however,
-             one already exists in the Container. Symbol replacement
-             is only possible if the symbol is first removed from the 
-            Container with the removeSymbols() method. Overwriting symbol
-            `records` and `description` are possible if all other fields have
-             not changed\n"))
+            name, ", however, ",
+             "one already exists in the Container. Symbol replacement ",
+             "is only possible if the symbol is first removed from the ",
+            "Container with the removeSymbols() method. Overwriting symbol ",
+            "`records` and `description` are possible if all other fields ",
+             "have not changed\n"))
         }
       }
     },
@@ -404,12 +404,12 @@ Container <- R6::R6Class (
         }
         else {
             stop(paste0("Attempting to add symbol ", 
-            name, ", however,
-             one already exists in the Container. Symbol replacement
-             is only possible if the symbol is first removed from the 
-            Container with the removeSymbols() method. Overwriting symbol
-            `records` and `description` are possible if all other fields have
-             not changed\n"))
+            name, ", however, ",
+             "one already exists in the Container. Symbol replacement ",
+             "is only possible if the symbol is first removed from the ",
+            "Container with the removeSymbols() method. Overwriting symbol ",
+            "`records` and `description` are possible if all other fields ",
+             "have not changed\n"))
         }
 
       }
@@ -466,12 +466,12 @@ Container <- R6::R6Class (
         }
         else {
             stop(paste0("Attempting to add symbol ", 
-            name, ", however,
-             one already exists in the Container. Symbol replacement
-             is only possible if the symbol is first removed from the 
-            Container with the removeSymbols() method. Overwriting symbol
-            `records` and `description` are possible if all other fields have
-             not changed\n"))
+            name, ", however, ",
+             "one already exists in the Container. Symbol replacement ",
+             "is only possible if the symbol is first removed from the ",
+            "Container with the removeSymbols() method. Overwriting symbol ",
+            "`records` and `description` are possible if all other fields ",
+             "have not changed\n"))
         }
 
       }
@@ -511,10 +511,10 @@ Container <- R6::R6Class (
         }
         else {
           stop(paste0("Attempting to add an Alias symbol named ", name, 
-          " however, a symbol with this name but different type already exists 
-          in the container. Symbol replacement is only possible if this symbols 
-          is first removed from the Container with the 
-          removeSymbols() method\n"))
+          " however, a symbol with this name but different type already exists ",
+          "in the container. Symbol replacement is only possible if this symbols ",
+          "is first removed from the Container with the ",
+          "removeSymbols() method\n"))
         }
       }
     },
@@ -532,11 +532,11 @@ Container <- R6::R6Class (
           return(symobj)
         }
         else {
-          stop(paste0("Attempting to add a UniverseAlias symbol named ", name, 
-          " however, a symbol with this name but different type already exists 
-          in the container. Symbol replacement is only possible if this symbols 
-          is first removed from the Container with the 
-          removeSymbols() method\n"))
+          stop(paste0("Attempting to add a UniverseAlias symbol named ", name,
+          " however, a symbol with this name but different type already ",
+          "exists in the container. Symbol replacement is only possible ",
+          "if this symbols is first removed from the Container with the ",
+          "removeSymbols() method\n"))
         }
       }
     },
@@ -581,8 +581,8 @@ Container <- R6::R6Class (
     compress = FALSE, uelPriority = NULL) {
 
       if (!is.logical(compress)) {
-        stop("'compress' must be of type logical; 
-        default False (no compression)\n")
+        stop(paste0("'compress' must be of type logical; ",
+        "default False (no compression)\n"))
       }
 
       if (!is.character(writeTo)) {
@@ -650,9 +650,9 @@ Container <- R6::R6Class (
           universe = self$getUniverseSet()
           if ((is.null(universe)) ||
           (!setequal(intersect(uelPriority, universe), uelPriority))) {
-            stop("uelPriority must be a subset of the universe, check 
-            spelling of an element in uelPriority? Also check 
-            getUniverseSet() method for the assumed Universe Set.\n")
+            stop(paste0("uelPriority must be a subset of the universe, check ",
+            "spelling of an element in uelPriority? Also check ",
+            "getUniverseSet() method for the assumed Universe Set.\n"))
           }
 
           reorder = uelPriority
@@ -994,8 +994,8 @@ Container <- R6::R6Class (
                 domainForwarding=FALSE,
                 m$expltext)
                 if (m$subtype != 0 && m$subtype != 1) {
-                  stop(paste0("Unknown set classification with 
-                  GAMS Subtype ", m$subtype, "cannot load set ", m$name))
+                  stop(paste0("Unknown set classification with ",
+                  "GAMS Subtype ", m$subtype, "cannot load set ", m$name))
                 }
             }
             else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {
@@ -1040,10 +1040,10 @@ Container <- R6::R6Class (
           }
           else {
             if (!any(symbolsToRead == self[m$aliasfor]$name)) {
-              stop(paste0("Cannot create the Alias symbol ", m, " because 
-              the parent set (", self[m$aliasfor], ") is not 
-              being read into the in the Container. Alias symbols 
-              require the parent set object to exist in the Container. Add ",
+              stop(paste0("Cannot create the Alias symbol ", m, " because ",
+              "the parent set (", self[m$aliasfor], ") is not ",
+              "being read into the in the Container. Alias symbols ",
+              "require the parent set object to exist in the Container. Add ",
               self[m$aliasfor], " to the list of symbols to read."))
             }
             else {
@@ -1115,8 +1115,8 @@ Container <- R6::R6Class (
         if (any(symbol_in_source == FALSE)) {
           s = which(symbol_in_source == FALSE)
           stop(paste0("User specified to read symbol ", 
-          symbols[s], " but it does 
-          not exist in the source container\n"))
+          symbols[s], " but it does ",
+          "not exist in the source container\n"))
         }
         else {
           symbolsToRead = symbols
@@ -1144,8 +1144,8 @@ Container <- R6::R6Class (
         })
         if (any(sym_is_valid == FALSE)) {
           s = which(sym_is_valid == FALSE)
-          stop(paste0("Cannot read symbol ", s, " because it is invalid, 
-          use $isValid(verbose=TRUE) method to debug symbol state\n"))
+          stop(paste0("Cannot read symbol ", s, " because it is invalid, ",
+          "use $isValid(verbose=TRUE) method to debug symbol state\n"))
         }
       }
 
@@ -1190,10 +1190,10 @@ Container <- R6::R6Class (
           }
           else if (inherits(s_loadfrom, ".ConstAlias")) {
             if (!any(symbolsToRead == s_loadfrom$aliasWith)) {
-              stop(paste0("Cannot create the Alias symbol ", s, " because 
-              the parent set (", s_loadfrom$aliasWith, ") is not 
-              being read into the in the Container. Alias symbols 
-              require the parent set object to exist in the Container. Add ",
+              stop(paste0("Cannot create the Alias symbol ", s, " because ",
+              "the parent set (", s_loadfrom$aliasWith, ") is not ",
+              "being read into the in the Container. Alias symbols ",
+              "require the parent set object to exist in the Container. Add ",
               s_loadfrom$aliasWith, " to the list of symbols to read."))
             }
             else {
@@ -1203,10 +1203,10 @@ Container <- R6::R6Class (
           }
           else if (inherits(s_loadfrom, "Alias")) {
             if (!any(symbolsToRead == s_loadfrom$aliasWith$name)) {
-              stop(paste0("Cannot create the Alias symbol ", s, " because 
-              the parent set (", s_loadfrom$aliasWith, ") is not 
-              being read into the in the Container. Alias symbols 
-              require the parent set object to exist in the Container. Add ",
+              stop(paste0("Cannot create the Alias symbol ", s, " because ",
+              "the parent set (", s_loadfrom$aliasWith, ") is not ",
+              "being read into the in the Container. Alias symbols ",
+              "require the parent set object to exist in the Container. Add ",
               s_loadfrom$aliasWith, " to the list of symbols to read."))
             }
             else {
@@ -1261,18 +1261,18 @@ Container <- R6::R6Class (
         # make sure that all symbols have consistent naming
         lapply(names(symbols), function(n) {
           if (n != self[n]$name) {
-            stop(paste0("Container `data` field is inconsistent with the symbol 
-            object name (", n, " != ", self[n]$name, "). Update 
-            symbol name with <symbol>$name = <name from `data` field> \n"))
+            stop(paste0("Container `data` field is inconsistent with the ",
+            "symbol object name (", n, " != ", self[n]$name, "). Update ",
+            "symbol name with <symbol>$name = <name from `data` field> \n"))
           }
           })
 
         # make sure that all symbols reference the correct Container instance
         lapply(symbols, function(n) {
           if (!identical(self, n$refContainer)) {
-            stop(paste0("Symbol ", self$name, " has a broken container 
-            reference. Update symbol reference with <symbol>$refContainer 
-            = <new_container>\n"))
+            stop(paste0("Symbol ", self$name, " has a broken container ",
+            "reference. Update symbol reference with <symbol>$refContainer ",
+            "= <new_container>\n"))
           }
           })
 

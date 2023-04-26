@@ -1760,8 +1760,8 @@ test_that("test_num_72", {
 
   expect_equal(m["dim0"]$shape(), dim(m["dim0"]$toDense()))
   expect_equal(m["dim1"]$shape(), dim(m["dim1"]$toDense()))
-  expect_equal(m["dim2"]$shape(), dim(m["dim2"]$toDense()))
-  expect_equal(m["dim3"]$shape(), dim(m["dim3"]$toDense()))
+  expect_error(m["dim2"]$toDense())
+  expect_error(m["dim3"]$toDense())
 }
 )
 
@@ -3389,5 +3389,55 @@ test_that("test_num_119", {
 
 
   expect_error({i$description = a})
+}
+)
+
+# reorderUELs with null argument
+test_that("test_num_120", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", c(1,2,4,3)))
+  i$setUELs(paste0("i", 1:5))
+
+  expect_equal(i$getUELs(), paste0("i", 1:5))
+
+  i$reorderUELs()
+  expect_equal(i$getUELs(), paste0("i", c(1,2,4,3, 5)))
+
+  a = Parameter$new(m, "p", domain=c(i, i), records=data.frame(i=c("i1","i5","i3"), i=c("i2","i4","i1"), value=c(1,3,4)))
+  expect_equal(a$getUELs(1), c("i1","i5","i3"))
+  expect_equal(a$getUELs(2), c("i2","i4","i1"))
+
+  a$setUELs(uels=paste0("i", 1:5), dimension=1)
+  a$setUELs(uels=paste0("i", 1:5), dimension=2)
+
+  expect_equal(a$getUELs(1), paste0("i", 1:5))
+  expect_equal(a$getUELs(2), paste0("i", 1:5))
+
+  a$reorderUELs(dimension=1)
+  expect_equal(a$getUELs(1), c("i1","i5","i3", "i2","i4"))
+
+  a$reorderUELs(dimension=2)
+  expect_equal(a$getUELs(2), c("i2","i4","i1", "i3","i5"))
+}
+)
+
+# todense uel checks
+test_that("test_num_121", {
+  m = Container$new()
+  i = Set$new(m, "i", records = paste0("i", c(1,2,4,3)))
+  a = Parameter$new(m, "a", domain=i, records=data.frame(i = c("i1","i3"), value=c(1,3)))
+  expect_equal(a$toDense(), array(c(1, 0, 0,  3)))
+
+  i$setUELs(paste0("i", 1:5))
+  i$reorderUELs(paste0("i", c(1,2,4,3, 5)))
+  # unused uels at the end are okay
+  expect_equal(a$toDense(), array(c(1, 0, 0,  3)))
+
+  i$reorderUELs(paste0("i", c(1,2,5, 4,3)))
+  expect_error(a$toDense())
+
+  # now the order of UELs is different from that of the records
+  i$setUELs(paste0("i", 1:4))
+  expect_error(a$toDense())
 }
 )
