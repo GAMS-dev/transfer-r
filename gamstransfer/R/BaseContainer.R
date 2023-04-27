@@ -456,11 +456,13 @@ SpecialValues = list(
       for (i in symbols) {
         if (any(self$listAliases() == i)) {
           if(inherits(self, "Container")) {
-            if (inherits(self[name], "Alias")) {
-             alias_with = append(alias_with, self[name]$aliasWith$name)
+            if (inherits(self[i], "Alias")) {
+              aliasName = self[i]$aliasWith$name
+            #  alias_with = append(alias_with, self[i]$aliasWith$name)
             }
-            else if (inherits(self[name], "UniverseAlias")) {
-              alias_with = append(alias_with, self[name]$aliasWith)
+            else if (inherits(self[i], "UniverseAlias")) {
+              aliasName = self[i]$aliasWith
+              # alias_with = append(alias_with, self[i]$aliasWith)
             }
           }
           else if (inherits(self, "ConstContainer")) {
