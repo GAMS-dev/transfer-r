@@ -83,8 +83,10 @@ SpecialValues = list(
     },
 
     `[` = function(key) {
-      if (self$data$has(key)) {
-        return(self$data$get(key))
+      if (self$.lc_data$has(tolower(key))) {
+        # key exists
+        true_case_key = self$.lc_data$get(tolower(key))
+        return(self$data$get(true_case_key))
       }
       else {
         return(invisible(NULL))

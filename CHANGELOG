@@ -7,6 +7,7 @@ GAMS Transfer R
 - Updated symbol method `reorderUELs()`. If the argument `uels` is not passed UELs are reordered based on the records
 - Symbol method `toDense()` now requires domain UELs and domain records to be in the same order and unused UELs in the domain (if any) at the end of the UEL list
 - Fixed the display of long error messages
+- bug fix in accessing Container symbols in a case-insensitive manner
 
 GAMS Transfer R v1.16.0
 ==================

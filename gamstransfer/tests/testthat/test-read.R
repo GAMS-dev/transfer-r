@@ -3441,3 +3441,13 @@ test_that("test_num_121", {
   expect_error(a$toDense())
 }
 )
+
+# case insensitive check
+test_that("test_num_122", {
+  m = Container$new()
+  m$read(testthat::test_path("testdata","trnsport.gdx"), "x")
+  expect_true(!is.null(m["x"]))
+  expect_true(!is.null(m["X"]))
+  expect_true(is.null(m["d"]))
+}
+)
