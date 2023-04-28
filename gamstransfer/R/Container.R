@@ -1043,35 +1043,9 @@ Container <- R6::R6Class (
                     self, m$name, self[m$aliasfor])
                   }
                 }
-                # aliasCount = aliasCount + 1
-                # aliasList = append(aliasList, list(m))
             }
 
         }
-
-        # print("alias list")
-        # print(aliasList)
-        # # do alias last
-        # for (m in aliasList) {
-        #   if (m$aliasfor == "*") {
-        #         # universe alias
-        #         UniverseAlias$new(self, m$name)
-        #   }
-        #   else {
-        #     if (!any(symbolsToRead == self[m$aliasfor]$name)) {
-        #       stop(paste0("Cannot create the Alias symbol ", m, " because ",
-        #       "the parent set (", m$aliasfor, ") is not ",
-        #       "being read into the Container. Alias symbols ",
-        #       "require the parent set object to exist in the Container. Add ",
-        #       m$aliasfor, " to the list of symbols to read.\n"))
-        #     }
-        #     else {
-        #       Alias$new(
-        #       self, m$name, self[m$aliasfor])
-        #     }
-        #   }
-
-        # }
 
         if (records == TRUE) {
           for (s in readData) {
