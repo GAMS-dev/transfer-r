@@ -3451,3 +3451,13 @@ test_that("test_num_122", {
   expect_true(is.null(m["d"]))
 }
 )
+
+
+# describe aliases
+test_that("test_num_123", {
+  m = Container$new()
+  expect_error(m$read(testthat::test_path("testdata","trnsport_with_alias.gdx"), "ip"))
+  m$read(testthat::test_path("testdata","trnsport_with_alias.gdx"))
+  m$describeAliases()
+}
+)
