@@ -974,22 +974,23 @@ Container <- R6::R6Class (
 
         readData = readlist[-1]
         rm("readlist")
-        aliasList = list()
-        aliasCount = 0
 
         symbolsToRead = unlist(lapply(readData, "[[", 1))
 
         # readData only contains symbols to be read
         for (m in readData) {
+            if (m$name == "*") next
+
+            domain = private$.getDomainGDXRead(m)
             if (m$type == .gdxSymbolTypes()[["GMS_DT_PAR"]]) {
               Parameter$new(
-                self, m$name, m$domain,
+                self, m$name, domain,
                 domainForwarding=FALSE,
                 description = m$expltext)
             }
             else if (m$type == .gdxSymbolTypes()[["GMS_DT_SET"]]) {
                 Set$new(
-                self, m$name, m$domain, as.logical(m$subtype),
+                self, m$name, domain, as.logical(m$subtype),
                 records = NULL,
                 domainForwarding=FALSE,
                 m$expltext)
@@ -1007,7 +1008,7 @@ Container <- R6::R6Class (
                   type = names(.VarTypeSubtype())[[type]]
                 }
                 Variable$new(
-                self, m$name, type, m$domain,
+                self, m$name, type, domain,
                 domainForwarding = FALSE,
                 description = m$expltext)
             }
@@ -1021,7 +1022,7 @@ Container <- R6::R6Class (
                 }
 
                 Equation$new(
-                self, m$name, type, m$domain,
+                self, m$name, type, domain,
                 domainForwarding = FALSE,
                 description = m$expltext)
             }
@@ -1091,9 +1092,28 @@ Container <- R6::R6Class (
             }
           }
 
-          private$.linkDomainObjects(symbolsToRead)
+          # private$.linkDomainObjects(symbolsToRead)
         }
 
+    },
+
+    .getDomainGDXRead = function(m) {
+      if(m$domaintype == 1 || m$domaintype == 2) {
+        return(m$domain)
+      }
+      else {
+        domain = unlist(lapply(m$domain, function(d) {
+          if (is.null(self[d])) {
+            return(d)
+          }
+          else {
+            return(self[d])
+
+          }
+        }
+        ), use.names=FALSE)
+        return(domain)
+      }
     },
 
     .containerRead = function(loadFrom, symbols, records) {
@@ -1151,6 +1171,7 @@ Container <- R6::R6Class (
           else {
             dnames = s_loadfrom$domainNames
           }
+
           if (inherits(s_loadfrom, c("Set", ".ConstSet"))) {
             Set$new(
             self, s_loadfrom$name, dnames, 
@@ -1213,23 +1234,29 @@ Container <- R6::R6Class (
           }
         }
 
-        private$.linkDomainObjects(symbolsToRead)
+        private$.linkDomainObjects(symbolsToRead, loadFrom)
     },
 
-    .linkDomainObjects = function(symbols) {
+    .linkDomainObjects = function(symbols, loadFrom) {
       symbol_is_alias = unlist(lapply(symbols, function(s) {
         inherits(self[s], ".BaseAlias")}), use.names=FALSE)
       symbol_not_alias = symbols[!symbol_is_alias]
 
       lapply(symbol_not_alias, function(s) {
-        d = unlist(lapply(self[s]$domain, function(j) {
-          if (is.character(j) && (any(symbol_not_alias == j)) && (j != s)) {
-               return(self[j])
-          }
-          else {
+        d = unlist(lapply(loadFrom[s]$domain, function(j) {
+          if (is.character(j)) {
             return(j)
           }
+          else {
+            if (any(symbol_not_alias == j$name)) {
+              return(self[j$name])
+            }
+            else {
+              return(j$name)
+            }
+          }
         }), use.names = FALSE)
+
         if (self[s]$dimension == 1) {
           self[s]$domain = d[[1]]
         }

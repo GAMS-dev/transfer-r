@@ -9,6 +9,7 @@ GAMS Transfer R
 - Fixed the display of long error messages
 - bug fix in accessing Container symbols in a case-insensitive manner
 - bug fix in the Container method `describeAliases`
+- Container `read` preserves the domain type from the source and avoids domain linking by symbol name
 
 GAMS Transfer R v1.16.0
 ==================

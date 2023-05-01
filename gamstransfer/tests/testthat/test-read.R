@@ -3461,3 +3461,49 @@ test_that("test_num_123", {
   m$describeAliases()
 }
 )
+
+# domain linking test on GDX read
+test_that("test_num_123", {
+  m = Container$new()
+  m$read(testthat::test_path("testdata","trnsport.gdx"))
+  expect_equal(m["d"]$domain, c(m["i"], m["j"]))
+
+  # subset of symbols in a different order
+  m1 = Container$new()
+  m1$read(testthat::test_path("testdata","trnsport.gdx"), c("d","i","j"))
+  expect_equal(m1["d"]$domain, c(m1["i"], m1["j"]))
+
+  # check the same for container read
+  m1 = Container$new()
+  m1$read(m, c("d","i","j"))
+  expect_equal(m1["d"]$domain, c(m1["i"], m1["j"]))
+
+  # subset of symbols one string one regular
+  m1 = Container$new()
+  m1$read(testthat::test_path("testdata","trnsport.gdx"), c("d","i"))
+  expect_equal(m1["d"]$domain, c(m1["i"], "j"))
+
+  # check the same for container read
+  m1 = Container$new()
+  m1$read(m, c("d","i"))
+  expect_equal(m1["d"]$domain, c(m1["i"], "j"))
+
+  # ensure that symbols are not linked using names
+  m = Container$new()
+  j = Set$new(m, "j", records=paste0("j",1:10))
+  i = Set$new(m, "i", records=paste0("i",1:10))
+  p = Parameter$new(m, "p", domain=c("j"), records = data.frame(j=paste0("i",1:10), 1:10))
+  m$write("gt.gdx")
+
+  m = Container$new("gt.gdx")
+  expect_equal(m["p"]$domain, "j")
+  expect_false(m["p"]$hasDomainViolations())
+
+  # check the same for container read
+  m2 = Container$new()
+  m2$read(m)
+  expect_equal(m2["p"]$domain, "j")
+  expect_false(m2["p"]$hasDomainViolations())
+
+}
+)
