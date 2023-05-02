@@ -48,7 +48,6 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 		if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
       stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
 
-
     int** dom_uel_used =new int*[Dim];
 
     if (!gdxSymbolInfoX(PGX, varNr, &nrecs, &subtype, explText))
@@ -340,6 +339,8 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   if (!gdxSystemInfo(PGX, &symCount, &uel_count))
     stop("CPP_readSuper:gdxSystemInfo GDX error (gdxSystemInfo)");
 
+  std::vector<bool> sym_enabled(symCount + 1, false); // initialize sym_enabled with false
+
 std::map<int, std::map<int, int>> sym_uel_map;
 
   // initialize empty lists for metadata
@@ -354,16 +355,17 @@ std::map<int, std::map<int, int>> sym_uel_map;
   _["records"]=-1);
 
   int l1_preallocate_size;
+
   if (symisnull == 1) {
     l1_preallocate_size = symCount + 1;
   }
   else {
     l1_preallocate_size = symNames.size() + 1;
   }
+
   List L1(l1_preallocate_size);
   L1[0] = acronymList;
 
-  int sym_nrs[l1_preallocate_size - 1];
   if (!symisnull) {
     for(int symcount=0; symcount < symNames.size(); symcount++) {
       mysymName = symNames(symcount);
@@ -371,14 +373,10 @@ std::map<int, std::map<int, int>> sym_uel_map;
         stop("User specified to read symbol %s, but it does not "
         "exist in the source file", mysymName);
       }
-      sym_nrs[symcount] = VarNr;
+      sym_enabled.at(VarNr) = true;
     }
   }
-  else {
-    for (int i=0; i < (l1_preallocate_size - 1); i++) {
-      sym_nrs[i] = i + 1;
-    }
-  }
+
 
   // if user wants to read all symbols, iterate over gdx symbols
   // otherwise iterate over symbols provided by user
@@ -401,7 +399,8 @@ std::map<int, std::map<int, int>> sym_uel_map;
   int l1count;
   l1count = 1;
 
-  for (int i : sym_nrs) {
+  for (int i=1; i < symCount + 1; i++) {
+    if (!symisnull && !sym_enabled.at(i)) continue;
     readInternal(PGX, i, records, templistAlias, 
     templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
     sym_uel_map, uel_count);
