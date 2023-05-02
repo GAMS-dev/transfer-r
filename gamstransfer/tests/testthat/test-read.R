@@ -3463,7 +3463,7 @@ test_that("test_num_123", {
 )
 
 # domain linking test on GDX read
-test_that("test_num_123", {
+test_that("test_num_124", {
   m = Container$new()
   m$read(testthat::test_path("testdata","trnsport.gdx"))
   expect_equal(m["d"]$domain, c(m["i"], m["j"]))
@@ -3507,3 +3507,14 @@ test_that("test_num_123", {
 
 }
 )
+
+# domain linking test on GDX read when domain symbol exists
+# in the container but is not read from GDX
+test_that("test_num_125", {
+  m = Container$new()
+  i = Set$new(m, "i")
+  m$read(testthat::test_path("testdata","trnsport.gdx"), "d")
+  expect_equal(m["d"]$domain, c("i", "j"))
+}
+)
+

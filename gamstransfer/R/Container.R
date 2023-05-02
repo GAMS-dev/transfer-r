@@ -981,7 +981,7 @@ Container <- R6::R6Class (
         for (m in readData) {
             if (m$name == "*") next
 
-            domain = private$.getDomainGDXRead(m)
+            domain = private$.getDomainGDXRead(m, symbolsToRead)
             if (m$type == .gdxSymbolTypes()[["GMS_DT_PAR"]]) {
               Parameter$new(
                 self, m$name, domain,
@@ -1097,13 +1097,14 @@ Container <- R6::R6Class (
 
     },
 
-    .getDomainGDXRead = function(m) {
+    .getDomainGDXRead = function(m, symbolsToRead) {
       if(m$domaintype == 1 || m$domaintype == 2) {
         return(m$domain)
       }
       else {
         domain = unlist(lapply(m$domain, function(d) {
-          if (is.null(self[d])) {
+          if (is.null(self[d]) || 
+          (!is.null(self[d]) && !any(symbolsToRead == d))) {
             return(d)
           }
           else {

@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v1.18.0
 ==================
 - Symbol method `isValid` now checks also for scalars with more than one record entries
 - bug fix in symbol `description`
