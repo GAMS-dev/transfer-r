@@ -29,9 +29,7 @@
 #' linked together (through their domain definitions), it enables 
 #' implicit set definitions, it enables structural manipulations of the 
 #' data (matrix generation), and it allows the user to perform different 
-#' read/write operations.The Container class inherits from an abstract
-#' BaseContainer class. To access the functions common to Container and
-#' ConstContainer, please use help(BaseContainer)
+#' read/write operations.
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export

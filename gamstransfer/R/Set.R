@@ -1,7 +1,6 @@
 #' @title Set Class
 #' @description A class for Set objects. This class inherits from an abstract Symbol class.
-#' The documentation for methods common to all symbols can be accessed via help(Symbol)
-#'  or help(BaseSymbol).
+#' The documentation for methods common to all symbols can be accessed via help(Symbol).
 #' @field description description of symbol
 #' @field dimension of symbol
 #' @field domainForwarding flag that forces set elements to be recursively 
