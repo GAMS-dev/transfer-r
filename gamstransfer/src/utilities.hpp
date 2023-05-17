@@ -17,8 +17,11 @@ class gt_gdx
     }
     ~gt_gdx() {
       // close the file and return
-      if (gdxClose(gdx)) stop("CPP_readSuper:gdxClose GDX error (gdxClose)");
-      if (!gdxFree(&gdx)) stop("CPP_readSuper:gdxFree GDX error (gdxFree)");
+      if (gdx) {
+        if (gdxClose(gdx)) stop("CPP_readSuper:gdxClose GDX error (gdxClose)");
+        if (!gdxFree(&gdx)) stop("CPP_readSuper:gdxFree GDX error (gdxFree)");
+      }
+
       if (gdxLibraryLoaded()) {
         if (!gdxLibraryUnload()) stop("CPP_readSuper:gdxLibraryUnload GDX error (gdxLibraryUnload)");
       }
