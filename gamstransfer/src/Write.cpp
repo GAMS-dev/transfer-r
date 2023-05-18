@@ -24,6 +24,7 @@
 #include <Rcpp.h>
 #include "gdxcc.h"
 #include "gclgms.h"
+#include "utilities.hpp"
 using namespace Rcpp;
 
 void WriteData(gdxHandle_t PGX, StringVector s,
@@ -90,9 +91,6 @@ std::string elemText, std::string sym_name) {
   return;
 }
 
-
-
-
 // [[Rcpp::export]]
 void CPP_gdxWriteSuper(List data, LogicalVector enable, CharacterVector sysDir, 
 CharacterVector fileName, CharacterVector uel_priority, 
@@ -100,30 +98,27 @@ bool is_uel_priority, bool compress) {
   std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
-  gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE];
 	int         ErrNr, rc, varType, varSubType;
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
-  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("CPP_gdxWriteSuper:gdxCreateD GDX init failed: %s", Msg);
+  gt_gdx gdxobj;
+  gdxobj.init_library(mysysDir.c_str());
 
-	gdxGetDLLVersion(PGX, Msg);
-
-	/* Write demand data */
+  /* Write demand data */
   if (!compress) {
-    rc = gdxOpenWrite(PGX, myFileName.c_str(), "GAMS Transfer", &ErrNr);
+    rc = gdxOpenWrite(gdxobj.gdx, myFileName.c_str(), "GAMS Transfer", &ErrNr);
     if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWrite Error opening the file %s with error code %i", myFileName, ErrNr);
   }
   else {
-    rc = gdxOpenWriteEx(PGX, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
+    rc = gdxOpenWriteEx(gdxobj.gdx, myFileName.c_str(), "GAMS Transfer", 1, &ErrNr);
     if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWriteEx Error opening the file %s with error code %i", myFileName, ErrNr);
   }
 
   gdxSVals_t sVals;
-  gdxGetSpecialValues(PGX, sVals);
+  gdxGetSpecialValues(gdxobj.gdx, sVals);
 
   sVals[GMS_SVIDX_NA] = NA_REAL;
   sVals[GMS_SVIDX_EPS] = -0.0;
@@ -131,20 +126,20 @@ bool is_uel_priority, bool compress) {
   sVals[GMS_SVIDX_PINF] = R_PosInf;
   sVals[GMS_SVIDX_MINF] = R_NegInf;
 
-  rc = gdxSetSpecialValues(PGX, sVals);
+  rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
   if (!rc) stop("CPP_gdxWriteSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
 
   // register UELs
   int UELno;
   if (is_uel_priority) {
-    rc = gdxUELRegisterStrStart(PGX);
+    rc = gdxUELRegisterStrStart(gdxobj.gdx);
     if (!rc) stop("CPP_gdxWriteSuper:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
     for (int i = 0; i < uel_priority.length(); i++) {
       myUEL = uel_priority(i);
-      rc = gdxUELRegisterStr(PGX, myUEL.c_str(), &UELno);
+      rc = gdxUELRegisterStr(gdxobj.gdx, myUEL.c_str(), &UELno);
       if (!rc) stop("Error registering UEL: %s", myUEL);
     }
-    if (!gdxUELRegisterDone(PGX))
+    if (!gdxUELRegisterDone(gdxobj.gdx))
       stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
   }
   DataFrame df;
@@ -168,7 +163,7 @@ bool is_uel_priority, bool compress) {
       if (isUniverseAlias == true) {
         std::string alias_with = symname["aliasWith"];
 
-        if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
+        if (!gdxAddAlias(gdxobj.gdx, mysym.c_str(), alias_with.c_str()))
         stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
         continue;
       }
@@ -176,7 +171,7 @@ bool is_uel_priority, bool compress) {
         Environment alias_with_env = symname["aliasWith"];
         std::string alias_with = alias_with_env["name"];
 
-        if (!gdxAddAlias(PGX, mysym.c_str(), alias_with.c_str()))
+        if (!gdxAddAlias(gdxobj.gdx, mysym.c_str(), alias_with.c_str()))
         stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
         continue;
       }
@@ -191,7 +186,7 @@ bool is_uel_priority, bool compress) {
       domainstr = symname["domainNames"];
     }
     std::string expltxt = symname["description"];
-    if (!gdxDataWriteStrStart(PGX, mysym.c_str(), 
+    if (!gdxDataWriteStrStart(gdxobj.gdx, mysym.c_str(), 
     expltxt.c_str(), Dim, varType, varSubType))
     stop("CPP_gdxWriteSuper:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart)");
 
@@ -201,27 +196,27 @@ bool is_uel_priority, bool compress) {
 
     std::string domaintype = symname["domainType"];
     if (domaintype == "regular") {
-      rc = gdxSymbolSetDomain(PGX, (const char **)domains_ptr);
+      rc = gdxSymbolSetDomain(gdxobj.gdx, (const char **)domains_ptr);
       if (!rc) {
-        gdxGetLastError(PGX); // clears last error
-        rc = gdxSymbolSetDomainX(PGX, sym_nr, (const char **)domains_ptr);
+        gdxGetLastError(gdxobj.gdx); // clears last error
+        rc = gdxSymbolSetDomainX(gdxobj.gdx, sym_nr, (const char **)domains_ptr);
         if (!rc) {
-          gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+          gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
           stop("CPP_gdxWriteSuper:gdxSymbolSetDomain GDX error: %s",Msg);
         }
       }
     }
     else if (domaintype == "relaxed") {
-      rc = gdxSymbolSetDomainX(PGX, sym_nr, (const char **)domains_ptr);
+      rc = gdxSymbolSetDomainX(gdxobj.gdx, sym_nr, (const char **)domains_ptr);
       if (!rc) {
-        gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+        gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
         stop("CPP_gdxWriteSuper:gdxSymbolSetDomainX GDX error: %s",Msg);
       }
     }
     int nrows = df.nrows();
     int ncols = df.size();
     if (nrows == 0) {
-      if (!gdxDataWriteDone(PGX)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
     }
     else {
       StringMatrix rec_domain(nrows, Dim);
@@ -248,26 +243,25 @@ bool is_uel_priority, bool compress) {
       for (int i =0; i < nrows; i++) {
         if (varType != GMS_DT_SET){
           names = rec_domain(i, _);
-          WriteData(PGX, names, rec_vals(i, _), varType, Dim, "", mysym);
+          WriteData(gdxobj.gdx, names, rec_vals(i, _), varType, Dim, "", mysym);
         }
         else {
           names = rec_domain(i, _);
           NumericVector zero_vec = {0};
-          WriteData(PGX, names, zero_vec, varType, Dim, Rcpp::as<std::string>(elem_text[i]), mysym);
+          WriteData(gdxobj.gdx, names, zero_vec, varType, Dim, Rcpp::as<std::string>(elem_text[i]), mysym);
         }
       }
-      if (!gdxDataWriteDone(PGX)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
 
     }
 
   // get the error count
-   if (gdxDataErrorCount(PGX)) {
-      gdxErrorStr(PGX, gdxGetLastError(PGX), Msg);
+  if (gdxDataErrorCount(gdxobj.gdx)) {
+      gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
       stop("CPP_gdxWriteSuper:gdxError GDX error for %s: %s", mysym, Msg);
-   }
+  }
   }
 
-  gdxAutoConvert(PGX, 0);
-  if (gdxClose(PGX)) stop("CPP_gdxWriteSuper:gdxClose GDX error (gdxClose)");
+  gdxAutoConvert(gdxobj.gdx, 0);
   return;
 }

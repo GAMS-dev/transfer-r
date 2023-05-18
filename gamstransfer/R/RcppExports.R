@@ -5,10 +5,6 @@ CPP_readSuper <- function(symNames, gdxName, sysDir, records, symisnull) {
     .Call(`_gamstransfer_CPP_readSuper`, symNames, gdxName, sysDir, records, symisnull)
 }
 
-CPP_getSpecialValues <- function(gdxName, sysDir) {
-    .Call(`_gamstransfer_CPP_getSpecialValues`, gdxName, sysDir)
-}
-
 CPP_getGDXSymbolTypes <- function() {
     .Call(`_gamstransfer_CPP_getGDXSymbolTypes`)
 }

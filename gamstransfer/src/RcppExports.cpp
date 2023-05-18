@@ -25,18 +25,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// CPP_getSpecialValues
-List CPP_getSpecialValues(CharacterVector gdxName, CharacterVector sysDir);
-RcppExport SEXP _gamstransfer_CPP_getSpecialValues(SEXP gdxNameSEXP, SEXP sysDirSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    rcpp_result_gen = Rcpp::wrap(CPP_getSpecialValues(gdxName, sysDir));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CPP_getGDXSymbolTypes
 List CPP_getGDXSymbolTypes();
 RcppExport SEXP _gamstransfer_CPP_getGDXSymbolTypes() {
@@ -116,7 +104,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 5},
-    {"_gamstransfer_CPP_getSpecialValues", (DL_FUNC) &_gamstransfer_CPP_getSpecialValues, 2},
     {"_gamstransfer_CPP_getGDXSymbolTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXSymbolTypes, 0},
     {"_gamstransfer_CPP_getGDXVarTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypes, 0},
     {"_gamstransfer_CPP_getGDXEqTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypes, 0},

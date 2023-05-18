@@ -24,6 +24,7 @@
 #include <Rcpp.h>
 #include "gdxcc.h"
 #include "gclgms.h"
+#include "utilities.hpp"
 using namespace Rcpp;
 
 #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])
@@ -292,7 +293,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 // [[Rcpp::export]]
 List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
                 CharacterVector sysDir, LogicalVector records, bool symisnull) {
-  gdxHandle_t PGX = NULL;
+  // gdxHandle_t PGX = NULL;
 	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], acrName[GMS_SSSIZE];
 	int         ErrNr, VarNr, rc;
 
@@ -308,25 +309,26 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
 	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
   int symCount, uel_count;
-// open GDX file and start reading
-  rc = gdxCreateD(&PGX, mysysDir.c_str(), Msg, sizeof(Msg));
-  if (!rc) stop("CPP_readSuper:gdxCreateD GDX init failed: %s", Msg);
 
-  gdxOpenRead(PGX, mygdxName.c_str(), &ErrNr);
+  // create gdx object
+  gt_gdx gdxobj;
+  gdxobj.init_library(mysysDir.c_str());
+
+  gdxOpenRead(gdxobj.gdx, mygdxName.c_str(), &ErrNr);
   if (ErrNr) stop("CPP_readSuper:gdxOpenRead GDX error with error code %i", ErrNr);
 
-  gdxFileVersion(PGX, Msg, Producer);
+  gdxFileVersion(gdxobj.gdx, Msg, Producer);
   // check for acronyms
   int nAcronym;
   List acronymList;
-  nAcronym = gdxAcronymCount(PGX);
+  nAcronym = gdxAcronymCount(gdxobj.gdx);
   if (nAcronym > 0) {
     warning("GDX file contains acronyms. "
           "Acronyms are not supported and are set to GAMS NA.\n");
     int acrID;
     std::vector<int> acronyms;
     for (int i=0; i < nAcronym; i++){
-      gdxAcronymGetInfo(PGX, i+1, acrName, Msg, &acrID);
+      gdxAcronymGetInfo(gdxobj.gdx, i+1, acrName, Msg, &acrID);
       acronyms.push_back(acrID);
     }
     acronymList = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
@@ -336,19 +338,19 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   }
 
   // get symbol count
-  if (!gdxSystemInfo(PGX, &symCount, &uel_count))
+  if (!gdxSystemInfo(gdxobj.gdx, &symCount, &uel_count))
     stop("CPP_readSuper:gdxSystemInfo GDX error (gdxSystemInfo)");
 
   std::vector<bool> sym_enabled(symCount + 1, false); // initialize sym_enabled with false
 
-std::map<int, std::map<int, int>> sym_uel_map;
+  std::map<int, std::map<int, int>> sym_uel_map;
 
   // initialize empty lists for metadata
   List templist, templistAlias;
   templistAlias =List::create(_["name"] = "", _["type"] = -1,
-         _["aliasfor"] = "", _["domain"]="", _["subtype"] = 
-         -1, _["expltext"]="", _["domaintype"]=-1,
-         _["numRecs"] = -1, _["records"]=-1);
+        _["aliasfor"] = "", _["domain"]="", _["subtype"] = 
+        -1, _["expltext"]="", _["domaintype"]=-1,
+        _["numRecs"] = -1, _["records"]=-1);
   templist = List::create(_["name"] = "", _["type"] = -1, 
   _["dimensions"]=-1, _["domain"]="", _["subtype"] = -1,
   _["expltext"]="", _["domaintype"]=-1, _["numRecs"] = -1,
@@ -369,7 +371,7 @@ std::map<int, std::map<int, int>> sym_uel_map;
   if (!symisnull) {
     for(int symcount=0; symcount < symNames.size(); symcount++) {
       mysymName = symNames(symcount);
-      if (!gdxFindSymbol(PGX, mysymName.c_str(), &VarNr)) {
+      if (!gdxFindSymbol(gdxobj.gdx, mysymName.c_str(), &VarNr)) {
         stop("User specified to read symbol %s, but it does not "
         "exist in the source file", mysymName);
       }
@@ -384,7 +386,7 @@ std::map<int, std::map<int, int>> sym_uel_map;
   if (records) {
     //set special values
     gdxSVals_t sVals;
-    gdxGetSpecialValues(PGX, sVals);
+    gdxGetSpecialValues(gdxobj.gdx, sVals);
 
     sVals[GMS_SVIDX_NA] = NA_REAL;
     sVals[GMS_SVIDX_EPS] = -0.0;
@@ -392,7 +394,7 @@ std::map<int, std::map<int, int>> sym_uel_map;
     sVals[GMS_SVIDX_PINF] = R_PosInf;
     sVals[GMS_SVIDX_MINF] = R_NegInf;
 
-    rc = gdxSetSpecialValues(PGX, sVals);
+    rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
     if (!rc) stop("CPP_readSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
 
   }
@@ -401,13 +403,12 @@ std::map<int, std::map<int, int>> sym_uel_map;
 
   for (int i=1; i < symCount + 1; i++) {
     if (!symisnull && !sym_enabled.at(i)) continue;
-    readInternal(PGX, i, records, templistAlias, 
+    readInternal(gdxobj.gdx, i, records, templistAlias, 
     templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
     sym_uel_map, uel_count);
     l1count ++;
   }
 
-  // close the file and return
-  if (gdxClose(PGX)) stop("CPP_readSuper:gdxClose GDX error (gdxClose)");
+
   return L1;
 }

@@ -1,3 +1,7 @@
+GAMS Transfer R
+==================
+- fixed bug with library unload upon read or write
+
 GAMS Transfer R v1.18.0
 ==================
 - Symbol method `isValid` now checks also for scalars with more than one record entries
