@@ -1,6 +1,7 @@
 GAMS Transfer R
 ==================
 - fixed bug with library unload upon read or write
+- Breaking: removed all `Const*` classes. `ConstContainer` is no longer supported. Use `Container` instead.
 
 GAMS Transfer R v1.18.0
 ==================
