@@ -107,7 +107,12 @@ SpecialValues = list(
         stop("The argument `names` must be type character\n")
       }
 
-      return(unlist(lapply(names, function(x) self$.lc_data$has(tolower(x))), use.names=FALSE))
+      if (length(names) == 1) {
+        return(self$.lc_data$has(tolower(names)))
+      }
+      else {
+        return(unlist(lapply(names, function(x) self$.lc_data$has(tolower(x))), use.names=FALSE))
+      }
     },
 
     getSymbolNames = function(names) {

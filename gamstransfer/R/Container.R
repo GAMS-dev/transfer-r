@@ -968,7 +968,8 @@ Container <- R6::R6Class (
         self$systemDirectory, records, is.null(symbols))
 
         acronyms = readlist[[1]]
-        if (acronyms$nAcronyms != 0) {
+
+        if (acronyms$nAcronyms == 0) {
           self$acronyms = acronyms[["acronyms"]]
         }
 
@@ -1055,7 +1056,8 @@ Container <- R6::R6Class (
               next
             }
 
-            recs = data.frame(s$records)
+            # recs = data.frame(s$records)
+            recs = s$records
             common_attr = colnames(recs)[(self[s$name]$dimension+1):length(recs)]
 
             if (self[s$name]$dimension == 0) {
@@ -1067,7 +1069,7 @@ Container <- R6::R6Class (
               is_dup = duplicated(dnames)
 
               if (any(is_dup)) {
-                dlabels = paste0(dnames, 1:self[s$name]$dimension)
+                dlabels = paste0(dnames, "_", 1:self[s$name]$dimension)
               }
               else {
                 dlabels = dnames
@@ -1076,11 +1078,12 @@ Container <- R6::R6Class (
 
             columnNames = append(dlabels, common_attr)
             colnames(recs) = columnNames
-            self[s$name]$setRecords(recs)
+            self[s$name]$records = recs
+            # self[s$name]$setRecords(recs)
 
             # map acronyms to NA
             if (!is.null(self$acronyms)) {
-              if (inherits(self[s$name], c("Parameter", 
+               if (inherits(self[s$name], c("Parameter", 
               "Variable", "Equation"))) {
                 records = self[s$name]$records
                 for (a in self$acronyms) {
