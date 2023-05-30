@@ -1811,7 +1811,7 @@ m$renameSymbol("D", "d_new")
 expect_equal(unlist(m$data$keys()), c("e","d_new"))
 
 # change case using rename
-expect_error(m$renameSymbol("d_new","D_neW"))
+m$renameSymbol("d_new","D_neW")
 expect_equal(tolower(unlist(m$data$keys())), tolower(c("e", "D_neW")))
 
 }
