@@ -20,13 +20,11 @@
 
     #' @field refContainer reference to the Container that the symbol 
     #' belongs to. Type Container.
-    self$refContainer = container
-    self$refContainer$.requiresStateCheck = TRUE
+    self$refContainer = container # also sets the check flag
+
     #' @field name name of the symbol
     self$name <- name
     container[name] = self
-
-    self$records = NULL
 
     self$domain = domain
 
@@ -687,7 +685,10 @@
       }
       else {
         private$.records = records_input
-        if (!is.null(self$records)) {
+        self$.requiresStateCheck = TRUE
+        self$refContainer$.requiresStateCheck = TRUE
+
+        if (!is.null(private$.records)) {
           if (any(self$domainForwarding == TRUE)) {
             private$domain_forwarding(self$domainForwarding)
 
@@ -696,12 +697,6 @@
             }
 
             self$refContainer$.requiresStateCheck = TRUE
-          }
-          else {
-              self$.requiresStateCheck = TRUE
-              if (inherits(self$refContainer, "Container")) {
-                self$refContainer$.requiresStateCheck = TRUE
-              }
           }
         }
       }
@@ -747,15 +742,10 @@
         if (!is.null(private$.description)) {
           if (private$.description != description_input) {
             self$.requiresStateCheck = TRUE
-            self$refContainer$.requiresStateCheck = TRUE
+            private$.ref_container$.requiresStateCheck = TRUE
           }
-          private$.description = description_input
         }
-        else {
-          self$.requiresStateCheck = TRUE
-          self$refContainer$.requiresStateCheck = TRUE
-          private$.description = description_input
-        }
+        private$.description = description_input
       }
     },
 
@@ -808,23 +798,25 @@
           stop(paste0("Argument 'domain' length cannot be > ", 
           .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "\n"))
         }
-        domain_arg_check = unlist(lapply(domain_input, function(d) {
-          return((inherits(d, c("Set", ".BaseAlias")) && d$dimension == 1)
-        || is.character(d))}), use.names = FALSE)
-        if (any(domain_arg_check == FALSE)) {
-          stop("All 'domain' elements must be either one dimensional ", 
-          "Set/Alias/UniverseAlias, or must be type Character\n")
+
+        lapply(domain_input, function(d) {
+          if (!((inherits(d, c("Set", ".BaseAlias")) && d$dimension == 1)
+                || is.character(d))) {
+            stop("All 'domain' elements must be either one dimensional ", 
+                 "Set/Alias/UniverseAlias, or must be type Character\n")
+          }
         }
+        )
 
         # check change of domain
-        if (!identical(private$.domain, domain_input)) {
-            self$.requiresStateCheck = TRUE
-            if (inherits(self$refContainer, "Container")) {
-              self$refContainer$.requiresStateCheck = TRUE
-            }
-            private$.domain = domain_input
-            if (self$dimension == 0) return()
+        if (!is.null(private$.domain)) {
+          if (!identical(private$.domain, domain_input)) {
+              self$.requiresStateCheck = TRUE
+              private$.ref_container$.requiresStateCheck = TRUE
+          }
         }
+
+        private$.domain = domain_input
 
       }
     },
@@ -843,16 +835,18 @@
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }
-        if (is.null(self$refContainer)){
-          if (!identical(self$refContainer, ref_container_input)) {
+        if (!is.null(private$.ref_container)){
+          if (!identical(private$.ref_container, ref_container_input)) {
+            # set flag for old container
+            private$.ref_container$.requiresStateCheck = TRUE
             self$.requiresStateCheck = TRUE
           }
-          private$.ref_container = ref_container_input
         }
-        else {
-          self$.requiresStateCheck = TRUE
-          private$.ref_container = ref_container_input
-        }
+        #assign
+        private$.ref_container = ref_container_input
+        # set flag for new container
+        ref_container_input$.requiresStateCheck = TRUE
+        self$.requiresStateCheck = TRUE
       }
     },
     name = function(name_input) {
@@ -869,9 +863,9 @@
           " max is ", private$symbolMaxLength, " characters\n"))
         }
 
-        if (self$refContainer$hasSymbols(name_input)) {
+        if (private$.ref_container$.lc_data$has(name_input)) {
           stop(paste0("A symbol with the name ", name_input, 
-          " already exists in the container\n"))
+            " already exists in the container\n"))
         }
 
         if (substr(name_input, 1, 1) == "_") {

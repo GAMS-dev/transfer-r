@@ -222,7 +222,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     // now map the numerical indx_matrix to string using from_codes
     std::vector<std::string> used_uels;
 
-    DataFrame df;
+    List df;
 
     for (int D = 0; D < Dim; D++) {
       if (dom_symid[D] < 0) continue;
@@ -262,11 +262,14 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     }
     else {
       if (sym_type == GMS_DT_PAR) {
-        df["values"] = record_values(_, 0);
+        df["value"] = record_values(_, 0);
       } else {
         df["element_text"] = elem_text;
       }
     }
+
+    df.attr("class") = "data.frame";
+    df.attr("row.names") = Rcpp::seq(1, NrRecs);
 
     if (sym_type == GMS_DT_ALIAS) {
       templistAlias["records"]= df;
