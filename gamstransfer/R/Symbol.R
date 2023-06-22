@@ -4,16 +4,18 @@
 #' and Equation are inherited.
 .Symbol <- R6Class(
   ".Symbol",
-  inherit = .BaseSymbol,
   public = list(
   .requiresStateCheck = NULL,
+  .gams_type = NULL,
+  .gams_subtype = NULL,
   initialize = function(container, name,
                         type, subtype, 
                         domain,
                         description,
                         domainForwarding) {
 
-    super$initialize(type, subtype)
+    self$.gams_type = type
+    self$.gams_subtype = subtype
 
 
     self$.requiresStateCheck = TRUE
@@ -31,6 +33,135 @@
     self$description = description
     self$domainForwarding = domainForwarding
 
+  },
+
+  format = function(...) paste0("GAMS Transfer: R6 object of class ", 
+  class(self)[1], ". Use ", self$name, "$summary for details"),
+
+  #' @description getMaxValue get the maximum value
+  #' @param columns columns over which one wants to get the maximum.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMaxValue = function(columns=NULL) {
+    private$.getMetric(columns, "max")
+  },
+
+  #' @description getMinValue get the minimum value in value column
+  #' @param columns columns over which one wants to get the minimum.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMinValue = function(columns=NULL) {
+    private$.getMetric(columns, "min")
+  },
+
+  #' @description getMeanValue get the mean value in value column
+  #' @param columns columns over which one wants to get the mean.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMeanValue = function(columns=NULL) {
+    private$.getMetric(columns, "mean")
+  },
+
+  #' @description getMaxAbsValue get the maximum absolute value in value column
+  #' @param columns columns over which one wants to get the 
+  #' maximum absolute value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  getMaxAbsValue = function(columns=NULL) {
+    private$.getMetric(columns, "maxAbs")
+  },
+
+  #' @description whereMax find the row number in records data frame with a 
+  #' maximum value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  whereMax = function(column=NULL) {
+    return(private$.whereMetric(column, "max"))
+  },
+
+  #' @description whereMaxAbs find the row number in records data frame 
+  #' with a maximum absolute value (return first instance only)
+  #' @description whereMax find the domain entry of records with a 
+  #' maximum absolute value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  whereMaxAbs = function(column=NULL) {
+    return(private$.whereMetric(column, "maxAbs"))
+  },
+
+  #' @description whereMin find the the row number in records data frame 
+  #' with a minimum value (return first instance only)
+  #' @description whereMax find the domain entry of records with a 
+  #' minimum value (return first instance only)
+  #' @param columns columns over which one wants to find the 
+  #' domain entry of records with a maximum value.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  whereMin = function(column=NULL) {
+    return(private$.whereMetric(column, "min"))
+  },
+
+  #'@description countNA total number of SpecialValues[["NA"]] in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues[["NA"]].
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  countNA = function(columns=NULL) {
+    return(private$.countSpecialValue(columns, "isNA"))
+  },
+
+  #' @description countEps total number of SpecialValues$EPS in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$EPS.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  countEps = function(columns=NULL) {
+    return(private$.countSpecialValue(columns, "isEps"))
+  },
+
+  #'@description countUndef total number of SpecialValues$UNDEF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$UNDEF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.
+  countUndef = function(columns=NULL) {
+    return(private$.countSpecialValue(columns, "isUndef"))
+  },
+
+  #'@description countPosInf total number of 
+  #' SpecialValues$POSINF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$POSINF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.  
+  countPosInf = function(columns=NULL) {
+    return(private$.countSpecialValue(columns, "isPosInf"))
+  },
+
+  #'@description countNegInf total number of 
+  #' SpecialValues$NEGINF in value column
+  #' @param columns columns in which one wants to count the number of 
+  #' SpecialValues$NEGINF.
+  #' This is an optional argument which defaults to `value` for parameter
+  #'  and `level` for variable and equation. For variables and equations, 
+  #' alternate column/columns can be provided using the columns argument.  
+  countNegInf = function(columns=NULL) {
+    return(private$.countSpecialValue(columns, "isNegInf"))
   },
 
   getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
@@ -978,6 +1109,110 @@
     .records = NULL,
     symbolMaxLength = 63,
     descriptionMaxLength = 255,
+
+    .getMetric = function(columns, metric) {
+      if (is.null(self$records) || inherits(self, "Set")) {
+        return(NA)
+      }
+
+      columns = private$.checkColumnsArgument(columns)
+
+      tryCatch(
+        {
+          if (metric == "max") {
+            return(max(self$records[,columns]))
+          }
+          else if (metric == "min") {
+            return(min(self$records[, columns]))
+          }
+          else if (metric == "mean") {
+            return(mean(self$records[,columns]))
+          }
+          else if (metric == "maxAbs") {
+            return(max(abs(self$records[,columns])))
+          }
+        },
+        error = function(cond) return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .whereMetric = function(column, metric) {
+      if (is.null(self$records) || inherits(self, "Set")) {
+        return(NA)
+      }
+
+      column = private$.checkColumnsArgument(column)
+
+      if (length(column) > 1) {
+        stop("At most one `column` can be specified\n")
+      }
+
+      tryCatch(
+        {
+          if (metric == "min") {
+            whereMetricVal = which.min(self$records[,column])
+          }
+          else if (metric == "max") {
+            whereMetricVal = which.max(self$records[,column])
+          }
+          else if (metric == "maxAbs") {
+            whereMetricVal = which.max(abs(self$records[,column]))
+          }
+
+            if (is.integer0(whereMetricVal)) {
+              return(NA)
+            }
+            else {
+              return(whereMetricVal)
+            }
+        },
+        error = function(cond) return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .countSpecialValue = function(columns, specialValueFunc) {
+      if (is.null(self$records) || inherits(self, "Set")) {
+        return(NA)
+      }
+      columns = private$.checkColumnsArgument(columns)
+      tryCatch(
+        {
+          return(sum(SpecialValues[[specialValueFunc]](self$records[,columns])))
+        },
+        error = function(cond)  return(NA),
+        warning = function(cond) return(NA)
+      )
+    },
+
+    .checkColumnsArgument = function(columns) {
+      if (inherits(self, "Parameter")) {
+        columns = "value"
+      }
+      else {
+        if (!is.null(columns)) {
+          if (!is.character(columns)) {
+            stop("The argument `columns` must be type character\n")
+          }
+
+          diff = setdiff(columns, private$.attr())
+          if (length(diff) != 0) {
+            stop(paste0("User entered columns (", toString(columns), 
+            ") must be a subset of valid numeric columns ", 
+            toString(private$.attr()), "\n"))
+          }
+        }
+        else {
+          columns = "level"
+        }
+      }
+      return(columns)
+    },
+
+    .attr = function() {
+      return(c("level", "marginal", "lower", "upper", "scale"))
+    },
 
     .get_default_domain_labels = function() {
       if (self$dimension == 0) return(c())

@@ -26,7 +26,7 @@
 #' @title Equation Class
 #' @description A class for Equation objects. This class inherits from an abstract 
 #' symbol class.The documentation for methods common to all symbols can be
-#' accessed via help(Symbol) or help(BaseSymbol).
+#' accessed via help(Symbol).
 #' countEPS, countNA, countNegInf, countPosInf, countUndef,
 #' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
 #' isValid, toDense, whereMax, whereMaxAbs, whereMin.

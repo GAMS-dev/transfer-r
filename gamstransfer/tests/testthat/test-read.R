@@ -1108,7 +1108,7 @@ test_that("test_num_45", {
 )
 
 test_that("test_num_46", {
-  h = ConstContainer$new()
+  h = Container$new()
   h$read(testthat::test_path("testdata", "biggdxtest.gdx"))
 
   m = Container$new(h)
@@ -1123,7 +1123,7 @@ test_that("test_num_46", {
 )
 
 test_that("test_num_47", {
-  m = ConstContainer$new(testthat::test_path("testdata", "test47.gdx"))
+  m = Container$new(testthat::test_path("testdata", "test47.gdx"))
   expect_true(m["a"]$domainType == "regular")
   expect_true(is.null(m["a"]$records))
 }
@@ -1137,23 +1137,23 @@ test_that("test_num_48", {
   l = Set$new(m, "l", i, records=paste0("i", 1:2))
   m$write("data.gdx")
 
-  m = ConstContainer$new("data.gdx")
+  m = Container$new("data.gdx")
 
   expect_true(m["i"]$domainType == "relaxed")
   expect_true(m["j"]$domainType == "none")
   expect_true(m["k"]$domainType == "relaxed")
   expect_true(m["l"]$domainType == "regular")
 
-  expect_true(is.null(m["i"]$records))
-  expect_true(is.null(m["j"]$records))
-  expect_true(is.null(m["k"]$records))
-  expect_true(is.null(m["l"]$records))
+  expect_true(!is.null(m["i"]$records))
+  expect_true(!is.null(m["j"]$records))
+  expect_true(!is.null(m["k"]$records))
+  expect_true(!is.null(m["l"]$records))
 }
 )
 
 
 test_that("test_num_49", {
-  m = ConstContainer$new(testthat::test_path("testdata", "test49.gdx"))
+  m = Container$new(testthat::test_path("testdata", "test49.gdx"))
   expect_equal(m["i"]$domainType, "relaxed")
 }
 )
@@ -1167,22 +1167,21 @@ test_that("test_num_50", {
   m$write("data.gdx")
 
 
-  m = ConstContainer$new()
+  m = Container$new()
   m$read(testthat::test_path("data.gdx"), symbols="i")
   expect_true(!is.null(m["i"]))
 
-  m = ConstContainer$new()
+  m = Container$new()
   m$read(testthat::test_path("data.gdx"), symbols= c("i", "j"))
   expect_true(!is.null(m["i"]))
   expect_true(!is.null(m["j"]))
 
-  m = ConstContainer$new()
+  m = Container$new()
   expect_error(m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy")))
 }
 )
 
 test_that("test_num_51", {
-  expect_error(ConstContainer$new("dummy.gdx"))
   expect_error(Container$new("dummy.gdx"))
 
   m = Container$new()
@@ -1191,7 +1190,6 @@ test_that("test_num_51", {
 )
 
 test_that("test_num_52", {
-  expect_error(ConstContainer$new(data.frame()))
   expect_error(Container$new(data.frame()))
 
   m = Container$new()
@@ -1200,7 +1198,7 @@ test_that("test_num_52", {
 )
 
 test_that("test_num_53", {
-  expect_warning(ConstContainer$new(testthat::test_path("testdata", "test53.gdx")))
+  expect_warning(Container$new(testthat::test_path("testdata", "test53.gdx")))
 }
 )
 
@@ -1239,22 +1237,24 @@ test_that("test_num_54", {
 )
 
 test_that("test_num_55", {
-  m = ConstContainer$new(testthat::test_path("testdata", "trnsport.gdx"))
+  m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
   old_names = unlist(m$data$keys())
   for (i in unlist(m$data$keys())) {
-    expect_true(is.null(m[i]$records))
+    expect_true(!is.null(m[i]$records))
   }
 
-  m = ConstContainer$new()
+  m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport.gdx"))
   for (i in unlist(m$data$keys())) {
     expect_true(is.data.frame(m[i]$records))
   }
 
-  m = ConstContainer$new(testthat::test_path("testdata", "test55.gdx"))
-  new_names = unlist(m$data$keys)
+  m = Container$new(testthat::test_path("testdata", "test55.gdx"))
+  new_names = unlist(m$data$keys())
   for (i in unlist(m$data$keys())) {
-    expect_true(is.null(m[i]$records))
+    if (i != "ce") {
+      expect_true(!is.null(m[i]$records))
+    }
   }
 
   expect_true(!identical(old_names, new_names))
@@ -1262,7 +1262,7 @@ test_that("test_num_55", {
 )
 
 test_that("test_num_56", {
-  m = ConstContainer$new()
+  m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport.gdx"))
 
   for (i in unlist(m$data$keys())) {
@@ -1285,23 +1285,7 @@ expect_true(t$isValid())
 }
 )
 
-# test make sure describe* are consistent between Container and ConstContainer
-test_that("test_num_58", {
-  m = Container$new(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
 
-  m2 = ConstContainer$new()
-  m2$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
-
-  expect_true(identical(m2$describeSets(), m$describeSets()))
-  expect_true(identical(m2$describeSets(append(m2$listSets(), m2$listAliases())),
-  m$describeSets(append(m$listSets(), m$listAliases()))))
-
-  expect_equal(m2$describeParameters(), m$describeParameters())
-  expect_equal(m2$describeVariables(), m$describeVariables())
-  expect_equal(m2$describeEquations(), m$describeEquations())
-
-}
-)
 
 # test read from another Container
 test_that("test_num_59", {
@@ -2423,9 +2407,9 @@ test_that("test_num_95", {
 }
 )
 
-# test reading and writing UniverseAlias with ConstContainer
+# test reading and writing UniverseAlias with Container
 test_that("test_num_96", {
-  m = ConstContainer$new()
+  m = Container$new()
 
   # read all symbols
   # uses the same gdx from test95
@@ -2548,13 +2532,13 @@ test_that("test_num_100", {
   # read all symbols: expect error because i already exists
   expect_error(m$read(testthat::test_path("testdata","test95.gdx")))
 
-  m2 = ConstContainer$new()
+  m2 = Container$new()
   m2$read(testthat::test_path("testdata","test95.gdx"))
 
   # read all symbols: expect error because i already exists
   expect_error(m$read(m2))
 
-  #read constcontainer into container
+  #read container into container
   m = Container$new(m2)
   expect_equal(m$listSymbols(), m2$listSymbols())
 
@@ -2650,15 +2634,16 @@ test_that("test_num_102", {
     domainType = "none"
   ))
 
-  # constcontainer
-  m = ConstContainer$new()
+  # container
+  m = Container$new()
   expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
 
-  m = ConstContainer$new()
+  m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
   expect_equal(m["i"]$summary, list(
     name = "i",
     isSingleton = FALSE,
+    domainObjects = "*",
     domainNames = "*",
     dimension = 1,
     description = "canning plants",
@@ -2669,7 +2654,8 @@ test_that("test_num_102", {
   expect_equal(m["d"]$summary, list(
     name = "d",
     isScalar = FALSE,
-    domainNames = c("i","j"),
+    domainObjects = c(m["i"],m["j"]),
+    domainNames = c("i", "j"),
     dimension = 2,
     description = "distance in thousands of miles",
     numberRecords = 6,
@@ -2679,6 +2665,7 @@ test_that("test_num_102", {
   expect_equal(m["x"]$summary, list(
     name = "x",
     type = "positive",
+    domainObjects = c(m["i"],m["j"]),
     domainNames = c("i","j"),
     dimension = 2,
     description = "shipment quantities in cases",
@@ -2689,6 +2676,7 @@ test_that("test_num_102", {
   expect_equal(m["demand"]$summary, list(
     name = "demand",
     type = "geq",
+    domainObjects = c(m["j"]),
     domainNames = "j",
     dimension = 1,
     description = "satisfy demand at market j",
@@ -2698,8 +2686,10 @@ test_that("test_num_102", {
 
   expect_equal(m["ip"]$summary, list(
     name = "ip",
+    aliasWith = m["i"],
     aliasWith_name = "i",
     isSingleton = FALSE,
+    domainObjects = "*",
     domainNames = "*",
     dimension = 1,
     description = "canning plants",
@@ -2960,7 +2950,7 @@ expect_false(u$equals(up))
 }
 )
 
-# test equals for container and constcontainer
+# test equals for container and container
 test_that("test_num_107", {
 m = Container$new()
 i = Set$new(m, "i")
@@ -3290,9 +3280,9 @@ test_that("test_num_114", {
 }
 )
 
-# test copy ConstContainer method
+# test copy Container method
 test_that("test_num_115", {
-  m = ConstContainer$new(testthat::test_path("testdata", "trnsport.gdx"))
+  m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
 
   m2 = Container$new()
   m$copy(m2)
@@ -3311,9 +3301,9 @@ test_that("test_num_115", {
 }
 )
 
-# test copy for constalias and constuniverse alias
+# test copy for alias and universe alias
 test_that("test_num_116", {
-  m = ConstContainer$new(testthat::test_path("testdata", "test95.gdx"))
+  m = Container$new(testthat::test_path("testdata", "test95.gdx"))
 
   m2 = Container$new()
 
@@ -3352,7 +3342,7 @@ test_that("test_num_118", {
   expect_true(e$isScalar)
 
   m$write("gt.gdx")
-  m2 = ConstContainer$new()
+  m2 = Container$new()
   m2$read(testthat::test_path("gt.gdx"))
 
   expect_true(m2["p"]$isScalar)

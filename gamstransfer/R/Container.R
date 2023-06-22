@@ -29,16 +29,17 @@
 #' linked together (through their domain definitions), it enables 
 #' implicit set definitions, it enables structural manipulations of the 
 #' data (matrix generation), and it allows the user to perform different 
-#' read/write operations.The Container class inherits from an abstract
-#' BaseContainer class. To access the functions common to Container and
-#' ConstContainer, please use help(BaseContainer)
+#' read/write operations.
 #' @field data is a named list containing all symbol data
 #' @field systemDirectory is the path to GAMS System directory
 #' @export
 Container <- R6::R6Class (
   "Container",
-  inherit = .BaseContainer,
   public = list(
+    systemDirectory = NULL,
+    data = NULL,
+    .lc_data = NULL,
+    acronyms = NULL,
     .requiresStateCheck = NULL,
     #' @description
     #' Create a new container simply by initializing an object.
@@ -50,12 +51,657 @@ Container <- R6::R6Class (
     #' Container$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
-      super$initialize(systemDirectory)
+      if (is.null(systemDirectory)) {
+        self$systemDirectory = find_gams()
+
+      }
+      else {
+        if (R.utils::isAbsolutePath(systemDirectory)) {
+          self$systemDirectory = systemDirectory
+        }
+        else {
+          stop(paste0("must enter valid full (absolute) path to the",
+          "GAMS system directory\n"))
+        }
+      }
+
+      self$acronyms = list()
+      self$data = collections::ordered_dict()
+      # another dict for lowercase names to original case
+      self$.lc_data = collections::dict()
 
       self$.requiresStateCheck = TRUE
 
       if (!missing(loadFrom)) {
         self$read(loadFrom)
+      }
+    },
+
+    `[` = function(key) {
+      if (self$.lc_data$has(tolower(key))) {
+        # key exists
+        true_case_key = self$.lc_data$get(tolower(key))
+        return(self$data$get(true_case_key))
+      }
+      else {
+        return(invisible(NULL))
+      }
+    },
+
+    `[<-` = function(key, values) {
+      self$data$set(key, values)
+      self$.lc_data$set(tolower(key), key)
+      return(invisible(self))
+    },
+
+    format = function(...) paste0("GAMS Transfer: R6 object of class", 
+    " Container"),
+
+    hasSymbols = function(names) {
+      if (!is.character(names)) {
+        stop("The argument `names` must be type character\n")
+      }
+      if (length(names) == 1) {
+        return(self$.lc_data$has(tolower(names)))
+      }
+      else {
+        return(unlist(lapply(names, function(x) {
+          self$.lc_data$has(tolower(x))
+        })
+        , use.names=FALSE))
+      }
+    },
+
+    getSymbolNames = function(names) {
+      if (!is.character(names)) {
+        stop("The argument `names` must be type character\n")
+      }
+      return(unlist(lapply(names, function(x) {
+        if (!self$.lc_data$has(tolower(x))) {
+          stop(paste0("Symbol ", x, " does not exist\n"))
+        }
+        else {
+          self$.lc_data$get(tolower(x))
+        }
+      }), use.names = FALSE))
+    },
+
+    #' @description list all symbols in the container if isValid = NULL
+    #' list all valid symbols in the container if  isValid = TRUE
+    #' list all invalid symbols in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listSymbols = function(isValid = NULL) {
+      if (!is.null(isValid)) {
+        if (!is.logical(isValid)) {
+          stop("The argument 'isValid' must be type logical\n")
+        }
+
+        correct_validity_data = unlist(lapply(unlist(self$data$keys()), 
+        function(x) {
+          if (self[x]$isValid() == isValid) {
+            return(x)
+          }
+        }), use.names = FALSE)
+
+        return(correct_validity_data)
+      }
+      else {
+        return(unlist(self$data$keys(), use.names = FALSE))
+      }
+    },
+
+    #' @description list all sets in the container if isValid = NULL
+    #' list all valid sets in the container if  isValid = TRUE
+    #' list all invalid sets in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listSets = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+      sets = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self[s], "Set") ) {
+          if (is.null(sets)) {
+            sets = s
+          }
+          else {
+            sets = append(sets, s)
+          }
+        }
+      }
+      return(sets)
+    },
+
+    #' @description list all parameters in the container if isValid = NULL
+    #' list all valid parameters in the container if  isValid = TRUE
+    #' list all invalid parameters in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listParameters = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+      parameters = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self[s], "Parameter")) {
+          if (is.null(parameters)) {
+            parameters = s
+          }
+          else {
+            parameters = append(parameters, s)
+          }
+        }
+      }
+      return(parameters)
+    },
+
+    #' @description list all aliases in the container if isValid = NULL
+    #' list all valid aliases in the container if  isValid = TRUE
+    #' list all invalid aliases in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @return a vector of symbols
+    listAliases = function(isValid = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+      aliases = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self[s], ".BaseAlias")) {
+          if (is.null(aliases)) {
+            aliases = s
+          }
+          else {
+            aliases = append(aliases, s)
+          }
+        }
+      }
+      return(aliases)
+    },
+
+    #' @description list all variables in the container if isValid = NULL
+    #' list all valid variables in the container if  isValid = TRUE
+    #' list all invalid variables in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
+    #' @return a vector of symbols
+    listVariables = function(isValid = NULL, types = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+
+      if (!(is.character(types) || is.list(types)|| is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
+      }
+
+      if (is.list(types)) {
+        if (!all(unlist(lapply(types, is.character)))) {
+          stop("Argument 'types' must contain only type character\n")
+        }
+      }
+
+      if (is.null(types)) {
+        types = .varTypes
+      }
+
+      for (t in types) {
+        if (!any(.varTypes == t)) {
+          stop(paste0("User input unrecognized variable type: ", t, " \n"))
+        }
+      }
+
+      variables = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self[s], "Variable")
+        && any(types == self[s]$type)) {
+          if (is.null(variables)) {
+            variables = s
+          }
+          else {
+          variables = append(variables, s)
+          }
+        }
+      }
+      return(variables)
+    },
+
+    #' @description list all equations in the container if isValid = NULL
+    #' list all valid equations in the container if  isValid = TRUE
+    #' list all invalid equations in the container if isValid = FALSE
+    #' @param isValid an optional logical argument
+    #' @param types an optional logical argument to list a subset of 
+    #' equation types
+    #' @return a vector of symbols
+    listEquations = function(isValid = NULL, types = NULL) {
+      if (!(is.logical(isValid) || is.null(isValid))) {
+        stop("Argument `isValid` must be type logical or NULL \n")
+      }
+
+      if (!(is.character(types) || is.list(types) || is.null(types))) {
+        stop("Argument `types` myst be type character, list, vector, or NULL \n")
+      }
+
+
+      if ( is.list(types) && !all(unlist(lapply(types, is.character)))) {
+        stop("Argument 'types' must contain only type character\n")
+      }
+
+      if (is.null(types)) {
+        types = unlist(unique(.EquationTypes))
+      }
+
+      for (t in types) {
+        if (is.null(.EquationTypes[[t]])) {
+          stop(paste0("User input unrecognized equation type: ", t, " \n"))
+        }
+      }
+
+      equations = NULL
+      for (s in self$listSymbols(isValid)) {
+        if (inherits(self[s], "Equation")
+        && any(types == self[s]$type)) {
+          if (is.null(equations)) {
+            equations = s
+          }
+          else {
+          equations = append(equations, s)
+          }
+        }
+      }
+      return(equations)
+    },
+
+    #' @description create a summary table with descriptive statistics for Sets
+    #' @param symbols an optional argument of type string or a list of sets 
+    #' to describe. The default value is NULL which assumes all sets.
+    describeSets = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listSets()
+        if (is.null(symbols)) return()
+      }
+      else {
+        if (!(is.list(symbols) || is.character(symbols))) {
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
+        }
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = c("name",
+            "isSingleton",
+            "domain",
+            "domainType",
+            "dim",
+            "numberRecs",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+
+      symbols = self$getSymbolNames(symbols)
+      for (i in symbols) {
+        if (any(self$listSets() == i)|| any(self$listAliases() == i)) {
+          symDescription = list(
+            i,
+            self[i]$isSingleton,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+
+
+      colnames(df) = colNames
+
+      if (length(intersect(symbols, self$listAliases())) != 0) {
+        alias_with = c()
+        is_alias = c()
+        for (i in nrow(df)) {
+          name =df[i, 1]
+          is_alias = append(is_alias, 
+          inherits(self[name], ".BaseAlias"))
+          if (inherits(self[name], "Alias")) {
+            alias_with = append(alias_with, self[name]$aliasWith$name)
+          }
+          else if (inherits(self[name], "UniverseAlias")) {
+            alias_with = append(alias_with, self[name]$aliasWith)
+          }
+        }
+        df$isAlias = is_alias
+        df$aliasWith = alias_with
+        append(colNames, "isAlias", 3)
+        append(colNames, "aliasWith", 4)
+        df <- df[, colNames]
+      }
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]), ])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive 
+    #' statistics for Aliases
+    #' @param symbols an optional argument of type string or a list of aliases 
+    #' to describe. The default value is NULL which assumes all aliases.
+    describeAliases = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listAliases()
+        if (is.null(symbols)) return()
+      }
+      else {
+        if (!(is.list(symbols) || is.character(symbols))) {
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
+        }
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list("name",
+            "aliasWith",
+            "isSingleton",
+            "domain",
+            "domainType",
+            "dim",
+            "numberRecs",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+      symbols = self$getSymbolNames(symbols)
+      for (i in symbols) {
+        if (any(self$listAliases() == i)) {
+          if (inherits(self[i], "Alias")) {
+            aliasName = self[i]$aliasWith$name
+          }
+          else if (inherits(self[i], "UniverseAlias")) {
+            aliasName = self[i]$aliasWith
+          }
+
+          symDescription = list(
+            i,
+            aliasName,
+            self[i]$isSingleton,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]), ])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive statistics 
+    #' for Parameters
+    #' @param symbols an optional argument of type string or a 
+    #' list of parameters to describe. The default value is 
+    #' NULL which assumes all parameters.
+    describeParameters = function(symbols = NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listParameters()
+        if (is.null(symbols)) return()
+      }
+      else {
+        if (!(is.list(symbols) || is.character(symbols))) {
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
+        }
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+
+      colNames = list(
+            "name",
+            "isScalar",
+            "domain",
+            "domainType",
+            "dim",
+            "numRecs",
+            "minValue",
+            "meanValue",
+            "maxValue",
+            "whereMin",
+            "whereMax",
+            "countEps",
+            "countNa",
+            "countUndef",
+            "sparsity"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+
+      symbols = self$getSymbolNames(symbols)
+      for (i in symbols) {
+        if (any(self$listParameters() == i)) {
+          symDescription = list(
+            i,
+            self[i]$isScalar,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getMinValue("value"),
+            self[i]$getMeanValue("value"),
+            self[i]$getMaxValue("value"),
+            self[i]$whereMin("value"),
+            self[i]$whereMax("value"),
+            self[i]$countEps("value"),
+            self[i]$countNA("value"),
+            self[i]$countUndef("value"),
+            self[i]$getSparsity()
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]),])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive 
+    #' statistics for Variables
+    #' @param symbols an optional argument of type string 
+    #' or a list of Variables to describe. The default value 
+    #' is NULL which assumes all variables.
+    describeVariables = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listVariables()
+        if (is.null(symbols)) return()
+      }
+      else {
+        if (!(is.list(symbols) || is.character(symbols))) {
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
+        }
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+      colNames = list(
+            "name",
+            "type",
+            "domain",
+            "domainType",
+            "dim",
+            "numRecs",
+            "sparsity",
+            "minLevel",
+            "meanLevel",
+            "maxLevel",
+            "whereMaxAbsLevel",
+            "countEpsLevel",
+            "minMarginal",
+            "meanMarginal",
+            "maxMarginal",
+            "whereMaxAbsMarginal",
+            "countEpsMarginal"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+
+      symbols = self$getSymbolNames(symbols)
+      for (i in symbols) {
+        if (any(self$listVariables() == i)) {
+          symDescription = list(
+            i,
+            self[i]$type,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getSparsity(),
+            self[i]$getMinValue("level"),
+            self[i]$getMeanValue("level"),
+            self[i]$getMaxValue("level"),
+            self[i]$whereMaxAbs("level"),
+            self[i]$countEps("level"),
+            self[i]$getMinValue("marginal"),
+            self[i]$getMeanValue("marginal"),
+            self[i]$getMaxValue("marginal"),
+            self[i]$whereMaxAbs("marginal"),
+            self[i]$countEps("marginal")
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order( df[,1]),])
+      }
+      else {
+        return(NULL)
+      }
+    },
+
+    #' @description create a summary table with descriptive 
+    #' statistics for Equations
+    #' @param symbols an optional argument of type string or 
+    #' a list of equations to describe. The default value is 
+    #' NULL which assumes all equations.
+    describeEquations = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listEquations()
+        if (is.null(symbols)) return()
+      }
+      else {
+        if (!(is.list(symbols) || is.character(symbols))) {
+          stop(paste0("Argument `symbols` must be type character, ",
+          "list, vector, or NULL \n"))
+        }
+      }
+
+      if (is.list(symbols)) {
+        if (!all(unlist(lapply(symbols, is.character) ))) {
+          stop("Argument `symbols` must contain elements of type character\n")
+        }
+      }
+      colNames = list(
+            "name",
+            "type",
+            "domain",
+            "domainType",
+            "dim",
+            "numRecs",
+            "sparsity",
+            "minLevel",
+            "meanLevel",
+            "maxLevel",
+            "whereMaxAbsLevel",
+            "countEpsLevel",
+            "minMarginal",
+            "meanMarginal",
+            "maxMarginal",
+            "whereMaxAbsMarginal",
+            "countEpsMarginal"
+            )
+      df = data.frame(matrix(NA, nrow = 
+      length(symbols), ncol = length(colNames)))
+      rowCount = 0
+
+      symbols = self$getSymbolNames(symbols)
+      for (i in symbols) {
+        if (any(self$listEquations() == i)) {
+          symDescription = list(
+            i,
+            self[i]$type,
+            paste(self[i]$domainNames, sep = "", collapse = " "),
+            self[i]$domainType,
+            self[i]$dimension,
+            self[i]$numberRecords,
+            self[i]$getSparsity(),
+            self[i]$getMinValue("level"),
+            self[i]$getMeanValue("level"),
+            self[i]$getMaxValue("level"),
+            self[i]$whereMaxAbs("level"),
+            self[i]$countEps("level"),
+            self[i]$getMinValue("marginal"),
+            self[i]$getMeanValue("marginal"),
+            self[i]$getMaxValue("marginal"),
+            self[i]$whereMaxAbs("marginal"),
+            self[i]$countEps("marginal")
+          )
+          rowCount = rowCount + 1
+          df[rowCount, ] = symDescription
+        }
+      }
+      colnames(df) = colNames
+      if (rowCount > 0) {
+        df = df[1:rowCount, ]
+        return(df[order(df[, 1]),])
+      }
+      else {
+        return(NULL)
       }
     },
 
@@ -103,13 +749,12 @@ Container <- R6::R6Class (
         }
         private$.gdxRead(loadFrom, symbols, records)
       }
-      else if (inherits(loadFrom, c("Container", "ConstContainer"))) {
+      else if (inherits(loadFrom, "Container")) {
         private$.containerRead(loadFrom, symbols, records)
       }
       else {
-        stop(paste0("Argument `loadFrom` must be type character, ",
-        "an instance of another Container, or an instance of a ",
-        "ConstContainer. \n"))
+        stop(paste0("Argument `loadFrom` must be type character or ",
+        "an instance of another Container\n"))
       }
     },
 
@@ -881,7 +1526,7 @@ Container <- R6::R6Class (
 
     equals = function(other, verbose=FALSE) {
 
-      if (!inherits(other, ".BaseContainer")) {
+      if (!inherits(other, "Container")) {
         if (verbose) {
           stop("The argument `other` is not a Container\n")
         }
@@ -1052,7 +1697,7 @@ Container <- R6::R6Class (
         if (records == TRUE) {
           for (s in readData) {
             if (is.null(s$records) || inherits(self[s$name], 
-            c(".BaseAlias"))) {
+            ".BaseAlias")) {
               next
             }
 
@@ -1153,92 +1798,76 @@ Container <- R6::R6Class (
         "Container with the removeSymbols() method.\n"))
       }
 
-      if (inherits(loadFrom, "Container")) {
-        sym_is_valid = lapply(symbolsToRead, 
-        function(x) {
-          s_loadfrom = loadFrom[x]
-          return(s_loadfrom$isValid())
-        })
-        if (any(sym_is_valid == FALSE)) {
-          s = which(sym_is_valid == FALSE)
-          stop(paste0("Cannot read symbol ", s, " because it is invalid, ",
-          "use $isValid(verbose=TRUE) method to debug symbol state\n"))
+      sym_is_valid = lapply(symbolsToRead, 
+      function(x) {
+        s_loadfrom = loadFrom[x]
+        return(s_loadfrom$isValid())
+      })
+      if (any(sym_is_valid == FALSE)) {
+        s = which(sym_is_valid == FALSE)
+        stop(paste0("Cannot read symbol ", s, " because it is invalid, ",
+        "use $isValid(verbose=TRUE) method to debug symbol state\n"))
+      }
+
+      for (s in symbolsToRead) {
+        s_loadfrom = loadFrom[s]
+        if (length(s_loadfrom$domainNames) == 1 
+        && is.na(s_loadfrom$domainNames)) {
+          dnames = NULL
+        }
+        else {
+          dnames = s_loadfrom$domainNames
+        }
+
+        if (inherits(s_loadfrom, "Set")) {
+          Set$new(
+          self, s_loadfrom$name, dnames, 
+          s_loadfrom$isSingleton,
+          records = s_loadfrom$records,
+          domainForwarding=FALSE,
+          s_loadfrom$description)
+        }
+        else if (inherits(s_loadfrom, "Parameter")) {
+          Parameter$new(
+          self, s_loadfrom$name, dnames,
+          domainForwarding=FALSE,
+          records = s_loadfrom$records,
+          description = s_loadfrom$description)
+        }
+        else if (inherits(s_loadfrom, "Variable")) {
+          Variable$new(
+          self, s_loadfrom$name, s_loadfrom$type, 
+          dnames,
+          domainForwarding = FALSE,
+          records = s_loadfrom$records,
+          description = s_loadfrom$description)
+        }
+        else if (inherits(s_loadfrom, "Equation")) {
+          Equation$new(
+          self, s_loadfrom$name, s_loadfrom$type, dnames,
+          domainForwarding = FALSE,
+          records = s_loadfrom$records,
+          description = s_loadfrom$description)
+        }
+        else if (inherits(s_loadfrom, "Alias")) {
+          if (!any(symbolsToRead == s_loadfrom$aliasWith$name)) {
+            stop(paste0("Cannot create the Alias symbol ", s, " because ",
+            "the parent set (", s_loadfrom$aliasWith, ") is not ",
+            "being read into the in the Container. Alias symbols ",
+            "require the parent set object to exist in the Container. Add ",
+            s_loadfrom$aliasWith, " to the list of symbols to read."))
+          }
+          else {
+            Alias$new(
+              self, s_loadfrom$name, self[s_loadfrom$aliasWith$name])
+          }
+        }
+        else if (inherits(s_loadfrom, "UniverseAlias")) {
+          UniverseAlias$new(self, s_loadfrom$name)
         }
       }
 
-        for (s in symbolsToRead) {
-          s_loadfrom = loadFrom[s]
-          if (length(s_loadfrom$domainNames) == 1 
-          && is.na(s_loadfrom$domainNames)) {
-            dnames = NULL
-          }
-          else {
-            dnames = s_loadfrom$domainNames
-          }
-
-          if (inherits(s_loadfrom, c("Set", ".ConstSet"))) {
-            Set$new(
-            self, s_loadfrom$name, dnames, 
-            s_loadfrom$isSingleton,
-            records = s_loadfrom$records,
-            domainForwarding=FALSE,
-            s_loadfrom$description)
-          }
-          else if (inherits(s_loadfrom, c("Parameter", ".ConstParameter"))) {
-            Parameter$new(
-            self, s_loadfrom$name, dnames,
-            domainForwarding=FALSE,
-            records = s_loadfrom$records,
-            description = s_loadfrom$description)
-          }
-          else if (inherits(s_loadfrom, c("Variable", ".ConstVariable"))) {
-            Variable$new(
-            self, s_loadfrom$name, s_loadfrom$type, 
-            dnames,
-            domainForwarding = FALSE,
-            records = s_loadfrom$records,
-            description = s_loadfrom$description)
-          }
-          else if (inherits(s_loadfrom, c("Equation", ".ConstEquation"))) {
-            Equation$new(
-            self, s_loadfrom$name, s_loadfrom$type, dnames,
-            domainForwarding = FALSE,
-            records = s_loadfrom$records,
-            description = s_loadfrom$description)
-          }
-          else if (inherits(s_loadfrom, ".ConstAlias")) {
-            if (!any(symbolsToRead == s_loadfrom$aliasWith)) {
-              stop(paste0("Cannot create the Alias symbol ", s, " because ",
-              "the parent set (", s_loadfrom$aliasWith, ") is not ",
-              "being read into the in the Container. Alias symbols ",
-              "require the parent set object to exist in the Container. Add ",
-              s_loadfrom$aliasWith, " to the list of symbols to read."))
-            }
-            else {
-              Alias$new(
-                self, s_loadfrom$name, self[s_loadfrom$aliasWith])
-            }
-          }
-          else if (inherits(s_loadfrom, "Alias")) {
-            if (!any(symbolsToRead == s_loadfrom$aliasWith$name)) {
-              stop(paste0("Cannot create the Alias symbol ", s, " because ",
-              "the parent set (", s_loadfrom$aliasWith, ") is not ",
-              "being read into the in the Container. Alias symbols ",
-              "require the parent set object to exist in the Container. Add ",
-              s_loadfrom$aliasWith, " to the list of symbols to read."))
-            }
-            else {
-              Alias$new(
-                self, s_loadfrom$name, self[s_loadfrom$aliasWith$name])
-            }
-          }
-          else if (inherits(s_loadfrom, c("UniverseAlias", 
-          ".ConstUniverseAlias"))) {
-            UniverseAlias$new(self, s_loadfrom$name)
-          }
-        }
-
-        private$.linkDomainObjects(symbolsToRead, loadFrom)
+      private$.linkDomainObjects(symbolsToRead, loadFrom)
     },
 
     .linkDomainObjects = function(symbols, loadFrom) {
@@ -1404,3 +2033,7 @@ Container <- R6::R6Class (
 
   )
   )
+
+
+`[.Container` <- function(obj, ...) obj$`[`(...)
+`[<-.Container` <- function(obj, ..., value) obj$`[<-`(..., value)
