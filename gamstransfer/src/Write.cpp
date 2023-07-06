@@ -30,7 +30,6 @@ using namespace Rcpp;
 void WriteData(gdxHandle_t PGX, StringVector s,
 NumericVector V, int VarType, int Dim,
 std::string elemText, std::string sym_name) {
-
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
@@ -229,9 +228,15 @@ bool is_uel_priority, bool compress) {
 
       StringVector elem_text(nrows);
       NumericMatrix rec_vals(nrows, ncols-Dim);
+      std::string text;
 
       if (varType == GMS_DT_SET) {
-        elem_text = df[Dim];
+        if (df.length() == Dim + 1) {
+          elem_text = df[Dim];
+        }
+        else {
+          elem_text = "";
+        }
       }
       else {
         NumericVector temp_num_col(Dim);
@@ -248,7 +253,13 @@ bool is_uel_priority, bool compress) {
         else {
           names = rec_domain(i, _);
           NumericVector zero_vec = {0};
-          WriteData(gdxobj.gdx, names, zero_vec, varType, Dim, Rcpp::as<std::string>(elem_text[i]), mysym);
+          if (df.length() == Dim + 1) {
+            text = Rcpp::as<std::string>(elem_text[i]);
+          }
+          else {
+            text = "";
+          }
+          WriteData(gdxobj.gdx, names, zero_vec, varType, Dim, text, mysym);
         }
       }
       if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");

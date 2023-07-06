@@ -74,14 +74,7 @@ Set <- R6Class(
       records = data.frame(records)
       c = length(records)
 
-      if (c == self$dimension) {
-        # no element text
-        records["element_text"] = ""
-      }
-      else if (c == self$dimension + 1) {
-
-      }
-      else {
+      if (c > self$dimension + 1 || c < self$dimension) {
         stop(paste0("The argument 'records' is of length ",
         c, " Expecting ", self$dimension + 1, "\n"))
       }
@@ -93,7 +86,9 @@ Set <- R6Class(
         columnNames = colnames(records)[1:self$dimension]
       }
 
-      columnNames = append(columnNames, "element_text")
+      if (c == self$dimension + 1) {
+        columnNames = append(columnNames, "element_text")
+      }
 
       records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
         if (is.factor(records[, d])) {

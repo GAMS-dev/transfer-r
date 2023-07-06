@@ -181,7 +181,7 @@ Parameter <- R6Class(
         r = nrow(records)
         c = length(records)
 
-        if (c != (self$dimension + 1)) {
+        if (c > (self$dimension + 1) || c < self$dimension) {
           stop(paste0("Dimensionality of records ", c - 1, 
           " is inconsistent with parameter domain specification ", 
           self$dimension))
@@ -198,13 +198,17 @@ Parameter <- R6Class(
             columnNames = colnames(records)[1:self$dimension]
           }
         }
-        columnNames = append(columnNames, "value")
 
-        #if records "value" is not numeric, stop.
-        val_column = records[,length(records)]
-        if (!(is.numeric(val_column) || all(SpecialValues$isNA(val_column)))) {
-            stop("All entries in the 'values' column of a parameter ",
-            "must be numeric.\n")
+        if (c == self$dimension + 1) {
+          columnNames = append(columnNames, "value")
+
+
+          #if records "value" is not numeric, stop.
+          val_column = records[,length(records)]
+          if (!(is.numeric(val_column) || all(SpecialValues$isNA(val_column)))) {
+              stop("All entries in the 'value' column of a parameter ",
+              "must be numeric.\n")
+          }
         }
 
         if (self$dimension == 0) {
