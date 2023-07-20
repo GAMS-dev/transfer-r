@@ -106,7 +106,7 @@
         return(default_value)
       }
       else {
-        return(private$.getMetric(c, "min"))
+        return(private$.getMetric(c, "mean"))
       }
     }), use.names =  FALSE)
 
@@ -157,7 +157,7 @@
       stop("At most one `column` can be specified\n")
     }
 
-    if (!is.null(self$records) && is.null(self$records[[c]])) {
+    if (!is.null(self$records) && is.null(self$records[[column]])) {
       return(1)
     }
     else {
@@ -185,7 +185,7 @@
       stop("At most one `column` can be specified\n")
     }
 
-    if (!is.null(self$records) && is.null(self$records[[c]])) {
+    if (!is.null(self$records) && is.null(self$records[[column]])) {
       return(1)
     }
     else {
@@ -213,7 +213,7 @@
       stop("At most one `column` can be specified\n")
     }
 
-    if (!is.null(self$records) && is.null(self$records[[c]])) {
+    if (!is.null(self$records) && is.null(self$records[[column]])) {
       return(1)
     }
     else {
@@ -712,7 +712,7 @@
       return(unlist(idx, use.names=FALSE))
     })
 
-    return(self$records[unlist(unique(idx)), ])
+    return(self$records[unlist(unique(idx)), , drop=FALSE])
   },
 
   hasDomainViolations = function() {
@@ -743,7 +743,7 @@
       })
       return(unlist(idx, use.names=FALSE))
     })
-    private$.records = private$.records[-unlist(unique(idx)), ]
+    private$.records = private$.records[-unlist(unique(idx)), , drop=FALSE]
     rownames(private$.records) <- NULL
     return(invisible(NULL))
   },
@@ -758,7 +758,7 @@
       return(data.frame())
     }
     else {
-      return(self$records[idx,])
+      return(self$records[idx, , drop = FALSE])
     }
   },
 
@@ -770,7 +770,7 @@
     idx = private$.get_duplicate_index(keep)
 
     if (!is.integer0(idx)) {
-      self$records = self$records[-idx, ]
+      self$records = self$records[-idx, , drop=FALSE]
       rownames(self$records) <- NULL
     }
     return(invisible(NULL))
@@ -1472,6 +1472,14 @@
         self$numberRecords, " != ", other$numberRecords, "\n"))
       }
 
+      if (self$dimension != 0) {
+        if (any(self$domainLabels != other$domainLabels)) {
+          stop(paste0("Symbols domain labels do not match ", 
+          toString(self$domainLabels), " != ", 
+          toString(other$domainLabels), "\n"))
+        }
+      }
+
       # check metadata
       if (checkMetaData) {
         if (self$name != other$name) {
@@ -1555,24 +1563,35 @@
 
     .check_set_records_equal = function(other, checkElementText) {
       if (self$numberRecords == 0) return()
-      #merge both dataframes by column_names
+      #merge both dataframes by domain column_names
       merged = merge(self$records, other$records, 
       by.x=self$domainLabels, by.y=other$domainLabels,
       all=TRUE)
 
-      isna_check = is.na(merged[(self$dimension+1):length(merged)])
+      if (self$dimension + 1 < length(merged)) {
+        # element text column exists
+        isna_check = is.na(merged[(self$dimension+1):length(merged)])
 
-      if (any(isna_check)) {
-        error_df = head(merged[as.logical(
-        rowSums(isna_check)),][1:self$dimension])
-        strmsg="symbol records do not match. Unmatched rows below\n"
-        strdf = paste0(capture.output(error_df), collapse="\n")
-        stop(paste0(strmsg, strdf, "\n"))
+        if (any(isna_check)) {
+          error_df = head(merged[as.logical(
+          rowSums(isna_check)),][1:self$dimension])
+          strmsg="symbol records do not match. Unmatched rows below\n"
+          strdf = paste0(capture.output(error_df), collapse="\n")
+          stop(paste0(strmsg, strdf, "\n"))
+        }
+      }
+      else {
+        # no element text column
+        if (nrow(merged) != nrow(self$records)) {
+          # if number of records is the same in self and other
+          # and if the merged dataframe has different number of records
+          stop("symbol records do not match. Unmatched rows are present.\n")
+        }
       }
 
       if (checkElementText) {
         if (is.null(merged$element_text.x)) {
-          # at least one of the two dataframes don't have element_text column
+          # at least one of the two dataframes doesn't have element_text column
           if (!is.null(merged$element_text)) {
             # only one data frame has element_text column
             if (!all(merged$element_text == "")) {
@@ -1612,46 +1631,72 @@
       if (self$dimension == 0) {
         # now compare numerical records
         for (attr in columns) {
-          # check for special values
-          count = 0
-          fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
-          is_special = FALSE
-          for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
-          SpecialValues$isUndef, SpecialValues$isPosInf, 
-          SpecialValues$isNegInf)) {
-            count = count + 1
-            is_special_self = f(self$records[, attr])
-            is_special_other = f(other$records[, attr])
+          self_column_exists = !is.null(self$records[[attr]])
+          other_column_exists = !is.null(other$records[[attr]])
 
-            if (any( is_special_self !=  is_special_other)) {
-              stop(paste0("Symbols with ", fnames[count], " special values 
-              do not match in the ", attr, " column.\n"))
+          if (inherits(self, "Parameter")) {
+            def_values = 0
+          }
+          else {
+            def_values = self$.getDefaultValues()
+          }
+          if (self_column_exists && !other_column_exists) {
+            if (any(self$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+              stop(paste0("symbol records do not match. ", other$name, "$records is considered to be 
+              at the default value of ", def_values[[attr]], "\n"))
             }
-            is_special = (is_special || is_special_self)
           }
-          if (is_special) next
-
-          if (!is.null(names(atol))) {
-            atol_attr = atol[[attr]]
+          else if (!self_column_exists && other_column_exists) {
+            if (any(other$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+              stop(paste0("symbol records do not match. ", self$name, "$records is considered to be 
+              at the default value of ", def_values[[attr]], "\n"))
+            }
           }
-          else {
-            atol_attr = atol
-          }
-
-          if (!is.null(names(rtol))) {
-              rtol_attr = rtol[[attr]]
+          else if (!self_column_exists && !other_column_exists) {
+            next
           }
           else {
-            rtol_attr = rtol
-          }
-          # check numerical equality subject to tolerance
-          lhs = abs(self$records[,attr] - other$records[, attr])
-          rhs = atol_attr + rtol_attr * abs(other$records[, attr])
+            # check for special values
+            count = 0
+            fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
+            is_special = FALSE
+            for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
+            SpecialValues$isUndef, SpecialValues$isPosInf, 
+            SpecialValues$isNegInf)) {
+              count = count + 1
+              is_special_self = f(self$records[, attr])
+              is_special_other = f(other$records[, attr])
 
-          if (lhs > rhs) {
-            stop(paste0("Symbol records contain numeric differences in the ", 
-            attr, " attribute that are outside the specified tolerances rtol=", 
-            rtol_attr, ", atol=", atol_attr, "\n"))
+              if (any( is_special_self !=  is_special_other)) {
+                stop(paste0("Symbols with ", fnames[count], " special values 
+                do not match in the ", attr, " column.\n"))
+              }
+              is_special = (is_special || is_special_self)
+            }
+            if (is_special) next
+
+            if (!is.null(names(atol))) {
+              atol_attr = atol[[attr]]
+            }
+            else {
+              atol_attr = atol
+            }
+
+            if (!is.null(names(rtol))) {
+                rtol_attr = rtol[[attr]]
+            }
+            else {
+              rtol_attr = rtol
+            }
+            # check numerical equality subject to tolerance
+            lhs = abs(self$records[,attr] - other$records[, attr])
+            rhs = atol_attr + rtol_attr * abs(other$records[, attr])
+
+            if (lhs > rhs) {
+              stop(paste0("Symbol records contain numeric differences in the ", 
+              attr, " attribute that are outside the specified tolerances rtol=", 
+              rtol_attr, ", atol=", atol_attr, "\n"))
+            }
           }
         }
       }
@@ -1660,83 +1705,122 @@
         merged = merge(self$records, other$records, 
         by.x=self$domainLabels, by.y=other$domainLabels,
         all=TRUE)
-        error_df = head(merged[as.logical(
-          rowSums(is.na(merged[(self$dimension+1):length(merged)]))),][1:self$dimension])
 
-        strmsg="symbol records do not match. Unmatched rows below\n"
-        strdf = paste0(capture.output(error_df), collapse="\n")
-        if (any(is.na(merged[,self$dimension:length(merged)]))) {
-          stop(paste0(strmsg, strdf, "\n"))
+        if (self$dimension + 1 < length(merged)) {
+          error_df = head(merged[as.logical(
+            rowSums(is.na(merged[(self$dimension+1):length(merged)]))),][1:self$dimension])
+
+          strmsg="symbol records do not match. Unmatched rows below\n"
+          strdf = paste0(capture.output(error_df), collapse="\n")
+          if (any(is.na(merged[,self$dimension:length(merged)]))) {
+            stop(paste0(strmsg, strdf, "\n"))
+          }
+
+        }
+        else {
+          # no element text column
+          if (nrow(merged) != nrow(self$records)) {
+            # if number of records is the same in self and other
+            # and if the merged dataframe has different number of records
+            stop("symbol records do not match. Unmatched rows are present.\n")
+          }
         }
 
         # now compare numerical records
         for (attr in columns) {
-          attrs_x = paste0(attr, ".x")
-          attrs_y = paste0(attr, ".y")
-          small_merged = merged[1:self$dimension]
-          small_merged[, c(attrs_x, attrs_y)] = 
-          merged[c(attrs_x, attrs_y)]
+          self_column_exists = !is.null(self$records[[attr]])
+          other_column_exists = !is.null(other$records[[attr]])
 
-          # check for special values
-          count = 0
-          fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
-          for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
-            SpecialValues$isUndef, SpecialValues$isPosInf, 
-            SpecialValues$isNegInf)) {
-            count = count + 1
-            idx_self = f(small_merged[, attrs_x])
-            idx_other = f(small_merged[, attrs_y])
-            if (any(idx_self != idx_other)) {
-              stop(paste0("Symbols with ", fnames[count], " special values ",
-              "do not match in the ", attr, " column.\n"))
-            }
-
-            if (any(idx_self)) {
-              # drop special values
-              small_merged = small_merged[-which(idx_self),]
-            }
-            if (nrow(small_merged) == 0) break
-          }
-
-
-          if (nrow(small_merged) == 0) next
-
-          if (!is.null(names(atol))) {
-            if (!is.null(atol[[attr]])) {
-              atol_attr = atol[[attr]]
-            }
-            else {
-              stop(paste0("User passed a named vector for the ", 
-              "argument `atol` but the attribute ", 
-              attr, " is missing\n"))
-            }
+          if (inherits(self, "Parameter")) {
+            def_values = 0
           }
           else {
-            atol_attr = atol
+            def_values = self$.getDefaultValues()
           }
 
-          if (!is.null(names(rtol))) {
-            if (!is.null(rtol[[attr]])) {
-              rtol_attr = rtol[[attr]]
+          if (self_column_exists && !other_column_exists) {
+            if (any(self$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+              stop(paste0("symbol records do not match. ", other$name, "$records is considered to be 
+              at the default value of ", def_values[[attr]], "\n"))
             }
-            else {
-              stop(paste0("User passed a named vector for the argument ", 
-              "`rtol` but the attribute ", attr, " is missing\n"))
+          }
+          else if (!self_column_exists && other_column_exists) {
+            if (any(other$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+              stop(paste0("symbol records do not match. ", self$name, "$records is considered to be 
+              at the default value of ", def_values[[attr]], "\n"))
             }
+          }
+          else if (!self_column_exists && !other_column_exists) {
+            next
           }
           else {
-            rtol_attr = rtol
-          }
+            attrs_x = paste0(attr, ".x")
+            attrs_y = paste0(attr, ".y")
+            small_merged = merged[1:self$dimension]
+            small_merged[, c(attrs_x, attrs_y)] = 
+            merged[c(attrs_x, attrs_y)]
 
-          # check numerical equality subject to tolerance
-          lhs = abs(small_merged[,paste0(attr, ".x")] - 
-          small_merged[, paste0(attr, ".y")])
-          rhs = atol_attr + rtol_attr * abs(small_merged[, paste0(attr, ".y")])
+            # check for special values
+            count = 0
+            fnames = c("EPS", "NA", "UNDEF", "POSINF", "NEGINF")
+            for (f in c(SpecialValues$isEps, SpecialValues$isNA, 
+              SpecialValues$isUndef, SpecialValues$isPosInf, 
+              SpecialValues$isNegInf)) {
+              count = count + 1
+              idx_self = f(small_merged[, attrs_x])
+              idx_other = f(small_merged[, attrs_y])
+              if (any(idx_self != idx_other)) {
+                stop(paste0("Symbols with ", fnames[count], " special values ",
+                "do not match in the ", attr, " column.\n"))
+              }
 
-          if (any(lhs > rhs)) {
-            stop(paste0("Symbol records contain numeric differences in the ", 
-            attr, " attribute that are outside the specified tolerances rtol="
-            , rtol_attr, ", atol=", atol_attr, "\n"))
+              if (any(idx_self)) {
+                # drop special values
+                small_merged = small_merged[-which(idx_self),]
+              }
+              if (nrow(small_merged) == 0) break
+            }
+
+            if (nrow(small_merged) == 0) next
+
+            if (!is.null(names(atol))) {
+              if (!is.null(atol[[attr]])) {
+                atol_attr = atol[[attr]]
+              }
+              else {
+                stop(paste0("User passed a named vector for the ", 
+                "argument `atol` but the attribute ", 
+                attr, " is missing\n"))
+              }
+            }
+            else {
+              atol_attr = atol
+            }
+
+            if (!is.null(names(rtol))) {
+              if (!is.null(rtol[[attr]])) {
+                rtol_attr = rtol[[attr]]
+              }
+              else {
+                stop(paste0("User passed a named vector for the argument ", 
+                "`rtol` but the attribute ", attr, " is missing\n"))
+              }
+            }
+            else {
+              rtol_attr = rtol
+            }
+
+            # check numerical equality subject to tolerance
+            lhs = abs(small_merged[,paste0(attr, ".x")] - 
+            small_merged[, paste0(attr, ".y")])
+            rhs = atol_attr + rtol_attr * abs(small_merged[, paste0(attr, ".y")])
+
+            if (any(lhs > rhs)) {
+              stop(paste0("Symbol records contain numeric differences in the ", 
+              attr, " attribute that are outside the specified tolerances rtol="
+              , rtol_attr, ", atol=", atol_attr, "\n"))
+            }
+
           }
         }
 
@@ -1784,26 +1868,21 @@
         }
         # if records exist, check consistency
         if (!is.null(self$records)) {
-          if (inherits(self, "Set")) {
+          if (inherits(self, c("Set", "Parameter"))) {
             if (length(self$records) > self$dimension + 1 || length(self$records) < self$dimension) {
               stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns (<symbol dimension> + 1)\n"))
+              " the correct number of columns {<symbol dimension>, <symbol dimension> + 1)}\n"))
             }
           }
 
-          if (inherits(self, "Parameter")) {
-            if (length(self$records) != self$dimension + 1) {
-              stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns (<symbol dimension> + 1)\n"))
-            }
-          }
 
           if (inherits(self, c("Variable", "Equation"))) {
-            if (length(self$records) != 
-            self$dimension + length(private$.attr())) {
+            if ((length(self$records) < self$dimension) ||
+            (length(self$records) >
+            self$dimension + length(private$.attr()))) {
               stop(paste0("Symbol 'records' does not have", 
-              " the correct number of columns ", 
-              self$dimension + length(private$.attr()), "\n"))
+              " the correct number of columns [", self$dimension,
+              ", ", self$dimension + length(private$.attr()), "]\n"))
             }
           }
 
@@ -1854,10 +1933,12 @@
 
           # check if all data columns are float
           if (inherits(self, c("Variable", "Parameter", "Equation" ))) {
-            for (i in (self$dimension + 1):length(self$records)) {
-              if (!(is.numeric(self$records[, i]) || 
-              all(SpecialValues$isNA(self$records[, i])))) {
-                stop("Data in column ", i, " must be numeric or NA\n")
+            if (length(self$records) > self$dimension ) {
+              for (i in (self$dimension + 1):length(self$records)) {
+                if (!(is.numeric(self$records[, i]) || 
+                all(SpecialValues$isNA(self$records[, i])))) {
+                  stop("Data in column ", i, " must be numeric or NA\n")
+                }
               }
             }
           }
@@ -1907,7 +1988,7 @@
             cnames =colnames(recs)
             recs= data.frame(recs1)
             colnames(recs) = cnames
-            recs = recs[!duplicated(recs[[dim]]),]
+            recs = recs[!duplicated(recs[[dim]]), , drop=FALSE]
             rownames(recs) <- NULL
           }
           else {
@@ -1921,13 +2002,13 @@
             recs= data.frame(recs1, recs2)
           }
           colnames(recs) = cnames
-          recs = recs[!duplicated(recs[[dim]]),]
+          recs = recs[!duplicated(recs[[dim]]), , drop= FALSE]
           rownames(recs) <- NULL
         }
         else {
           recs = self$records[diter]
           colnames(recs) = dim
-          recs = recs[!duplicated(recs[[dim]]),]
+          recs = recs[!duplicated(recs[[dim]]), , drop=FALSE]
           rownames(recs) <- NULL
         }
         self$refContainer[i]$records = recs

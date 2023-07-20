@@ -96,7 +96,7 @@ Equation <- R6Class(
     setRecords = function(records) {
       if (inherits(records, c("list", "array", "numeric", "integer"))) {
 
-        if (is.array(records) || inherits(records, "numeric")){
+        if (is.array(records) || inherits(records, "numeric")) {
           records= list(level = records) # default to level
         }
 
@@ -287,12 +287,13 @@ Equation <- R6Class(
 
         usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
 
-        for (i in setdiff(private$.attr(), usr_attr)) {
-          records[i] = private$.default_values[[private$.type]][[i]]
-        }
+        # for (i in setdiff(private$.attr(), usr_attr)) {
+        #   records[i] = private$.default_values[[private$.type]][[i]]
+        # }
 
         #check dimensionality
-        if (length(records) != self$dimension + length(private$.attr())) {
+        if ((length(records) < self$dimension) ||
+          (length(records) > self$dimension + length(private$.attr()))) {
           stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
           " is inconsistent with equation domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
@@ -304,11 +305,13 @@ Equation <- R6Class(
         }
 
         # check if numeric
-        for (i in (self$dimension + 1):length(records)) {
-          if (!(is.numeric(records[[i]]) || 
-          all(SpecialValues$isNA(records[[i]])))) {
-            stop(paste0("All elements of the, `" , colnames(records)[i], 
-            "` column of `records` not type numeric or NA.\n"))
+        if (self$dimension + 1 < length(records)) {
+          for (i in (self$dimension + 1):length(records)) {
+            if (!(is.numeric(records[[i]]) || 
+            all(SpecialValues$isNA(records[[i]])))) {
+              stop(paste0("All elements of the, `" , colnames(records)[i], 
+              "` column of `records` not type numeric or NA.\n"))
+            }
           }
         }
 
@@ -318,12 +321,11 @@ Equation <- R6Class(
           correct_order = colnames(records)[(1:self$dimension)]
         }
         correct_order = append(correct_order, private$.attr())
-        records = records[, correct_order]
-
-        columnNames = append(columnNames, private$.attr())
+        correct_order = intersect(correct_order, usr_colnames)
+        records = records[correct_order]
 
         if (self$dimension == 0) {
-          colnames(records) = columnNames
+          colnames(records) = correct_order
           self$records = records
           return()
         }
@@ -341,10 +343,8 @@ Equation <- R6Class(
           return(records[, d])
         })
 
-        records = data.frame(records)
-        colnames(records) = columnNames
+        colnames(records) = correct_order
         self$records = records
-        # self$.linkDomainCategories()
 
       }
       return(invisible(NULL))
@@ -452,6 +452,10 @@ Equation <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$type = self$type
+    },
+
+    .getDefaultValues = function() {
+      return(private$.default_values[[self$type]])
     }
   ),
 

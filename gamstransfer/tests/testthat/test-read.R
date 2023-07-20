@@ -401,72 +401,6 @@ test_that("test_num_17", {
 )
 
 test_that("test_num_18", {
-
-    default_values = list(
-    "binary" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = 1.0,
-        "scale" = 1.0
-    ),
-    "integer" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "positive" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "negative" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = 0.0,
-        "scale" = 1.0
-    ),
-    "free" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "sos1" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "sos2" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "semicont" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 1.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "semiint" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 1.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    )
-  )
   m  = Container$new()
   df = data.frame("domain"=c("i0"))
 
@@ -487,80 +421,13 @@ test_that("test_num_18", {
     m$addVariable(varname, i, "*", records = df)
 
     expect_equal(colnames(m[varname]$records),
-    c("domain", "level", "marginal", "lower", "upper", "scale"))
+    c("domain"))
 
-    expect_equal(m[varname]$records[1, "level"], 
-    default_values[[i]][["level"]])
-
-    expect_equal(m[varname]$records[1, "marginal"], 
-    default_values[[i]][["marginal"]])
-
-    expect_equal(m[varname]$records[1, "lower"], 
-    default_values[[i]][["lower"]])
-
-    expect_equal(m[varname]$records[1, "upper"], 
-    default_values[[i]][["upper"]])
-
-    expect_equal(m[varname]$records[1, "scale"], 
-    default_values[[i]][["scale"]])
   }
 }
 )
 
 test_that("test_num_19", {
-
-  default_values = list(
-      "eq" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = 0.0,
-          "scale" = 1.0
-      ),
-      "geq" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = SpecialValues$POSINF,
-          "scale" = 1.0
-      ),
-      "leq" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = 0.0,
-          "scale" = 1.0
-      ),
-      "nonbinding" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = SpecialValues$POSINF,
-          "scale" = 1.0
-      ),
-      "cone" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = SpecialValues$POSINF,
-          "scale" = 1.0
-      ),
-      "external" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = 0.0,
-          "scale" = 1.0
-      ),
-      "boolean" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = 0.0,
-          "scale" = 1.0
-      )
-  )
-
   m  = Container$new()
   df = data.frame("domain"= c("i0"))
 
@@ -573,22 +440,8 @@ test_that("test_num_19", {
     m$addEquation(eqname, i, "*", records = df)
 
     expect_equal(colnames(m[eqname]$records),
-    c("domain", "level", "marginal", "lower", "upper", "scale"))
+    c("domain"))
 
-    expect_equal(m[eqname]$records[1, "level"], 
-    default_values[[i]][["level"]])
-
-    expect_equal(m[eqname]$records[1, "marginal"], 
-    default_values[[i]][["marginal"]])
-
-    expect_equal(m[eqname]$records[1, "lower"], 
-    default_values[[i]][["lower"]])
-
-    expect_equal(m[eqname]$records[1, "upper"], 
-    default_values[[i]][["upper"]])
-
-    expect_equal(m[eqname]$records[1, "scale"], 
-    default_values[[i]][["scale"]])
   }
 }
 )
@@ -686,7 +539,7 @@ test_that("test_num_26", {
   j = Set$new(m, "j", i, records = 
   data.frame(i=c("c"), c("desc for elem 'c'")), domainForwarding=TRUE)
 
-  df = data.frame("p" =c("c"), "element_text" = c(""))
+  df = data.frame("p" =c("c"))
   df$p = factor(df$p, ordered = TRUE)
   expect_equal(i$records, df)
 
@@ -700,12 +553,12 @@ test_that("test_num_26", {
   l = Set$new(m, "l", k, records = c("a", "b"), domainForwarding = TRUE)
 
   # test l
-  df = data.frame("k"=c("a", "b"), "element_text"=c("", ""))
+  df = data.frame("k"=c("a", "b"))
   df$k = factor(df$k, ordered=TRUE)
   expect_equal(l$records, df)
 
   # test k
-  df = data.frame("j"=c("a", "b"), "element_text"=c("",""))
+  df = data.frame("j"=c("a", "b"))
   df$j = factor(df$j, ordered = TRUE)
   expect_equal(k$records, df)
 
@@ -715,7 +568,7 @@ test_that("test_num_26", {
   expect_equal(j$records, df)
 
   # test i
-  df = data.frame("p"=c("c"), "element_text"=c(""))
+  df = data.frame("p"=c("c"))
   df$p = factor(df$p, ordered = TRUE)
   expect_equal(i$records, df)
 
@@ -827,7 +680,7 @@ test_that("test_num_34", {
   i = Set$new(m, "i")
   j = Alias$new(m, "j", i)
   j$setRecords(c("a", "b"))
-  df = data.frame("uni"=c("a", "b"), "element_text"=c("",""))
+  df = data.frame("uni"=c("a", "b"))
   df$uni = factor(df$uni, ordered=TRUE)
 
   expect_equal(i$records, df)
@@ -2563,7 +2416,7 @@ i = Set$new(m, "i", records=replicate(5, "i1"))
 ip = Alias$new(m, "ip", i)
 
 expect_equal(ip$countDuplicateRecords(), 4)
-expect_equal(ip$findDuplicateRecords(), ip$records[2:5, ])
+expect_equal(ip$findDuplicateRecords(), ip$records[2:5, , drop=FALSE])
 expect_true(ip$hasDuplicateRecords())
 ip$dropDuplicateRecords()
 expect_equal(nrow(i$records), 1)
@@ -3508,3 +3361,116 @@ test_that("test_num_125", {
 }
 )
 
+# extensive partial column tests
+test_that("test_num_126", {
+  # data frames with only domain - equation
+  for (t in c("eq","geq","leq","nonbinding", "cone", "external", "boolean")) {
+    m = Container$new()
+    e = Equation$new(m, "e", type=t, domain="*", records = data.frame(i=c("i1","i2","i3")))
+    expect_equal(m$listSymbols(), c("e"))
+    expect_equal(colnames(m["e"]$records), "i")
+    expect_equal(length(m["e"]$records), 1)
+    expect_true(m["e"]$isValid())
+    m$write("partial_equation.gdx")
+
+    m1 = Container$new("partial_equation.gdx")
+    expect_equal(m1$listSymbols(), "e")
+    expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["e"]$records), 6)
+    for (i in c("level", "marginal", "lower", "upper", "scale")) {
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues()[[i]]))
+    }
+  }
+
+  # data frames with only domain - variable
+  for (t in c("binary", "integer", "positive", "negative", "free", "sos1", "sos2", "semicont", "semiint")) {
+    m = Container$new()
+    v = Variable$new(m, "v", type=t, domain="*", records = data.frame(i=c("i1","i2","i3")))
+    expect_equal(m$listSymbols(), c("v"))
+    expect_equal(colnames(m["v"]$records), "i")
+    expect_equal(length(m["v"]$records), 1)
+    expect_true(m["v"]$isValid())
+    m$write("partial_variable.gdx")
+
+    m1 = Container$new("partial_variable.gdx")
+    expect_equal(m1$listSymbols(), "v")
+    expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["v"]$records), 6)
+    for (i in c("level", "marginal", "lower", "upper", "scale")) {
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$.getDefaultValues()[[i]]))
+    }
+  }
+
+  # data frames with only domain - parameter
+  m = Container$new()
+  p = Parameter$new(m, "p", domain="*", records = data.frame(i=c("i1","i2","i3")))
+  expect_equal(m$listSymbols(), c("p"))
+  expect_equal(colnames(m["p"]$records), "i")
+  expect_equal(length(m["p"]$records), 1)
+  expect_true(m["p"]$isValid())
+  m$write("partial_parameter.gdx")
+
+  m1 = Container$new("partial_parameter.gdx")
+  expect_equal(m1$listSymbols(), "p")
+  expect_equal(colnames(m1["p"]$records), c("uni", "value"))
+  expect_equal(length(m1["p"]$records), 2)
+  expect_equal(m1["p"]$records[,"value"], replicate(m["p"]$numberRecords, 0))
+
+  # data frames with only domain - set
+  m = Container$new()
+  s = Set$new(m, "s", records = data.frame(i=c("i1","i2","i3")))
+  expect_equal(m$listSymbols(), c("s"))
+  expect_equal(colnames(m["s"]$records), "i")
+  expect_equal(length(m["s"]$records), 1)
+  expect_true(m["s"]$isValid())
+  m$write("partial_set.gdx")
+
+  m1 = Container$new("partial_set.gdx")
+  expect_equal(m1$listSymbols(), "s")
+  expect_equal(colnames(m1["s"]$records), c("uni", "element_text"))
+  expect_equal(length(m1["s"]$records), 2)
+
+
+  # data frames with domain + missing attribute columns - equation
+  for (t in c("eq","geq","leq","nonbinding", "cone", "external", "boolean")) {
+    m = Container$new()
+    e = Equation$new(m, "e", type=t, domain="*", records = data.frame(i=c("i1","i2","i3"), marginal=c(10, 10, 10)))
+    expect_equal(m$listSymbols(), c("e"))
+    expect_equal(colnames(m["e"]$records), c("i", "marginal"))
+    expect_equal(length(m["e"]$records), 2)
+    expect_true(m["e"]$isValid())
+    m$write("partial_equation.gdx")
+
+    m1 = Container$new("partial_equation.gdx")
+    expect_equal(m1$listSymbols(), "e")
+    expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["e"]$records), 6)
+    for (i in c("level", "lower", "upper", "scale")) {
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues()[[i]]))
+    }
+    expect_equal(m1["e"]$records[,"marginal"], replicate(m["e"]$numberRecords, 10))
+
+  }
+
+  # data frames with domain + missing attribute columns - variable
+  for (t in c("binary", "integer", "positive", "negative", "free", "sos1", "sos2", "semicont", "semiint")) {
+    m = Container$new()
+    v = Variable$new(m, "v", type=t, domain="*", records = data.frame(i=c("i1","i2","i3"), marginal=c(10, 10, 10)))
+    expect_equal(m$listSymbols(), c("v"))
+    expect_equal(colnames(m["v"]$records), c("i", "marginal"))
+    expect_equal(length(m["v"]$records), 2)
+    expect_true(m["v"]$isValid())
+    m$write("partial_variable.gdx")
+
+    m1 = Container$new("partial_variable.gdx")
+    expect_equal(m1$listSymbols(), "v")
+    expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["v"]$records), 6)
+    for (i in c("level", "lower", "upper", "scale")) {
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$.getDefaultValues()[[i]]))
+    }
+    expect_equal(m1["v"]$records[,"marginal"], replicate(m["v"]$numberRecords, 10))
+
+  }
+}
+)

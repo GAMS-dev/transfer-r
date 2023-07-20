@@ -227,7 +227,14 @@ bool is_uel_priority, bool compress) {
       }
 
       StringVector elem_text(nrows);
-      NumericMatrix rec_vals(nrows, ncols-Dim);
+      int n_attr;
+      if (varType == GMS_DT_PAR) {
+        n_attr = 1;
+      }
+      else {
+        n_attr = 5;
+      }
+      NumericMatrix rec_vals(nrows, n_attr);
       std::string text;
 
       if (varType == GMS_DT_SET) {
@@ -240,9 +247,62 @@ bool is_uel_priority, bool compress) {
       }
       else {
         NumericVector temp_num_col(Dim);
-        for (int d = Dim; d < ncols; d++) {
-          temp_num_col = df[d];
-          rec_vals(_, d-Dim) = temp_num_col;
+        if (ncols > Dim) {
+          // one or more attribute columns
+          // for parameters this is enough to say all attributes are present
+          if (ncols - Dim == n_attr) {
+            // all attribute columns are present
+            for (int d = Dim; d < ncols; d++) {
+              temp_num_col = df[d];
+              rec_vals(_, d-Dim) = temp_num_col;
+            }
+          }
+          else {
+            // some attribute columns are missing
+            // can only happen for variables and equations
+            CharacterVector colnames = df.names();
+            std::string attributes[5] = {"level", "marginal", "lower", "upper", "scale"};
+            Function default_val_fun = symname[".getDefaultValues"];
+            List default_values = default_val_fun();
+            NumericVector def_vec(rec_vals.nrow());
+
+            std::vector<std::string> colnames_vec(colnames.size());
+
+            for (int i = 0; i < colnames.size(); i++){
+                colnames_vec[i] = colnames(i);
+            }
+
+            for (int i =0; i < 5; i++) {
+              std::string attr = attributes[i];
+
+              if ( std::any_of(colnames_vec.begin(), colnames_vec.end(), [attr](std::string i){return i==attr;}) ) {
+                temp_num_col = df[attr];
+                rec_vals(_, i) = temp_num_col;
+              }
+              else {
+                def_vec.fill(default_values[i]);
+                rec_vals(_, i) = def_vec;
+              }
+            }
+          }
+        }
+        else {
+          // no attribute column. Fill all values with default
+          if (varType == GMS_DT_PAR) {
+            NumericVector def_vec(rec_vals.nrow());
+            def_vec.fill(0);
+            rec_vals(_, 0) = def_vec;
+          }
+          else {
+            Function default_val_fun = symname[".getDefaultValues"];
+            List default_values = default_val_fun();
+
+            NumericVector def_vec(rec_vals.nrow());
+            for (int d = 0; d < n_attr; d++) {
+              def_vec.fill(default_values[d]);
+              rec_vals(_, d) = def_vec;
+            }
+          }
         }
       }
       for (int i =0; i < nrows; i++) {
