@@ -203,8 +203,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       else if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
         record_values(rec_nr, 0) = gdx_values[GMS_VAL_LEVEL];
         record_values(rec_nr, 1) = gdx_values[GMS_VAL_MARGINAL];
-        record_values(rec_nr, 2) = gdx_values[GMS_VAL_UPPER];
-        record_values(rec_nr, 3) = gdx_values[GMS_VAL_LOWER];
+        record_values(rec_nr, 2) = gdx_values[GMS_VAL_LOWER];
+        record_values(rec_nr, 3) = gdx_values[GMS_VAL_UPPER];
         record_values(rec_nr, 4) = gdx_values[GMS_VAL_SCALE];
         for (int D = 0; D < Dim; D++) {
           indx_matrix(rec_nr, D) = GET_DOM_MAP(D, gdx_uel_index[D]) + 1;
