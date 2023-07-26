@@ -3474,3 +3474,64 @@ test_that("test_num_126", {
   }
 }
 )
+
+# extensive partial column tests for scalars
+test_that("test_num_127", {
+#parameter
+m = Container$new()
+p = Parameter$new(m, "p", records=data.frame())
+m$write("partial_scalar.gdx")
+m1 = Container$new("partial_scalar.gdx")
+expect_equal(m1["p"]$records$value, 0)
+
+#variable
+m = Container$new()
+v = Variable$new(m, "v", records=data.frame())
+m$write("partial_scalar_variable.gdx")
+m1 = Container$new("partial_scalar_variable.gdx")
+for (i in c("level", "marginal", "lower", "upper", "scale")) {
+  expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues()[[i]])
+}
+
+#equation
+m = Container$new()
+e = Equation$new(m, "e", type="eq", records=data.frame())
+m$write("partial_scalar_equation.gdx")
+m1 = Container$new("partial_scalar_equation.gdx")
+for (i in c("level", "marginal", "lower", "upper", "scale")) {
+  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues()[[i]])
+}
+
+#variable partial column
+m = Container$new()
+v = Variable$new(m, "v", records=data.frame(marginal=10))
+m$write("partial_scalar_variable.gdx")
+m1 = Container$new("partial_scalar_variable.gdx")
+for (i in c("level", "lower", "upper", "scale")) {
+  expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues()[[i]])
+}
+expect_equal(m1["v"]$records[["marginal"]], 10)
+
+#equation
+m = Container$new()
+e = Equation$new(m, "e", type="eq", records=data.frame(marginal=10))
+m$write("partial_scalar_equation.gdx")
+m1 = Container$new("partial_scalar_equation.gdx")
+for (i in c("level", "lower", "upper", "scale")) {
+  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues()[[i]])
+}
+expect_equal(m1["e"]$records[["marginal"]], 10)
+}
+)
+
+# test other methods with partial columns
+test_that("test_num_128", {
+# count* methods
+# equals
+# getMaxValue etc..
+# isValid
+# toDense
+# where* methods
+
+}
+)
