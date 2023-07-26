@@ -52,7 +52,7 @@
 
     max_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = private$.get_default_value(c)
+        default_value = self$.getDefaultValue()[[c]]
         return(default_value)
       }
       else {
@@ -77,7 +77,7 @@
 
     min_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = private$.get_default_value(c)
+        default_value = self$.getDefaultValue()[[c]]
         return(default_value)
       }
       else {
@@ -102,7 +102,7 @@
 
     mean_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = private$.get_default_value(c)
+        default_value = self$.getDefaultValue()[[c]]
         return(default_value)
       }
       else {
@@ -128,7 +128,7 @@
 
     max_abs_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = private$.get_default_value(c)
+        default_value = self$.getDefaultValue()[[c]]
         return(abs(default_value))
       }
       else {
@@ -2091,125 +2091,7 @@
       }
       return(newsym)
     }
-  },
-
-  .variable_default_values = list(
-    "binary" = list(
-        "level"= 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = 1.0,
-        "scale" = 1.0
-    ),
-    "integer" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "positive" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "negative" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = 0.0,
-        "scale" = 1.0
-    ),
-    "free" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = SpecialValues$NEGINF,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "sos1" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "sos2" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 0.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "semicont" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 1.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    ),
-    "semiint" = list(
-        "level" = 0.0,
-        "marginal" = 0.0,
-        "lower" = 1.0,
-        "upper" = SpecialValues$POSINF,
-        "scale" = 1.0
-    )
-  ),
-
-  .equation_default_values = list(
-      "eq" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = 0.0,
-          "scale" = 1.0
-      ),
-      "geq" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = SpecialValues$POSINF,
-          "scale" = 1.0
-      ),
-      "leq" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = 0.0,
-          "scale" = 1.0
-      ),
-      "nonbinding" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = SpecialValues$NEGINF,
-          "upper" = SpecialValues$POSINF,
-          "scale" = 1.0
-      ),
-      "cone" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = SpecialValues$POSINF,
-          "scale" = 1.0
-      ),
-      "external" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = 0.0,
-          "scale" = 1.0
-      ),
-      "boolean" = list(
-          "level" = 0.0,
-          "marginal" = 0.0,
-          "lower" = 0.0,
-          "upper" = 0.0,
-          "scale" = 1.0
-      )
-    )
+  }
 
   )
 )
