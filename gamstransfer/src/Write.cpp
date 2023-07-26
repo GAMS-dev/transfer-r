@@ -68,7 +68,6 @@ std::string elemText, std::string sym_name) {
   else {
     Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
   }
-
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   if (!rc) {
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
@@ -176,6 +175,7 @@ bool is_uel_priority, bool compress) {
       }
 
     }
+
     Dim = symname["dimension"];
     StringVector names(Dim);
     df = symname["records"];
@@ -214,8 +214,41 @@ bool is_uel_priority, bool compress) {
     }
     int nrows = df.nrows();
     int ncols = df.size();
+
+    int n_attr;
+    if (varType == GMS_DT_PAR) {
+      n_attr = 1;
+    }
+    else {
+      n_attr = 5;
+    }
     if (nrows == 0) {
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (Dim != 0 || varType == GMS_DT_SET) {
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      }
+      else {
+        NumericMatrix rec_vals(1, n_attr);
+        // for scalars, write the default values
+        // no attribute column. Fill all values with default
+        if (varType == GMS_DT_PAR) {
+          NumericVector def_vec(rec_vals.nrow());
+          def_vec.fill(0);
+          rec_vals(_, 0) = def_vec;
+        }
+        else {
+          Function default_val_fun = symname[".getDefaultValues"];
+          List default_values = default_val_fun();
+
+          NumericVector def_vec(rec_vals.nrow());
+          for (int d = 0; d < n_attr; d++) {
+            def_vec.fill(default_values[d]);
+            rec_vals(_, d) = def_vec;
+          }
+        }
+
+        WriteData(gdxobj.gdx, "", rec_vals(0, _), varType, Dim, "", mysym);
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      }
     }
     else {
       StringMatrix rec_domain(nrows, Dim);
@@ -227,16 +260,8 @@ bool is_uel_priority, bool compress) {
       }
 
       StringVector elem_text(nrows);
-      int n_attr;
-      if (varType == GMS_DT_PAR) {
-        n_attr = 1;
-      }
-      else {
-        n_attr = 5;
-      }
       NumericMatrix rec_vals(nrows, n_attr);
       std::string text;
-
       if (varType == GMS_DT_SET) {
         if (df.length() == Dim + 1) {
           elem_text = df[Dim];
