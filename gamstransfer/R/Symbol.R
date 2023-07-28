@@ -52,7 +52,8 @@
 
     max_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = self$.getDefaultValue()[[c]]
+        if (inherits(self, "Parameter")) return(0)
+        default_value = self$.getDefaultValues()[[c]]
         return(default_value)
       }
       else {
@@ -77,7 +78,8 @@
 
     min_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = self$.getDefaultValue()[[c]]
+        if (inherits(self, "Parameter")) return(0)
+        default_value = self$.getDefaultValues()[[c]]
         return(default_value)
       }
       else {
@@ -102,7 +104,8 @@
 
     mean_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = self$.getDefaultValue()[[c]]
+        if (inherits(self, "Parameter")) return(0)
+        default_value = self$.getDefaultValues()[[c]]
         return(default_value)
       }
       else {
@@ -128,7 +131,8 @@
 
     max_abs_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
-        default_value = self$.getDefaultValue()[[c]]
+        if (inherits(self, "Parameter")) return(0)
+        default_value = self$.getDefaultValues()[[c]]
         return(abs(default_value))
       }
       else {
@@ -233,16 +237,7 @@
     }
     columns = private$.checkColumnsArgument(columns)
 
-    NA_count = unlist(lapply(columns, function(c) {
-      if (!is.null(self$records) && is.null(self$records[[c]])) {
-        return(0)
-      }
-      else {
-        return(private$.countSpecialValue(columns, "isNA"))
-      }
-    }), use.names =  FALSE)
-
-    return(sum(NA_count))
+    return(private$.countSpecialValue(columns, "isNA"))
   },
 
   #' @description countEps total number of SpecialValues$EPS in value column
@@ -257,16 +252,7 @@
     }
     columns = private$.checkColumnsArgument(columns)
 
-    EPS_count = unlist(lapply(columns, function(c) {
-      if (!is.null(self$records) && is.null(self$records[[c]])) {
-        return(0)
-      }
-      else {
-        return(private$.countSpecialValue(columns, "isEps"))
-      }
-    }), use.names =  FALSE)
-
-    return(sum(EPS_count))
+    return(private$.countSpecialValue(columns, "isEps"))
   },
 
   #'@description countUndef total number of SpecialValues$UNDEF in value column
@@ -281,16 +267,7 @@
     }
     columns = private$.checkColumnsArgument(columns)
 
-    Undef_count = unlist(lapply(columns, function(c) {
-      if (!is.null(self$records) && is.null(self$records[[c]])) {
-        return(0)
-      }
-      else {
-        return(private$.countSpecialValue(columns, "isUndef"))
-      }
-    }), use.names =  FALSE)
-
-    return(sum(Undef_count))
+    return(private$.countSpecialValue(columns, "isUndef"))
   },
 
   #'@description countPosInf total number of 
@@ -306,16 +283,8 @@
     }
     columns = private$.checkColumnsArgument(columns)
 
-    PosInf_count = unlist(lapply(columns, function(c) {
-      if (!is.null(self$records) && is.null(self$records[[c]])) {
-        return(0)
-      }
-      else {
-        return(private$.countSpecialValue(columns, "isPosInf"))
-      }
-    }), use.names =  FALSE)
+    return(private$.countSpecialValue(columns, "isPosInf"))
 
-    return(sum(PosInf_count))
   },
 
   #'@description countNegInf total number of 
@@ -331,16 +300,7 @@
     }
     columns = private$.checkColumnsArgument(columns)
 
-    NegInf_count = unlist(lapply(columns, function(c) {
-      if (!is.null(self$records) && is.null(self$records[[c]])) {
-        return(0)
-      }
-      else {
-        return(private$.countSpecialValue(columns, "isNegInf"))
-      }
-    }), use.names =  FALSE)
-
-    return(sum(NegInf_count))
+    return(private$.countSpecialValue(columns, "isNegInf"))
   },
 
   getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
@@ -889,7 +849,21 @@
     }
 
     if (is.null(self$records)) return(NULL)
-    if (self$dimension  == 0) return(self$records[[column]])
+
+    if (self$dimension  == 0) {
+      if (is.null(self$records[[column]])) {
+        if (inherits(self, "Parameter")) {
+          def_value = self$.getDefaultValues()
+        }
+        else {
+          def_value = self$.getDefaultValues()[[column]]
+        }
+        return(self$.getDefaultValues())
+      }
+      else {
+        return(self$records[[column]])
+      }
+    }
 
     if (self$domainType == "regular") {
       if (self$hasDomainViolations()) {
@@ -946,7 +920,18 @@
     }
 
     a = array(0, dim = self$shape())
-    a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
+    if (is.null(self$records[[column]])) {
+      if (inherits(self, "Parameter")) {
+        def_value = self$.getDefaultValues()
+      }
+      else {
+        def_value = self$.getDefaultValues()[[column]]
+      }
+      a[matrix(unlist(idx), ncol=length(idx))] = def_value
+    }
+    else {
+      a[matrix(unlist(idx), ncol=length(idx))] = self$records[, column]
+    }
     return(a)
 
   },
@@ -1210,7 +1195,12 @@
     numberRecords = function() {
       if (self$isValid() == TRUE) {
         if (!is.null(self$records)) {
-          return(nrow(self$records))
+          if (self$dimension == 0) {
+            return(1)
+          }
+          else {
+            return(nrow(self$records))
+          }
         }
         else {
           return(0)
@@ -1339,7 +1329,22 @@
 
       tryCatch(
         {
-          return(sum(SpecialValues[[specialValueFunc]](self$records[,columns])))
+          special_val_count = unlist(lapply(columns, function(c) {
+            if (is.null(self$records[[c]])) {
+              if (inherits(self, "Parameter")) return(0)
+
+              if (SpecialValues[[specialValueFunc]](self$.getDefaultValues()[[c]])) {
+                return(self$numberRecords)
+              }
+              else {
+                return(0)
+              }
+            }
+            else {
+              return(SpecialValues[[specialValueFunc]](self$records[,c]))
+            }
+          }), use.names = FALSE)
+          return(sum(special_val_count))
         },
         error = function(cond)  return(NA),
         warning = function(cond) return(NA)
@@ -1463,8 +1468,15 @@
         "`` != `", other$domainType, "`\n"))
       }
 
-      if (!identical(self$domain, other$domain)) {
-        stop(paste0("Symbol domains do not match \n"))
+      if (self$dimension != 0 && self$domainType == "regular") {
+        for (d in 1:self$dimension) {
+          if (inherits(self$domain[[d]], ".Symbol")) {
+            if (!self$domain[[d]]$equals(other$domain[[d]])) {
+              stop(paste0("Symbol domains for dimension ", d ,
+              " do not match.\n"))
+            }
+          }
+        }
       }
 
       if (self$numberRecords != other$numberRecords) {
@@ -1516,6 +1528,7 @@
       }
       else if (inherits(self, c("Parameter", "Variable", 
       "Equation"))) {
+
         private$.check_numeric_records_equal(other, columns, rtol, atol)
       }
     },
@@ -1638,18 +1651,18 @@
             def_values = 0
           }
           else {
-            def_values = self$.getDefaultValues()
+            def_values = self$.getDefaultValues()[[attr]]
           }
           if (self_column_exists && !other_column_exists) {
-            if (any(self$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+            if (any(self$records[[attr]] != replicate(self$numberRecords, def_values))) {
               stop(paste0("symbol records do not match. ", other$name, "$records is considered to be 
-              at the default value of ", def_values[[attr]], "\n"))
+              at the default value of ", def_values, "\n"))
             }
           }
           else if (!self_column_exists && other_column_exists) {
-            if (any(other$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+            if (any(other$records[[attr]] != replicate(self$numberRecords, def_values))) {
               stop(paste0("symbol records do not match. ", self$name, "$records is considered to be 
-              at the default value of ", def_values[[attr]], "\n"))
+              at the default value of ", def_values, "\n"))
             }
           }
           else if (!self_column_exists && !other_column_exists) {
@@ -1735,19 +1748,19 @@
             def_values = 0
           }
           else {
-            def_values = self$.getDefaultValues()
+            def_values = self$.getDefaultValues()[[attr]]
           }
 
           if (self_column_exists && !other_column_exists) {
-            if (any(self$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+            if (any(self$records[[attr]] != replicate(self$numberRecords, def_values))) {
               stop(paste0("symbol records do not match. ", other$name, "$records is considered to be 
-              at the default value of ", def_values[[attr]], "\n"))
+              at the default value of ", def_values, "\n"))
             }
           }
           else if (!self_column_exists && other_column_exists) {
-            if (any(other$records[[attr]] != replicate(self$numberRecords, def_values[[attr]]))) {
+            if (any(other$records[[attr]] != replicate(self$numberRecords, def_values))) {
               stop(paste0("symbol records do not match. ", self$name, "$records is considered to be 
-              at the default value of ", def_values[[attr]], "\n"))
+              at the default value of ", def_values, "\n"))
             }
           }
           else if (!self_column_exists && !other_column_exists) {

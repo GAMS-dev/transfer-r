@@ -292,6 +292,10 @@ Parameter <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
+    },
+
+    .getDefaultValues = function() {
+      return(0)
     }
   ),
 

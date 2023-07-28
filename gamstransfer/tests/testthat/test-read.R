@@ -3524,14 +3524,265 @@ expect_equal(m1["e"]$records[["marginal"]], 10)
 }
 )
 
-# test other methods with partial columns
+# test count* and isvalid methods with partial columns
 test_that("test_num_128", {
 # count* methods
-# equals
-# getMaxValue etc..
-# isValid
-# toDense
-# where* methods
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:10))
+p = Parameter$new(m, "p", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_true(p$isValid())
 
+flist = c(p$countNA, p$countEps, p$countNegInf, p$countPosInf, p$countUndef)
+for (f in flist) {
+  expect_equal(f(), 0)
+}
+
+v = Variable$new(m, "v", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_true(v$isValid())
+flist = c(v$countNA, v$countEps, v$countNegInf, v$countPosInf, v$countUndef)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+flist = c(v$countNA, v$countEps, v$countNegInf, v$countPosInf, v$countUndef)
+for (f in flist) {
+  expect_equal(f(columns=c("level", "scale")), 0)
+}
+
+expect_equal(v$countPosInf(columns="upper"), 5)
+expect_equal(v$countNegInf(columns="lower"), 5)
+
+e = Equation$new(m, "e", type="eq", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_true(e$isValid())
+flist = c(e$countNA, e$countEps, e$countNegInf, e$countPosInf, e$countUndef)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+expect_equal(e$countPosInf(columns="upper"), 0)
+expect_equal(e$countNegInf(columns="lower"), 0)
+
+
+#scalars count* methods
+m = Container$new()
+p = Parameter$new(m, "p", records=data.frame())
+expect_true(p$isValid())
+flist = c(p$countNA, p$countEps, p$countNegInf, p$countPosInf, p$countUndef)
+for (f in flist) {
+  expect_equal(f(), 0)
+}
+
+v = Variable$new(m, "v", records = data.frame())
+expect_true(v$isValid())
+flist = c(v$countNA, v$countEps, v$countNegInf, v$countPosInf, v$countUndef)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+flist = c(v$countNA, v$countEps, v$countNegInf, v$countPosInf, v$countUndef)
+for (f in flist) {
+  expect_equal(f(columns=c("level", "scale")), 0)
+}
+
+expect_equal(v$countPosInf(columns="upper"), 1)
+expect_equal(v$countNegInf(columns="lower"), 1)
+
+e = Equation$new(m, "e", type="eq", records = data.frame())
+expect_true(e$isValid())
+flist = c(e$countNA, e$countEps, e$countNegInf, e$countPosInf, e$countUndef)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+expect_equal(e$countPosInf(columns="upper"), 0)
+expect_equal(e$countNegInf(columns="lower"), 0)
+
+}
+)
+
+# test get* and isvalid methods with partial columns
+test_that("test_num_129", {
+# get* methods
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:10))
+p = Parameter$new(m, "p", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_true(p$isValid())
+
+flist = c(p$getMaxValue, p$getMinValue, p$getMaxAbsValue, p$getMeanValue)
+for (f in flist) {
+  expect_equal(f(), 0)
+}
+
+v = Variable$new(m, "v", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_true(v$isValid())
+flist = c(v$getMaxValue, v$getMinValue, v$getMaxAbsValue, v$getMeanValue)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+flist = c(v$getMaxValue, v$getMinValue, v$getMaxAbsValue, v$getMeanValue)
+for (f in flist) {
+  expect_equal(f(columns=c("level", "marginal")), 0)
+}
+
+expect_equal(v$getMaxValue(columns="upper"), Inf)
+expect_equal(v$getMaxValue(columns="lower"), -Inf)
+
+e = Equation$new(m, "e", type="eq", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_true(e$isValid())
+flist = c(e$getMaxValue, e$getMinValue, e$getMaxAbsValue, e$getMeanValue)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+expect_equal(e$getMaxValue(columns="upper"), 0)
+expect_equal(e$getMinValue(columns="lower"), 0)
+
+
+#scalars get* methods
+m = Container$new()
+p = Parameter$new(m, "p", records=data.frame())
+expect_true(p$isValid())
+flist = c(p$getMaxValue, p$getMinValue, p$getMaxAbsValue, p$getMeanValue)
+for (f in flist) {
+  expect_equal(f(), 0)
+}
+
+v = Variable$new(m, "v", records = data.frame())
+expect_true(v$isValid())
+flist = c(v$getMaxValue, v$getMinValue, v$getMaxAbsValue, v$getMeanValue)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+flist = c(v$getMaxValue, v$getMinValue, v$getMaxAbsValue, v$getMeanValue)
+for (f in flist) {
+  expect_equal(f(columns=c("level", "marginal")), 0)
+}
+
+expect_equal(v$getMaxValue(columns="upper"), Inf)
+expect_equal(v$getMaxValue(columns="lower"), -Inf)
+
+e = Equation$new(m, "e", type="eq", records = data.frame())
+expect_true(e$isValid())
+flist = c(e$getMaxValue, e$getMinValue, e$getMaxAbsValue, e$getMeanValue)
+for (f in flist) {
+  expect_equal(f(columns="level"), 0)
+}
+
+expect_equal(e$getMaxValue(columns="upper"), 0)
+expect_equal(e$getMinValue(columns="lower"), 0)
+
+}
+)
+
+# test where* and isvalid methods with partial columns
+test_that("test_num_130", {
+# where* methods
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:10))
+p = Parameter$new(m, "p", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_equal(p$getSparsity(), 0.5)
+
+flist = c(p$whereMax, p$whereMaxAbs, p$whereMin)
+for (f in flist) {
+  expect_equal(f(), 1)
+}
+
+v = Variable$new(m, "v", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_equal(v$getSparsity(), 0.5)
+flist = c(v$whereMax, v$whereMaxAbs, v$whereMin)
+for (f in flist) {
+  expect_equal(f(column="level"), 1)
+}
+
+expect_equal(v$whereMax(column="upper"), 1)
+expect_equal(v$whereMaxAbs(column="lower"), 1)
+
+e = Equation$new(m, "e", type="eq", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_equal(e$getSparsity(), 0.5)
+flist = c(e$whereMax, e$whereMaxAbs, e$whereMin)
+for (f in flist) {
+  expect_equal(f(column="level"), 1)
+}
+
+expect_equal(e$whereMax(column="upper"), 1)
+expect_equal(e$whereMin(column="lower"), 1)
+
+
+#scalars where* methods
+m = Container$new()
+p = Parameter$new(m, "p", records=data.frame())
+expect_equal(p$getSparsity(), NA)
+flist = c(p$whereMax, p$whereMaxAbs, p$whereMin)
+for (f in flist) {
+  expect_equal(f(), 1)
+}
+
+v = Variable$new(m, "v", records = data.frame())
+expect_equal(v$getSparsity(), NA)
+flist = c(v$whereMax, v$whereMaxAbs, v$whereMin)
+for (f in flist) {
+  expect_equal(f(column="level"), 1)
+}
+
+expect_equal(v$whereMax(column="upper"), 1)
+expect_equal(v$whereMin(column="lower"), 1)
+
+e = Equation$new(m, "e", type="eq", records = data.frame())
+expect_equal(e$getSparsity(), NA)
+flist = c(e$whereMax, e$whereMaxAbs, e$whereMin)
+for (f in flist) {
+  expect_equal(f(column="level"), 1)
+}
+
+expect_equal(e$whereMaxAbs(column="upper"), 1)
+expect_equal(e$whereMin(column="lower"), 1)
+
+# toDense
+
+}
+)
+
+# test toDense* and isvalid methods with partial columns
+test_that("test_num_131", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:10))
+p = Parameter$new(m, "p", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_equal(p$toDense(), as.array(replicate(10, 0)))
+
+v = Variable$new(m, "v", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_equal(v$toDense(), as.array(replicate(10, 0)))
+expect_equal(v$toDense(column="upper"), as.array(c(0, replicate(5, Inf), 0, 0, 0, 0)))
+expect_equal(v$toDense(column="lower"), as.array(c(0, replicate(5, -Inf), 0, 0, 0, 0)))
+
+e = Equation$new(m, "e", type="eq", domain = i, records = data.frame(i=paste0("i", 2:6)))
+expect_equal(e$toDense(), as.array(replicate(10, 0)))
+expect_equal(e$toDense(column="upper"), as.array(replicate(10, 0)))
+expect_equal(e$toDense(column="lower"), as.array(replicate(10, 0)))
+}
+)
+# equals
+# test equals method with partial columns
+test_that("test_num_132", {
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:10))
+p = Parameter$new(m, "p", domain = i, records = data.frame(i=paste0("i", 2:6)))
+
+m2 = Container$new()
+i2 = Set$new(m2, "i", records=data.frame(uni=paste0("i", 1:10), element_text=""))
+p2 = Parameter$new(m2, "p", domain=i2, records=data.frame(i=paste0("i", 2:6), replicate(5, 0)))
+expect_true(p$equals(p2))
+expect_true(p2$equals(p))
+
+v = Variable$new(m, "v", domain = i, records = data.frame(i=paste0("i", 2:6)))
+v2 = Variable$new(m2, "v", domain = i2, records = data.frame(i=paste0("i", 2:6), level=0))
+expect_true(v$equals(v2))
+expect_true(v2$equals(v))
+
+e = Equation$new(m, "e", type="eq", domain = i, records = data.frame(i=paste0("i", 2:6)))
+e2 = Equation$new(m2, "e", type="eq", domain = i2, records = data.frame(i=paste0("i", 2:6), level=0))
+expect_true(e$equals(e2))
+expect_true(e2$equals(e))
 }
 )
