@@ -1,4 +1,4 @@
-GAMS Transfer R
+GAMS Transfer R v2.0.0
 ==================
 - Breaking: removed all `Const*` classes. `ConstContainer` is no longer supported. Use `Container` instead.
 - bug fix in read for `Variable` and `Equation` classes where the `lower` and `upper` attributes were interchanged.
