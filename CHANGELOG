@@ -3,6 +3,7 @@ GAMS Transfer R
 - Breaking: removed all `Const*` classes. `ConstContainer` is no longer supported. Use `Container` instead.
 - bug fix in read for `Variable` and `Equation` classes where the `lower` and `upper` attributes were interchanged.
 - Records columns that are not specified by the user in a dataframe are not auto completed to save memory. For example, a set with only the domain columns will now not have the `element_text` columns. A default valuer is assumed for the missing attributes.
+- bug fix in the Symbol method `equals` where identical domain symbols exist in different containers
 
 GAMS Transfer R v1.18.0
 ==================
