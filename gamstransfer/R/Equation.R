@@ -454,8 +454,21 @@ Equation <- R6Class(
       newsym$type = self$type
     },
 
-    .getDefaultValues = function() {
-      return(private$.default_values[[self$type]])
+    .getDefaultValues = function(columns=NULL) {
+      if (is.null(columns)) {
+        columns = private$.attr()
+      }
+
+      if (length(columns) == 1) {
+        return(private$.default_values[[self$type]][[columns]])
+      }
+      else {
+        def_vals = unlist(lapply(columns, function(c) { 
+          return(private$.default_values[[self$type]][[c]]) }), 
+          use.names=FALSE)
+        names(def_vals) = columns
+        return(def_vals)
+      }
     }
   ),
 

@@ -294,7 +294,7 @@ Parameter <- R6Class(
       set.seed(NULL)
     },
 
-    .getDefaultValues = function() {
+    .getDefaultValues = function(columns=NULL) {
       return(0)
     }
   ),

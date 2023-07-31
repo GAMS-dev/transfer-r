@@ -53,7 +53,7 @@
     max_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
         if (inherits(self, "Parameter")) return(0)
-        default_value = self$.getDefaultValues()[[c]]
+        default_value = self$.getDefaultValues(columns=c)
         return(default_value)
       }
       else {
@@ -79,7 +79,7 @@
     min_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
         if (inherits(self, "Parameter")) return(0)
-        default_value = self$.getDefaultValues()[[c]]
+        default_value = self$.getDefaultValues(columns=c)
         return(default_value)
       }
       else {
@@ -105,7 +105,7 @@
     mean_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
         if (inherits(self, "Parameter")) return(0)
-        default_value = self$.getDefaultValues()[[c]]
+        default_value = self$.getDefaultValues(columns=c)
         return(default_value)
       }
       else {
@@ -132,7 +132,7 @@
     max_abs_vals = unlist(lapply(columns, function(c) {
       if (!is.null(self$records) && is.null(self$records[[c]])) {
         if (inherits(self, "Parameter")) return(0)
-        default_value = self$.getDefaultValues()[[c]]
+        default_value = self$.getDefaultValues(columns=c)
         return(abs(default_value))
       }
       else {
@@ -856,9 +856,9 @@
           def_value = self$.getDefaultValues()
         }
         else {
-          def_value = self$.getDefaultValues()[[column]]
+          def_value = self$.getDefaultValues(columns=column)
         }
-        return(self$.getDefaultValues())
+        return(def_value)
       }
       else {
         return(self$records[[column]])
@@ -925,7 +925,7 @@
         def_value = self$.getDefaultValues()
       }
       else {
-        def_value = self$.getDefaultValues()[[column]]
+        def_value = self$.getDefaultValues(columns=column)
       }
       a[matrix(unlist(idx), ncol=length(idx))] = def_value
     }
@@ -1333,7 +1333,7 @@
             if (is.null(self$records[[c]])) {
               if (inherits(self, "Parameter")) return(0)
 
-              if (SpecialValues[[specialValueFunc]](self$.getDefaultValues()[[c]])) {
+              if (SpecialValues[[specialValueFunc]](self$.getDefaultValues(columns=c))) {
                 return(self$numberRecords)
               }
               else {
@@ -1651,7 +1651,7 @@
             def_values = 0
           }
           else {
-            def_values = self$.getDefaultValues()[[attr]]
+            def_values = self$.getDefaultValues(columns=attr)
           }
           if (self_column_exists && !other_column_exists) {
             if (any(self$records[[attr]] != replicate(self$numberRecords, def_values))) {
@@ -1748,7 +1748,7 @@
             def_values = 0
           }
           else {
-            def_values = self$.getDefaultValues()[[attr]]
+            def_values = self$.getDefaultValues(columns=attr)
           }
 
           if (self_column_exists && !other_column_exists) {
