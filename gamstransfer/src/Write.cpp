@@ -105,7 +105,7 @@ bool is_uel_priority, bool compress) {
   gt_gdx gdxobj;
   gdxobj.init_library(mysysDir.c_str());
 
-  /* Write demand data */
+  /* open */
   if (!compress) {
     rc = gdxOpenWrite(gdxobj.gdx, myFileName.c_str(), "GAMS Transfer", &ErrNr);
     if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWrite Error opening the file %s with error code %i", myFileName, ErrNr);
@@ -253,7 +253,7 @@ bool is_uel_priority, bool compress) {
     else {
       StringMatrix rec_domain(nrows, Dim);
 
-      StringVector tempcol(Dim);
+      StringVector tempcol(nrows);
       for (int d = 0; d < Dim; d++) {
         tempcol = df[d];
         rec_domain(_, d) = tempcol;
@@ -271,7 +271,7 @@ bool is_uel_priority, bool compress) {
         }
       }
       else {
-        NumericVector temp_num_col(Dim);
+        NumericVector temp_num_col(nrows);
         if (ncols > Dim) {
           // one or more attribute columns
           // for parameters this is enough to say all attributes are present
