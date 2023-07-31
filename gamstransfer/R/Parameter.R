@@ -84,7 +84,7 @@ Parameter <- R6Class(
     #' array or a dataframe.
     setRecords = function(records) {
       if (inherits(records, c("array", "numeric", "integer"))) { # checks for matrix + arrays + vectors + numbers
-        if ((length(records) > 1) && (self$domainType != "regular")) {
+        if ((self$dimension != 0) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into ",
             "records is only possible for symbols where ",
@@ -161,7 +161,7 @@ Parameter <- R6Class(
 
         row.names(df) <- NULL
         if (nrow(df) == 0) {
-          self$records = NULL
+          self$records = data.frame()
         }
         else {
           self$records = df

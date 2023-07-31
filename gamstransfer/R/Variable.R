@@ -74,13 +74,14 @@ Variable <- R6Class(
           records= list(level = records) # default to level
         }
 
+        usr_attr = intersect(private$.attr(), names(records))
         if (inherits(records, "list")) {
           #check if user attributes are valid
-          if (length(intersect(private$.attr(), names(records))) == 0) {
+          if (length(usr_attr) < length(names(records))) {
             stop(paste0("Unrecognized user attribute detected in `records`. ",
-            "The attributes must be one of the following", 
+            "The attributes must be one of the following ", 
             toString(private$.attr()),
-            "and must be passed as names of a named list.\n"))
+            " and must be passed as names of a named list.\n"))
           }
           # check if elements of the list are arrays or numerics
           for (i in length(records)) {
@@ -103,7 +104,6 @@ Variable <- R6Class(
 
         # check if all records have equal size
         size1 = dim(records[[1]])
-        # size = lapply(records, dim)
 
         for (i in seq_along(records)) {
           if(!all(dim(records[[i]]) == size1)) {
@@ -111,13 +111,15 @@ Variable <- R6Class(
           }
         }
 
-        if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
-          stop(paste0(
-            "Data conversion for non-scalar array (i.e., matrix) format into ",
-            "records is only possible for symbols where ",
-            "self$domainType = 'regular'. ",
-            "Must define symbol with specific domain set objects, ",
-            "symbol domainType is currently ",self$domainType,".\n" ))
+        if (self$dimension != 0) {
+          if (self$domainType != "regular") {
+            stop(paste0(
+              "Data conversion for non-scalar array (i.e., matrix) ",
+              "format into records is only possible for symbols where ",
+              "self$domainType = 'regular'. ",
+              "Must define symbol with specific domain set objects, ",
+              "symbol domainType is currently ", self$domainType, ".\n" ))
+          }
         }
 
         for (i in self$domain) {
@@ -160,8 +162,8 @@ Variable <- R6Class(
         }
 
         if (self$dimension == 0) {
-          self$records = data.frame(matrix(nrow=1, ncol=length(private$.attr())))
-          colnames(self$records) = private$.attr()
+          self$records = data.frame(matrix(nrow=1, ncol=length(usr_attr)))
+          colnames(self$records) = usr_attr
 
           for (i in seq_along(records)) {
             if (length(records[[i]]) > 1) {
@@ -171,15 +173,10 @@ Variable <- R6Class(
               self$records[names(records)[[i]]] = records[[i]]
             }
           }
-          for (i in private$.attr()) {
-            if (is.na(self$records[[i]])) {
-              self$records[i] = private$.default_values[[private$.type]][[i]]
-            }
-          }
           return()
         }
 
-        #everything from here on is a parameter
+        #everything from here on is a non-scalar
         listOfDomains = replicate(self$dimension, list(NA))
         for (i in seq_along(self$domain)) {
           d = self$domain[[i]]
@@ -203,32 +200,31 @@ Variable <- R6Class(
 
         row.names(df) <- NULL
         if (nrow(df) == 0) {
-          self$records = NULL
+          self$records = data.frame()
         }
         else {
-          usr_colnames = colnames(df)
-          columnNames = super$.get_default_domain_labels()
-          if (self$dimension +  1 > length(usr_colnames)) {
-            usr_attr = NULL
-          }
-          else {
-            usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
-          }
-          for (i in setdiff(private$.attr(), usr_attr)) {
-            df[i] = private$.default_values[[private$.type]][[i]]
-          }
+          # usr_colnames = colnames(df) # already has default_domain_labels
+          # if (self$dimension +  1 > length(usr_colnames)) {
+          #   usr_attr = NULL
+          # }
+          # else {
+          #   usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+          # }
+          # for (i in setdiff(private$.attr(), usr_attr)) {
+          #   df[i] = private$.default_values[[private$.type]][[i]]
+          # }
 
           # reorder columns
           correct_order = c()
           if (self$dimension > 0) {
             correct_order = colnames(df)[(1:self$dimension)]
           }
-          correct_order = append(correct_order, private$.attr())
+          correct_order = append(correct_order, usr_attr)
           df = df[, correct_order]
 
           #rename columns
-          columnNames = append(columnNames, private$.attr())
-          colnames(df) = columnNames
+          # columnNames = append(columnNames, private$.attr())
+          # colnames(df) = columnNames
 
           self$records = df
           self$.linkDomainCategories()
@@ -256,10 +252,6 @@ Variable <- R6Class(
           usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
         }
 
-        # for (i in setdiff(private$.attr(), usr_attr)) {
-        #   records[i] = private$.default_values[[private$.type]][[i]]
-        # }
-
         #check dimensionality
         if ((length(records) < self$dimension) ||
           (length(records) > self$dimension + length(private$.attr()))) {
@@ -276,7 +268,7 @@ Variable <- R6Class(
         }
 
         # check if numeric
-        if (self$dimension + 1 < length(records)) {
+        if (self$dimension + 1 <= length(records)) {
           for (i in (self$dimension + 1):length(records)) {
             if (!(is.numeric(records[[i]]) || 
             all(SpecialValues$isNA(records[[i]])))) {

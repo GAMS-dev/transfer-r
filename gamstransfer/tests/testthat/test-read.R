@@ -829,11 +829,7 @@ test_that("test_num_42", {
 
   df = data.frame(i=i$records[,1], 
   j=j$records[,1],
-  level= c(1,1,1,1,1),
-  marginal=c(0,0,0,0,0),
-  lower = replicate(5, -Inf),
-  upper = replicate(5, Inf),
-  scale = replicate(5, 1)
+  level= c(1,1,1,1,1)
   )
 
   expect_equal(v$records, df)
@@ -908,10 +904,7 @@ test_that("test_num_43", {
 
   recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
   "j"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
-  "marginal"=replicate(5, SpecialValues$EPS),
-  "lower" = replicate(5, SpecialValues$NEGINF),
-  "upper" = replicate(5, SpecialValues$POSINF),
-  "scale" = replicate(5, 1))
+  "marginal"=replicate(5, SpecialValues$EPS))
   recs[,1] = factor(recs[,1], ordered=TRUE)
   recs[,2] = factor(recs[,2], ordered=TRUE)
   recs[2,"level"] = 1
@@ -921,10 +914,7 @@ test_that("test_num_43", {
 
   recs=data.frame("i"=c("i1","i2","i3","i4","i5"), 
   "j"=c("j1","j2","j3","j4","j5"), "level"=c(0,0,0,0,0),
-  "marginal"=replicate(5, SpecialValues$EPS),
-  "lower" = replicate(5, 0),
-  "upper" = replicate(5, 0),
-  "scale" = replicate(5, 1))
+  "marginal"=replicate(5, SpecialValues$EPS))
   recs[,1] = factor(recs[,1], ordered=TRUE)
   recs[,2] = factor(recs[,2], ordered=TRUE)
   recs[2,"level"] = 1
@@ -1197,10 +1187,7 @@ test_that("test_num_61", {
   df = data.frame(i=i$records[,1], 
   j=j$records[,1],
   level= c(0,1,0,SpecialValues$EPS,0),
-  marginal=replicate(5, SpecialValues$EPS),
-  lower = replicate(5, -Inf),
-  upper = replicate(5, Inf),
-  scale = replicate(5, 1)
+  marginal=replicate(5, SpecialValues$EPS)
   )
 
   expect_equal(v$records, df)
@@ -1208,10 +1195,7 @@ test_that("test_num_61", {
   df = data.frame(i=i$records[,1], 
   j=j$records[,1],
   level= c(0,1,0,SpecialValues$EPS,0),
-  marginal = replicate(5, SpecialValues$EPS),
-  lower = replicate(5, 0),
-  upper = replicate(5, 0),
-  scale = replicate(5, 1)
+  marginal = replicate(5, SpecialValues$EPS)
   )
   expect_equal(e$records, df)
 }
@@ -2052,7 +2036,7 @@ expect_equal(as.numeric(d$records$value),replicate(5, 1))
 
 # overwriting
 m$addParameter("d", , domain=c(i, j), records=matrix(0, 5, 5))
-expect_true(is.null(d$records))
+expect_true(nrow(d$records) == 0)
 }
 )
 
