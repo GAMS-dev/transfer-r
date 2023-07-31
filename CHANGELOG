@@ -1,3 +1,7 @@
+GAMS Transfer R v2.4.0
+==================
+- bug fix in read for `Variable` and `Equation` classes where the `lower` and `upper` attributes were interchanged.
+
 GAMS Transfer R v2.2.0
 ==================
 - fixed bug with library unload upon read or write
