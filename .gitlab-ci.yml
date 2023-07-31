@@ -85,8 +85,8 @@ install-gamsdist-leg:
     entrypoint: [""]
   script:
     - python3 ci/fetch_gams.py fetch_and_install_leg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - /cache/gams-installs/`python3 ci/fetch_gams.py version`/gams
-    - python3 ci/fetch_gams.py version
+    - /cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`/gams
+    - python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH
   artifacts:
     name: leg-gmsdirpath
     expire_in: 15 minutes
@@ -103,7 +103,7 @@ install-gamsdist-deg:
   dependencies: [fetch-ci-scripts]
   script:
     - python3 ci/fetch_gams.py fetch_and_install_deg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - $HOME/cache/gams-installs/`python3 ci/fetch_gams.py version`/gams
+    - $HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`/gams
 
 install-gamsdist-arm64:
   stage: install-gams
@@ -116,7 +116,7 @@ install-gamsdist-arm64:
   dependencies: [fetch-ci-scripts]
   script:
     - python3 ci/fetch_gams.py fetch_and_install_dac $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - $HOME/cache/gams-installs/`python3 ci/fetch_gams.py version`/gams
+    - $HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`/gams
 
 install-gamsdist-wei:
   stage: install-gams
@@ -131,7 +131,7 @@ install-gamsdist-wei:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
   script:
     - python ci/fetch_gams.py install $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - python ci/fetch_gams.py version
+    - python ci/fetch_gams.py version $PF_CUSTOM_BRANCH
     - $gmsdirname = Get-Content mygmsdir.tmp -Raw
     - Invoke-Expression "& 'C:\\Cache\\gams-installs\\$gmsdirname\\gams.exe'"
   artifacts:
@@ -298,8 +298,8 @@ test_r_macos:
     tags:
         - macos
     script:
-        - PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version`:$PATH
-        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version`:$DYLD_LIBRARY_PATH
+        - PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`:$PATH
+        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD check ./gamstransfer --no-manual
     needs: [fetch-ci-scripts,install-gamsdist-deg,build_r_macos,build_r_source]
@@ -313,8 +313,8 @@ test_r_macos_arm64:
     tags:
         - macos-arm64
     script:
-        - PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version`:$PATH
-        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version`:$DYLD_LIBRARY_PATH
+        - PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`:$PATH
+        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD check ./gamstransfer --no-manual
     needs: [fetch-ci-scripts,install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
