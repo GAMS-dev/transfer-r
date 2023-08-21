@@ -160,13 +160,17 @@ Parameter <- R6Class(
         df = df[(!logicalVector),]
 
         row.names(df) <- NULL
+        # if the data frame has no rows, remove the attribute columns
         if (nrow(df) == 0) {
-          self$records = data.frame()
+          if(self$dimension == 0) {
+            df = data.frame()
+          }
+          else {
+            df = df[, 1:self$dimension, drop=FALSE]
+          }
         }
-        else {
-          self$records = df
-          self$.linkDomainCategories()
-        }
+        self$records = df
+        self$.linkDomainCategories()
       }
       else {
 

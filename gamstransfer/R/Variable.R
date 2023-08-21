@@ -200,20 +200,14 @@ Variable <- R6Class(
 
         row.names(df) <- NULL
         if (nrow(df) == 0) {
-          self$records = data.frame()
+          if(self$dimension == 0) {
+            df = data.frame()
+          }
+          else {
+            df = df[, 1:self$dimension, drop=FALSE]
+          }
         }
         else {
-          # usr_colnames = colnames(df) # already has default_domain_labels
-          # if (self$dimension +  1 > length(usr_colnames)) {
-          #   usr_attr = NULL
-          # }
-          # else {
-          #   usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
-          # }
-          # for (i in setdiff(private$.attr(), usr_attr)) {
-          #   df[i] = private$.default_values[[private$.type]][[i]]
-          # }
-
           # reorder columns
           correct_order = c()
           if (self$dimension > 0) {
@@ -221,15 +215,9 @@ Variable <- R6Class(
           }
           correct_order = append(correct_order, usr_attr)
           df = df[, correct_order]
-
-          #rename columns
-          # columnNames = append(columnNames, private$.attr())
-          # colnames(df) = columnNames
-
-          self$records = df
-          self$.linkDomainCategories()
         }
-
+        self$records = df
+        self$.linkDomainCategories()
       }
       else {
         # check if records is a dataframe and make if not

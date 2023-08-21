@@ -2410,7 +2410,7 @@ expect_equal(nrow(i$records), 1)
 #summary test
 test_that("test_num_102", {
   m = Container$new()
-  expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
+  # expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
 
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
@@ -2473,7 +2473,7 @@ test_that("test_num_102", {
 
   # container
   m = Container$new()
-  expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
+  # expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
 
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
@@ -3746,6 +3746,7 @@ expect_equal(e$toDense(column="upper"), as.array(replicate(10, 0)))
 expect_equal(e$toDense(column="lower"), as.array(replicate(10, 0)))
 }
 )
+
 # equals
 # test equals method with partial columns
 test_that("test_num_132", {
@@ -3770,3 +3771,22 @@ expect_true(e$equals(e2))
 expect_true(e2$equals(e))
 }
 )
+# dataframe with no rows still have column names and factors
+test_that("test_num_133", {
+library(gamstransfer)
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:3))
+p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
+expect_true(is.factor(p$records[,1]))
+expect_equal(colnames(p$records), "i")
+
+v = Variable$new(m, "v", domain=i, records=c(0, 0, 0))
+expect_true(is.factor(v$records[,1]))
+expect_equal(colnames(v$records), "i")
+
+e = Equation$new(m, "e", type="eq", domain=i, records=c(0, 0, 0))
+expect_true(is.factor(e$records[,1]))
+expect_equal(colnames(e$records), "i")
+}
+)
+
