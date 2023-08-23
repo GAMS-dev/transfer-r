@@ -27,10 +27,19 @@
 #include "utilities.hpp"
 using namespace Rcpp;
 
-void WriteData(gdxHandle_t PGX, StringVector s,
-NumericVector V, int VarType, int Dim,
-std::string elemText, std::string sym_name) {
+// struct contains symbol info and missing attributes to 
+// populate default values
+struct sym_info
+{
+  std::string name;
+  int dim, type;
+  bool missing_attributes[5] = {false};
+  double default_values[5];
+};
 
+
+void WriteData(gdxHandle_t PGX, sym_info mysym_info, StringVector s,
+NumericVector V, std::string elemText) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
@@ -38,18 +47,22 @@ std::string elemText, std::string sym_name) {
   char gdx_err_msg[GMS_SSSIZE];
   std::string rec_name;
   GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
-  for (int D=0; D < Dim; D++) {
+  for (int D=0; D < mysym_info.dim; D++) {
     strcpy(Indx[D], s[D]);
   }
-
-  if (VarType == GMS_DT_VAR || VarType == GMS_DT_EQU) {
-    Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
-    Values[GMS_VAL_MARGINAL] = V[GMS_VAL_MARGINAL];
-    Values[GMS_VAL_UPPER] = V[GMS_VAL_UPPER];
-    Values[GMS_VAL_LOWER] = V[GMS_VAL_LOWER];
-    Values[GMS_VAL_SCALE] = V[GMS_VAL_SCALE];
+  int v_count = 0;
+  if (mysym_info.type == GMS_DT_VAR || mysym_info.type == GMS_DT_EQU) {
+    for (int i =0; i <5; i++) {
+      if (mysym_info.missing_attributes[i]) {
+        Values[i] = mysym_info.default_values[i];
+      }
+      else {
+        Values[i] = V[v_count];
+        v_count++;
+      }
+    }
   }
-  else if (VarType == GMS_DT_SET) {
+  else if (mysym_info.type == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
       int txtnr;
       if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr)) {
@@ -67,16 +80,20 @@ std::string elemText, std::string sym_name) {
     }
   }
   else {
-    Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
+    if (mysym_info.missing_attributes[GMS_VAL_LEVEL]) {
+      Values[GMS_VAL_LEVEL] = mysym_info.default_values[GMS_VAL_LEVEL];
+    }
+    else {
+      Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
+    }
   }
-
 	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   if (!rc) {
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
 
-    rec_name = rec_name + sym_name;
+    rec_name = rec_name + mysym_info.name;
     rec_name = rec_name + "(";
-    for (int i = 0; i < Dim; i++)
+    for (int i = 0; i < mysym_info.dim; i++)
     {
         if (i > 0)
            rec_name = rec_name + ",";
@@ -107,7 +124,7 @@ bool is_uel_priority, bool compress) {
   gt_gdx gdxobj;
   gdxobj.init_library(mysysDir.c_str());
 
-  /* Write demand data */
+  /* open */
   if (!compress) {
     rc = gdxOpenWrite(gdxobj.gdx, myFileName.c_str(), "GAMS Transfer", &ErrNr);
     if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWrite Error opening the file %s with error code %i", myFileName, ErrNr);
@@ -147,7 +164,6 @@ bool is_uel_priority, bool compress) {
   int Dim, sym_nr;
   StringVector colString, colElemText;
   NumericVector colDouble;
-
   sym_nr = 0;
   for (int d=0; d < data.length(); d++) {
     if (!enable[d]) continue;
@@ -156,6 +172,9 @@ bool is_uel_priority, bool compress) {
     std::string mysym = symname["name"];
     varType = symname[".gams_type"];
     varSubType = symname[".gams_subtype"];
+    sym_info mysym_info;
+    mysym_info.name = mysym;
+    mysym_info.type = varType;
 
     if (varType == GMS_DT_ALIAS) {
       bool isUniverseAlias = symname[".isUniverseAlias"];
@@ -181,6 +200,7 @@ bool is_uel_priority, bool compress) {
     StringVector names(Dim);
     df = symname["records"];
     domain = symname["domain"];
+    mysym_info.dim = Dim;
     List domainstr;
     if (Dim != 0) {
       domainstr = symname["domainNames"];
@@ -215,40 +235,132 @@ bool is_uel_priority, bool compress) {
     }
     int nrows = df.nrows();
     int ncols = df.size();
+    int n_attr;
+    if (varType == GMS_DT_PAR) {
+      n_attr = 1;
+    }
+    else {
+      n_attr = 5;
+    }
+
+    NumericMatrix rec_vals(nrows, n_attr);
+
+    // get default values
+    if (varType != GMS_DT_SET) {
+      Function default_val_fun = symname[".getDefaultValues"];
+      List default_values = default_val_fun();
+      for (int d = 0; d < n_attr; d++) {
+         mysym_info.default_values[d] = default_values[d];
+      }
+    }
+
     if (nrows == 0) {
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (Dim != 0 || varType == GMS_DT_SET) {
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      }
+      else {
+        NumericVector dummyvec;
+        // for scalars, write the default values
+        // no attribute column. Fill all values with default
+        if (varType == GMS_DT_PAR) {
+          mysym_info.missing_attributes[GMS_VAL_LEVEL] = true;
+        }
+        else {
+          for (int d = 0; d < n_attr; d++) {
+            mysym_info.missing_attributes[d] = true;
+          }
+        }
+
+        WriteData(gdxobj.gdx, mysym_info, "", dummyvec, "");
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      }
     }
     else {
       StringMatrix rec_domain(nrows, Dim);
 
-      StringVector tempcol(Dim);
+      StringVector tempcol(nrows);
       for (int d = 0; d < Dim; d++) {
         tempcol = df[d];
         rec_domain(_, d) = tempcol;
       }
 
       StringVector elem_text(nrows);
-      NumericMatrix rec_vals(nrows, ncols-Dim);
-
+      std::string text;
       if (varType == GMS_DT_SET) {
-        elem_text = df[Dim];
-      }
-      else {
-        NumericVector temp_num_col(Dim);
-        for (int d = Dim; d < ncols; d++) {
-          temp_num_col = df[d];
-          rec_vals(_, d-Dim) = temp_num_col;
+        if (df.length() == Dim + 1) {
+          elem_text = df[Dim];
+        }
+        else {
+          elem_text = "";
         }
       }
+      else {
+        NumericVector temp_num_col(nrows);
+        if (ncols > Dim) {
+          // one or more attribute columns
+          // for parameters this is enough to say all attributes are present
+          if (ncols - Dim == n_attr) {
+            // all attribute columns are present
+            for (int d = Dim; d < ncols; d++) {
+              temp_num_col = df[d];
+              rec_vals(_, d-Dim) = temp_num_col;
+            }
+          }
+          else {
+            // some attribute columns are missing
+            // can only happen for variables and equations
+            CharacterVector colnames = df.names();
+            std::string attributes[5] = {"level", "marginal", "lower", "upper", "scale"};
+
+            std::vector<std::string> colnames_vec(colnames.size());
+
+            for (int i = 0; i < colnames.size(); i++){
+                colnames_vec[i] = colnames(i);
+            }
+
+            int rec_val_column_count = 0;
+            for (int i =0; i < 5; i++) {
+              std::string attr = attributes[i];
+
+              if ( std::any_of(colnames_vec.begin(), colnames_vec.end(), [attr](std::string i){return i==attr;}) ) {
+                temp_num_col = df[attr];
+                rec_vals(_, rec_val_column_count) = temp_num_col;
+                rec_val_column_count++;
+              }
+              else {
+                mysym_info.missing_attributes[i] = true;
+              }
+            }
+          }
+        }
+        else {
+          // no attribute column. Fill all values with default
+          if (varType == GMS_DT_PAR) {
+            mysym_info.missing_attributes[GMS_VAL_LEVEL] = true;
+          }
+          else {
+            for (int d = 0; d < n_attr; d++) {
+              mysym_info.missing_attributes[d] = true;
+            }
+          }
+        }
+      }
+
       for (int i =0; i < nrows; i++) {
         if (varType != GMS_DT_SET){
           names = rec_domain(i, _);
-          WriteData(gdxobj.gdx, names, rec_vals(i, _), varType, Dim, "", mysym);
+          WriteData(gdxobj.gdx, mysym_info, names, rec_vals(i, _), "");
         }
         else {
           names = rec_domain(i, _);
           NumericVector zero_vec = {0};
-          WriteData(gdxobj.gdx, names, zero_vec, varType, Dim, Rcpp::as<std::string>(elem_text[i]), mysym);
+          if (df.length() == Dim + 1) {
+            text = Rcpp::as<std::string>(elem_text[i]);
+          }
+          else {
+            text = "";
+          }
+          WriteData(gdxobj.gdx, mysym_info, names, zero_vec, text);
         }
       }
       if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");

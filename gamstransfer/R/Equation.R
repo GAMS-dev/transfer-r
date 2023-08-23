@@ -96,20 +96,23 @@ Equation <- R6Class(
     setRecords = function(records) {
       if (inherits(records, c("list", "array", "numeric", "integer"))) {
 
-        if (is.array(records) || inherits(records, "numeric")){
+        if (is.array(records) || inherits(records, "numeric")) {
           records= list(level = records) # default to level
         }
 
+        usr_attr = intersect(private$.attr(), names(records))
         if (inherits(records, "list")) {
           #check if user attributes are valid
-          if (length(intersect(private$.attr(), names(records))) == 0) {
+          if (length(usr_attr) < length(names(records))) {
             stop(paste0("Unrecognized user attribute detected in `records`. ",
-            "The attributes must be one of the following", toString(private$.attr()),
-            "and must be passed as names of a named list.\n"))
+            "The attributes must be one of the following ", 
+            toString(private$.attr()),
+            " and must be passed as names of a named list.\n"))
           }
           # check if elements of the list are arrays or numerics
           for (i in length(records)) {
-            if (!(is.numeric(records[[i]]) || all(SpecialValues$isNA(records[[i]])))) {
+            if (!(is.numeric(records[[i]]) || 
+            all(SpecialValues$isNA(records[[i]])))) {
               stop("All elements of the named list `records` must ",
               "be type numeric.\n")
             }
@@ -127,7 +130,6 @@ Equation <- R6Class(
 
         # check if all records have equal size
         size1 = dim(records[[1]])
-        # size = lapply(records, dim)
 
         for (i in seq_along(records)) {
           if(!all(dim(records[[i]]) == size1)) {
@@ -135,14 +137,17 @@ Equation <- R6Class(
           }
         }
 
-        if ((length(records[[1]]) > 1) && (self$domainType != "regular")) {
-          stop(paste0(
-            "Data conversion for non-scalar array (i.e., matrix) format into ",
-            "records is only possible for symbols where ",
-            "self$domainType = 'regular'. ",
-            "Must define symbol with specific domain set objects, ",
-            "symbol domainType is currently ",self$domainType,".\n" ))
+        if (self$dimension != 0) {
+          if (self$domainType != "regular") {
+            stop(paste0(
+              "Data conversion for non-scalar array (i.e., matrix) ",
+              "format into records is only possible for symbols where ",
+              "self$domainType = 'regular'. ",
+              "Must define symbol with specific domain set objects, ",
+              "symbol domainType is currently ", self$domainType, ".\n" ))
+          }
         }
+
 
         for (i in self$domain) {
           if (i$isValid() == FALSE) {
@@ -184,8 +189,8 @@ Equation <- R6Class(
           )
         }
         if (self$dimension == 0) {
-          self$records = data.frame(matrix(nrow=1, ncol=length(private$.attr())))
-          colnames(self$records) = private$.attr()
+          self$records = data.frame(matrix(nrow=1, ncol=length(usr_attr)))
+          colnames(self$records) = usr_attr
 
           for (i in seq_along(records)) {
             if (length(records[[i]]) > 1) {
@@ -195,15 +200,10 @@ Equation <- R6Class(
               self$records[names(records)[[i]]] = records[[i]]
             }
           }
-          for (i in private$.attr()) {
-            if (is.na(self$records[[i]])) {
-              self$records[i] = private$.default_values[[private$.type]][[i]]
-            }
-          }
           return()
         }
 
-        #everything from here on is a parameter
+        #everything from here on is a non-scalar
         listOfDomains = replicate(self$dimension, list(NA))
         for (i in seq_along(self$domain)) {
           d = self$domain[[i]]
@@ -228,38 +228,24 @@ Equation <- R6Class(
         row.names(df) <- NULL
 
         if (nrow(df) == 0) {
-          self$records = NULL
-        }
-        else {
-          usr_colnames = colnames(df)
-
-          columnNames = super$.get_default_domain_labels()
-          if (self$dimension +  1 > length(usr_colnames)) {
-            usr_attr = NULL
+          if(self$dimension == 0) {
+            df = data.frame()
           }
           else {
-            usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
+            df = df[, 1:self$dimension, drop=FALSE]
           }
-
-          for (i in setdiff(private$.attr(), usr_attr)) {
-            df[i] = private$.default_values[[private$.type]][[i]]
-          }
-
+        }
+        else {
           # reorder columns
           correct_order = c()
           if (self$dimension > 0) {
             correct_order = colnames(df)[(1:self$dimension)]
           }
-          correct_order = append(correct_order, private$.attr())
+          correct_order = append(correct_order, usr_attr)
           df = df[, correct_order]
-
-          #rename columns
-          columnNames = append(columnNames, private$.attr())
-          colnames(df) = columnNames
-
-          self$records = df
-          self$.linkDomainCategories()
         }
+        self$records = df
+        self$.linkDomainCategories()
 
       }
       else {
@@ -276,7 +262,6 @@ Equation <- R6Class(
         if (any(duplicated(columnNames))) {
           columnNames = super$.get_default_domain_labels()
         }
-        # columnNames = self$domainLabels
 
         if (self$dimension +  1 > length(usr_colnames)) {
           usr_attr = NULL
@@ -287,12 +272,9 @@ Equation <- R6Class(
 
         usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
 
-        for (i in setdiff(private$.attr(), usr_attr)) {
-          records[i] = private$.default_values[[private$.type]][[i]]
-        }
-
         #check dimensionality
-        if (length(records) != self$dimension + length(private$.attr())) {
+        if ((length(records) < self$dimension) ||
+          (length(records) > self$dimension + length(private$.attr()))) {
           stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
           " is inconsistent with equation domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
@@ -304,11 +286,13 @@ Equation <- R6Class(
         }
 
         # check if numeric
-        for (i in (self$dimension + 1):length(records)) {
-          if (!(is.numeric(records[[i]]) || 
-          all(SpecialValues$isNA(records[[i]])))) {
-            stop(paste0("All elements of the, `" , colnames(records)[i], 
-            "` column of `records` not type numeric or NA.\n"))
+        if (self$dimension + 1 <= length(records)) {
+          for (i in (self$dimension + 1):length(records)) {
+            if (!(is.numeric(records[[i]]) || 
+            all(SpecialValues$isNA(records[[i]])))) {
+              stop(paste0("All elements of the, `" , colnames(records)[i], 
+              "` column of `records` not type numeric or NA.\n"))
+            }
           }
         }
 
@@ -318,12 +302,11 @@ Equation <- R6Class(
           correct_order = colnames(records)[(1:self$dimension)]
         }
         correct_order = append(correct_order, private$.attr())
-        records = records[, correct_order]
-
-        columnNames = append(columnNames, private$.attr())
+        correct_order = intersect(correct_order, usr_colnames)
+        records = records[correct_order]
 
         if (self$dimension == 0) {
-          colnames(records) = columnNames
+          colnames(records) = correct_order
           self$records = records
           return()
         }
@@ -341,10 +324,8 @@ Equation <- R6Class(
           return(records[, d])
         })
 
-        records = data.frame(records)
-        colnames(records) = columnNames
+        colnames(records) = correct_order
         self$records = records
-        # self$.linkDomainCategories()
 
       }
       return(invisible(NULL))
@@ -452,6 +433,23 @@ Equation <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$type = self$type
+    },
+
+    .getDefaultValues = function(columns=NULL) {
+      if (is.null(columns)) {
+        columns = private$.attr()
+      }
+
+      if (length(columns) == 1) {
+        return(private$.default_values[[self$type]][[columns]])
+      }
+      else {
+        def_vals = unlist(lapply(columns, function(c) { 
+          return(private$.default_values[[self$type]][[c]]) }), 
+          use.names=FALSE)
+        names(def_vals) = columns
+        return(def_vals)
+      }
     }
   ),
 

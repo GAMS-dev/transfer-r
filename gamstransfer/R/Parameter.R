@@ -84,7 +84,7 @@ Parameter <- R6Class(
     #' array or a dataframe.
     setRecords = function(records) {
       if (inherits(records, c("array", "numeric", "integer"))) { # checks for matrix + arrays + vectors + numbers
-        if ((length(records) > 1) && (self$domainType != "regular")) {
+        if ((self$dimension != 0) && (self$domainType != "regular")) {
           stop(paste0(
             "Data conversion for non-scalar array (i.e., matrix) format into ",
             "records is only possible for symbols where ",
@@ -160,13 +160,17 @@ Parameter <- R6Class(
         df = df[(!logicalVector),]
 
         row.names(df) <- NULL
+        # if the data frame has no rows, remove the attribute columns
         if (nrow(df) == 0) {
-          self$records = NULL
+          if(self$dimension == 0) {
+            df = data.frame()
+          }
+          else {
+            df = df[, 1:self$dimension, drop=FALSE]
+          }
         }
-        else {
-          self$records = df
-          self$.linkDomainCategories()
-        }
+        self$records = df
+        self$.linkDomainCategories()
       }
       else {
 
@@ -181,7 +185,7 @@ Parameter <- R6Class(
         r = nrow(records)
         c = length(records)
 
-        if (c != (self$dimension + 1)) {
+        if (c > (self$dimension + 1) || c < self$dimension) {
           stop(paste0("Dimensionality of records ", c - 1, 
           " is inconsistent with parameter domain specification ", 
           self$dimension))
@@ -198,13 +202,17 @@ Parameter <- R6Class(
             columnNames = colnames(records)[1:self$dimension]
           }
         }
-        columnNames = append(columnNames, "value")
 
-        #if records "value" is not numeric, stop.
-        val_column = records[,length(records)]
-        if (!(is.numeric(val_column) || all(SpecialValues$isNA(val_column)))) {
-            stop("All entries in the 'values' column of a parameter ",
-            "must be numeric.\n")
+        if (c == self$dimension + 1) {
+          columnNames = append(columnNames, "value")
+
+
+          #if records "value" is not numeric, stop.
+          val_column = records[,length(records)]
+          if (!(is.numeric(val_column) || all(SpecialValues$isNA(val_column)))) {
+              stop("All entries in the 'value' column of a parameter ",
+              "must be numeric.\n")
+          }
         }
 
         if (self$dimension == 0) {
@@ -288,6 +296,10 @@ Parameter <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
+    },
+
+    .getDefaultValues = function(columns=NULL) {
+      return(0)
     }
   ),
 
