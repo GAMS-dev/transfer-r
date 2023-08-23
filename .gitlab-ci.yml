@@ -105,7 +105,7 @@ install-gamsdist-wei:
     - main
     - tags
   tags: [windows]
-  dependencies: [fetch-gamsdist-for-wei,fetch-ci-scripts]
+  dependencies: [fetch-ci-scripts]
   image:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
   script:
