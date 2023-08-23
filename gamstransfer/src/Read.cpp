@@ -46,7 +46,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 
     std::map<int, int> uel_map; //for each symbol
     // loop over symbols to get metadata
-		if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
+    if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
       stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
 
     int** dom_uel_used =new int*[Dim];
@@ -118,7 +118,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 
   int all_dom_nrecs[Dim];
   for (int D = 0; D < Dim; D++) {
-		// get sym info for domain D
+    // get sym info for domain D
     if (!gdxSymbolInfo(PGX, dom_symid[D], buf, &dom_dim, &dom_type))
       stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
     if (!(dom_type == GMS_DT_SET || dom_type == GMS_DT_ALIAS)) {
@@ -297,8 +297,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
                 CharacterVector sysDir, LogicalVector records, bool symisnull) {
   // gdxHandle_t PGX = NULL;
-	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], acrName[GMS_SSSIZE];
-	int         ErrNr, VarNr, rc;
+  char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], acrName[GMS_SSSIZE];
+  int         ErrNr, VarNr, rc;
 
   std::string mysymName;
   std::string mygdxName = Rcpp::as<std::string>(gdxName);
@@ -308,8 +308,8 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   gdxValues_t gdx_values;
 
   gdxStrIndexPtrs_t domains_ptr;
-	gdxStrIndex_t domains;
-	GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
+  gdxStrIndex_t domains;
+  GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
   int symCount, uel_count;
 

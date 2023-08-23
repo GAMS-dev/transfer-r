@@ -43,7 +43,7 @@ NumericVector V, std::string elemText) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
-	int rc;
+  int rc;
   char gdx_err_msg[GMS_SSSIZE];
   std::string rec_name;
   GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
@@ -87,7 +87,7 @@ NumericVector V, std::string elemText) {
       Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
     }
   }
-	rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
+  rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   if (!rc) {
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
 
@@ -115,8 +115,8 @@ bool is_uel_priority, bool compress) {
   std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
-	char        Msg[GMS_SSSIZE];
-	int         ErrNr, rc, varType, varSubType;
+  char        Msg[GMS_SSSIZE];
+  int         ErrNr, rc, varType, varSubType;
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
