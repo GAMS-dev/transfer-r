@@ -1,6 +1,5 @@
 stages:
   - fetch-scripts
-  - fetch
   - install-gams
   - images
   - build
@@ -51,26 +50,6 @@ fetch-ci-scripts:
     name: ci-scripts
     expire_in: 2 hours
     paths: [ci/*]
-
-fetch-gamsdist-for-wei:
-  stage: fetch
-  only:
-    - merge_requests
-    - main
-    - tags
-  when: on_success
-  tags: [linux]
-  dependencies: [fetch-ci-scripts]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [ "" ]
-  script:
-    - python3 ci/fetch_gams.py fetch_wei $PF_CUSTOM_BRANCH $SSH_KEY_PORTING force
-    - python3 ci/fetch_gams.py fetch_wei $PF_CUSTOM_BRANCH $SSH_KEY_PORTING buildInfo
-  artifacts:
-    name: wei-installer
-    expire_in: 15 minutes
-    paths: [windows_x64_64.exe,buildInfo.txt]
 
 install-gamsdist-leg:
   stage: install-gams
@@ -130,7 +109,7 @@ install-gamsdist-wei:
   image:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
   script:
-    - python ci/fetch_gams.py install $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
+    - python ci/fetch_gams.py fetch_and_install $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
     - python ci/fetch_gams.py version $PF_CUSTOM_BRANCH
     - $gmsdirname = Get-Content mygmsdir.tmp -Raw
     - Invoke-Expression "& 'C:\\Cache\\gams-installs\\$gmsdirname\\gams.exe'"
