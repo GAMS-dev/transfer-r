@@ -27,6 +27,8 @@
 #include "utilities.hpp"
 using namespace Rcpp;
 
+// struct contains symbol info and missing attributes to 
+// populate default values
 struct sym_info
 {
   std::string name;
