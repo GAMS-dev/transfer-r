@@ -3779,14 +3779,17 @@ i = Set$new(m, "i", records=paste0("i", 1:3))
 p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
 expect_true(is.factor(p$records[,1]))
 expect_equal(colnames(p$records), "i")
+expect_equal(levels(p$records[, 1]), c("i1","i2","i3"))
 
 v = Variable$new(m, "v", domain=i, records=c(0, 0, 0))
 expect_true(is.factor(v$records[,1]))
 expect_equal(colnames(v$records), "i")
+expect_equal(levels(v$records[, 1]), c("i1","i2","i3"))
 
 e = Equation$new(m, "e", type="eq", domain=i, records=c(0, 0, 0))
 expect_true(is.factor(e$records[,1]))
 expect_equal(colnames(e$records), "i")
+expect_equal(levels(e$records[, 1]), c("i1","i2","i3"))
 }
 )
 
