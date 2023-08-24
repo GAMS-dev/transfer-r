@@ -349,7 +349,12 @@
       return(uels_d)
     }), use.names = FALSE)
 
-    return(unique(uels))
+    if (self$dimension == 1) {
+      return(uels)
+    }
+    else {
+      return(unique(uels))
+    }
   },
 
   setUELs = function(uels, dimension = NULL, rename=FALSE) {

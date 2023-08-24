@@ -269,10 +269,17 @@ test_that("test_num_10", {
 
   a <- Parameter$new(m, "a", list(i, j), domainForwarding=TRUE)
 
-  df <- data.frame(list("i"= c("a", "b"),
-  "j" = c("c", "d"), "value" = c(1, 1)))
+  df <- data.frame("i"= c("a", "b"),
+  "j" = c("c", "d"), "value" = c(1, 1))
 
   a$records <- df
+  expect_false(a$isValid())
+
+  df <- data.frame("i"= factor(c("a", "b")),
+  "j" = factor(c("c", "d")), "value" = c(1, 1))
+
+  a$records <- df
+  expect_true(a$isValid())
 
   expect_equal(as.character(i$records$uni), c("a", "b"))
   expect_equal(as.character(j$records$uni), c("c", "d"))
