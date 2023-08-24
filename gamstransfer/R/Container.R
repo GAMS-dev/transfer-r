@@ -1602,13 +1602,6 @@ Container <- R6::R6Class (
           }
         }
 
-        # if (is.null(symbols)) {
-        #   cpp_syminput = ""
-        # }
-        # else {
-        #   cpp_syminput = symbols
-        # }
-
         readlist = CPP_readSuper(symbols, loadFrom, 
         self$systemDirectory, records)
 

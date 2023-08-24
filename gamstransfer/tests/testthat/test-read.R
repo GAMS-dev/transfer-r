@@ -3778,6 +3778,7 @@ expect_true(e$equals(e2))
 expect_true(e2$equals(e))
 }
 )
+
 # dataframe with no rows still have column names and factors
 test_that("test_num_133", {
 library(gamstransfer)
@@ -3797,6 +3798,33 @@ e = Equation$new(m, "e", type="eq", domain=i, records=c(0, 0, 0))
 expect_true(is.factor(e$records[,1]))
 expect_equal(colnames(e$records), "i")
 expect_equal(levels(e$records[, 1]), c("i1","i2","i3"))
+}
+)
+
+# dataframe with no rows still have column names and factors
+test_that("test_num_134", {
+library(gamstransfer)
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:3))
+p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
+expect_true(is.factor(p$records[,1]))
+expect_equal(colnames(p$records), "i")
+expect_equal(levels(p$records[, 1]), c("i1","i2","i3"))
+
+m$write("gt.gdx", symbols="p")
+
+system2(command="gdxdump", args=
+"gt.gdx uelTable=foo",
+stdout = "foo.gms")
+
+system2(command="gams", args=
+"foo.gms gdx=foo.gdx lo=0",
+stdout = FALSE)
+
+m = Container$new("foo.gdx")
+
+expect_equal(m$getUELs(), c("i1","i2","i3"))
+
 }
 )
 

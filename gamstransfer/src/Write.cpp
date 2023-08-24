@@ -168,12 +168,10 @@ bool compress) {
 
   Function get_uel_fun = container["getUELs"];
   List uel_list_out = get_uel_fun();
-  // CharacterVector all_uels = get_uel_fun();
 
   if (!Rf_isNull(uel_list_out[0])) {
-    CharacterVector all_uels = uel_list_out[0];
-    for (int i=0; i < all_uels.length(); i++) {
-      myUEL = all_uels[i];
+    for (int i=0; i < uel_list_out.length(); i++) {
+      myUEL = Rcpp::as<std::string> (uel_list_out[i]);
       rc = gdxUELRegisterStr(gdxobj.gdx, myUEL.c_str(), &UELno);
       if (!rc) stop("Error registering UEL: %s", myUEL);
     }
