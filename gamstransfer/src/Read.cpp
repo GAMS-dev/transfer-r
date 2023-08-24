@@ -294,8 +294,8 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 }
 
 // [[Rcpp::export]]
-List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
-                CharacterVector sysDir, LogicalVector records, bool symisnull) {
+List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
+                CharacterVector sysDir, LogicalVector records) {
   // gdxHandle_t PGX = NULL;
   char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], acrName[GMS_SSSIZE];
   int         ErrNr, VarNr, rc;
@@ -360,8 +360,13 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   _["records"]=-1);
 
   int l1_preallocate_size;
+  CharacterVector symNames;
 
-  if (symisnull == 1) {
+  if (symNames_.isNotNull()) {
+    symNames = symNames_;
+  }
+
+  if (symNames_.isNull()) {
     l1_preallocate_size = symCount + 1;
   }
   else {
@@ -371,7 +376,7 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   List L1(l1_preallocate_size);
   L1[0] = acronymList;
 
-  if (!symisnull) {
+  if (symNames_.isNotNull()) {
     for(int symcount=0; symcount < symNames.size(); symcount++) {
       mysymName = symNames(symcount);
       if (!gdxFindSymbol(gdxobj.gdx, mysymName.c_str(), &VarNr)) {
@@ -405,7 +410,7 @@ List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName,
   l1count = 1;
 
   for (int i=1; i < symCount + 1; i++) {
-    if (!symisnull && !sym_enabled.at(i)) continue;
+    if (symNames_.isNotNull() && !sym_enabled.at(i)) continue;
     readInternal(gdxobj.gdx, i, records, templistAlias, 
     templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
     sym_uel_map, uel_count);

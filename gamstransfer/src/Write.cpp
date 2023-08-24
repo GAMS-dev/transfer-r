@@ -109,9 +109,14 @@ NumericVector V, std::string elemText) {
 }
 
 // [[Rcpp::export]]
-void CPP_gdxWriteSuper(List data, LogicalVector enable, CharacterVector sysDir, 
-CharacterVector fileName, CharacterVector uel_priority, 
-bool is_uel_priority, bool compress) {
+void CPP_gdxWriteSuper(Environment container, LogicalVector enable,
+CharacterVector fileName, Nullable<CharacterVector> uel_priority_,
+bool compress) {
+  Environment data_dict = container["data"];
+  Function as_list = data_dict["as_list"];
+  List data = as_list();
+
+  CharacterVector sysDir = container["systemDirectory"];
   std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
@@ -148,17 +153,35 @@ bool is_uel_priority, bool compress) {
 
   // register UELs
   int UELno;
-  if (is_uel_priority) {
-    rc = gdxUELRegisterStrStart(gdxobj.gdx);
-    if (!rc) stop("CPP_gdxWriteSuper:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
+  rc = gdxUELRegisterStrStart(gdxobj.gdx);
+  if (!rc) stop("CPP_gdxWriteSuper:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
+
+  if (uel_priority_.isNotNull()) {
+    CharacterVector uel_priority(uel_priority_);
+
     for (int i = 0; i < uel_priority.length(); i++) {
       myUEL = uel_priority(i);
       rc = gdxUELRegisterStr(gdxobj.gdx, myUEL.c_str(), &UELno);
       if (!rc) stop("Error registering UEL: %s", myUEL);
     }
-    if (!gdxUELRegisterDone(gdxobj.gdx))
-      stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
   }
+
+  Function get_uel_fun = container["getUELs"];
+  List uel_list_out = get_uel_fun();
+  // CharacterVector all_uels = get_uel_fun();
+
+  if (!Rf_isNull(uel_list_out[0])) {
+    CharacterVector all_uels = uel_list_out[0];
+    for (int i=0; i < all_uels.length(); i++) {
+      myUEL = all_uels[i];
+      rc = gdxUELRegisterStr(gdxobj.gdx, myUEL.c_str(), &UELno);
+      if (!rc) stop("Error registering UEL: %s", myUEL);
+    }
+  }
+
+  if (!gdxUELRegisterDone(gdxobj.gdx))
+    stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
+
   DataFrame df;
   List domain;
   int Dim, sym_nr;

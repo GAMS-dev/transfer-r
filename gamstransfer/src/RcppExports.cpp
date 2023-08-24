@@ -11,17 +11,16 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // CPP_readSuper
-List CPP_readSuper(CharacterVector symNames, CharacterVector gdxName, CharacterVector sysDir, LogicalVector records, bool symisnull);
-RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNamesSEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP recordsSEXP, SEXP symisnullSEXP) {
+List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, CharacterVector sysDir, LogicalVector records);
+RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP recordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type symNames(symNamesSEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type symNames_(symNames_SEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
     Rcpp::traits::input_parameter< LogicalVector >::type records(recordsSEXP);
-    Rcpp::traits::input_parameter< bool >::type symisnull(symisnullSEXP);
-    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames, gdxName, sysDir, records, symisnull));
+    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, sysDir, records));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -86,31 +85,29 @@ BEGIN_RCPP
 END_RCPP
 }
 // CPP_gdxWriteSuper
-void CPP_gdxWriteSuper(List data, LogicalVector enable, CharacterVector sysDir, CharacterVector fileName, CharacterVector uel_priority, bool is_uel_priority, bool compress);
-RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP dataSEXP, SEXP enableSEXP, SEXP sysDirSEXP, SEXP fileNameSEXP, SEXP uel_prioritySEXP, SEXP is_uel_prioritySEXP, SEXP compressSEXP) {
+void CPP_gdxWriteSuper(Environment container, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress);
+RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP containerSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< Environment >::type container(containerSEXP);
     Rcpp::traits::input_parameter< LogicalVector >::type enable(enableSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type uel_priority(uel_prioritySEXP);
-    Rcpp::traits::input_parameter< bool >::type is_uel_priority(is_uel_prioritySEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type uel_priority_(uel_priority_SEXP);
     Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
-    CPP_gdxWriteSuper(data, enable, sysDir, fileName, uel_priority, is_uel_priority, compress);
+    CPP_gdxWriteSuper(container, enable, fileName, uel_priority_, compress);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 5},
+    {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 4},
     {"_gamstransfer_CPP_getGDXSymbolTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXSymbolTypes, 0},
     {"_gamstransfer_CPP_getGDXVarTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypes, 0},
     {"_gamstransfer_CPP_getGDXEqTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypes, 0},
     {"_gamstransfer_CPP_getGDXVarTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypeSubtype, 0},
     {"_gamstransfer_CPP_getGDXEqTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypeSubtype, 0},
     {"_gamstransfer_CPP_getGDXSetTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXSetTypeSubtype, 0},
-    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 7},
+    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 5},
     {NULL, NULL, 0}
 };
 
