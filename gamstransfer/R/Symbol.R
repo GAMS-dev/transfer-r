@@ -1955,6 +1955,16 @@
               }
             }
           }
+
+          # check if all domain columns are factors
+          if (self$dimension != 0) {
+            for (i in 1:self$dimension) {
+              if (!is.factor(self$records[, i])) {
+                stop(paste0("Domain information in column ",
+                colnames(self$records)[i], "must be type factor\n"))
+              }
+            }
+          }
         }
 
       }
