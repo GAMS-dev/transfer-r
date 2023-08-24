@@ -1,3 +1,7 @@
+GAMS Transfer R
+==================
+- bug fix in registering unused UELs when not all symbols from the container are written to a GDX file
+
 GAMS Transfer R v2.0.0
 ==================
 - Breaking: removed all `Const*` classes. `ConstContainer` is no longer supported. Use `Container` instead.
