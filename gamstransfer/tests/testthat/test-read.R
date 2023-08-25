@@ -207,7 +207,7 @@ test_that("test_num_7", {
   i <- Set$new(m, "i", records = c("c", "a", "b"))
   expect_true(is.data.frame(i$records))
 
-  m$write("gt.gdx", uelPriority = list("a"))
+  m$write("gt.gdx", uelPriority = "a")
 
   m2 = Container$new(testthat::test_path("testdata", "test7_uels.gdx"))
   expect_true(inherits(m2, "Container"))
