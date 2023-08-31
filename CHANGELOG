@@ -1,6 +1,9 @@
 GAMS Transfer R
 ==================
 - bug fix in registering unused UELs when not all symbols from the container are written to a GDX file
+- Following `Container` methods do not support `list` input for `symbols` argument: `describeSets`, `describeAliases`, `describeParameters`, `describeVariables`, `describeEquations`, `read`, `removeSymbols`, `getSymbols`.
+- `types` argument in the `Container` methods `listVariables` and `listEquations` does not support the input of type `list`. Use `vector` inputs instead.
+- `uelPriority` argument in the `Container` method `write` does not support the input of type `list`. Use `vector` inputs instead.
 
 GAMS Transfer R v2.0.0
 ==================
