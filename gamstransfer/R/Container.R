@@ -1288,7 +1288,7 @@ Container <- R6::R6Class (
         }
 
         if (is.null(uelPriority)) {
-          reorder = NA
+          reorder = NULL
           is_uel_priority = FALSE
         }
         else {
@@ -1309,10 +1309,10 @@ Container <- R6::R6Class (
       else {
         is_uel_priority = FALSE
         enable = NA
-        reorder = NA
+        reorder = NULL
       }
-      CPP_gdxWriteSuper(self$data$as_list(), enable, self$systemDirectory, 
-      writeTo, reorder, is_uel_priority, compress)
+      CPP_gdxWriteSuper(self, enable,
+      writeTo, reorder, compress)
     },
 
     #' @description reorder symbols in order to avoid domain violations
@@ -1602,15 +1602,8 @@ Container <- R6::R6Class (
           }
         }
 
-        if (is.null(symbols)) {
-          cpp_syminput = ""
-        }
-        else {
-          cpp_syminput = symbols
-        }
-
-        readlist = CPP_readSuper(cpp_syminput, loadFrom, 
-        self$systemDirectory, records, is.null(symbols))
+        readlist = CPP_readSuper(symbols, loadFrom, 
+        self$systemDirectory, records)
 
         acronyms = readlist[[1]]
 

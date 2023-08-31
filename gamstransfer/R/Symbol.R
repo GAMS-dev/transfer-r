@@ -349,7 +349,12 @@
       return(uels_d)
     }), use.names = FALSE)
 
-    return(unique(uels))
+    if (self$dimension == 1) {
+      return(uels)
+    }
+    else {
+      return(unique(uels))
+    }
   },
 
   setUELs = function(uels, dimension = NULL, rename=FALSE) {
@@ -1952,6 +1957,16 @@
                 all(SpecialValues$isNA(self$records[, i])))) {
                   stop("Data in column ", i, " must be numeric or NA\n")
                 }
+              }
+            }
+          }
+
+          # check if all domain columns are factors
+          if (self$dimension != 0) {
+            for (i in 1:self$dimension) {
+              if (!is.factor(self$records[, i])) {
+                stop(paste0("Domain information in column ",
+                colnames(self$records)[i], "must be type factor\n"))
               }
             }
           }
