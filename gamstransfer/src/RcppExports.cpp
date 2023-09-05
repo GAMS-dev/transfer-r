@@ -85,8 +85,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CPP_gdxWriteSuper
-void CPP_gdxWriteSuper(Environment container, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress);
-RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP containerSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP) {
+void CPP_gdxWriteSuper(Environment container, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress, int mode);
+RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP containerSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Environment >::type container(containerSEXP);
@@ -94,7 +94,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
     Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type uel_priority_(uel_priority_SEXP);
     Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
-    CPP_gdxWriteSuper(container, enable, fileName, uel_priority_, compress);
+    Rcpp::traits::input_parameter< int >::type mode(modeSEXP);
+    CPP_gdxWriteSuper(container, enable, fileName, uel_priority_, compress, mode);
     return R_NilValue;
 END_RCPP
 }
@@ -107,7 +108,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gamstransfer_CPP_getGDXVarTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypeSubtype, 0},
     {"_gamstransfer_CPP_getGDXEqTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypeSubtype, 0},
     {"_gamstransfer_CPP_getGDXSetTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXSetTypeSubtype, 0},
-    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 5},
+    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 6},
     {NULL, NULL, 0}
 };
 

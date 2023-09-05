@@ -1164,7 +1164,7 @@ Container <- R6::R6Class (
     #' is possible to prepend the UEL list with a user specified order 
     #' using the uel_priority argument.
     write = function(writeTo, symbols=NULL, 
-    compress = FALSE, uelPriority = NULL) {
+    compress = FALSE, uelPriority = NULL, mode = NULL) {
 
       if (!is.logical(compress)) {
         stop(paste0("'compress' must be of type logical; ",
@@ -1188,6 +1188,24 @@ Container <- R6::R6Class (
         stop("'uelPriority' must be type character or NULL\n")
       }
 
+      if (is.null(mode)) {
+        mode = "string"
+      }
+      if (!(is.character(mode) && length(mode) == 1)) {
+        stop("Argument `mode` must be type character 
+        of length 1\n")
+      }
+
+      if (!any(c("string", "mapped") == mode)) {
+        stop("Argument `mode` must be one of the following: 'string', 'raw'\n")
+      }
+
+      if (mode == "string") {
+        mode_int = 1
+      }
+      else {
+        mode_int = 2
+      }
       isempty = (length(self$listSymbols()) == 0)
       if (!isempty) {
         if (is.null(symbols)) {
@@ -1244,7 +1262,7 @@ Container <- R6::R6Class (
         reorder = NULL
       }
       CPP_gdxWriteSuper(self, enable,
-      writeTo, reorder, compress)
+      writeTo, reorder, compress, mode_int)
     },
 
     #' @description reorder symbols in order to avoid domain violations

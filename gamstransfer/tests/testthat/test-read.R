@@ -3828,3 +3828,19 @@ expect_equal(m$getUELs(), c("i1","i2","i3"))
 }
 )
 
+# mapped write
+test_that("test_num_135", {
+m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
+expect_error(m$write("gt.gdx", mode = 1))
+m$write("gt.gdx", mode = "string")
+ms = Container$new("gt.gdx")
+m$write("gt.gdx", mode = "mapped")
+mm = Container$new("gt.gdx")
+expect_true(ms$equals(mm))
+
+m = Container$new()
+m$read(testthat::test_path("testdata", "trnsport.gdx"), records=FALSE)
+m$write("gt.gdx", mode="mapped")
+m$write("gt.gdx", mode="string")
+
+})
