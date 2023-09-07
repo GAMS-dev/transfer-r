@@ -232,18 +232,12 @@ Container <- R6::R6Class (
         stop("Argument `isValid` must be type logical or NULL \n")
       }
 
-      if (!(is.character(types) || is.list(types)|| is.null(types))) {
-        stop("Argument `types` myst be type character, list, vector, or NULL \n")
-      }
-
-      if (is.list(types)) {
-        if (!all(unlist(lapply(types, is.character)))) {
-          stop("Argument 'types' must contain only type character\n")
-        }
-      }
-
       if (is.null(types)) {
         types = .varTypes
+      }
+
+      if (!(is.character(types) )) {
+        stop("Argument `types` myst be type character or NULL \n")
       }
 
       for (t in types) {
@@ -279,17 +273,12 @@ Container <- R6::R6Class (
         stop("Argument `isValid` must be type logical or NULL \n")
       }
 
-      if (!(is.character(types) || is.list(types) || is.null(types))) {
-        stop("Argument `types` myst be type character, list, vector, or NULL \n")
-      }
-
-
-      if ( is.list(types) && !all(unlist(lapply(types, is.character)))) {
-        stop("Argument 'types' must contain only type character\n")
-      }
-
       if (is.null(types)) {
         types = unlist(unique(.EquationTypes))
+      }
+
+      if (!is.character(types)) {
+        stop("Argument `types` myst be type character or NULL \n")
       }
 
       for (t in types) {
@@ -322,15 +311,8 @@ Container <- R6::R6Class (
         if (is.null(symbols)) return()
       }
       else {
-        if (!(is.list(symbols) || is.character(symbols))) {
-          stop(paste0("Argument `symbols` must be type character, ",
-          "list, vector, or NULL \n"))
-        }
-      }
-
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
+        if (!is.character(symbols)) {
+          stop(paste0("Argument `symbols` must be type character or NULL \n"))
         }
       }
 
@@ -405,15 +387,8 @@ Container <- R6::R6Class (
         if (is.null(symbols)) return()
       }
       else {
-        if (!(is.list(symbols) || is.character(symbols))) {
-          stop(paste0("Argument `symbols` must be type character, ",
-          "list, vector, or NULL \n"))
-        }
-      }
-
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
+        if (!is.character(symbols)) {
+          stop(paste0("Argument `symbols` must be type character or NULL\n"))
         }
       }
 
@@ -474,15 +449,8 @@ Container <- R6::R6Class (
         if (is.null(symbols)) return()
       }
       else {
-        if (!(is.list(symbols) || is.character(symbols))) {
-          stop(paste0("Argument `symbols` must be type character, ",
-          "list, vector, or NULL \n"))
-        }
-      }
-
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
+        if (!is.character(symbols)) {
+          stop(paste0("Argument `symbols` must be type character or NULL\n"))
         }
       }
 
@@ -553,17 +521,11 @@ Container <- R6::R6Class (
         if (is.null(symbols)) return()
       }
       else {
-        if (!(is.list(symbols) || is.character(symbols))) {
-          stop(paste0("Argument `symbols` must be type character, ",
-          "list, vector, or NULL \n"))
+        if (!is.character(symbols)) {
+          stop(paste0("Argument `symbols` must be type character or NULL\n"))
         }
       }
 
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
       colNames = list(
             "name",
             "type",
@@ -635,17 +597,11 @@ Container <- R6::R6Class (
         if (is.null(symbols)) return()
       }
       else {
-        if (!(is.list(symbols) || is.character(symbols))) {
-          stop(paste0("Argument `symbols` must be type character, ",
-          "list, vector, or NULL \n"))
+        if (!is.character(symbols)) {
+          stop(paste0("Argument `symbols` must be type character or NULL\n"))
         }
       }
 
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character) ))) {
-          stop("Argument `symbols` must contain elements of type character\n")
-        }
-      }
       colNames = list(
             "name",
             "type",
@@ -724,17 +680,8 @@ Container <- R6::R6Class (
       }
 
       # is.character will also check vector of strings
-      if (!(is.character(symbols)) && !(is.list(symbols)) 
-      && !(is.null(symbols))) {
-        stop("argument symbols must be of the type list, string, or NULL\n")
-      }
-
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character)))) {
-          stop("argument `symbols`` must contain only type string\n")
-        }
-        # convert symbols argument to a vector
-        symbols = unlist(symbols)
+      if (!(is.character(symbols)) && !(is.null(symbols))) {
+        stop("argument symbols must be of the type character or NULL\n")
       }
 
       if (is.character(loadFrom)) {
@@ -786,18 +733,14 @@ Container <- R6::R6Class (
     #' @description removes symbols from the Container
     #' @param symbols a string specifying the symbol name or a list of symbols 
     #' to be removed from the container
-    removeSymbols = function(symbols = NULL) {
-      # is.character also checks vector of strings
-      if (!(is.character(symbols) || is.list(symbols))) {
-        stop("Argument 'symbols' must be of type string, list, or vector\n")
+    removeSymbols = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listSymbols()
       }
 
-      # if only one element is character in a vector, entire vector is character
-      # so the following check is needed only for lists
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character)))) {
-          stop("Argument 'symbols' must contain only type character\n")
-        }
+      # is.character also checks vector of strings
+      if (!is.character(symbols)) {
+        stop("Argument 'symbols' must be of type character or NULL\n")
       }
 
       symbols = self$getSymbols(symbols)
@@ -1190,15 +1133,13 @@ Container <- R6::R6Class (
     #' @param symbols character, string, or vector of Symbols for which 
     #' the user wants object references
     #' @returns a list of object references to symbols
-    getSymbols = function(symbols) {
-      if (!(is.character(symbols) || is.list(symbols))) {
-        stop("The argument symbols must be type character, list, or vector \n")
+    getSymbols = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$listSymbols()
       }
 
-      if (is.list(symbols)) {
-        if (!all(unlist(lapply(symbols, is.character)))) {
-          stop("Argument 'symbols' must contain only type character\n")
-        }
+      if (!is.character(symbols)) {
+        stop("The argument symbols must be type character or NULL \n")
       }
 
       objisnull = unlist(lapply(symbols, self$hasSymbols), use.names = FALSE)
@@ -1231,7 +1172,7 @@ Container <- R6::R6Class (
       }
 
       if (!is.character(writeTo)) {
-        stop("The argument writeTo must be of type string\n")
+        stop("The argument writeTo must be of type character\n")
       }
       else {
         namesplit = strsplit(writeTo, "\\.")
@@ -1243,17 +1184,8 @@ Container <- R6::R6Class (
         writeTo = R.utils::getAbsolutePath(path.expand(writeTo))
       }
 
-      if (!is.null(uelPriority)) {
-        if (!(is.character(uelPriority) || is.list(uelPriority))) {
-          stop("'uelPriority' must be type list or str\n")
-        }
-
-        if (is.list(uelPriority)) {
-          if (!all(unlist(lapply(uelPriority, is.character), 
-          use.names = FALSE))) {
-            stop("Argument `uelPriority` must contain only type character\n")
-          }
-        }
+      if (!(is.character(uelPriority) || is.null(uelPriority))) {
+        stop("'uelPriority' must be type character or NULL\n")
       }
 
       isempty = (length(self$listSymbols()) == 0)
