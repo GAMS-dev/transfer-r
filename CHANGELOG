@@ -4,6 +4,7 @@ GAMS Transfer R
 - Breaking: Following `Container` methods do not support `list` input for `symbols` argument: `describeSets`, `describeAliases`, `describeParameters`, `describeVariables`, `describeEquations`, `read`, `removeSymbols`, `getSymbols`.
 - Breaking: `types` argument in the `Container` methods `listVariables` and `listEquations` does not support the input of type `list`. Use `vector` inputs instead.
 - Breaking: `uelPriority` argument in the `Container` method `write` does not support the input of type `list`. Use `vector` inputs instead.
+- `Container` method `write` now supports `mapped` write mode with the help of new argument `mode`
 
 GAMS Transfer R v2.0.0
 ==================
