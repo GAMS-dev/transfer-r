@@ -158,13 +158,12 @@ Set <- R6Class(
     summary = function() {
       return(list(
         "name" = self$name,
-        "isSingleton" = self$isSingleton,
-        "domainObjects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
         "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
+        "isSingleton" = self$isSingleton,
+        "domain" = self$domainNames,
+        "domainType" = self$domainType,
+        "dimension" = self$dimension,
+        "numberRecords" = self$numberRecords
       ))
     }
   ),

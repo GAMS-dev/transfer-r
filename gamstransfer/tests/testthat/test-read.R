@@ -2455,8 +2455,8 @@ test_that("test_num_98", {
   expect_equal(p0$findDuplicateRecords(), data.frame())
   expect_equal(p0$countDuplicateRecords(), 0)
   expect_equal(p0$summary, 
-  list(name="p0", isScalar=FALSE, domainObjects = list(ip), domainNames = "ip",
-  dimension=1, description="", numberRecords=5, domainType="regular"))
+  list(name="p0", description="", domain = "ip", domainType="regular",
+  dimension=1, numberRecords=5))
 
   m$removeSymbols("ip")
   expect_true(p0$isValid())
@@ -2471,18 +2471,15 @@ test_that("test_num_98", {
   expect_equal(p0$findDuplicateRecords(), data.frame())
   expect_equal(p0$countDuplicateRecords(), 0)
   expect_equal(p0$summary, 
-  list(name="p0", isScalar=FALSE, domainObjects = "*", domainNames = "*",
-  dimension=1, description="", numberRecords=5, domainType="none"))
+  list(name="p0", description="", domain = "*", domainType="none",
+  dimension=1, numberRecords=5))
 
   expect_true(!ip$isValid())
   expect_equal(ip$summary,
   list("name" = "ip",
-  aliasWith_name = "*",
-  domainNames = "*",
-  dimension = 1,
   description = "Aliased with *",
-  numberRecords = NA,
-  domainType = "none"))
+  aliasWith = "*"
+  ))
 }
 )
 
@@ -2560,59 +2557,52 @@ test_that("test_num_102", {
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
   expect_equal(m["i"]$summary, list(
     name = "i",
-    isSingleton = FALSE,
-    domainObjects = "*",
-    domainNames = "*",
-    dimension = 1,
     description = "canning plants",
-    numberRecords = 2,
-    domainType = "none"
+    isSingleton = FALSE,
+    domain = "*",
+    domainType = "none",
+    dimension = 1,
+    numberRecords = 2
   ))
 
   expect_equal(m["d"]$summary, list(
     name = "d",
-    isScalar = FALSE,
-    domainObjects = c(m["i"], m["j"]),
-    domainNames = c("i","j"),
-    dimension = 2,
     description = "distance in thousands of miles",
-    numberRecords = 6,
-    domainType = "regular"
+    domain = c("i","j"),
+    domainType = "regular",
+    dimension = 2,
+    numberRecords = 6
   ))
 
   expect_equal(m["x"]$summary, list(
     name = "x",
-    type = "positive",
-    domainObjects = c(m["i"], m["j"]),
-    domainNames = c("i","j"),
-    dimension = 2,
     description = "shipment quantities in cases",
-    numberRecords = 6,
-    domainType = "regular"
+    type = "positive",
+    domain = c("i","j"),
+    domainType = "regular",
+    dimension = 2,
+    numberRecords = 6
   ))
 
   expect_equal(m["demand"]$summary, list(
     name = "demand",
-    type = "geq",
-    domainObjects = list(m["j"]),
-    domainNames = "j",
-    dimension = 1,
     description = "satisfy demand at market j",
-    numberRecords = 3,
-    domainType = "regular"
+    type = "geq",
+    domain = "j",
+    domainType = "regular",
+    dimension = 1,
+    numberRecords = 3
   ))
 
   expect_equal(m["ip"]$summary, list(
     name = "ip",
-    aliasWith = m["i"],
-    aliasWith_name = "i",
-    isSingleton = FALSE,
-    domainObjects = "*",
-    domainNames = "*",
-    dimension = 1,
     description = "canning plants",
-    numberRecords = 2,
-    domainType = "none"
+    aliasWith = "i",
+    isSingleton = FALSE,
+    domain = "*",
+    domainType = "none",
+    dimension = 1,
+    numberRecords = 2
   ))
 
   # container
@@ -2623,59 +2613,52 @@ test_that("test_num_102", {
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
   expect_equal(m["i"]$summary, list(
     name = "i",
-    isSingleton = FALSE,
-    domainObjects = "*",
-    domainNames = "*",
-    dimension = 1,
     description = "canning plants",
-    numberRecords = 2,
-    domainType = "none"
+    isSingleton = FALSE,
+    domain = "*",
+    domainType = "none",
+    dimension = 1,
+    numberRecords = 2
   ))
 
   expect_equal(m["d"]$summary, list(
     name = "d",
-    isScalar = FALSE,
-    domainObjects = c(m["i"],m["j"]),
-    domainNames = c("i", "j"),
-    dimension = 2,
     description = "distance in thousands of miles",
-    numberRecords = 6,
-    domainType = "regular"
+    domain = c("i", "j"),
+    domainType = "regular",
+    dimension = 2,
+    numberRecords = 6
   ))
 
   expect_equal(m["x"]$summary, list(
     name = "x",
-    type = "positive",
-    domainObjects = c(m["i"],m["j"]),
-    domainNames = c("i","j"),
-    dimension = 2,
     description = "shipment quantities in cases",
-    numberRecords = 6,
-    domainType = "regular"
+    type = "positive",
+    domain = c("i","j"),
+    domainType = "regular",
+    dimension = 2,
+    numberRecords = 6
   ))
 
   expect_equal(m["demand"]$summary, list(
     name = "demand",
-    type = "geq",
-    domainObjects = c(m["j"]),
-    domainNames = "j",
-    dimension = 1,
     description = "satisfy demand at market j",
-    numberRecords = 3,
-    domainType = "regular"
+    type = "geq",
+    domain = "j",
+    domainType = "regular",
+    dimension = 1,
+    numberRecords = 3
   ))
 
   expect_equal(m["ip"]$summary, list(
     name = "ip",
-    aliasWith = m["i"],
-    aliasWith_name = "i",
-    isSingleton = FALSE,
-    domainObjects = "*",
-    domainNames = "*",
-    dimension = 1,
     description = "canning plants",
-    numberRecords = 2,
-    domainType = "none"
+    aliasWith = "i",
+    isSingleton = FALSE,
+    domain = "*",
+    domainType = "none",
+    dimension = 1,
+    numberRecords = 2
   ))
 }
 )

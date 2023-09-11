@@ -454,13 +454,12 @@ Variable <- R6Class(
     summary = function() {
       return(list(
         "name" = self$name,
-        "type" = self$type,
-        "domainObjects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
         "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
+        "type" = self$type,
+        "domain" = self$domainNames,
+        "domainType" = self$domainType,
+        "dimension" = self$dimension,
+        "numberRecords" = self$numberRecords
       ))
     }
   ),

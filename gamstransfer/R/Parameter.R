@@ -311,13 +311,11 @@ Parameter <- R6Class(
     summary = function() {
       return(list(
         "name" = self$name,
-        "isScalar" = self$isScalar,
-        "domainObjects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
         "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
+        "domain" = self$domainNames,
+        "domainType" = self$domainType,
+        "dimension" = self$dimension,
+        "numberRecords" = self$numberRecords
       ))
     }
   )

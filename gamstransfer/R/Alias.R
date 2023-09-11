@@ -373,17 +373,21 @@ Alias <- R6Class(
     summary = function() {
     super$.testRefContainer()
     private$.testParentSet()
+    if (inherits(self$aliasWith, c("Set", "Alias"))) {
+      aliasWithName = self$aliasWith$name
+    }
+    else {
+      aliasWithName = selt$aliasWith
+    }
     return(list(
       "name" = self$name,
-      "aliasWith" = self$aliasWith,
-      "aliasWith_name" = self$aliasWith$name,
-      "isSingleton" = self$isSingleton,
-      "domainObjects" = self$domain,
-      "domainNames" = self$domainNames,
-      "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords,
-      "domainType" = self$domainType
+      "aliasWith" = aliasWithName,
+      "isSingleton" = self$isSingleton,
+      "domain" = self$domainNames,
+      "domainType" = self$domainType,
+      "dimension" = self$dimension,
+      "numberRecords" = self$numberRecords
     ))
     }
   ),

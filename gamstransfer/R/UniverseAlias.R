@@ -195,12 +195,8 @@ UniverseAlias <- R6Class(
     summary = function() {
     return(list(
       "name" = self$name,
-      "aliasWith_name" = self$aliasWith,
-      "domainNames" = self$domainNames,
-      "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords,
-      "domainType" = self$domainType
+      "aliasWith" = self$aliasWith
     ))
     }
   ),

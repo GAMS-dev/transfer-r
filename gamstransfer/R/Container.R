@@ -1500,6 +1500,13 @@ Container <- R6::R6Class (
       for (s in symbols) {
         s$copy(destination, overwrite)
       }
+    },
+
+    summary = function() {
+      return(list(
+        systemDirectory = self$systemDirectory,
+        numberSymbols = length(self$listSymbols())
+      ))
     }
 
   ),
