@@ -4099,3 +4099,15 @@ expect_error(Set$new(m, "i", domain = j, records=paste0("i", 1:3)))
 expect_equal(length(m$listSymbols()), 0)
 }
 )
+
+# get* methods
+test_that("test_num_135", {
+m = Container$new(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
+
+expect_equal(m$getSymbols(m$listSets()), m$getSets())
+expect_equal(m$getSymbols(m$listAliases()), m$getAliases())
+expect_equal(m$getSymbols(m$listParameters()), m$getParameters())
+expect_equal(m$getSymbols(m$listVariables()), m$getVariables())
+expect_equal(m$getSymbols(m$listEquations()), m$getEquations())
+}
+)

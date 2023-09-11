@@ -629,6 +629,27 @@ Container <- R6::R6Class (
       }
     },
 
+
+    getSets = function(isValid = NULL) {
+      return(self$getSymbols(self$listSets(isValid)))
+    },
+
+    getParameters = function(isValid = NULL) {
+      return(self$getSymbols(self$listParameters(isValid)))
+    },
+
+    getVariables = function(isValid = NULL) {
+      return(self$getSymbols(self$listVariables(isValid)))
+    },
+
+    getEquations = function(isValid = NULL) {
+      return(self$getSymbols(self$listEquations(isValid)))
+    },
+
+    getAliases = function(isValid = NULL) {
+      return(self$getSymbols(self$listAliases(isValid)))
+    },
+
     #' @description main method to read loadFrom, can be provided 
     #' with a list of symbols to read in subsets, `records` controls 
     #' if symbol records are loaded or just metadata
