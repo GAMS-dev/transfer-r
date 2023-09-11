@@ -320,8 +320,8 @@ Container <- R6::R6Class (
             "isSingleton",
             "domain",
             "domainType",
-            "dim",
-            "numberRecs",
+            "dimension",
+            "numberRecords",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -397,8 +397,8 @@ Container <- R6::R6Class (
             "isSingleton",
             "domain",
             "domainType",
-            "dim",
-            "numberRecs",
+            "dimension",
+            "numberRecords",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -456,19 +456,15 @@ Container <- R6::R6Class (
 
       colNames = list(
             "name",
-            "isScalar",
             "domain",
             "domainType",
-            "dim",
-            "numRecs",
-            "minValue",
-            "meanValue",
-            "maxValue",
+            "dimension",
+            "numberRecords",
+            "min",
+            "mean",
+            "max",
             "whereMin",
             "whereMax",
-            "countEps",
-            "countNa",
-            "countUndef",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -480,7 +476,6 @@ Container <- R6::R6Class (
         if (any(self$listParameters() == i)) {
           symDescription = list(
             i,
-            self[i]$isScalar,
             paste(self[i]$domainNames, sep = "", collapse = " "),
             self[i]$domainType,
             self[i]$dimension,
@@ -490,9 +485,6 @@ Container <- R6::R6Class (
             self[i]$getMaxValue("value"),
             self[i]$whereMin("value"),
             self[i]$whereMax("value"),
-            self[i]$countEps("value"),
-            self[i]$countNA("value"),
-            self[i]$countUndef("value"),
             self[i]$getSparsity()
           )
           rowCount = rowCount + 1
@@ -531,19 +523,13 @@ Container <- R6::R6Class (
             "type",
             "domain",
             "domainType",
-            "dim",
-            "numRecs",
+            "dimension",
+            "numberRecords",
             "sparsity",
             "minLevel",
             "meanLevel",
             "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
+            "whereMaxAbsLevel"
             )
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
@@ -563,13 +549,7 @@ Container <- R6::R6Class (
             self[i]$getMinValue("level"),
             self[i]$getMeanValue("level"),
             self[i]$getMaxValue("level"),
-            self[i]$whereMaxAbs("level"),
-            self[i]$countEps("level"),
-            self[i]$getMinValue("marginal"),
-            self[i]$getMeanValue("marginal"),
-            self[i]$getMaxValue("marginal"),
-            self[i]$whereMaxAbs("marginal"),
-            self[i]$countEps("marginal")
+            self[i]$whereMaxAbs("level")
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -607,19 +587,13 @@ Container <- R6::R6Class (
             "type",
             "domain",
             "domainType",
-            "dim",
-            "numRecs",
+            "dimension",
+            "numberRecords",
             "sparsity",
             "minLevel",
             "meanLevel",
             "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
+            "whereMaxAbsLevel"
             )
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
@@ -639,13 +613,7 @@ Container <- R6::R6Class (
             self[i]$getMinValue("level"),
             self[i]$getMeanValue("level"),
             self[i]$getMaxValue("level"),
-            self[i]$whereMaxAbs("level"),
-            self[i]$countEps("level"),
-            self[i]$getMinValue("marginal"),
-            self[i]$getMeanValue("marginal"),
-            self[i]$getMaxValue("marginal"),
-            self[i]$whereMaxAbs("marginal"),
-            self[i]$countEps("marginal")
+            self[i]$whereMaxAbs("level")
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
