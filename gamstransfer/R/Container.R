@@ -694,31 +694,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description provides a universe for all symbols
-    getUniverseSet = function() {
-      uni = c()
-      for (i in self$listSymbols(isValid = TRUE)) {
-        if (!is.null(self[i]$records)) {
-          if (self[i]$dimension > 0) {
-            df = self[i]$records[, (1:self[i]$dimension)]
-            if (is.factor(df)) {
-              uni = append(uni, levels(df))
-            }
-            else {
-              uni = append(uni, c(t(df)))
-            }
-          }
-        }
-      }
-
-      if (length(uni) != 0) {
-        return(unique(uni))
-      }
-      else {
-        return(NULL)
-      }
-    },
-
     #' @description removes symbols from the Container
     #' @param symbols a string specifying the symbol name or a list of symbols 
     #' to be removed from the container
@@ -1231,12 +1206,12 @@ Container <- R6::R6Class (
           is_uel_priority = FALSE
         }
         else {
-          universe = self$getUniverseSet()
+          universe = self$getUELs()
           if ((is.null(universe)) ||
           (!setequal(intersect(uelPriority, universe), uelPriority))) {
             stop(paste0("uelPriority must be a subset of the universe, check ",
             "spelling of an element in uelPriority? Also check ",
-            "getUniverseSet() method for the assumed Universe Set.\n"))
+            "getUELs() method for the assumed Universe Set.\n"))
           }
 
           reorder = uelPriority

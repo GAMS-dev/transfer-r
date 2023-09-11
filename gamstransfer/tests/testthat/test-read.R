@@ -244,7 +244,7 @@ test_that("test_num_6", {
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2["foo"]$records))
 
-  expect_equal(as.character(m$getUniverseSet()), as.character(m2["foo"]$records$uni))
+  expect_equal(as.character(m$getUELs()), as.character(m2["foo"]$records$uni))
 }
 )
 
@@ -300,7 +300,7 @@ test_that("test_num_9", {
   expect_equal(as.character(i$records$col1), c("a", "b"))
   expect_equal(as.character(i$records$col2), c("c", "d"))
 
-  expect_equal(as.character(m$getUniverseSet()), c("a", "c", "b", "d", "e", "f"))
+  expect_equal(as.character(m$getUELs()), c("a", "b", "c", "d", "e", "f"))
 
   #just try writing to see if there are any errors
   m$write("out.gdx")
@@ -431,7 +431,7 @@ test_that("test_num_16", {
   expect_equal(as.character(m["j"]$records$i), c("a", "b"))
   expect_equal(as.character(m["i"]$records$uni), c("a", "b"))
 
-  expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
+  expect_equal(as.character(m$getUELs()), c("a", "b", "c", "aa"))
   expect_equal(a$isValid(), TRUE)
   expect_equal(l$isValid(), TRUE)
 }
@@ -456,7 +456,7 @@ test_that("test_num_17", {
   expect_equal(as.character(m["j"]$records$i), c("a", "b"))
   expect_equal(as.character(m["i"]$records$uni), c("a", "b"))
 
-  expect_equal(as.character(m$getUniverseSet()), c("a", "b", "c", "aa"))
+  expect_equal(as.character(m$getUELs()), c("a", "b", "c", "aa"))
 
   expect_equal(m$listSymbols(isValid = FALSE), NULL)
 }
