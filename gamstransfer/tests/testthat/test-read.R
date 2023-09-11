@@ -4027,7 +4027,6 @@ expect_true(e2$equals(e))
 
 # dataframe with no rows still have column names and factors
 test_that("test_num_133", {
-library(gamstransfer)
 m = Container$new()
 i = Set$new(m, "i", records=paste0("i", 1:3))
 p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
@@ -4109,3 +4108,11 @@ m$write("gt.gdx", mode="mapped")
 m$write("gt.gdx", mode="string")
 
 })
+
+# symbol shouldn't be added to the container if the constructor call fails
+test_that("test_num_136", {
+m = Container$new()
+expect_error(Set$new(m, "i", domain = j, records=paste0("i", 1:3)))
+expect_equal(length(m$listSymbols()), 0)
+}
+)

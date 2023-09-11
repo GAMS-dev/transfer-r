@@ -26,12 +26,12 @@
 
     #' @field name name of the symbol
     self$name <- name
-    container[name] = self
 
     self$domain = domain
 
     self$description = description
     self$domainForwarding = domainForwarding
+    container[name] = self
 
   },
 
