@@ -20,9 +20,9 @@
 
     self$.requiresStateCheck = TRUE
 
-    #' @field refContainer reference to the Container that the symbol 
+    #' @field container reference to the Container that the symbol 
     #' belongs to. Type Container.
-    self$refContainer = container # also sets the check flag
+    self$container = container # also sets the check flag
 
     #' @field name name of the symbol
     self$name <- name
@@ -986,17 +986,17 @@
       else {
         private$.records = records_input
         self$.requiresStateCheck = TRUE
-        self$refContainer$.requiresStateCheck = TRUE
+        self$container$.requiresStateCheck = TRUE
 
         if (!is.null(private$.records)) {
           if (any(self$domainForwarding == TRUE)) {
             private$domain_forwarding(self$domainForwarding)
 
-            for (i in self$refContainer$listSymbols()) {
-              self$refContainer[i]$.requiresStateCheck = TRUE
+            for (i in self$container$listSymbols()) {
+              self$container[i]$.requiresStateCheck = TRUE
             }
 
-            self$refContainer$.requiresStateCheck = TRUE
+            self$container$.requiresStateCheck = TRUE
           }
         }
       }
@@ -1121,7 +1121,7 @@
       }
     },
 
-    refContainer = function(ref_container_input) {
+    container = function(ref_container_input) {
       if (missing(ref_container_input)) {
         return(private$.ref_container)
       }
@@ -1186,11 +1186,11 @@
           if (private$.name != name_input) {
             self$.requiresStateCheck = TRUE
 
-            refcontainer = private$.ref_container
+            container = private$.ref_container
 
-            refcontainer[name_input] = refcontainer[private$.name]
-            refcontainer$data$remove(private$.name)
-            refcontainer$.lc_data$remove(tolower(private$.name))
+            container[name_input] = container[private$.name]
+            container$data$remove(private$.name)
+            container$.lc_data$remove(tolower(private$.name))
           }
           private$.name = name_input
         }
@@ -1851,14 +1851,14 @@
         # if regular domain, symbols in domain must be valid
         if (self$domainType == "regular") {
           for (i in self$domain) {
-            if (!self$refContainer$hasSymbols(i$name)) {
+            if (!self$container$hasSymbols(i$name)) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the object referenced is not in the", 
               " Container anymore -- must reset domain for symbol ", 
               self$name, "\n"))
 
             }
-            if (!identical(i, self$refContainer[i$name])) {
+            if (!identical(i, self$container[i$name])) {
               stop(paste0("symbol defined over domain symbol ",
               i$name, " however, the symbol with name ", i$name, 
               " in the container is different. Seems to be a broken link.",
@@ -2000,12 +2000,12 @@
       to_grow = rev(to_grow)
 
       for (i in to_grow) {
-        dim = (self$refContainer[i]$domainNames)[1]
+        dim = (self$container[i]$domainNames)[1]
         if (dim == "*") dim = "uni"
-        if (!is.null(self$refContainer[i]$records)) {
-          recs = self$refContainer[i]$records
+        if (!is.null(self$container[i]$records)) {
+          recs = self$container[i]$records
 
-          if (self$refContainer[i]$dimension > 1) {
+          if (self$container[i]$dimension > 1) {
             stop("attempting to forward a domain set that has dimension > 1\n")
           }
           if (is.null(recs$element_text)) {
@@ -2039,7 +2039,7 @@
           recs = recs[!duplicated(recs[[dim]]), , drop=FALSE]
           rownames(recs) <- NULL
         }
-        self$refContainer[i]$records = recs
+        self$container[i]$records = recs
       }
     }
   },
@@ -2081,7 +2081,7 @@
 
     if (is.null(destination[self$name])){
       # symbol doesn't exist in the destination container
-      destination$read(self$refContainer, self$name)
+      destination$read(self$container, self$name)
       return(NULL)
     }
     else {

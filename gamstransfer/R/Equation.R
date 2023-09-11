@@ -40,7 +40,7 @@
 #' @field name name of symbol
 #' @field numberRecords 	number of symbol records
 #' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
+#' @field container reference to the Container that the symbol belongs to
 #' @field shape a list describing the array dimensions if records were
 #'  converted with $toDense()
 #' @field summary output a list of only the metadata

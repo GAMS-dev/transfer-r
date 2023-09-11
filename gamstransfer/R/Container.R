@@ -718,7 +718,7 @@ Container <- R6::R6Class (
       setOrAliasObj = symbols[setOrAliasBool]
 
       lapply(symbols, function(sym) {
-        sym$refContainer <- NULL
+        sym$container <- NULL
         sym$.requiresStateCheck <- TRUE
         self$data$remove(sym$name)
         self$.lc_data$remove(tolower(sym$name))
@@ -1840,9 +1840,9 @@ Container <- R6::R6Class (
 
         # make sure that all symbols reference the correct Container instance
         lapply(symbols, function(n) {
-          if (!identical(self, n$refContainer)) {
+          if (!identical(self, n$container)) {
             stop(paste0("Symbol ", self$name, " has a broken container ",
-            "reference. Update symbol reference with <symbol>$refContainer ",
+            "reference. Update symbol reference with <symbol>$container ",
             "= <new_container>\n"))
           }
           })

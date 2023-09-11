@@ -1020,7 +1020,7 @@ test_that("test_num_45", {
 
   m$removeSymbols("i")
 
-  expect_true(is.null(i$refContainer))
+  expect_true(is.null(i$container))
   expect_true(unlist(m$data$keys()) == c("j"))
   expect_true(j$isValid())
   expect_equal(j$domain, "*")
