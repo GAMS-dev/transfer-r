@@ -1189,7 +1189,7 @@ Container <- R6::R6Class (
       }
 
       if (is.null(mode)) {
-        mode = "string"
+        mode = "mapped"
       }
       if (!(is.character(mode) && length(mode) == 1)) {
         stop("Argument `mode` must be type character 
@@ -1197,7 +1197,7 @@ Container <- R6::R6Class (
       }
 
       if (!any(c("string", "mapped") == mode)) {
-        stop("Argument `mode` must be one of the following: 'string', 'raw'\n")
+        stop("Argument `mode` must be one of the following: 'string', 'mapped'\n")
       }
 
       if (mode == "string") {
