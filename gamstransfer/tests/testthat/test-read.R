@@ -13,6 +13,14 @@ test_that("readwritetest", {
   paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
   expect_equal(ret, 0)
+
+  # write everything
+  m$write(testthat::test_path("gt.gdx"), mode = "string")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -36,6 +44,14 @@ test_that("test_num_1", {
   expect_equal(nrow(a$records), 2)
 
   m$write("gt.gdx")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test1.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+
+  m$write("gt.gdx", mode="string")
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "test1.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -66,6 +82,14 @@ test_that("test_num_2", {
   expect_equal(as.character(j$records$uni), c("c", "d"))
 
   m$write("gt.gdx")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test2.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+
+  m$write("gt.gdx", mode="string")
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "test2.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -103,6 +127,14 @@ test_that("test_num_3", {
   stdout = FALSE)
 
   expect_equal(ret, 0)
+
+  m$write("gt.gdx", mode="string")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test3.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
 }
 )
 
@@ -132,6 +164,14 @@ test_that("test_num_4", {
   expect_equal(as.character(l$records$k), c("a", "b"))
 
   m$write("gt.gdx")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test4.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
+
+  m$write("gt.gdx", mode="string")
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "test4.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -181,6 +221,14 @@ test_that("test_num_5", {
   stdout = FALSE)
 
   expect_equal(ret, 0)
+
+  m$write("gt.gdx", mode="string")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test5.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+
+  expect_equal(ret, 0)
 }
 )
 
@@ -191,7 +239,7 @@ test_that("test_num_6", {
   i <- Set$new(m, "i", records = c("c", "a", "b"))
   expect_true(is.data.frame(i$records))
   m$write("gt.gdx")
-
+  m$write("gt.gdx", mode="string")
   m2 = Container$new(testthat::test_path("testdata", "test6_uels.gdx"))
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2["foo"]$records))
@@ -208,13 +256,14 @@ test_that("test_num_7", {
   expect_true(is.data.frame(i$records))
 
   m$write("gt.gdx", uelPriority = "a")
+  m$write("gt.gdx", uelPriority = "a", mode="string")
 
   m2 = Container$new(testthat::test_path("testdata", "test7_uels.gdx"))
   expect_true(inherits(m2, "Container"))
   expect_true(is.data.frame(m2["foo"]$records))
 
   expect_equal(c("a", "c", "b"), as.character(m2["foo"]$records$uni))
-  
+
 }
 )
 
@@ -235,6 +284,7 @@ test_that("test_num_8", {
 
   #try writing
   m$write("out.gdx")
+  m$write("out.gdx", mode="string")
 }
 )
 
@@ -254,6 +304,7 @@ test_that("test_num_9", {
 
   #just try writing to see if there are any errors
   m$write("out.gdx")
+  m$write("out.gdx", mode="string")
 }
 )
 
@@ -286,6 +337,7 @@ test_that("test_num_10", {
 
   #try writing
   m$write("out.gdx")
+  m$write("out.gdx", mode="string")
 }
 )
 
@@ -309,6 +361,7 @@ test_that("test_num_11", {
   records = data.frame("i"= c("a", "c"), "val" = c(1, 2)))
   expect_equal(j$toDense(), array(c(1,0,2,0)))
   m$write("out.gdx")
+  m$write("out.gdx", mode="string")
 }
 )
 
@@ -331,6 +384,7 @@ test_that("test_num_13", {
   expect_equal(unlist(m$data$keys()), c("j"))
 
   m$write("out.gdx")
+  m$write("out.gdx", mode="string")
 }
 )
 
@@ -345,6 +399,7 @@ test_that("test_num_14", {
   expect_equal(unlist(m$data$keys()), c("h"))
 
   m$write("out.gdx")
+  m$write("out.gdx", mode="string")
 }
 )
 
@@ -593,6 +648,14 @@ test_that("test_num_27", {
   paste0(testthat::test_path("testdata", "test27.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
   expect_equal(ret, 0)
+
+  # write everything
+  m$write(testthat::test_path("gt.gdx"), mode="string")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test27.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -610,6 +673,7 @@ test_that("test_num_28", {
   # try writing
 
   expect_equal(m$write("gt.gdx"), NULL)
+  expect_equal(m$write("gt.gdx", mode="string"), NULL)
 }
 )
 
@@ -629,6 +693,7 @@ test_that("test_num_29", {
 
   # try writing
   expect_equal(m$write("gt.gdx"), NULL)
+  expect_equal(m$write("gt.gdx", mode="string"), NULL)
 }
 )
 
@@ -639,6 +704,7 @@ test_that("test_num_30", {
   a = Parameter$new(m, "a", i)
   # try writing
   expect_equal(m$write("gt.gdx"), NULL)
+  expect_equal(m$write("gt.gdx", mode="string"), NULL)
 }
 )
 
@@ -939,6 +1005,11 @@ test_that("test_num_44", {
 
   m2 = Container$new(testthat::test_path("out.gdx"))
   expect_true(m2["i"]$type == "free")
+
+  m$write("out.gdx", mode="string")
+
+  m2 = Container$new(testthat::test_path("out.gdx"))
+  expect_true(m2["i"]$type == "free")
 }
 )
 
@@ -964,6 +1035,14 @@ test_that("test_num_46", {
   m = Container$new(h)
   # write everything
   m$write(testthat::test_path("gt.gdx"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+  # write everything
+  m$write(testthat::test_path("gt.gdx"), mode="string")
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -998,6 +1077,20 @@ test_that("test_num_48", {
   expect_true(!is.null(m["j"]$records))
   expect_true(!is.null(m["k"]$records))
   expect_true(!is.null(m["l"]$records))
+
+  m$write("data.gdx", mode="string")
+
+  m = Container$new("data.gdx")
+
+  expect_true(m["i"]$domainType == "relaxed")
+  expect_true(m["j"]$domainType == "none")
+  expect_true(m["k"]$domainType == "relaxed")
+  expect_true(m["l"]$domainType == "regular")
+
+  expect_true(!is.null(m["i"]$records))
+  expect_true(!is.null(m["j"]$records))
+  expect_true(!is.null(m["k"]$records))
+  expect_true(!is.null(m["l"]$records))
 }
 )
 
@@ -1016,6 +1109,25 @@ test_that("test_num_50", {
   l = Set$new(m, "l", i, records=paste0("i", 1:2))
   m$write("data.gdx")
 
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"), symbols="i")
+  expect_true(!is.null(m["i"]))
+
+  m = Container$new()
+  m$read(testthat::test_path("data.gdx"), symbols= c("i", "j"))
+  expect_true(!is.null(m["i"]))
+  expect_true(!is.null(m["j"]))
+
+  m = Container$new()
+  expect_error(m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy")))
+
+  m = Container$new()
+  i = Set$new(m, "i", domain=c("k"), records = paste0("i", 1:5))
+  j = Set$new(m, "j", domain=c("*"), records = paste0("j", 1:5))  
+  k = Set$new(m, "k", domain = c("*", "l"), records = data.frame(paste0("k", 1:5), paste0("l", 1:5)))
+  l = Set$new(m, "l", i, records=paste0("i", 1:2))
+  m$write("data.gdx", mode="string")
 
   m = Container$new()
   m$read(testthat::test_path("data.gdx"), symbols="i")
@@ -2248,6 +2360,20 @@ test_that("test_num_95", {
   stdout = FALSE)
   expect_equal(ret, 0)
 
+  # write everything
+  m$write(testthat::test_path("gt.gdx"), mode="string")
+
+  expect_true(inherits(m["h"], "UniverseAlias"))
+  expect_true(inherits(m["ip"], "Alias"))
+  expect_true(inherits(m["i"], "Set"))
+
+  expect_equal(m$listSets(), "i")
+  expect_equal(m$listAliases(), c("ip", "h"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test95.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -2272,6 +2398,17 @@ test_that("test_num_96", {
   stdout = FALSE)
   expect_equal(ret, 0)
 
+  # write everything
+  m2$write(testthat::test_path("gt.gdx"), mode="string")
+
+  expect_true(inherits(m2["h"], "UniverseAlias"))
+  expect_true(inherits(m2["ip"], "Alias"))
+  expect_true(inherits(m2["i"], "Set"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test95.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -2547,6 +2684,12 @@ test_that("test_num_102", {
 test_that("test_num_103", {
 m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
 m$write("partial_write.gdx", symbols="a")
+
+m1 = Container$new("partial_write.gdx")
+expect_equal(m1["a"]$domain, "i")
+expect_equal(m1["a"]$domainType, "relaxed")
+
+m$write("partial_write.gdx", symbols="a", mode="string")
 
 m1 = Container$new("partial_write.gdx")
 expect_equal(m1["a"]$domain, "i")
@@ -3014,6 +3157,7 @@ expect_equal(nrow(a$records), (50**4)/20)
 test_that("test_num_111", {
 m = Container$new()
 expect_true(is.null(m$write("empty.gdx")))
+expect_true(is.null(m$write("empty.gdx", mode="string")))
 
 }
 )
@@ -3170,6 +3314,12 @@ test_that("test_num_117", {
   m2 = Container$new(testthat::test_path("gt.gdx"))
 
   expect_equal(m["isub"]$getUELs(), paste0("i",1:5))
+
+  m$write("gt.gdx", mode="string")
+
+  m2 = Container$new(testthat::test_path("gt.gdx"))
+
+  expect_equal(m["isub"]$getUELs(), paste0("i",1:5))
 }
 )
 
@@ -3186,6 +3336,14 @@ test_that("test_num_118", {
   expect_true(e$isScalar)
 
   m$write("gt.gdx")
+  m2 = Container$new()
+  m2$read(testthat::test_path("gt.gdx"))
+
+  expect_true(m2["p"]$isScalar)
+  expect_true(m2["v"]$isScalar)
+  expect_true(m2["e"]$isScalar)
+
+  m$write("gt.gdx", mode="string")
   m2 = Container$new()
   m2$read(testthat::test_path("gt.gdx"))
 
@@ -3339,6 +3497,17 @@ test_that("test_num_124", {
   expect_equal(m2["p"]$domain, "j")
   expect_false(m2["p"]$hasDomainViolations())
 
+  m$write("gt.gdx", mode="string")
+
+  m = Container$new("gt.gdx")
+  expect_equal(m["p"]$domain, "j")
+  expect_false(m["p"]$hasDomainViolations())
+
+  # check the same for container read
+  m2 = Container$new()
+  m2$read(m)
+  expect_equal(m2["p"]$domain, "j")
+  expect_false(m2["p"]$hasDomainViolations())
 }
 )
 
@@ -3371,6 +3540,16 @@ test_that("test_num_126", {
     for (i in c("level", "marginal", "lower", "upper", "scale")) {
       expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues(columns=i)))
     }
+
+    m$write("partial_equation.gdx", mode="string")
+
+    m1 = Container$new("partial_equation.gdx")
+    expect_equal(m1$listSymbols(), "e")
+    expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["e"]$records), 6)
+    for (i in c("level", "marginal", "lower", "upper", "scale")) {
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues(columns=i)))
+    }
   }
 
   # data frames with only domain - variable
@@ -3382,6 +3561,16 @@ test_that("test_num_126", {
     expect_equal(length(m["v"]$records), 1)
     expect_true(m["v"]$isValid())
     m$write("partial_variable.gdx")
+
+    m1 = Container$new("partial_variable.gdx")
+    expect_equal(m1$listSymbols(), "v")
+    expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["v"]$records), 6)
+    for (i in c("level", "marginal", "lower", "upper", "scale")) {
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$.getDefaultValues(columns=i)))
+    }
+
+    m$write("partial_variable.gdx", mode="string")
 
     m1 = Container$new("partial_variable.gdx")
     expect_equal(m1$listSymbols(), "v")
@@ -3407,6 +3596,15 @@ test_that("test_num_126", {
   expect_equal(length(m1["p"]$records), 2)
   expect_equal(m1["p"]$records[,"value"], replicate(m["p"]$numberRecords, 0))
 
+
+  m$write("partial_parameter.gdx", mode="string")
+
+  m1 = Container$new("partial_parameter.gdx")
+  expect_equal(m1$listSymbols(), "p")
+  expect_equal(colnames(m1["p"]$records), c("uni", "value"))
+  expect_equal(length(m1["p"]$records), 2)
+  expect_equal(m1["p"]$records[,"value"], replicate(m["p"]$numberRecords, 0))
+
   # data frames with only domain - set
   m = Container$new()
   s = Set$new(m, "s", records = data.frame(i=c("i1","i2","i3")))
@@ -3415,6 +3613,13 @@ test_that("test_num_126", {
   expect_equal(length(m["s"]$records), 1)
   expect_true(m["s"]$isValid())
   m$write("partial_set.gdx")
+
+  m1 = Container$new("partial_set.gdx")
+  expect_equal(m1$listSymbols(), "s")
+  expect_equal(colnames(m1["s"]$records), c("uni", "element_text"))
+  expect_equal(length(m1["s"]$records), 2)
+
+  m$write("partial_set.gdx", mode="string")
 
   m1 = Container$new("partial_set.gdx")
   expect_equal(m1$listSymbols(), "s")
@@ -3436,6 +3641,14 @@ test_that("test_num_126", {
     expect_equal(m1$listSymbols(), "e")
     expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["e"]$records), 6)
+
+    m$write("partial_equation.gdx", mode="string")
+
+    m1 = Container$new("partial_equation.gdx")
+    expect_equal(m1$listSymbols(), "e")
+    expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["e"]$records), 6)
+
     for (i in c("level", "lower", "upper", "scale")) {
       expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues(columns=i)))
     }
@@ -3452,6 +3665,13 @@ test_that("test_num_126", {
     expect_equal(length(m["v"]$records), 2)
     expect_true(m["v"]$isValid())
     m$write("partial_variable.gdx")
+
+    m1 = Container$new("partial_variable.gdx")
+    expect_equal(m1$listSymbols(), "v")
+    expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["v"]$records), 6)
+
+    m$write("partial_variable.gdx", mode="string")
 
     m1 = Container$new("partial_variable.gdx")
     expect_equal(m1$listSymbols(), "v")
@@ -3475,6 +3695,10 @@ m$write("partial_scalar.gdx")
 m1 = Container$new("partial_scalar.gdx")
 expect_equal(m1["p"]$records$value, 0)
 
+m$write("partial_scalar.gdx", mode="string")
+m1 = Container$new("partial_scalar.gdx")
+expect_equal(m1["p"]$records$value, 0)
+
 #variable
 m = Container$new()
 v = Variable$new(m, "v", records=data.frame())
@@ -3484,6 +3708,13 @@ for (i in c("level", "marginal", "lower", "upper", "scale")) {
   expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues(columns=i))
 }
 
+m$write("partial_scalar_variable.gdx", mode="string")
+m1 = Container$new("partial_scalar_variable.gdx")
+for (i in c("level", "marginal", "lower", "upper", "scale")) {
+  expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues(columns=i))
+}
+
+
 #equation
 m = Container$new()
 e = Equation$new(m, "e", type="eq", records=data.frame())
@@ -3492,6 +3723,13 @@ m1 = Container$new("partial_scalar_equation.gdx")
 for (i in c("level", "marginal", "lower", "upper", "scale")) {
   expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
 }
+
+m$write("partial_scalar_equation.gdx", mode="string")
+m1 = Container$new("partial_scalar_equation.gdx")
+for (i in c("level", "marginal", "lower", "upper", "scale")) {
+  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
+}
+
 
 #variable partial column
 m = Container$new()
@@ -3512,6 +3750,14 @@ for (i in c("level", "lower", "upper", "scale")) {
   expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
 }
 expect_equal(m1["e"]$records[["marginal"]], 10)
+
+m$write("partial_scalar_equation.gdx", mode="string")
+m1 = Container$new("partial_scalar_equation.gdx")
+for (i in c("level", "lower", "upper", "scale")) {
+  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
+}
+expect_equal(m1["e"]$records[["marginal"]], 10)
+
 }
 )
 
@@ -3803,7 +4049,6 @@ expect_equal(levels(e$records[, 1]), c("i1","i2","i3"))
 
 # dataframe with no rows still have column names and factors
 test_that("test_num_134", {
-library(gamstransfer)
 m = Container$new()
 i = Set$new(m, "i", records=paste0("i", 1:3))
 p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
@@ -3825,6 +4070,42 @@ m = Container$new("foo.gdx")
 
 expect_equal(m$getUELs(), c("i1","i2","i3"))
 
+
+m = Container$new()
+i = Set$new(m, "i", records=paste0("i", 1:3))
+p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
+expect_true(is.factor(p$records[,1]))
+expect_equal(colnames(p$records), "i")
+expect_equal(levels(p$records[, 1]), c("i1","i2","i3"))
+m$write("gt.gdx", symbols="p", mode="string")
+
+system2(command="gdxdump", args=
+"gt.gdx uelTable=foo",
+stdout = "foo.gms")
+
+system2(command="gams", args=
+"foo.gms gdx=foo.gdx lo=0",
+stdout = FALSE)
+
+m = Container$new("foo.gdx")
+
+expect_equal(m$getUELs(), c("i1","i2","i3"))
 }
 )
 
+# mapped write
+test_that("test_num_135", {
+m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
+expect_error(m$write("gt.gdx", mode = 1))
+m$write("gt.gdx", mode = "string")
+ms = Container$new("gt.gdx")
+m$write("gt.gdx", mode = "mapped")
+mm = Container$new("gt.gdx")
+expect_true(ms$equals(mm))
+
+m = Container$new()
+m$read(testthat::test_path("testdata", "trnsport.gdx"), records=FALSE)
+m$write("gt.gdx", mode="mapped")
+m$write("gt.gdx", mode="string")
+
+})
