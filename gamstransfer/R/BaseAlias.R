@@ -43,17 +43,17 @@
     #' an alias for
     initialize = function(container=NULL, name=NULL) {
       self$.requiresStateCheck = TRUE
-      self$refContainer = container
+      self$container = container
       self$name = name
-      refcontainer = self$refContainer
-      refcontainer[name] = self
+      # container = self$container
+      container[name] = self
       self$.gams_type = .gdxSymbolTypes()[["GMS_DT_ALIAS"]]
       self$.gams_subtype = 1
     }
   ),
 
   active = list(
-    refContainer = function(ref_container_input) {
+    container = function(ref_container_input) {
       if (missing(ref_container_input)) {
         return(private$.ref_container)
       }
@@ -66,8 +66,8 @@
         if (!inherits(ref_container_input, "Container")) {
           stop("Symbol 'container' must be type Container\n")
         }
-        if (is.null(self$refContainer)){
-          if (!identical(self$refContainer, ref_container_input)) {
+        if (is.null(self$container)){
+          if (!identical(self$container, ref_container_input)) {
             self$.requiresStateCheck = TRUE
           }
           private$.ref_container = ref_container_input
@@ -84,7 +84,7 @@
         return(private$.name)
       }
       else {
-        private$.testRefContainer()
+        private$.testContainer()
         if (!is.character(name_input)) {
           stop("GAMS symbol 'name' must be type chracter\n")
         }
@@ -94,7 +94,7 @@
           " max is ", private$symbolMaxLength, " characters"))
         }
 
-        if (self$refContainer$hasSymbols(name_input)) {
+        if (self$container$hasSymbols(name_input)) {
           stop(paste0("A symbol with the name ", name_input, 
           " already exists in the container\n"))
         }
@@ -115,8 +115,8 @@
   ),
 
   private = list(
-    .testRefContainer = function() {
-      if (!inherits(self$refContainer, "Container")) {
+    .testContainer = function() {
+      if (!inherits(self$container, "Container")) {
         stop("UniverseAlias/Alias is no longer referring a Container object\n")
       }
     },
@@ -132,7 +132,7 @@
 
       if (is.null(destination[self$name])){
         # symbol doesn't exist in the destination container
-        destination$read(self$refContainer, self$name)
+        destination$read(self$container, self$name)
         return(NULL)
       }
       else {

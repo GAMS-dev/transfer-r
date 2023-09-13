@@ -320,8 +320,8 @@ Container <- R6::R6Class (
             "isSingleton",
             "domain",
             "domainType",
-            "dim",
-            "numberRecs",
+            "dimension",
+            "numberRecords",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -397,8 +397,8 @@ Container <- R6::R6Class (
             "isSingleton",
             "domain",
             "domainType",
-            "dim",
-            "numberRecs",
+            "dimension",
+            "numberRecords",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -456,19 +456,15 @@ Container <- R6::R6Class (
 
       colNames = list(
             "name",
-            "isScalar",
             "domain",
             "domainType",
-            "dim",
-            "numRecs",
-            "minValue",
-            "meanValue",
-            "maxValue",
+            "dimension",
+            "numberRecords",
+            "min",
+            "mean",
+            "max",
             "whereMin",
             "whereMax",
-            "countEps",
-            "countNa",
-            "countUndef",
             "sparsity"
             )
       df = data.frame(matrix(NA, nrow = 
@@ -480,7 +476,6 @@ Container <- R6::R6Class (
         if (any(self$listParameters() == i)) {
           symDescription = list(
             i,
-            self[i]$isScalar,
             paste(self[i]$domainNames, sep = "", collapse = " "),
             self[i]$domainType,
             self[i]$dimension,
@@ -490,9 +485,6 @@ Container <- R6::R6Class (
             self[i]$getMaxValue("value"),
             self[i]$whereMin("value"),
             self[i]$whereMax("value"),
-            self[i]$countEps("value"),
-            self[i]$countNA("value"),
-            self[i]$countUndef("value"),
             self[i]$getSparsity()
           )
           rowCount = rowCount + 1
@@ -531,19 +523,13 @@ Container <- R6::R6Class (
             "type",
             "domain",
             "domainType",
-            "dim",
-            "numRecs",
+            "dimension",
+            "numberRecords",
             "sparsity",
             "minLevel",
             "meanLevel",
             "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
+            "whereMaxAbsLevel"
             )
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
@@ -563,13 +549,7 @@ Container <- R6::R6Class (
             self[i]$getMinValue("level"),
             self[i]$getMeanValue("level"),
             self[i]$getMaxValue("level"),
-            self[i]$whereMaxAbs("level"),
-            self[i]$countEps("level"),
-            self[i]$getMinValue("marginal"),
-            self[i]$getMeanValue("marginal"),
-            self[i]$getMaxValue("marginal"),
-            self[i]$whereMaxAbs("marginal"),
-            self[i]$countEps("marginal")
+            self[i]$whereMaxAbs("level")
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -607,19 +587,13 @@ Container <- R6::R6Class (
             "type",
             "domain",
             "domainType",
-            "dim",
-            "numRecs",
+            "dimension",
+            "numberRecords",
             "sparsity",
             "minLevel",
             "meanLevel",
             "maxLevel",
-            "whereMaxAbsLevel",
-            "countEpsLevel",
-            "minMarginal",
-            "meanMarginal",
-            "maxMarginal",
-            "whereMaxAbsMarginal",
-            "countEpsMarginal"
+            "whereMaxAbsLevel"
             )
       df = data.frame(matrix(NA, nrow = 
       length(symbols), ncol = length(colNames)))
@@ -639,13 +613,7 @@ Container <- R6::R6Class (
             self[i]$getMinValue("level"),
             self[i]$getMeanValue("level"),
             self[i]$getMaxValue("level"),
-            self[i]$whereMaxAbs("level"),
-            self[i]$countEps("level"),
-            self[i]$getMinValue("marginal"),
-            self[i]$getMeanValue("marginal"),
-            self[i]$getMaxValue("marginal"),
-            self[i]$whereMaxAbs("marginal"),
-            self[i]$countEps("marginal")
+            self[i]$whereMaxAbs("level")
           )
           rowCount = rowCount + 1
           df[rowCount, ] = symDescription
@@ -659,6 +627,27 @@ Container <- R6::R6Class (
       else {
         return(NULL)
       }
+    },
+
+
+    getSets = function(isValid = NULL) {
+      return(self$getSymbols(self$listSets(isValid)))
+    },
+
+    getParameters = function(isValid = NULL) {
+      return(self$getSymbols(self$listParameters(isValid)))
+    },
+
+    getVariables = function(isValid = NULL) {
+      return(self$getSymbols(self$listVariables(isValid)))
+    },
+
+    getEquations = function(isValid = NULL) {
+      return(self$getSymbols(self$listEquations(isValid)))
+    },
+
+    getAliases = function(isValid = NULL) {
+      return(self$getSymbols(self$listAliases(isValid)))
     },
 
     #' @description main method to read loadFrom, can be provided 
@@ -705,31 +694,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description provides a universe for all symbols
-    getUniverseSet = function() {
-      uni = c()
-      for (i in self$listSymbols(isValid = TRUE)) {
-        if (!is.null(self[i]$records)) {
-          if (self[i]$dimension > 0) {
-            df = self[i]$records[, (1:self[i]$dimension)]
-            if (is.factor(df)) {
-              uni = append(uni, levels(df))
-            }
-            else {
-              uni = append(uni, c(t(df)))
-            }
-          }
-        }
-      }
-
-      if (length(uni) != 0) {
-        return(unique(uni))
-      }
-      else {
-        return(NULL)
-      }
-    },
-
     #' @description removes symbols from the Container
     #' @param symbols a string specifying the symbol name or a list of symbols 
     #' to be removed from the container
@@ -750,7 +714,7 @@ Container <- R6::R6Class (
       setOrAliasObj = symbols[setOrAliasBool]
 
       lapply(symbols, function(sym) {
-        sym$refContainer <- NULL
+        sym$container <- NULL
         sym$.requiresStateCheck <- TRUE
         self$data$remove(sym$name)
         self$.lc_data$remove(tolower(sym$name))
@@ -1207,6 +1171,8 @@ Container <- R6::R6Class (
         mode_int = 2
       }
       isempty = (length(self$listSymbols()) == 0)
+      enable = NA
+
       if (!isempty) {
         if (is.null(symbols)) {
           symbols = unlist(self$data$keys())
@@ -1236,33 +1202,10 @@ Container <- R6::R6Class (
         if (private$isValidSymbolOrder() == FALSE) {
           self$reorderSymbols()
         }
-
-        if (is.null(uelPriority)) {
-          reorder = NULL
-          is_uel_priority = FALSE
-        }
-        else {
-          universe = self$getUniverseSet()
-          if ((is.null(universe)) ||
-          (!setequal(intersect(uelPriority, universe), uelPriority))) {
-            stop(paste0("uelPriority must be a subset of the universe, check ",
-            "spelling of an element in uelPriority? Also check ",
-            "getUniverseSet() method for the assumed Universe Set.\n"))
-          }
-
-          reorder = uelPriority
-          reorder = append(reorder, universe)
-          reorder = unlist(unique(reorder))
-          is_uel_priority = TRUE
-        }
       }
-      else {
-        is_uel_priority = FALSE
-        enable = NA
-        reorder = NULL
-      }
+
       CPP_gdxWriteSuper(self, enable,
-      writeTo, reorder, compress, mode_int)
+      writeTo, uelPriority, compress, mode_int)
     },
 
     #' @description reorder symbols in order to avoid domain violations
@@ -1532,6 +1475,13 @@ Container <- R6::R6Class (
       for (s in symbols) {
         s$copy(destination, overwrite)
       }
+    },
+
+    summary = function() {
+      return(list(
+        systemDirectory = self$systemDirectory,
+        numberSymbols = length(self$listSymbols())
+      ))
     }
 
   ),
@@ -1865,9 +1815,9 @@ Container <- R6::R6Class (
 
         # make sure that all symbols reference the correct Container instance
         lapply(symbols, function(n) {
-          if (!identical(self, n$refContainer)) {
+          if (!identical(self, n$container)) {
             stop(paste0("Symbol ", self$name, " has a broken container ",
-            "reference. Update symbol reference with <symbol>$refContainer ",
+            "reference. Update symbol reference with <symbol>$container ",
             "= <new_container>\n"))
           }
           })

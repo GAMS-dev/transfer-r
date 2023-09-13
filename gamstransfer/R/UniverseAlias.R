@@ -12,7 +12,7 @@
 #' @field name name of symbol
 #' @field numberRecords 	number of symbol records
 #' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
+#' @field container reference to the Container that the symbol belongs to
 #' @field summary output a list of only the metadata
 UniverseAlias <- R6Class(
   "UniverseAlias",
@@ -41,7 +41,7 @@ UniverseAlias <- R6Class(
 
     getUELs = function(ignoreUnused = FALSE) {
       if (self$isValid()) {
-        return(self$refContainer$getUELs(ignoreUnused = ignoreUnused))
+        return(self$container$getUELs(ignoreUnused = ignoreUnused))
       }
       else {
         return(NULL)
@@ -165,7 +165,7 @@ UniverseAlias <- R6Class(
 
     records = function(records_input) {
       if (!self$isValid()) return(NULL)
-      df = data.frame(self$refContainer$getUELs())
+      df = data.frame(self$container$getUELs())
       colnames(df) = "uni"
       return(df)
     },
@@ -195,12 +195,8 @@ UniverseAlias <- R6Class(
     summary = function() {
     return(list(
       "name" = self$name,
-      "aliasWith_name" = self$aliasWith,
-      "domainNames" = self$domainNames,
-      "dimension" = self$dimension,
       "description" = self$description,
-      "numberRecords" = self$numberRecords,
-      "domainType" = self$domainType
+      "aliasWith" = self$aliasWith
     ))
     }
   ),
@@ -213,12 +209,12 @@ UniverseAlias <- R6Class(
 
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
-        super$.testRefContainer()
+        super$.testContainer()
       }
     },
 
     .testParentSet = function() {
-      if (!self$refContainer$hasSymbols(self$aliasWith$name)) {
+      if (!self$container$hasSymbols(self$aliasWith$name)) {
         stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
         self$name, " is no longer in the container and cannot ",
         "be referenced\n"))

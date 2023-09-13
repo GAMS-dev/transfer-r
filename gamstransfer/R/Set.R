@@ -13,7 +13,7 @@
 #' @field name name of symbol
 #' @field numberRecords 	number of symbol records
 #' @field records the main symbol records
-#' @field refContainer reference to the Container that the symbol belongs to
+#' @field container reference to the Container that the symbol belongs to
 #' @field summary output a list of only the metadata
 Set <- R6Class(
   "Set",
@@ -158,13 +158,12 @@ Set <- R6Class(
     summary = function() {
       return(list(
         "name" = self$name,
-        "isSingleton" = self$isSingleton,
-        "domainObjects" = self$domain,
-        "domainNames" = self$domainNames,
-        "dimension" = self$dimension,
         "description" = self$description,
-        "numberRecords" = self$numberRecords,
-        "domainType" = self$domainType
+        "isSingleton" = self$isSingleton,
+        "domain" = self$domainNames,
+        "domainType" = self$domainType,
+        "dimension" = self$dimension,
+        "numberRecords" = self$numberRecords
       ))
     }
   ),
