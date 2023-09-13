@@ -4101,7 +4101,7 @@ expect_equal(length(m$listSymbols()), 0)
 )
 
 # get* methods
-test_that("test_num_135", {
+test_that("test_num_137", {
 m = Container$new(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
 
 expect_equal(m$getSymbols(m$listSets()), m$getSets())
