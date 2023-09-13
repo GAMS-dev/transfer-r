@@ -1,10 +1,26 @@
-GAMS Transfer R
+GAMS Transfer R v2.6.0
 ==================
 - bug fix in registering unused UELs when not all symbols from the container are written to a GDX file
-- Breaking: Following `Container` methods do not support `list` input for `symbols` argument: `describeSets`, `describeAliases`, `describeParameters`, `describeVariables`, `describeEquations`, `read`, `removeSymbols`, `getSymbols`.
+- Breaking: Following `Container` methods do not support `list` input for `symbols` argument: `describeSets`, `describeAliases`, `describeParameters`, `describeVariables`, `describeEquations`, `read`, `removeSymbols`, `getSymbols`. Use `vector` inputs instead.
 - Breaking: `types` argument in the `Container` methods `listVariables` and `listEquations` does not support the input of type `list`. Use `vector` inputs instead.
 - Breaking: `uelPriority` argument in the `Container` method `write` does not support the input of type `list`. Use `vector` inputs instead.
 - `Container` method `write` now supports `mapped` write mode with the help of new argument `mode`
+- Breaking: removed `getUniverseSet` method from `Container`. Use `getUELs` instead.
+- Symbol `field` `refContainer` is renamed to `container`.
+- bug fix in failed `Symbol` constructor call resulting in symbol being added to the `Container`
+- The output of `describe*` `Container` methods has been improved for clarity.
+- `summary` field for `Symbol` objects is refined for clarity.
+- `Container` objects now have a `summary` field.
+- New convenience methods for `Container` objects: `getSets`, `getAliases`, `getParameters`, `getVariables`, and `getEquations`.
+
+GAMS Transfer R v2.4.0
+==================
+- bug fix in read for `Variable` and `Equation` classes where the `lower` and `upper` attributes were interchanged.
+
+GAMS Transfer R v2.2.0
+==================
+- fixed bug with library unload upon read or write
+- performance improvement in setting records for symbols
 
 GAMS Transfer R v2.0.0
 ==================
