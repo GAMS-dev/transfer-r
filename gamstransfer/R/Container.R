@@ -1171,6 +1171,8 @@ Container <- R6::R6Class (
         mode_int = 2
       }
       isempty = (length(self$listSymbols()) == 0)
+      enable = NA
+
       if (!isempty) {
         if (is.null(symbols)) {
           symbols = unlist(self$data$keys())
@@ -1200,33 +1202,10 @@ Container <- R6::R6Class (
         if (private$isValidSymbolOrder() == FALSE) {
           self$reorderSymbols()
         }
-
-        if (is.null(uelPriority)) {
-          reorder = NULL
-          is_uel_priority = FALSE
-        }
-        else {
-          universe = self$getUELs()
-          if ((is.null(universe)) ||
-          (!setequal(intersect(uelPriority, universe), uelPriority))) {
-            stop(paste0("uelPriority must be a subset of the universe, check ",
-            "spelling of an element in uelPriority? Also check ",
-            "getUELs() method for the assumed Universe Set.\n"))
-          }
-
-          reorder = uelPriority
-          reorder = append(reorder, universe)
-          reorder = unlist(unique(reorder))
-          is_uel_priority = TRUE
-        }
       }
-      else {
-        is_uel_priority = FALSE
-        enable = NA
-        reorder = NULL
-      }
+
       CPP_gdxWriteSuper(self, enable,
-      writeTo, reorder, compress, mode_int)
+      writeTo, uelPriority, compress, mode_int)
     },
 
     #' @description reorder symbols in order to avoid domain violations

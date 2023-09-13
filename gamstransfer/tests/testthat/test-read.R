@@ -3142,6 +3142,19 @@ m = Container$new()
 expect_true(is.null(m$write("empty.gdx")))
 expect_true(is.null(m$write("empty.gdx", mode="string")))
 
+# write empty gdx with uelPriority
+m$write("gt.gdx", uelPriority = c("i1","i2","i3"))
+
+system2(command="gdxdump", args=
+"gt.gdx uelTable=foo",
+stdout = "foo.gms")
+
+system2(command="gams", args=
+"foo.gms gdx=foo.gdx lo=0",
+stdout = FALSE)
+
+m = Container$new("foo.gdx")
+expect_equal(m$getUELs(), c("i1","i2","i3"))
 }
 )
 
