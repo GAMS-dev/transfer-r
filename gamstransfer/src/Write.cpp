@@ -350,8 +350,6 @@ bool compress, int mode) {
     // get default values
     if (varType != GMS_DT_SET) {
       List default_values = symname["defaultValues"];
-      // Function default_val_fun = symname[".getDefaultValues"];
-      // List default_values = default_val_fun();
       for (int d = 0; d < n_attr; d++) {
          mysym_info.default_values[d] = default_values[d];
       }
