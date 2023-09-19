@@ -296,14 +296,13 @@ Parameter <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
-    },
-
-    .getDefaultValues = function(columns=NULL) {
-      return(0)
     }
   ),
 
   active = list(
+    defaultValues = function() {
+      return(private$.getDefaultValues())
+    },
     isScalar = function() {
       return(self$dimension == 0)
     },
@@ -317,6 +316,12 @@ Parameter <- R6Class(
         "dimension" = self$dimension,
         "numberRecords" = self$numberRecords
       ))
+    }
+  ),
+
+private = list(
+      .getDefaultValues = function(columns=NULL) {
+      return(0)
     }
   )
 )

@@ -52,8 +52,14 @@ Container <- R6::R6Class (
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
 
       if (is.null(systemDirectory)) {
-        self$systemDirectory = find_gams()
-
+          sysDirPath = find_gams()
+          if (is.null(sysDirPath)) {
+            stop("Could not find a GAMS installation in the environment ", 
+            "variable `PATH`. Specify the GAMS system ",
+            "directory via the Container constructor argument ",
+             "`systemDirectory`\n")
+          }
+        self$systemDirectory = sysDirPath
       }
       else {
         if (R.utils::isAbsolutePath(systemDirectory)) {

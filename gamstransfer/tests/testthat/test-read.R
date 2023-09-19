@@ -3534,7 +3534,7 @@ test_that("test_num_126", {
     expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["e"]$records), 6)
     for (i in c("level", "marginal", "lower", "upper", "scale")) {
-      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues(columns=i)))
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
     }
 
     m$write("partial_equation.gdx", mode="string")
@@ -3544,7 +3544,7 @@ test_that("test_num_126", {
     expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["e"]$records), 6)
     for (i in c("level", "marginal", "lower", "upper", "scale")) {
-      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues(columns=i)))
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
     }
   }
 
@@ -3563,7 +3563,7 @@ test_that("test_num_126", {
     expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["v"]$records), 6)
     for (i in c("level", "marginal", "lower", "upper", "scale")) {
-      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$.getDefaultValues(columns=i)))
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$defaultValues[[i]]))
     }
 
     m$write("partial_variable.gdx", mode="string")
@@ -3573,7 +3573,7 @@ test_that("test_num_126", {
     expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["v"]$records), 6)
     for (i in c("level", "marginal", "lower", "upper", "scale")) {
-      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$.getDefaultValues(columns=i)))
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$defaultValues[[i]]))
     }
   }
 
@@ -3646,7 +3646,7 @@ test_that("test_num_126", {
     expect_equal(length(m1["e"]$records), 6)
 
     for (i in c("level", "lower", "upper", "scale")) {
-      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$.getDefaultValues(columns=i)))
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
     }
     expect_equal(m1["e"]$records[,"marginal"], replicate(m["e"]$numberRecords, 10))
 
@@ -3674,7 +3674,7 @@ test_that("test_num_126", {
     expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["v"]$records), 6)
     for (i in c("level", "lower", "upper", "scale")) {
-      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$.getDefaultValues(columns=i)))
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$defaultValues[[i]]))
     }
     expect_equal(m1["v"]$records[,"marginal"], replicate(m["v"]$numberRecords, 10))
 
@@ -3701,13 +3701,13 @@ v = Variable$new(m, "v", records=data.frame())
 m$write("partial_scalar_variable.gdx")
 m1 = Container$new("partial_scalar_variable.gdx")
 for (i in c("level", "marginal", "lower", "upper", "scale")) {
-  expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues(columns=i))
+  expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
 }
 
 m$write("partial_scalar_variable.gdx", mode="string")
 m1 = Container$new("partial_scalar_variable.gdx")
 for (i in c("level", "marginal", "lower", "upper", "scale")) {
-  expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues(columns=i))
+  expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
 }
 
 
@@ -3717,13 +3717,13 @@ e = Equation$new(m, "e", type="eq", records=data.frame())
 m$write("partial_scalar_equation.gdx")
 m1 = Container$new("partial_scalar_equation.gdx")
 for (i in c("level", "marginal", "lower", "upper", "scale")) {
-  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
+  expect_equal(m1["e"]$records[[i]], m["e"]$defaultValues[[i]])
 }
 
 m$write("partial_scalar_equation.gdx", mode="string")
 m1 = Container$new("partial_scalar_equation.gdx")
 for (i in c("level", "marginal", "lower", "upper", "scale")) {
-  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
+  expect_equal(m1["e"]$records[[i]], m["e"]$defaultValues[[i]])
 }
 
 
@@ -3733,7 +3733,7 @@ v = Variable$new(m, "v", records=data.frame(marginal=10))
 m$write("partial_scalar_variable.gdx")
 m1 = Container$new("partial_scalar_variable.gdx")
 for (i in c("level", "lower", "upper", "scale")) {
-  expect_equal(m1["v"]$records[[i]], m["v"]$.getDefaultValues(columns=i))
+  expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
 }
 expect_equal(m1["v"]$records[["marginal"]], 10)
 
@@ -3743,14 +3743,14 @@ e = Equation$new(m, "e", type="eq", records=data.frame(marginal=10))
 m$write("partial_scalar_equation.gdx")
 m1 = Container$new("partial_scalar_equation.gdx")
 for (i in c("level", "lower", "upper", "scale")) {
-  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
+  expect_equal(m1["e"]$records[[i]], m["e"]$defaultValues[[i]])
 }
 expect_equal(m1["e"]$records[["marginal"]], 10)
 
 m$write("partial_scalar_equation.gdx", mode="string")
 m1 = Container$new("partial_scalar_equation.gdx")
 for (i in c("level", "lower", "upper", "scale")) {
-  expect_equal(m1["e"]$records[[i]], m["e"]$.getDefaultValues(columns=i))
+  expect_equal(m1["e"]$records[[i]], m["e"]$defaultValues[[i]])
 }
 expect_equal(m1["e"]$records[["marginal"]], 10)
 

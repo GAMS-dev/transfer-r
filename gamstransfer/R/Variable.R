@@ -402,28 +402,15 @@ Variable <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$type = self$type
-    },
-
-    .getDefaultValues = function(columns=NULL) {
-      if (is.null(columns)) {
-        columns = private$.attr()
-      }
-
-      if (length(columns) == 1) {
-        return(private$.default_values[[self$type]][[columns]])
-      }
-      else {
-        def_vals = unlist(lapply(columns, function(c) { 
-          return(private$.default_values[[self$type]][[c]]) }), 
-          use.names=FALSE)
-        names(def_vals) = columns
-        return(def_vals)
-      }
     }
 
   ),
 
   active = list(
+    defaultValues = function() {
+      return(private$.getDefaultValues())
+    },
+
     isScalar = function() {
       return(self$dimension == 0)
     },
@@ -531,6 +518,23 @@ Variable <- R6Class(
           "upper" = SpecialValues$POSINF,
           "scale" = 1.0
       )
-    )
+    ),
+
+    .getDefaultValues = function(columns=NULL) {
+      if (is.null(columns)) {
+        columns = private$.attr()
+      }
+
+      if (length(columns) == 1) {
+        return(private$.default_values[[self$type]][[columns]])
+      }
+      else {
+        def_vals = unlist(lapply(columns, function(c) { 
+          return(private$.default_values[[self$type]][[c]]) }), 
+          use.names=FALSE)
+        names(def_vals) = columns
+        return(def_vals)
+      }
+    }
   )
   )
