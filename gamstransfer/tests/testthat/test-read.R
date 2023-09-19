@@ -4124,3 +4124,16 @@ expect_equal(m$getSymbols(m$listVariables()), m$getVariables())
 expect_equal(m$getSymbols(m$listEquations()), m$getEquations())
 }
 )
+
+# get* methods
+test_that("test_num_138", {
+m = Container$new()
+a = Parameter$new(m, "a", c("*","*"), records=data.frame(i=c("i1","i2"), j=c("j1","j2"), val=1:2))
+a$setUELs(c("new","i1","i2"), 1)
+expect_equal(a$getUELs(1), c("new","i1","i2"))
+expect_error(a$toDense())
+a$reorderUELs()
+expect_equal(a$getUELs(1), c("i1","i2","new"))
+}
+)
+
