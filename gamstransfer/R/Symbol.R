@@ -423,7 +423,7 @@
       if (is.null(uels)) {
         unique_used = unique(private$.records[, d])
         unused_uels = setdiff(levels(private$.records[, d]), unique_used)
-        uels = c(as.character(unique_used), unused_uels)
+        uel_levels = c(as.character(unique_used), unused_uels)
       }
       else {
         if ((length(uels) != length(levels(private$.records[, d])))) {
@@ -436,8 +436,9 @@
             "contain all uels that need to be reordered"))
           }
         }
+        uel_levels = uels
       }
-      private$.records[, d] = factor(private$.records[, d], levels=uels)
+      private$.records[, d] = factor(private$.records[, d], levels=uel_levels)
     }
   },
 
@@ -918,7 +919,16 @@
 
     }
     else {
+
+      if (all())
       idx = lapply(1:self$dimension, function(d) {
+        unique_recs = unique(as.character(self$records[ ,1]))
+        if (!all(unique_recs == self$getUELs(d)[1:length(unique_recs)])) {
+          stop(paste0("Cannot create dense array because the order of the ", 
+          "symbol UELs from symbol records does not match the data order.",
+          "Hint: unused UELs may be affecting the order. The users can ",
+          "reorder UELs by calling ", self$name, "$reorderUELs()\n"))
+        }
         return(as.numeric(factor(self$records[,d], 
         levels = levels(self$records[, d]))) )
       })

@@ -18,6 +18,7 @@ GAMS Transfer R v2.6.0
 - bug fix in the Symbol method `equals` where identical domain symbols exist in different containers
 - `uelPriority` argument in write does not have to be a subset of the universe set. Users can register any UELs using the `uelPriority` argument.
 - new field `defaultValues` for symbols of type `Parameter`, `Variable`, and `Equation`.
+- bug fix in symbol `reorderUELs` and `toDense` method for symbols with `relaxed domain`.
 
 GAMS Transfer R v2.4.0
 ==================
