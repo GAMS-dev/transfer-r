@@ -423,7 +423,7 @@
       if (is.null(uels)) {
         unique_used = unique(private$.records[, d])
         unused_uels = setdiff(levels(private$.records[, d]), unique_used)
-        uels = c(as.character(unique_used), unused_uels)
+        uel_levels = c(as.character(unique_used), unused_uels)
       }
       else {
         if ((length(uels) != length(levels(private$.records[, d])))) {
@@ -436,8 +436,9 @@
             "contain all uels that need to be reordered"))
           }
         }
+        uel_levels = uels
       }
-      private$.records[, d] = factor(private$.records[, d], levels=uels)
+      private$.records[, d] = factor(private$.records[, d], levels=uel_levels)
     }
   },
 
