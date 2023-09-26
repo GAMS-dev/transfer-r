@@ -26,6 +26,6 @@
 # Minimum required GAMS Distribution version, which
 # is the latest official GAMS release.
 GAMS_DISTRIB_MAJOR=44
-GAMS_DISTRIB_MINOR=1
-GAMS_DISTRIB_GOLD=1
+GAMS_DISTRIB_MINOR=4
+GAMS_DISTRIB_GOLD=0
 

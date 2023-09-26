@@ -1,8 +1,8 @@
 Package: gamstransfer
 Type: Package
 Title: A package to maintain GAMS data outside a GAMS script
-Version: 2.0
-Date: 2023-07-06
+Version: 2.6
+Date: 2023-09-25
 Author: Atharv Bhosekar
 Maintainer: Atharv Bhosekar <abhosekar@gams.com>
 Description: GAMS Transfer is a package to maintain GAMS data outside a GAMS
@@ -24,7 +24,7 @@ Description: GAMS Transfer is a package to maintain GAMS data outside a GAMS
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.6), R6 (>= 2.5.1), R.utils (>= 2.11.0), collections(>= 0.3.6)
 LinkingTo: Rcpp
-Suggests: 
+Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.1.1
