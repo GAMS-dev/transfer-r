@@ -29,7 +29,7 @@ CPP_getGDXSetTypeSubtype <- function() {
     .Call(`_gamstransfer_CPP_getGDXSetTypeSubtype`)
 }
 
-CPP_gdxWriteSuper <- function(container, enable, fileName, uel_priority_, compress, mode) {
-    invisible(.Call(`_gamstransfer_CPP_gdxWriteSuper`, container, enable, fileName, uel_priority_, compress, mode))
+CPP_gdxWrite <- function(container, enable, fileName, uel_priority_, compress, mode) {
+    invisible(.Call(`_gamstransfer_CPP_gdxWrite`, container, enable, fileName, uel_priority_, compress, mode))
 }
 

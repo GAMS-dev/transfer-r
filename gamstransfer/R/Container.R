@@ -1210,7 +1210,7 @@ Container <- R6::R6Class (
         }
       }
 
-      CPP_gdxWriteSuper(self, enable,
+      CPP_gdxWrite(self, enable,
       writeTo, uelPriority, compress, mode_int)
     },
 

@@ -28,3 +28,24 @@ class gt_gdx
 
     }
 };
+
+// struct contains symbol info and missing attributes to 
+// populate default values
+class sym_info
+{
+  public:
+    std::string name;
+    int dim, type, subtype, sym_nr;
+    std::string* domain, domain_type;
+    std::string description;
+    bool missing_attributes[5] = {false};
+    DataFrame* records;
+
+    sym_info() {
+      domain = new std::string[dim];
+    }
+
+    ~sym_info() {
+      delete[] domain;
+    }
+};
