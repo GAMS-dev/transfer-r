@@ -7,7 +7,14 @@ stages:
   - package
   - release
 
+include:
+  - project: 'devel/ciscripts'
+    file: .install-jobs.yml
+  - project: 'devel/ciscripts'
+    file: .shared-vars.yml
+
 variables:
+  extends: .shared-variables
   GIT_SUBMODULE_STRATEGY: recursive
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/gams_transfer_r/${CI_COMMIT_TAG}/"
   MACHINES_CONTAINER_REG:
@@ -15,117 +22,37 @@ variables:
       description: "URL to the container registry of the machines repository"
   PF_CUSTOM_BRANCH:
       value: "0"
-      description: "Name of custom branch, or X.Y.Z for published distribution, or 0 if version is specified in text file with lines GAMS_DISTRIB_MAJOR=X, GAMS_DISTRIB_MINOR=Y, GAMS_DISTRIB_GOLD=Z"
-  PF_BUILDS_WWW_PATH:
-      value: $BUILDS_WWW_PATH
-      description: "URL path prefix for builds server"
-  PF_BUILDS_SSH_PORT:
-      value: $BUILDS_SSH_PORT
-      description: "Port used for SSH connection to builds server"
-  PF_BUILDS_SSH_SERVER:
-      value: $BUILDS_SSH_SERVER
-      description: "URL of the build server"
-  PF_BUILDS_SSH_USER:
-      value: $BUILDS_SSH_USER
-      description: "Username used for SSH connection to builds server"
-  PF_GAMS_LICENSE:
-      value: $GAMS_LICENSE
-      description: "GAMS license string used for testing"
+      description: "Name of custom branch, or X.Y.Z for published distribution, or 0 if version is specified in text file"
+
+#============================================================================================================
 
 fetch-ci-scripts:
-  stage: fetch-scripts
-  only:
-    - merge_requests
-    - main
-    - tags
-  tags: [linux]
-  dependencies: []
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [ "" ]
-  script:
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/ciscripts.git scripts-repo
-    - cp -R scripts-repo/ci .
-  artifacts:
-    name: ci-scripts
-    expire_in: 2 hours
-    paths: [ci/*]
+  only: [merge_requests, main, tags]
 
 install-gamsdist-leg:
-  stage: install-gams
-  only:
-    - merge_requests
-    - main
-    - tags
-  tags: [linux]
-  dependencies: [fetch-ci-scripts]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
-  script:
-    - python3 ci/fetch_gams.py fetch_and_install_leg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - /cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`/gams
-    - python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-  artifacts:
-    name: leg-gmsdirpath
-    expire_in: 15 minutes
-    paths: [mygmsdir.tmp]
+  extends: .install-gams-leg
+  only: [merge_requests, main, tags]
 
 install-gamsdist-deg:
-  stage: install-gams
-  only:
-    - merge_requests
-    - main
-    - tags
-  when: on_success
-  tags: [macos]
-  dependencies: [fetch-ci-scripts]
-  script:
-    - python3 ci/fetch_gams.py fetch_and_install_deg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - $HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`/gams
+  extends: .install-gams-deg
+  only: [merge_requests, main, tags]
 
 install-gamsdist-arm64:
-  stage: install-gams
-  only:
-    - merge_requests
-    - main
-    - tags
-  when: on_success
-  tags: [macos-arm64]
-  dependencies: [fetch-ci-scripts]
-  script:
-    - python3 ci/fetch_gams.py fetch_and_install_dac $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - $HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`/gams
+  extends: .install-gams-dac
+  only: [merge_requests, main, tags]
 
 install-gamsdist-wei:
-  stage: install-gams
-  when: on_success
-  only:
-    - merge_requests
-    - main
-    - tags
-  tags: [windows]
-  dependencies: [fetch-ci-scripts]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-  script:
-    - python ci/fetch_gams.py fetch_and_install_wei $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - python ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
-    - $gmsdirname = Get-Content mygmsdir.tmp -Raw
-    - Invoke-Expression "& 'C:\\Cache\\gams-installs\\$gmsdirname\\gams.exe'"
-  artifacts:
-    name: wei-gmsdirpath
-    expire_in: 15 minutes
-    paths: [mygmsdir.tmp]
+  extends: .install-gams-wei
+  only: [merge_requests, main, tags]
+
+#============================================================================================================
 
 image_linux:
     stage: images
-    tags:
-        - linux
+    tags: [linux]
     image:
         name: docker:latest
-    services:
-        - docker:dind
+    services: [docker:dind]
     variables:
         DOCKER_TLS_CERTDIR: "/certs"
     before_script:
@@ -144,8 +71,7 @@ image_linux:
 
 image_windows:
   stage: images
-  tags:
-    - windows-shell
+  tags: [windows-shell]
   script:
     - docker build -t $CI_REGISTRY_IMAGE/windows/builder images/windows
     - docker push $CI_REGISTRY_IMAGE/windows/builder
@@ -156,11 +82,11 @@ image_windows:
       when: manual
       allow_failure: true
 
+#============================================================================================================
 
 build_r_linux_binary:
     stage: build
-    tags:
-        - linux
+    tags: [linux]
     needs: [install-gamsdist-leg]
     image: 
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
@@ -168,20 +94,15 @@ build_r_linux_binary:
         - R CMD INSTALL gamstransfer --build
         - mkdir binary
         - mv gamstransfer_*.tar.gz binary/gamstransfer_r_linux.tar.gz
-    only:
-        - merge_requests
-        - main
-        - tags
+    only: [merge_requests, main, tags]
     artifacts:
         name: gamstransfer_r_linux
-        paths:
-            - binary
+        paths: [binary]
         expire_in: 1 day
 
 build_r_source:
     stage: build
-    tags:
-        - linux
+    tags: [linux]
     needs: [install-gamsdist-leg]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
@@ -189,10 +110,7 @@ build_r_source:
         - R CMD build gamstransfer
         - mkdir source
         - mv gamstransfer_*.tar.gz source/gamstransfer_r.tar.gz
-    only:
-        - merge_requests
-        - main
-        - tags
+    only: [merge_requests, main, tags]
     artifacts:
         name: gamstransfer_r
         paths:
@@ -201,17 +119,13 @@ build_r_source:
 
 build_r_macos:
     stage: build
-    tags:
-        - macos
+    tags: [macos]
     needs: [install-gamsdist-deg]
     script:
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos.tgz
-    only:
-        - merge_requests
-        - main
-        - tags
+    only: [merge_requests, main, tags]
     artifacts:
         name: gams_transfer_r_macos
         paths: [gamstransfer_r_macos.tgz]
@@ -219,17 +133,13 @@ build_r_macos:
 
 build_r_macos_arm64:
     stage: build
-    tags:
-        - macos-arm64
+    tags: [macos-arm64]
     needs: [install-gamsdist-arm64]
     script:
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos_arm64.tgz
-    only:
-        - merge_requests
-        - main
-        - tags
+    only: [merge_requests, main, tags]
     artifacts:
         name: gams_transfer_r_macos_arm64
         paths: [gamstransfer_r_macos_arm64.tgz]
@@ -245,67 +155,54 @@ build_r_windows:
         - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD build gamstransfer
         - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD INSTALL gamstransfer --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
-    only:
-        - merge_requests
-        - main
-        - tags
+    only: [merge_requests, main, tags]
     artifacts:
         name: gams_transfer_r_windows
         paths: [gamstransfer_r_windows.zip]
         expire_in: 1 day
 
+#============================================================================================================
+
 test_r_linux:
     stage: test
-    tags:
-        - linux
+    tags: [linux]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
-        - PATH=/cache/gams-installs/`cat mygmsdir.tmp`:$PATH
+        - PATH=/cache/gams-installs/`cat gams_folder_leg.txt`:$PATH
         - echo $PATH
         - R CMD check ./gamstransfer --no-manual --no-tests
         - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
         - Rscript -e "testthat::test_dir('gamstransfer/tests')"
-    needs: [fetch-ci-scripts,install-gamsdist-leg,build_r_linux_binary,build_r_source]
-    only:
-        - merge_requests
-        - main
-        - tags
+    needs: [install-gamsdist-leg,build_r_linux_binary,build_r_source]
+    only: [merge_requests, main, tags]
 
 test_r_macos:
     stage: test
-    tags:
-        - macos
+    tags: [macos]
     script:
-        - PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`:$PATH
-        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`:$DYLD_LIBRARY_PATH
+        - PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$PATH
+        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD check ./gamstransfer --no-manual
-    needs: [fetch-ci-scripts,install-gamsdist-deg,build_r_macos,build_r_source]
-    only:
-        - merge_requests
-        - main
-        - tags
+    needs: [install-gamsdist-deg,build_r_macos,build_r_source]
+    only: [merge_requests, main, tags]
 
 test_r_macos_arm64:
     stage: test
-    tags:
-        - macos-arm64
+    tags: [macos-arm64]
     script:
-        - PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`:$PATH
-        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`python3 ci/fetch_gams.py version $PF_CUSTOM_BRANCH $SSH_KEY_PORTING`:$DYLD_LIBRARY_PATH
+        - PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$PATH
+        - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD check ./gamstransfer --no-manual
-    needs: [fetch-ci-scripts,install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
-    only:
-        - merge_requests
-        - main
-        - tags
+    needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
+    only: [merge_requests, main, tags]
 
 test_r_windows:
     stage: test
     tags: [windows]
-    needs: [fetch-ci-scripts,install-gamsdist-wei,build_r_windows,build_r_source]
+    needs: [install-gamsdist-wei,build_r_windows,build_r_source]
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
@@ -316,15 +213,13 @@ test_r_windows:
         - mv gamstransfer_r_windows.zip gamstransfer.zip
         - Rscript -e "install.packages('gamstransfer.zip', type='binary')"; $null
         - C:\'Program Files'\R\R-4.2.1\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
-    only:
-        - merge_requests
-        - main
-        - tags
+    only: [merge_requests, main, tags]
+
+#============================================================================================================
 
 package:
     stage: package
-    tags:
-        - linux
+    tags: [linux]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
@@ -343,13 +238,13 @@ package:
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos.tgz ${PACKAGE_REGISTRY_URL}
         - |
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r_macos_arm64.tgz ${PACKAGE_REGISTRY_URL}
-    only:
-        - tags
+    only: [tags]
+
+#============================================================================================================
 
 release_job:
     stage: release
-    tags:
-        - linux
+    tags: [linux]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
@@ -365,5 +260,4 @@ release_job:
                 --assets-link "{\"name\":\"gamstransfer_r_windows.zip\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_windows.zip\"}" \
                 --assets-link "{\"name\":\"gamstransfer_r_macos.tgz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_macos.tgz\"}" \
                 --assets-link "{\"name\":\"gamstransfer_r_macos_arm64.tgz\",\"url\":\"${PACKAGE_REGISTRY_URL}gamstransfer_r_macos_arm64.tgz\"}"
-    only:
-        - tags
+    only: [tags]
