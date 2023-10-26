@@ -45,7 +45,7 @@ DataFrame df, int mode) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
-  int rc;
+  int rc, iDummy;
   char gdx_err_msg[GMS_SSSIZE], Msg[GMS_SSSIZE];
 
   std::string rec_name;
@@ -108,8 +108,8 @@ DataFrame df, int mode) {
     StringVector s(mysym_info.dim);
     if (mode != 1) {
       for (int i = 0; i < mysym_info.dim; i++) {
-        if (!gdxUMUelGet(PGX, gdx_uel_index[i], Msg, NULL)) {
-          stop("readInternal:gdxUMUelGet GDX error(gdxUMUelGet)");
+        if (!gdxUMUelGet(PGX, gdx_uel_index[i], Msg, &iDummy)) {
+          stop("WriteData:gdxUMUelGet GDX error(gdxUMUelGet)");
         }
         s[i] = Msg;
       }
@@ -120,7 +120,6 @@ DataFrame df, int mode) {
       }
     }
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
-
     rec_name = rec_name + mysym_info.name;
     rec_name = rec_name + "(";
     for (int i = 0; i < mysym_info.dim; i++)
@@ -129,7 +128,6 @@ DataFrame df, int mode) {
            rec_name = rec_name + ",";
         rec_name = rec_name + s[i];
     }
-
     rec_name = rec_name + ")";
 
     if (mode == 1) {
@@ -138,6 +136,7 @@ DataFrame df, int mode) {
     else {
       stop("WriteData:gdxDataWriteMap GDX error in record %s:%s", rec_name, gdx_err_msg );
     }
+
   }
 
   return;
@@ -184,7 +183,6 @@ bool compress, int mode) {
 
   gt_gdx gdxobj;
   gdxobj.init_library(mysysDir.c_str());
-
   /* open */
   if (!compress) {
     rc = gdxOpenWrite(gdxobj.gdx, myFileName.c_str(), "GAMS Transfer", &ErrNr);
@@ -203,7 +201,6 @@ bool compress, int mode) {
   sVals[GMS_SVIDX_UNDEF] = R_NaN;
   sVals[GMS_SVIDX_PINF] = R_PosInf;
   sVals[GMS_SVIDX_MINF] = R_NegInf;
-
   rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
   if (!rc) stop("CPP_gdxWriteSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
   // register UELs
@@ -219,7 +216,6 @@ bool compress, int mode) {
       if (!rc) stop("Error registering UEL: %s", myUEL);
     }
   }
-
   if (!gdxUELRegisterDone(gdxobj.gdx))
     stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
   DataFrame df;
@@ -336,7 +332,6 @@ bool compress, int mode) {
       delete[] uel_map;
     continue;
     }
-
     int n_attr;
     if (varType == GMS_DT_PAR) {
       n_attr = 1;
@@ -471,6 +466,7 @@ bool compress, int mode) {
             WriteData(gdxobj.gdx, mysym_info, names, 0, rec_vals(i, _), "", df, mode);
           }
           else {
+
             WriteData(gdxobj.gdx, mysym_info, "", uel_ids, rec_vals(i, _), "",df, mode);
           }
         }

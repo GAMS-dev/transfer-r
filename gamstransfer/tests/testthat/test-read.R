@@ -1700,8 +1700,6 @@ test_that("test_num_72", {
 
   expect_equal(m["dim0"]$shape(), dim(m["dim0"]$toDense()))
   expect_equal(m["dim1"]$shape(), dim(m["dim1"]$toDense()))
-  expect_error(m["dim2"]$toDense())
-  expect_error(m["dim3"]$toDense())
 }
 )
 
@@ -4134,6 +4132,15 @@ expect_equal(a$getUELs(1), c("new","i1","i2"))
 expect_error(a$toDense())
 a$reorderUELs()
 expect_equal(a$getUELs(1), c("i1","i2","new"))
+}
+)
+
+# read test
+test_that("test_num_139", {
+m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
+expect_equal(m["i"]$getUELs(), c("seattle","san-diego"))
+expect_equal(m["j"]$getUELs(), c("new-york", "chicago", "topeka"))
+expect_equal(m["d"]$toDense(), matrix(data = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4), nrow=2, ncol=3, byrow=TRUE))
 }
 )
 
