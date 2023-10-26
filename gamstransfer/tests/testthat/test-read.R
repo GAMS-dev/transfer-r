@@ -4144,3 +4144,16 @@ expect_equal(m["d"]$toDense(), matrix(data = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4), nr
 }
 )
 
+# getUELs for NULL records
+test_that("test_num_139", {
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+d = Parameter$new(m, "p", domain=c(i, j), 
+      records=data.frame(i=c("i1","i2","i3"), 
+      j=c("j1","j2","j3"), val=1:3))
+dv = d$getDomainViolations()
+expect_equal(length(dv), 2)
+}
+)
+

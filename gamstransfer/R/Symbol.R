@@ -305,6 +305,7 @@
 
   getUELs = function(dimension=NULL, codes=NULL, ignoreUnused = FALSE) {
     if (self$dimension == 0) return(c())
+    if (is.null(self$records)) return(NULL)
     if (is.null(dimension)) {
       if (!is.null(codes)) {
         stop("User must specify `dimension` if retrieving UELs with the ",
