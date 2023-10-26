@@ -2,6 +2,7 @@ GAMS Transfer R
 ==================
 - bug fix in reading symbols with unused UELs
 - bug fix in `getUELs` method with `unusedUELs` argument when the symbol has `NULL` records
+- squashed a build warning
 
 GAMS Transfer R v2.6.0
 ==================

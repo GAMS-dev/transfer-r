@@ -266,7 +266,8 @@ bool compress, int mode) {
       df_is_null =  true;
     }
     df = symname["records"];
-    int ncols, nrows;
+    int ncols =0;
+    int nrows;
     std::string expltxt;
     List domainstr;
     if (Dim != 0) {
