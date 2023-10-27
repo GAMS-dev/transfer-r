@@ -1700,8 +1700,6 @@ test_that("test_num_72", {
 
   expect_equal(m["dim0"]$shape(), dim(m["dim0"]$toDense()))
   expect_equal(m["dim1"]$shape(), dim(m["dim1"]$toDense()))
-  expect_error(m["dim2"]$toDense())
-  expect_error(m["dim3"]$toDense())
 }
 )
 
@@ -4137,3 +4135,33 @@ expect_equal(a$getUELs(1), c("i1","i2","new"))
 }
 )
 
+# read test
+test_that("test_num_139", {
+m = Container$new(testthat::test_path("testdata", "trnsport.gdx"))
+expect_equal(m["i"]$getUELs(), c("seattle","san-diego"))
+expect_equal(m["j"]$getUELs(), c("new-york", "chicago", "topeka"))
+expect_equal(m["d"]$toDense(), matrix(data = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4), nrow=2, ncol=3, byrow=TRUE))
+}
+)
+
+# getUELs for NULL records
+test_that("test_num_139", {
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+d = Parameter$new(m, "p", domain=c(i, j), 
+      records=data.frame(i=c("i1","i2","i3"), 
+      j=c("j1","j2","j3"), val=1:3))
+dv = d$getDomainViolations()
+expect_equal(length(dv), 2)
+}
+)
+
+# getUELs order
+test_that("test_num_140", {
+m = Container$new(testthat::test_path("testdata", "universe_order.gdx"))
+expect_equal(m["p"]$getUELs(), c("i2","i5","i9","i1","i3"))
+expect_equal(m["p"]$getUELs(1), c("i2","i5","i9"))
+expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
+}
+)

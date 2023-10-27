@@ -45,7 +45,7 @@ DataFrame df, int mode) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
-  int rc;
+  int rc, iDummy;
   char gdx_err_msg[GMS_SSSIZE], Msg[GMS_SSSIZE];
 
   std::string rec_name;
@@ -108,8 +108,8 @@ DataFrame df, int mode) {
     StringVector s(mysym_info.dim);
     if (mode != 1) {
       for (int i = 0; i < mysym_info.dim; i++) {
-        if (!gdxUMUelGet(PGX, gdx_uel_index[i], Msg, NULL)) {
-          stop("readInternal:gdxUMUelGet GDX error(gdxUMUelGet)");
+        if (!gdxUMUelGet(PGX, gdx_uel_index[i], Msg, &iDummy)) {
+          stop("WriteData:gdxUMUelGet GDX error(gdxUMUelGet)");
         }
         s[i] = Msg;
       }
@@ -270,7 +270,8 @@ bool compress, int mode) {
       df_is_null =  true;
     }
     df = symname["records"];
-    int ncols, nrows;
+    int ncols =0;
+    int nrows;
     std::string expltxt;
     List domainstr;
     if (Dim != 0) {
