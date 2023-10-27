@@ -4157,3 +4157,11 @@ expect_equal(length(dv), 2)
 }
 )
 
+# getUELs order
+test_that("test_num_140", {
+m = Container$new(testthat::test_path("testdata", "universe_order.gdx"))
+expect_equal(m["p"]$getUELs(), c("i2","i5","i9","i1","i3"))
+expect_equal(m["p"]$getUELs(1), c("i2","i5","i9"))
+expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
+}
+)
