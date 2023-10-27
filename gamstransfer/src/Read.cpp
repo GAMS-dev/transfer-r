@@ -230,7 +230,12 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       // change dom_uel_used from true/false to position in the symbol records
       int num_used = 0;
       for (int k = 0; k < all_dom_nrecs[D]; k++) {
+        if (dom_uel_used[D][k] > 0) {
           dom_uel_used[D][k] = num_used++;
+        }
+        else {
+          dom_uel_used[D][k] = -1;
+        }
       }
 
       for (int k = 1; k <= uel_count; k++) {
@@ -242,6 +247,11 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
           }
           used_uels.push_back(Msg);
         }
+      }
+
+      // shift domain indices
+      for (int k = 0; k < nrecs; k++) {
+        indx_matrix(k, D) = dom_uel_used[D][(int) indx_matrix(k, D) - 1] + 1;
       }
 
       // create a factor v
