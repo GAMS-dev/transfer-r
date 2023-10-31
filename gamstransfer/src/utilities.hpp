@@ -36,16 +36,18 @@ class sym_info
   public:
     std::string name;
     int dim, type, subtype, sym_nr;
-    std::string* domain, domain_type;
-    std::string description;
+    std::string* domain;
+    std::string description, domain_type;
     bool missing_attributes[5] = {false};
     DataFrame* records;
 
-    sym_info() {
-      domain = new std::string[dim];
-    }
+    // sym_info() {
+    //   // domain = new std::string[dim];
+    // }
 
     ~sym_info() {
-      delete[] domain;
+      if (dim != 0) {
+        delete[] domain;
+      }
     }
 };

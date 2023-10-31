@@ -244,12 +244,12 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     if (mode == 1) {
       if (!gdxDataWriteStrStart(gdxobj.gdx, info.name.c_str(), 
       info.description.c_str(), info.dim, info.type, info.subtype))
-      stop("CPP_gdxWriteSuper:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart)");
+      stop("gt_write_symbol:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart)");
     }
     else {
       if (!gdxDataWriteMapStart(gdxobj.gdx, info.name.c_str(), 
       info.description.c_str(), info.dim, info.type, info.subtype))
-      stop("CPP_gdxWriteSuper:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart)");
+      stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart)");
     }
 
     for (int D=0; D < info.dim; D++) {
@@ -263,7 +263,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         rc = gdxSymbolSetDomainX(gdxobj.gdx, info.sym_nr, (const char **)domains_ptr);
         if (!rc) {
           gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
-          stop("CPP_gdxWriteSuper:gdxSymbolSetDomain GDX error: %s",Msg);
+          stop("gt_write_symbol:gdxSymbolSetDomain GDX error: %s",Msg);
         }
       }
     }
@@ -271,12 +271,12 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       rc = gdxSymbolSetDomainX(gdxobj.gdx, info.sym_nr, (const char **)domains_ptr);
       if (!rc) {
         gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
-        stop("CPP_gdxWriteSuper:gdxSymbolSetDomainX GDX error: %s",Msg);
+        stop("gt_write_symbol:gdxSymbolSetDomainX GDX error: %s",Msg);
       }
     }
 
     if (!info.records) {
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
       delete[] uel_map;
       return;
     }
@@ -442,7 +442,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
   // get the error count
   if (gdxDataErrorCount(gdxobj.gdx)) {
       gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
-      stop("CPP_gdxWriteSuper:gdxError GDX error for %s: %s", info.name, Msg);
+      stop("gt_write_symbol:gdxError GDX error for %s: %s", info.name, Msg);
   }
 }
 
@@ -511,9 +511,6 @@ bool compress, int mode) {
     std::string expltxt;
     expltxt = Rcpp::as<std::string>(sym_data["description"]);
 
-    // if (varType != GMS_DT_SET) {
-    //   List default_values = sym_data["defaultValues"];
-    // }
     // all object info done
 
     //store object info into sym_info object
@@ -552,11 +549,8 @@ bool compress, int mode) {
 
   CharacterVector sysDir = container["systemDirectory"];
 
-  // std::string myUEL;
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
-  char        Msg[GMS_SSSIZE];
-  int         ErrNr, rc, varType, varSubType;
 
   gt_gdx gdxobj;
   gdxobj.init_library(mysysDir.c_str());
@@ -565,7 +559,6 @@ bool compress, int mode) {
   gt_open_write(gdxobj, myFileName, compress);
   gt_set_special_values(gdxobj);
 
-  // int UELno;
   if (uel_priority_.isNotNull()) {
     std::string uel;
     CharacterVector uel_priority(uel_priority_);
@@ -575,23 +568,41 @@ bool compress, int mode) {
 
   DataFrame df;
   List domain;
-  int Dim, sym_nr;
+  int sym_nr;
   StringVector colString, colElemText;
   NumericVector colDouble;
   sym_nr = 0;
 
   for (int d=0; d < data.length(); d++) {
+
     if (!enable[d]) continue;
+
+    sym_info mysym_info;
     sym_nr++;
     Environment sym_obj = data[d];
 
     // get all data from the object
     std::string sym_name = sym_obj["name"];
-    varType = sym_obj[".gams_type"];
-    varSubType = sym_obj[".gams_subtype"];
+    mysym_info.name = sym_name;
+    mysym_info.type = sym_obj[".gams_type"];
+    mysym_info.dim = sym_obj["dimension"];
+    mysym_info.subtype = sym_obj[".gams_subtype"];
+    mysym_info.description = Rcpp::as<std::string>(sym_obj["description"]);
+    std::string domaintype = sym_obj["domainType"];
+    mysym_info.domain_type = domaintype;
+    mysym_info.sym_nr = sym_nr;
+    List domainstr;
+    if (mysym_info.dim != 0) {
+      domainstr = sym_obj["domainNames"];
+      mysym_info.domain = new std::string[mysym_info.dim];
+    }
+
+    for (int s = 0; s < mysym_info.dim; s++) {
+      mysym_info.domain[s] = Rcpp::as<std::string>(domainstr[s]);
+    }
 
     std::string alias_with;
-    if (varType == GMS_DT_ALIAS) {
+    if (mysym_info.type == GMS_DT_ALIAS) {
       bool isUniverseAlias = sym_obj[".isUniverseAlias"];
       if (isUniverseAlias) {
         alias_with = Rcpp::as<std::string>(sym_obj["aliasWith"]);
@@ -601,11 +612,10 @@ bool compress, int mode) {
         alias_with = Rcpp::as<std::string>(alias_with_env["name"]);
       }
 
-      if (!gdxAddAlias(gdxobj.gdx, sym_name.c_str(), alias_with.c_str()))
-      stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
+      if (!gdxAddAlias(gdxobj.gdx, mysym_info.name.c_str(), alias_with.c_str()))
+      stop("CPP_gdxWrite:gdxAddAlias GDX error (gdxAddAlias)");
       continue;
     }
-    Dim = sym_obj["dimension"];
 
     bool df_is_null;
     df_is_null = false;
@@ -613,34 +623,6 @@ bool compress, int mode) {
       df_is_null =  true;
     }
     df = sym_obj["records"];
-
-    List domainstr;
-    if (Dim != 0) {
-      domainstr = sym_obj["domainNames"];
-    }
-
-    std::string domaintype = sym_obj["domainType"];
-
-    std::string expltxt;
-    expltxt = Rcpp::as<std::string>(sym_obj["description"]);
-
-    // all object info done
-
-    //store object info into sym_info object
-    // todo: remove this step and merge with all the above assignments
-    sym_info mysym_info;
-    mysym_info.name = sym_name;
-    mysym_info.type = varType;
-    mysym_info.dim = Dim;
-    mysym_info.type = varType;
-    mysym_info.subtype = varSubType;
-    mysym_info.description = expltxt;
-    mysym_info.domain_type = domaintype;
-    mysym_info.sym_nr = sym_nr;
-    for (int d = 0; d < mysym_info.dim; d++) {
-      mysym_info.domain[d] = Rcpp::as<std::string>(domainstr[d]);
-    }
-
     if (df_is_null) {
       mysym_info.records = NULL;
     }
