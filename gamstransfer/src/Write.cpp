@@ -144,7 +144,7 @@ void gt_register_uels(gt_gdx& gdxobj, CharacterVector arr, int* uel_id ) {
   int uel_no, N, rc;
   std::string myUEL;
   rc = gdxUELRegisterStrStart(gdxobj.gdx);
-  if (!rc) stop("CPP_gdxWriteSuper:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
+  if (!rc) stop("gt_register_uels:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
 
   N = arr.length();
   for (int i = 0; i < N; i++) {
@@ -157,7 +157,7 @@ void gt_register_uels(gt_gdx& gdxobj, CharacterVector arr, int* uel_id ) {
     }
   }
   if (!gdxUELRegisterDone(gdxobj.gdx))
-    stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
+    stop("gt_register_uels:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
 
 }
 
@@ -165,11 +165,11 @@ void gt_open_write(gt_gdx& gdxobj, std::string filename, bool compress) {
   int rc, err_nr;
   if (!compress) {
     rc = gdxOpenWrite(gdxobj.gdx, filename.c_str(), "GAMS Transfer", &err_nr);
-    if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWrite Error opening the file %s with error code %i", filename, err_nr);
+    if (!rc) stop("gt_open_write:gdxOpenWrite Error opening the file %s with error code %i", filename, err_nr);
   }
   else {
     rc = gdxOpenWriteEx(gdxobj.gdx, filename.c_str(), "GAMS Transfer", 1, &err_nr);
-    if (!rc) stop("CPP_gdxWriteSuper:gdxOpenWriteEx Error opening the file %s with error code %i", filename, err_nr);
+    if (!rc) stop("gt_open_write:gdxOpenWriteEx Error opening the file %s with error code %i", filename, err_nr);
   }
 }
 
@@ -185,7 +185,7 @@ void gt_set_special_values(gt_gdx& gdxobj) {
   sVals[GMS_SVIDX_MINF] = R_NegInf;
 
   rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
-  if (!rc) stop("CPP_gdxWriteSuper:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
+  if (!rc) stop("gt_set_special_values:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
   return;
 }
 
@@ -194,7 +194,7 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
   std::string uel;
 
   rc = gdxUELRegisterStrStart(gdxobj.gdx);
-  if (!rc) stop("CPP_gdxWriteSuper:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
+  if (!rc) stop("gt_register_priority_uels:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
 
   for (int i = 0; i < uel_priority.length(); i++) {
     uel = Rcpp::as<std::string>(uel_priority[i]);
@@ -203,7 +203,7 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
   }
 
   if (!gdxUELRegisterDone(gdxobj.gdx))
-  stop("CPP_gdxWriteSuper:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
+  stop("gt_register_priority_uels:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
 
 }
 
@@ -293,7 +293,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
     if (nrows == 0) {
       if (info.dim != 0 || info.type == GMS_DT_SET) {
-        if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
       }
       else {
         NumericVector dummyvec;
@@ -311,7 +311,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
         WriteData(gdxobj.gdx, info, "", dummyintvec, dummyvec, "", mode);
 
-        if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
       }
     }
     else {
@@ -429,7 +429,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           }
         }
       }
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("CPP_gdxWriteSuper:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
     }
 
     if (mode != 1) {
@@ -452,7 +452,6 @@ bool compress, int mode) {
 // takes list input instead of container input
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
-  int rc;
   gt_gdx gdxobj;
   gdxobj.init_library(mysysDir.c_str());
 
@@ -473,25 +472,27 @@ bool compress, int mode) {
   sym_nr = 0;
   for (int d=0; d < writeList.length(); d++) {
     if (!enable[d]) continue;
+    sym_info mysym_info;
     sym_nr++;
     List sym_data = writeList[d];
 
-    int varType, varSubType;
     // get all data from the object
     std::string sym_name = sym_data["name"];
-    varType = sym_data["type"];
-    varSubType = sym_data["subtype"];
+    mysym_info.name = sym_name;
+    mysym_info.type = sym_data["type"];
+    mysym_info.dim =  sym_data["dimension"];
+    mysym_info.subtype = sym_data["subtype"];
+    mysym_info.description = Rcpp::as<std::string>(sym_data["description"]);
+    std::string domaintype = sym_data["domainType"];
+    mysym_info.domain_type = domaintype;
 
-    if (varType == GMS_DT_ALIAS) {
-      bool isUniverseAlias = sym_data[".isUniverseAlias"];
+    if (mysym_info.type == GMS_DT_ALIAS) {
       std::string alias_with = sym_data["aliasWith"];
 
       if (!gdxAddAlias(gdxobj.gdx, sym_name.c_str(), alias_with.c_str()))
       stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
       continue;
     }
-
-    Dim = sym_data["dimension"];
 
     bool df_is_null;
     df_is_null = false;
@@ -501,29 +502,15 @@ bool compress, int mode) {
 
     df = sym_data["records"];
 
-    List domainstr;
+    CharacterVector domain;
     if (Dim != 0) {
-      domainstr = sym_data["domainNames"];
+      domain = sym_data["domain"];
+      mysym_info.domain = new std::string[mysym_info.dim];
     }
 
-    std::string domaintype = sym_data["domainType"];
-
-    std::string expltxt;
-    expltxt = Rcpp::as<std::string>(sym_data["description"]);
-
-    // all object info done
-
-    //store object info into sym_info object
-    // todo: remove this step and merge with all the above assignments
-    sym_info mysym_info;
-    mysym_info.name = sym_name;
-    mysym_info.type = varType;
-    mysym_info.dim = Dim;
-    mysym_info.type = varType;
-    mysym_info.subtype = varSubType;
-    mysym_info.description = expltxt;
-    mysym_info.domain_type = domaintype;
-    // mysym_info.default_values = default_values;
+    for (int s = 0; s < mysym_info.dim; s++) {
+      mysym_info.domain[s] = Rcpp::as<std::string>(domain[s]);
+    }
 
     if (df_is_null) {
       mysym_info.records = NULL;
@@ -574,7 +561,6 @@ bool compress, int mode) {
   sym_nr = 0;
 
   for (int d=0; d < data.length(); d++) {
-
     if (!enable[d]) continue;
 
     sym_info mysym_info;
