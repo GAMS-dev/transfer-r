@@ -29,11 +29,22 @@ using namespace Rcpp;
 
 #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])
 
+double gt_map_acronyms(std::vector<int> acronyms, double value) {
+for (auto &a:acronyms) {
+    if (value == a * 1e301) {
+      return NA_REAL;
+    }
+}
+return value;
+}
+
+
 void readInternal(gdxHandle_t PGX, int varNr, bool records, 
   List templistAlias,List templist,List &L1, int l1count,
   gdxUelIndex_t gdx_uel_index, gdxValues_t gdx_values,
   gdxStrIndexPtrs_t domains_ptr, 
-  std::map<int, std::map<int, int>> &sym_uel_map, int uel_count) {
+  std::map<int, std::map<int, int>> &sym_uel_map, int uel_count,
+  int n_acronyms, std::vector<int> acronyms) {
     std::vector<double> levels, marginals, lower, upper, scale;
     int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
     domain_type, idx;
@@ -194,18 +205,27 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
             elem_text(rec_nr) = "";
           }
         } else {
-          record_values(rec_nr, 0) = gdx_values[GMS_VAL_LEVEL];
+          if (n_acronyms > 0) {
+            record_values(rec_nr, 0) = gt_map_acronyms(acronyms, gdx_values[GMS_VAL_LEVEL]);
+          }
+          else {
+            record_values(rec_nr, 0) = gdx_values[GMS_VAL_LEVEL];
+          }
         }
         for (int D = 0; D < Dim; D++) {
           indx_matrix(rec_nr, D) = GET_DOM_MAP(D, gdx_uel_index[D]) + 1;
         }
       }
       else if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
-        record_values(rec_nr, 0) = gdx_values[GMS_VAL_LEVEL];
-        record_values(rec_nr, 1) = gdx_values[GMS_VAL_MARGINAL];
-        record_values(rec_nr, 2) = gdx_values[GMS_VAL_LOWER];
-        record_values(rec_nr, 3) = gdx_values[GMS_VAL_UPPER];
-        record_values(rec_nr, 4) = gdx_values[GMS_VAL_SCALE];
+        for (int i = 0; i < 5; i++) {
+          if (n_acronyms > 0) {
+            record_values(rec_nr, i) = gt_map_acronyms(acronyms, gdx_values[i]);
+          }
+          else {
+            record_values(rec_nr, i) = gdx_values[i];
+          }
+        }
+
         for (int D = 0; D < Dim; D++) {
           indx_matrix(rec_nr, D) = GET_DOM_MAP(D, gdx_uel_index[D]) + 1;
         }
@@ -332,23 +352,24 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
 
   gdxFileVersion(gdxobj.gdx, Msg, Producer);
   // check for acronyms
-  int nAcronym;
-  List acronymList;
-  nAcronym = gdxAcronymCount(gdxobj.gdx);
-  if (nAcronym > 0) {
+  int n_acronyms;
+  // List acronymList;
+  n_acronyms = gdxAcronymCount(gdxobj.gdx);
+  std::vector<int> acronyms;
+
+  if (n_acronyms > 0) {
     warning("GDX file contains acronyms. "
           "Acronyms are not supported and are set to GAMS NA.\n");
     int acrID;
-    std::vector<int> acronyms;
-    for (int i=0; i < nAcronym; i++){
+    for (int i=0; i < n_acronyms; i++){
       gdxAcronymGetInfo(gdxobj.gdx, i+1, acrName, Msg, &acrID);
       acronyms.push_back(acrID);
     }
-    acronymList = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
+    // acronymList = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
   }
-  else {
-    acronymList = List::create(_["nAcronyms"]=nAcronym);
-  }
+  // else {
+  //   acronymList = List::create(_["nAcronyms"]=nAcronym);
+  // }
 
   // get symbol count
   if (!gdxSystemInfo(gdxobj.gdx, &symCount, &uel_count))
@@ -377,14 +398,14 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   }
 
   if (symNames_.isNull()) {
-    l1_preallocate_size = symCount + 1;
+    l1_preallocate_size = symCount;
   }
   else {
-    l1_preallocate_size = symNames.size() + 1;
+    l1_preallocate_size = symNames.size();
   }
 
   List L1(l1_preallocate_size);
-  L1[0] = acronymList;
+  // L1[0] = acronymList;
 
   if (symNames_.isNotNull()) {
     for(int symcount=0; symcount < symNames.size(); symcount++) {
@@ -417,13 +438,13 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
 
   }
   int l1count;
-  l1count = 1;
+  l1count = 0;
 
   for (int i=1; i < symCount + 1; i++) {
     if (symNames_.isNotNull() && !sym_enabled.at(i)) continue;
     readInternal(gdxobj.gdx, i, records, templistAlias, 
     templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
-    sym_uel_map, uel_count);
+    sym_uel_map, uel_count, n_acronyms, acronyms);
     l1count ++;
   }
 

@@ -1511,19 +1511,10 @@ Container <- R6::R6Class (
         readlist = CPP_readSuper(symbols, loadFrom, 
         self$systemDirectory, records)
 
-        acronyms = readlist[[1]]
+        symbolsToRead = unlist(lapply(readlist, "[[", 1))
 
-        if (acronyms$nAcronyms == 0) {
-          self$acronyms = acronyms[["acronyms"]]
-        }
-
-        readData = readlist[-1]
-        rm("readlist")
-
-        symbolsToRead = unlist(lapply(readData, "[[", 1))
-
-        # readData only contains symbols to be read
-        for (m in readData) {
+        # readlist only contains symbols to be read
+        for (m in readlist) {
             if (m$name == "*") next
 
             domain = private$.getDomainGDXRead(m, symbolsToRead)
@@ -1594,7 +1585,7 @@ Container <- R6::R6Class (
         }
 
         if (records == TRUE) {
-          for (s in readData) {
+          for (s in readlist) {
             if (is.null(s$records) || inherits(self[s$name], 
             ".BaseAlias")) {
               next
@@ -1623,23 +1614,7 @@ Container <- R6::R6Class (
             columnNames = append(dlabels, common_attr)
             colnames(recs) = columnNames
             self[s$name]$records = recs
-            # self[s$name]$setRecords(recs)
-
-            # map acronyms to NA
-            if (!is.null(self$acronyms)) {
-               if (inherits(self[s$name], c("Parameter", 
-              "Variable", "Equation"))) {
-                records = self[s$name]$records
-                for (a in self$acronyms) {
-                  records[(records 
-                  == a * 1e301)] = SpecialValues[["NA"]]
-                }
-                self[s$name]$records = records
-              }
-            }
           }
-
-          # private$.linkDomainObjects(symbolsToRead)
         }
 
     },

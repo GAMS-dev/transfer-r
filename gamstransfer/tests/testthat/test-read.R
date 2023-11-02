@@ -4165,3 +4165,16 @@ expect_equal(m["p"]$getUELs(1), c("i2","i5","i9"))
 expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
 }
 )
+
+# acronyms
+test_that("test_num_141", {
+  f = function() {
+    return(Container$new(testthat::test_path("testdata", "acronym_test.gdx")))
+  }
+expect_warning(m <- f())
+expect_equal(m["shutdown"]$records[["value"]], replicate(5, as.numeric(NA)))
+expect_equal(m["v"]$records[["level"]], c(1, NA, NA, NA, 2))
+expect_equal(m["e"]$records[["marginal"]], c(1, NA, NA, NA, 2))
+
+}
+)
