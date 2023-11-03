@@ -402,8 +402,22 @@ Variable <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$type = self$type
-    }
+    },
 
+    toList = function() {
+      l = list(
+               type = .gdxSymbolTypes()[["GMS_DT_VAR"]],
+               name= self$name,
+               description = self$description,
+               subtype = self$type,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
+    }
   ),
 
   active = list(

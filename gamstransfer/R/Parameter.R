@@ -296,6 +296,20 @@ Parameter <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
+    },
+
+    toList = function() {
+      l = list(
+               type = .gdxSymbolTypes()[["GMS_DT_PAR"]],
+               name= self$name,
+               description = self$description,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
     }
   ),
 

@@ -39,7 +39,6 @@ Container <- R6::R6Class (
     systemDirectory = NULL,
     data = NULL,
     .lc_data = NULL,
-    acronyms = NULL,
     .requiresStateCheck = NULL,
     #' @description
     #' Create a new container simply by initializing an object.
@@ -71,7 +70,6 @@ Container <- R6::R6Class (
         }
       }
 
-      self$acronyms = list()
       self$data = collections::ordered_dict()
       # another dict for lowercase names to original case
       self$.lc_data = collections::dict()
@@ -1481,6 +1479,12 @@ Container <- R6::R6Class (
       for (s in symbols) {
         s$copy(destination, overwrite)
       }
+    },
+
+    toList = function() {
+      return(lapply(self$getSymbols(), function(s) {
+        return(s$toList())
+      }))
     },
 
     summary = function() {

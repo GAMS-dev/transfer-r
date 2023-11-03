@@ -139,6 +139,21 @@ Set <- R6Class(
 
       newsym$isSingleton = self$isSingleton
       return(invisible(NULL))
+    },
+
+    toList = function() {
+      l = list(
+               type = .gdxSymbolTypes()[["GMS_DT_SET"]],
+               name= self$name,
+               description = self$description,
+               isSingleton = self$subtype,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
     }
   ),
 
