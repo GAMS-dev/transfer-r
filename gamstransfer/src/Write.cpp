@@ -446,6 +446,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
   }
 }
 
+// [[Rcpp::export]]
 void CPP_gdxWriteSuper(List writeList, CharacterVector sysDir, LogicalVector enable,
 CharacterVector fileName, Nullable<CharacterVector> uel_priority_,
 bool compress, int mode) {
