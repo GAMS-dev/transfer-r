@@ -38,18 +38,29 @@ for (auto &a:acronyms) {
 return value;
 }
 
-
 void readInternal(gdxHandle_t PGX, int varNr, bool records, 
-  List templistAlias,List templist,List &L1, int l1count,
-  gdxUelIndex_t gdx_uel_index, gdxValues_t gdx_values,
-  gdxStrIndexPtrs_t domains_ptr, 
+  List &L1, int l1count,
   std::map<int, std::map<int, int>> &sym_uel_map, int uel_count,
   int n_acronyms, std::vector<int> acronyms) {
-    std::vector<double> levels, marginals, lower, upper, scale;
-    int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
-    domain_type, idx;
-    gdxUelIndex_t dom_symid;
-    char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE], buf[GMS_SSSIZE];
+
+  gdxUelIndex_t gdx_uel_index;
+  gdxValues_t gdx_values;
+
+  gdxStrIndexPtrs_t domains_ptr;
+  gdxStrIndex_t domains;
+  GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
+
+// void readInternal(gdxHandle_t PGX, int varNr, bool records, 
+//   List templistAlias,List templist,List &L1, int l1count,
+//   gdxUelIndex_t gdx_uel_index, gdxValues_t gdx_values,
+//   gdxStrIndexPtrs_t domains_ptr, 
+//   std::map<int, std::map<int, int>> &sym_uel_map, int uel_count,
+//   int n_acronyms, std::vector<int> acronyms) {
+  std::vector<double> levels, marginals, lower, upper, scale;
+  int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
+  domain_type, idx;
+  gdxUelIndex_t dom_symid;
+  char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE], buf[GMS_SSSIZE];
 
     std::vector<std::string> domain, index, elemText;
     std::vector<std::vector<std::string>> indices;
@@ -59,6 +70,29 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     // loop over symbols to get metadata
     if (!gdxSymbolInfo(PGX, varNr, symbolID, &Dim, &sym_type))
       stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+
+
+    // initialize empty lists for metadata
+    List sym_list;
+    if (sym_type == GMS_DT_ALIAS) {
+      sym_list =List::create(_["type"] = -1, _["name"] = "",
+      _["aliasWith"] = "");
+    }
+    else if (sym_type == GMS_DT_SET) {
+      sym_list = List::create( _["type"] = -1, _["name"] = "",
+      _["description"]="", _["isSingleton"] = -1, _["domain"]="", _["domainType"]=-1,
+      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
+    }
+    else if (sym_type == GMS_DT_PAR) {
+      sym_list = List::create( _["type"] = -1, _["name"] = "",
+      _["description"]="", _["domain"]="", _["domainType"]=-1,
+      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
+    }
+    else { // var of equ
+      sym_list = List::create( _["type"] = -1, _["name"] = "",
+      _["description"]="", _["subtype"] = -1, _["domain"]="", _["domainType"]=-1,
+      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
+    }
 
     int** dom_uel_used =new int*[Dim];
 
@@ -85,37 +119,44 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
         if (!gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy))
           stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
 
-        if (!gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText))
-          stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
+        // if (!gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText))
+        //   stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
 
-        domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
-        if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
+        // domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
+        // if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
 
-        if (!gdxDataReadRawStart(PGX, subtype, &NrRecs))
-        stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
+        // if (!gdxDataReadRawStart(PGX, subtype, &NrRecs))
+        // stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
       }
-      templistAlias["name"] = symbolID;
-      templistAlias["type"] = sym_type;
-      templistAlias["aliasfor"] = aliasForID;
-      templistAlias["domain"] = domain;
-      templistAlias["subtype"] = parent_set_subtype;
-      templistAlias["expltext"] = explText;
-      templistAlias["domaintype"] = domain_type;
-      templistAlias["numRecs"] = NrRecs;
+      sym_list["name"] = symbolID;
+      sym_list["type"] = sym_type;
+      sym_list["aliasWith"] = aliasForID;
+      // templistAlias["domain"] = domain;
+      // templistAlias["subtype"] = parent_set_subtype;
+      // templistAlias["expltext"] = explText;
+      // templistAlias["domaintype"] = domain_type;
+      // templistAlias["numRecs"] = NrRecs;
 
-      L1[l1count] = clone(templistAlias);
+      L1[l1count] = clone(sym_list);
     }
     else {
-      templist["name"] = symbolID;
-      templist["type"] = sym_type;
-      templist["dimensions"] = Dim;
-      templist["domain"] = domain;
-      templist["subtype"] = subtype;
-      templist["expltext"] = explText;
-      templist["domaintype"] = domain_type;
-      templist["numRecs"] = nrecs;
+      sym_list["name"] = symbolID;
+      sym_list["type"] = sym_type;
+      sym_list["dimension"] = Dim;
+      sym_list["domain"] = domain;
 
-      L1[l1count] = clone(templist);
+      if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
+        sym_list["subtype"] = subtype;
+      }
+      else if (sym_type == GMS_DT_SET) {
+        sym_list["isSingleton"] = subtype;
+      }
+
+      sym_list["description"] = explText;
+      sym_list["domainType"] = domain_type;
+      sym_list["numberRecords"] = nrecs;
+
+      L1[l1count] = clone(sym_list);
     }
 
   // if we just need metadata, stop here and return
@@ -171,12 +212,12 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 
   if (NrRecs == 0) {
     if (sym_type == GMS_DT_ALIAS) {
-      templistAlias["records"] = R_NilValue;
-      L1[l1count] = clone(templistAlias);
+      // templistAlias["records"] = R_NilValue;
+      // L1[l1count] = clone(templistAlias);
     }
     else {
-      templist["records"] = R_NilValue;
-      L1[l1count] = clone(templist);
+      sym_list["records"] = R_NilValue;
+      L1[l1count] = clone(sym_list);
     }
   }
   else {
@@ -302,12 +343,12 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
     df.attr("row.names") = Rcpp::seq(1, NrRecs);
 
     if (sym_type == GMS_DT_ALIAS) {
-      templistAlias["records"]= df;
-      L1[l1count] = clone(templistAlias);
+      // templistAlias["records"]= df;
+      // L1[l1count] = clone(templistAlias);
     }
     else {
-      templist["records"]=df;
-      L1[l1count] = clone(templist);
+      sym_list["records"]=df;
+      L1[l1count] = clone(sym_list);
     }
   }
 
@@ -334,12 +375,12 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   std::string mygdxName = Rcpp::as<std::string>(gdxName);
   std::string mysysDir = Rcpp::as<std::string>(sysDir);
 
-  gdxUelIndex_t gdx_uel_index;
-  gdxValues_t gdx_values;
+  // gdxUelIndex_t gdx_uel_index;
+  // gdxValues_t gdx_values;
 
-  gdxStrIndexPtrs_t domains_ptr;
-  gdxStrIndex_t domains;
-  GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
+  // gdxStrIndexPtrs_t domains_ptr;
+  // gdxStrIndex_t domains;
+  // GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
   int symCount, uel_count;
 
@@ -353,7 +394,6 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   gdxFileVersion(gdxobj.gdx, Msg, Producer);
   // check for acronyms
   int n_acronyms;
-  // List acronymList;
   n_acronyms = gdxAcronymCount(gdxobj.gdx);
   std::vector<int> acronyms;
 
@@ -365,11 +405,7 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
       gdxAcronymGetInfo(gdxobj.gdx, i+1, acrName, Msg, &acrID);
       acronyms.push_back(acrID);
     }
-    // acronymList = List::create(_["nAcronyms"]=nAcronym, _["acronyms"]=acronyms);
   }
-  // else {
-  //   acronymList = List::create(_["nAcronyms"]=nAcronym);
-  // }
 
   // get symbol count
   if (!gdxSystemInfo(gdxobj.gdx, &symCount, &uel_count))
@@ -380,15 +416,16 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   std::map<int, std::map<int, int>> sym_uel_map;
 
   // initialize empty lists for metadata
-  List templist, templistAlias;
-  templistAlias =List::create(_["name"] = "", _["type"] = -1,
-        _["aliasfor"] = "", _["domain"]="", _["subtype"] = 
-        -1, _["expltext"]="", _["domaintype"]=-1,
-        _["numRecs"] = -1, _["records"]=-1);
-  templist = List::create(_["name"] = "", _["type"] = -1, 
-  _["dimensions"]=-1, _["domain"]="", _["subtype"] = -1,
-  _["expltext"]="", _["domaintype"]=-1, _["numRecs"] = -1,
-  _["records"]=-1);
+  // List templist, templistAlias;
+  // templistAlias =List::create(_["type"] = -1, _["name"] = "",
+  // _["aliasWith"] = "");
+  // // templistAlias =List::create(_["name"] = "", _["type"] = -1,
+  // //       _["aliasfor"] = "", _["domain"]="", _["subtype"] =
+  // //       -1, _["expltext"]="", _["domaintype"]=-1,
+  // //       _["numRecs"] = -1, _["records"]=-1);
+  // templist = List::create( _["type"] = -1, _["name"] = "",
+  // _["description"]="", _["subtype"] = -1, _["domain"]="", _["domainType"]=-1,
+  //  _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
 
   int l1_preallocate_size;
   CharacterVector symNames;
@@ -442,9 +479,12 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
 
   for (int i=1; i < symCount + 1; i++) {
     if (symNames_.isNotNull() && !sym_enabled.at(i)) continue;
-    readInternal(gdxobj.gdx, i, records, templistAlias, 
-    templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
+    readInternal(gdxobj.gdx, i, records, L1, l1count,
     sym_uel_map, uel_count, n_acronyms, acronyms);
+
+    // readInternal(gdxobj.gdx, i, records, templistAlias, 
+    // templist, L1, l1count, gdx_uel_index, gdx_values, domains_ptr,
+    // sym_uel_map, uel_count, n_acronyms, acronyms);
     l1count ++;
   }
 
