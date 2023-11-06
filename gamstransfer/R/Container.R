@@ -1595,28 +1595,29 @@ Container <- R6::R6Class (
             }
 
             # recs = data.frame(s$records)
-            recs = s$records
-            common_attr = colnames(recs)[(self[s$name]$dimension+1):length(recs)]
+            # recs = s$records
+            # common_attr = colnames(recs)[(self[s$name]$dimension+1):length(recs)]
 
-            if (self[s$name]$dimension == 0) {
-              dlabels = c()
-            }
-            else {
-              dnames = self[s$name]$domainNames
-              dnames[dnames == "*"] = "uni"
-              is_dup = duplicated(dnames)
+            # if (self[s$name]$dimension == 0) {
+            #   dlabels = c()
+            # }
+            # else {
+            #   dnames = self[s$name]$domainNames
+            #   dnames[dnames == "*"] = "uni"
+            #   is_dup = duplicated(dnames)
 
-              if (any(is_dup)) {
-                dlabels = paste0(dnames, "_", 1:self[s$name]$dimension)
-              }
-              else {
-                dlabels = dnames
-              }
-            }
+            #   if (any(is_dup)) {
+            #     dlabels = paste0(dnames, "_", 1:self[s$name]$dimension)
+            #   }
+            #   else {
+            #     dlabels = dnames
+            #   }
+            # }
 
-            columnNames = append(dlabels, common_attr)
-            colnames(recs) = columnNames
-            self[s$name]$records = recs
+            # columnNames = append(dlabels, common_attr)
+            # colnames(recs) = columnNames
+            # self[s$name]$records = recs
+            self[s$name]$records = s$records;
           }
         }
 

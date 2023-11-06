@@ -56,12 +56,14 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
 //   gdxStrIndexPtrs_t domains_ptr, 
 //   std::map<int, std::map<int, int>> &sym_uel_map, int uel_count,
 //   int n_acronyms, std::vector<int> acronyms) {
-  std::vector<double> levels, marginals, lower, upper, scale;
-  int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
-  domain_type, idx;
-  gdxUelIndex_t dom_symid;
-  char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE], buf[GMS_SSSIZE];
+    std::vector<double> levels, marginals, lower, upper, scale;
+    int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
+    domain_type, idx;
+    gdxUelIndex_t dom_symid;
+    char symbolID[GMS_SSSIZE], Msg[GMS_SSSIZE], buf[GMS_SSSIZE];
 
+    std::string d_col_name;
+    bool is_duplicated;
     std::vector<std::string> domain, index, elemText;
     std::vector<std::vector<std::string>> indices;
     char aliasForID[GMS_SSSIZE], explText[GMS_SSSIZE];
@@ -320,7 +322,27 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       CharacterVector ch = wrap(used_uels);
       v.attr("class") = "factor";
       v.attr("levels") = ch;
-      df[std::to_string(D)] = v;
+
+      // check if domain is duplicated and set domain labels accordingly
+      std::set<std::string> unique_domain(domain.begin(), domain.end());
+      is_duplicated = (unique_domain.size() != domain.size());
+      if (is_duplicated) {
+        if (domain.at(D).compare("*") == 0) {
+          d_col_name = "uni_" + std::to_string(D+1);
+        }
+        else {
+          d_col_name = domain.at(D) + "_" + std::to_string(D+1);
+        }
+      }
+      else {
+        if (domain.at(D).compare("*") == 0) {
+          d_col_name = "uni";
+        }
+        else {
+          d_col_name = domain.at(D);
+        }
+      }
+      df[d_col_name] = v;
       used_uels.clear();
     }
 
