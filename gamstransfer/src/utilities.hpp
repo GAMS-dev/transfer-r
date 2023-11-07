@@ -46,7 +46,7 @@ class sym_info
     // }
 
     ~sym_info() {
-      if (dim != 0) {
+      if (dim != 0 && type != GMS_DT_ALIAS) {
         delete[] domain;
       }
     }
