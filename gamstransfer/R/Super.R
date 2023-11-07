@@ -123,7 +123,7 @@ writeSuper = function(writeList, writeTo, symbols=NULL,
         # }
       }
 
-      CPP_gdxWriteSuper(writeList, enable,
+      CPP_gdxWriteSuper(writeList, systemDirectory, enable,
       writeTo, uelPriority, compress, mode_int)
 
 }
