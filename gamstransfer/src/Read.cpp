@@ -155,7 +155,16 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       }
 
       sym_list["description"] = explText;
-      sym_list["domainType"] = domain_type;
+      if (domain_type == 1) {
+        sym_list["domainType"] = "none";
+      }
+      else if (domain_type == 2) {
+        sym_list["domainType"] = "relaxed";
+      }
+      else {
+        sym_list["domainType"] = "regular";
+      }
+      // sym_list["domainType"] = domain_type;
       sym_list["numberRecords"] = nrecs;
 
       L1[l1count] = clone(sym_list);

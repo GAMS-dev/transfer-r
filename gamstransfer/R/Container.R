@@ -1625,7 +1625,7 @@ Container <- R6::R6Class (
 
     .getDomainGDXRead = function(m, symbolsToRead) {
       if (m$type == .gdxSymbolTypes()[["GMS_DT_ALIAS"]]) return(NULL)
-      if(m$domainType == 1 || m$domainType == 2) {
+      if(m$domainType == "none" || m$domainType == "relaxed") {
         return(m$domain)
       }
       else {
