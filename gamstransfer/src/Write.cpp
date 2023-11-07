@@ -471,6 +471,7 @@ bool compress, int mode) {
   StringVector colString, colElemText;
   NumericVector colDouble;
   sym_nr = 0;
+
   for (int d=0; d < writeList.length(); d++) {
     if (!enable[d]) continue;
     sym_info mysym_info;
@@ -481,19 +482,30 @@ bool compress, int mode) {
     std::string sym_name = sym_data["name"];
     mysym_info.name = sym_name;
     mysym_info.type = sym_data["type"];
-    mysym_info.dim =  sym_data["dimension"];
-    mysym_info.subtype = sym_data["subtype"];
-    mysym_info.description = Rcpp::as<std::string>(sym_data["description"]);
-    std::string domaintype = sym_data["domainType"];
-    mysym_info.domain_type = domaintype;
 
     if (mysym_info.type == GMS_DT_ALIAS) {
       std::string alias_with = sym_data["aliasWith"];
-
       if (!gdxAddAlias(gdxobj.gdx, sym_name.c_str(), alias_with.c_str()))
       stop("CPP_gdxWriteSuper:gdxAddAlias GDX error (gdxAddAlias)");
       continue;
     }
+
+    mysym_info.dim =  sym_data["dimension"];
+
+    if (mysym_info.type == GMS_DT_VAR || mysym_info.type == GMS_DT_EQU) {
+      mysym_info.subtype = sym_data["subtype"];
+    }
+    else if (mysym_info.type == GMS_DT_SET) {
+      mysym_info.subtype = sym_data["isSingleton"];
+    }
+
+    mysym_info.description = Rcpp::as<std::string>(sym_data["description"]);
+
+    std::string domaintype = sym_data["domainType"];
+
+    mysym_info.domain_type = domaintype;
+
+
 
     bool df_is_null;
     df_is_null = false;
@@ -504,7 +516,7 @@ bool compress, int mode) {
     df = sym_data["records"];
 
     CharacterVector domain;
-    if (Dim != 0) {
+    if (mysym_info.dim != 0) {
       domain = sym_data["domain"];
       mysym_info.domain = new std::string[mysym_info.dim];
     }
@@ -521,6 +533,7 @@ bool compress, int mode) {
     }
 
     gt_write_symbol(gdxobj, mysym_info, mode);
+
   }
 
   gdxAutoConvert(gdxobj.gdx, 0);
