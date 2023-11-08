@@ -146,7 +146,7 @@ Set <- R6Class(
                type = .gdxSymbolTypes()[["GMS_DT_SET"]],
                name= self$name,
                description = self$description,
-               isSingleton = self$subtype,
+               isSingleton = self$isSingleton,
                domain = self$domainNames,
                domainType = self$domainType,
                dimension = self$dimension,

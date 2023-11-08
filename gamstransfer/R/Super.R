@@ -19,10 +19,7 @@ readSuper = function(loadFrom, symbols=NULL, records=TRUE, systemDirectory = NUL
         systemDirectory = sysDirPath
     }
     else {
-        if (R.utils::isAbsolutePath(systemDirectory)) {
-            self$systemDirectory = systemDirectory
-        }
-        else {
+        if (!R.utils::isAbsolutePath(systemDirectory)) {
             stop(paste0("must enter valid full (absolute) path to the",
             "GAMS system directory\n"))
         }
