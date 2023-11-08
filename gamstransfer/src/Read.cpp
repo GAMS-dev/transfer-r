@@ -147,8 +147,11 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       sym_list["dimension"] = Dim;
       sym_list["domain"] = domain;
 
-      if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
-        sym_list["subtype"] = subtype;
+      if (sym_type == GMS_DT_VAR) {
+        sym_list["subtype"] = gmsVarTypeText[subtype];
+      }
+      if (sym_type == GMS_DT_EQU) {
+        sym_list["subtype"] = gmsEquTypeText[subtype - GMS_EQU_USERINFO_BASE];
       }
       else if (sym_type == GMS_DT_SET) {
         sym_list["isSingleton"] = subtype;

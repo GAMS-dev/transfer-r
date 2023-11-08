@@ -51,3 +51,13 @@ class sym_info
       }
     }
 };
+
+static const char* const gmsEquTypeText[GMS_EQUTYPE_MAX] = {
+   "eq",
+   "geq",
+   "leq",
+   "nonbinding",
+   "external",
+   "cone",
+   "boolean"
+};
