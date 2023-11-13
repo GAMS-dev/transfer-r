@@ -79,7 +79,7 @@ Equation <- R6Class(
       type = .EquationTypes[[type]]
 
       symtype = .gdxSymbolTypes()[["GMS_DT_EQU"]]
-      symsubtype = .EqTypeSubtype()[[type]]
+      symsubtype = .EqTypeSubtype()[[tolower(type)]]
 
 
       super$initialize(container, name,
@@ -465,7 +465,7 @@ Equation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.EquationTypes == type_input)) {
+        if (!any(.EquationTypes == tolower(type_input))) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
               "1. 'eq', 'E', or 'e' -- equality\n",
               "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
@@ -477,7 +477,7 @@ Equation <- R6Class(
           )))
         }
 
-        private$.type = type_input
+        private$.type = tolower(type_input)
       }
     },
 

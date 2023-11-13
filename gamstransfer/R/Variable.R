@@ -52,7 +52,7 @@ Variable <- R6Class(
       self$type = type
 
       symtype = .gdxSymbolTypes()[["GMS_DT_VAR"]]
-      symsubtype = .VarTypeSubtype()[[type]]
+      symsubtype = .VarTypeSubtype()[[tolower(type)]]
 
       super$initialize(container, name,
                       symtype, symsubtype, 
@@ -434,7 +434,7 @@ Variable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.varTypes == type_input)) {
+        if (!any(.varTypes == tolower(type_input))) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
           " 1. 'binary' \n",
           " 2. 'integer' \n",
@@ -448,7 +448,7 @@ Variable <- R6Class(
           )))
         }
 
-        private$.type = type_input
+        private$.type = tolower(type_input)
       }
     },
 
