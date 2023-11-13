@@ -474,6 +474,7 @@ bool compress, int mode) {
 
   for (int d=0; d < writeList.length(); d++) {
     if (!enable[d]) continue;
+
     sym_info mysym_info;
     sym_nr++;
     List sym_data = writeList[d];
@@ -491,9 +492,15 @@ bool compress, int mode) {
     }
 
     mysym_info.dim =  sym_data["dimension"];
+    std::string subtype_str;
+    if (mysym_info.type == GMS_DT_VAR) {
 
-    if (mysym_info.type == GMS_DT_VAR || mysym_info.type == GMS_DT_EQU) {
-      mysym_info.subtype = sym_data["subtype"];
+      subtype_str = Rcpp::as<std::string>(sym_data["subtype"]);
+      mysym_info.subtype = varTypeText_to_int.at(subtype_str);
+    }
+    else if (mysym_info.type == GMS_DT_EQU) {
+      subtype_str = Rcpp::as<std::string>(sym_data["subtype"]);
+      mysym_info.subtype = equTypeText_to_int.at(subtype_str) + GMS_EQU_USERINFO_BASE;
     }
     else if (mysym_info.type == GMS_DT_SET) {
       mysym_info.subtype = sym_data["isSingleton"];
@@ -504,7 +511,7 @@ bool compress, int mode) {
     std::string domaintype = sym_data["domainType"];
 
     mysym_info.domain_type = domaintype;
-
+    mysym_info.sym_nr = sym_nr;
 
 
     bool df_is_null;
@@ -533,7 +540,6 @@ bool compress, int mode) {
     }
 
     gt_write_symbol(gdxobj, mysym_info, mode);
-
   }
 
   gdxAutoConvert(gdxobj.gdx, 0);
