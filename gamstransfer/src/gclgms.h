@@ -146,16 +146,16 @@ static const char* const gmsGdxTypeText[GMS_DT_MAX] = {
 };
 
 static const char* const gmsVarTypeText[GMS_VARTYPE_MAX] = {
-   "Unknown",
-   "Binary",
-   "Integer",
-   "Positive",
-   "Negative",
-   "Free",
-   "Sos1",
-   "Sos2",
-   "Semicont",
-   "Semiint"
+   "unknown",
+   "binary",
+   "integer",
+   "positive",
+   "negative",
+   "free",
+   "sos1",
+   "sos2",
+   "semicont",
+   "semiint"
 };
 
 static const char* const gmsValTypeText[GMS_VAL_MAX] = {
