@@ -35,7 +35,7 @@ class sym_info
 {
   public:
     std::string name;
-    int dim, type, subtype, sym_nr;
+    int dim, type, sym_nr, subtype;
     std::string* domain;
     std::string description, domain_type;
     bool missing_attributes[5] = {false};
@@ -61,3 +61,15 @@ static const char* const gmsEquTypeText[GMS_EQUTYPE_MAX] = {
    "cone",
    "boolean"
 };
+
+const std::map<std::string, int> varTypeText_to_int
+{{"unknown", 0}, {"binary", 1}, {"integer", 2},
+{"positive", 3}, {"negative", 4},{"free", 5},
+{"sos1", 6}, {"sos2", 7},{"semicont", 8},
+{"semiint", 9}
+};
+
+const std::map<std::string, int> equTypeText_to_int
+{{"eq", 0}, {"geq", 1}, {"leq", 2},
+{"nonbinding", 3}, {"external", 4},{"cone", 5},
+{"boolean", 6}};
