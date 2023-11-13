@@ -140,6 +140,15 @@ UniverseAlias <- R6Class(
       # copy alias
       private$.copy(destination, overwrite)
       return(invisible(NULL))
+    },
+
+    toList = function() {
+      l = list(
+        type = .gdxSymbolTypes()[["GMS_DT_ALIAS"]],
+        name = self$name,
+        aliasWith = "*"
+      )
+      return(l)
     }
   ),
 
