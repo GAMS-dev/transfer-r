@@ -245,7 +245,7 @@ Container <- R6::R6Class (
       }
 
       for (t in types) {
-        if (!any(.varTypes == t)) {
+        if (!any(.varTypes == tolower(t))) {
           stop(paste0("User input unrecognized variable type: ", t, " \n"))
         }
       }
@@ -286,7 +286,7 @@ Container <- R6::R6Class (
       }
 
       for (t in types) {
-        if (is.null(.EquationTypes[[t]])) {
+        if (is.null(.EquationTypes[[tolower(t)]])) {
           stop(paste0("User input unrecognized equation type: ", t, " \n"))
         }
       }
@@ -1458,7 +1458,6 @@ Container <- R6::R6Class (
       }
 
       for (s in self$data$keys()) {
-        print(paste0("name: ", s))
         selfsym = self[s]
         othersym = other[s]
         if (!selfsym$equals(othersym, verbose=verbose)) {
@@ -1508,6 +1507,7 @@ Container <- R6::R6Class (
           }
           else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {
               type = m$subtype
+              if (tolower(type) == "unknown") type = "free"
               # type = which(.VarTypeSubtype() == m$subtype)
               # if (is.integer0(type)) {
               #   type = "free"
@@ -1569,6 +1569,8 @@ Container <- R6::R6Class (
     },
 
     toList = function() {
+      if (length(self$listSymbols()) == 0) return(list())
+
       return(lapply(self$getSymbols(), function(s) {
         return(s$toList())
       }))
