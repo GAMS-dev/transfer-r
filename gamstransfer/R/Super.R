@@ -101,10 +101,10 @@ writeSuper = function(writeList, writeTo, symbols=NULL,
         else {
           enable = replicate(length(writeList), FALSE)
 
-          allSymbols = as.list(1:length(writeList))
-          names(allSymbols) = allSymbols
+          allSymbolsList = as.list(1:length(writeList))
+          names(allSymbolsList) = allSymbols
 
-          allSymDict = collections::dict(allSymbols)
+          allSymDict = collections::dict(allSymbolsList)
 
           idx=unlist(lapply(symbols, function(s) {
             allSymDict$get(s)
