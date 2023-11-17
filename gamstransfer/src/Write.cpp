@@ -482,7 +482,9 @@ bool compress, int mode) {
     // get all data from the object
     std::string sym_name = sym_data["name"];
     mysym_info.name = sym_name;
-    mysym_info.type = sym_data["type"];
+    std::string type_str;
+    type_str = Rcpp::as<std::string>(sym_data["type"]);
+    mysym_info.type = symTypeText_to_int.at(type_str);
 
     if (mysym_info.type == GMS_DT_ALIAS) {
       std::string alias_with = sym_data["aliasWith"];
@@ -590,9 +592,26 @@ bool compress, int mode) {
     // get all data from the object
     std::string sym_name = sym_obj["name"];
     mysym_info.name = sym_name;
-    mysym_info.type = sym_obj[".gams_type"];
+    std::string type_str;
+    CharacterVector class_vec;
+    class_vec = sym_obj.attr("class");
+    type_str = class_vec[0];
+    mysym_info.type = symTypeText_to_int.at(type_str);
     mysym_info.dim = sym_obj["dimension"];
-    mysym_info.subtype = sym_obj[".gams_subtype"];
+
+    std::string subtype_str;
+    if (mysym_info.type == GMS_DT_VAR) {
+      subtype_str = Rcpp::as<std::string>(sym_obj["type"]);
+      mysym_info.subtype = varTypeText_to_int.at(subtype_str);
+    }
+    else if (mysym_info.type == GMS_DT_EQU) {
+      subtype_str = Rcpp::as<std::string>(sym_obj["type"]);
+      mysym_info.subtype = equTypeText_to_int.at(subtype_str) + GMS_EQU_USERINFO_BASE;
+    }
+    else if (mysym_info.type == GMS_DT_SET) {
+      mysym_info.subtype = sym_obj["isSingleton"];
+    }
+
     mysym_info.description = Rcpp::as<std::string>(sym_obj["description"]);
     std::string domaintype = sym_obj["domainType"];
     mysym_info.domain_type = domaintype;

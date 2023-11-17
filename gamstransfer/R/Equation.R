@@ -78,12 +78,7 @@ Equation <- R6Class(
       # call from outside
       type = .EquationTypes[[type]]
 
-      symtype = .gdxSymbolTypes()[["GMS_DT_EQU"]]
-      symsubtype = .EqTypeSubtype()[[tolower(type)]]
-
-
       super$initialize(container, name,
-                      symtype, symsubtype, 
                       domain, description, domainForwarding)
       if (!is.null(records)) {
         self$setRecords(records)
@@ -437,7 +432,7 @@ Equation <- R6Class(
 
     toList = function() {
       l = list(
-               type = .gdxSymbolTypes()[["GMS_DT_EQU"]],
+               type = "Equation",
                name= self$name,
                description = self$description,
                subtype = self$type,

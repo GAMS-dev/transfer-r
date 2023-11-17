@@ -49,13 +49,6 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
   gdxStrIndexPtrs_t domains_ptr;
   gdxStrIndex_t domains;
   GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
-
-// void readInternal(gdxHandle_t PGX, int varNr, bool records, 
-//   List templistAlias,List templist,List &L1, int l1count,
-//   gdxUelIndex_t gdx_uel_index, gdxValues_t gdx_values,
-//   gdxStrIndexPtrs_t domains_ptr, 
-//   std::map<int, std::map<int, int>> &sym_uel_map, int uel_count,
-//   int n_acronyms, std::vector<int> acronyms) {
     std::vector<double> levels, marginals, lower, upper, scale;
     int NrRecs, N, Dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
     domain_type, idx;
@@ -120,30 +113,15 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
         // normal Alias
         if (!gdxSymbolInfo(PGX, subtype, aliasForID, &Dim, &dummy))
           stop("readInternal:gdxSymbolInfo GDX error (gdxSymbolInfo)");
-
-        // if (!gdxSymbolInfoX(PGX, subtype, &nrecs, &parent_set_subtype, explText))
-        //   stop("readInternal:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
-
-        // domain_type = gdxSymbolGetDomainX(PGX, subtype, domains_ptr);
-        // if (!domain_type) stop("readInternal:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
-
-        // if (!gdxDataReadRawStart(PGX, subtype, &NrRecs))
-        // stop("readInternal:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
       }
       sym_list["name"] = symbolID;
-      sym_list["type"] = sym_type;
+      sym_list["type"] = gmsGdxTypeText[sym_type];
       sym_list["aliasWith"] = aliasForID;
-      // templistAlias["domain"] = domain;
-      // templistAlias["subtype"] = parent_set_subtype;
-      // templistAlias["expltext"] = explText;
-      // templistAlias["domaintype"] = domain_type;
-      // templistAlias["numRecs"] = NrRecs;
-
       L1[l1count] = clone(sym_list);
     }
     else {
       sym_list["name"] = symbolID;
-      sym_list["type"] = sym_type;
+      sym_list["type"] = gmsGdxTypeText[sym_type];
       sym_list["dimension"] = Dim;
       sym_list["domain"] = domain;
 
@@ -167,7 +145,6 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
       else {
         sym_list["domainType"] = "regular";
       }
-      // sym_list["domainType"] = domain_type;
       sym_list["numberRecords"] = nrecs;
 
       L1[l1count] = clone(sym_list);
@@ -225,11 +202,7 @@ void readInternal(gdxHandle_t PGX, int varNr, bool records,
   }
 
   if (NrRecs == 0) {
-    if (sym_type == GMS_DT_ALIAS) {
-      // templistAlias["records"] = R_NilValue;
-      // L1[l1count] = clone(templistAlias);
-    }
-    else {
+    if (sym_type != GMS_DT_ALIAS) {
       sym_list["records"] = R_NilValue;
       L1[l1count] = clone(sym_list);
     }

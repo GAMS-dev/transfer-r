@@ -248,7 +248,7 @@ Alias <- R6Class(
         aliasWithName = selt$aliasWith
       }
       l = list(
-        type = .gdxSymbolTypes()[["GMS_DT_ALIAS"]],
+        type = "Alias",
         name = self$name,
         aliasWith = aliasWithName
       )

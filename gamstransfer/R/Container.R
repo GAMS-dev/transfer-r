@@ -1488,13 +1488,13 @@ Container <- R6::R6Class (
       for (m in readlist) {
           if (m$name == "*") next
           domain = private$.getDomainGDXRead(m, symbolsToRead)
-          if (m$type == .gdxSymbolTypes()[["GMS_DT_PAR"]]) {
+          if (m$type == "Parameter") {
             Parameter$new(
               self, m$name, domain,
               domainForwarding=FALSE,
               description = m$description)
           }
-          else if (m$type == .gdxSymbolTypes()[["GMS_DT_SET"]]) {
+          else if (m$type == "Set") {
               Set$new(
               self, m$name, domain, as.logical(m$isSingleton),
               records = NULL,
@@ -1505,22 +1505,15 @@ Container <- R6::R6Class (
                 "GAMS Subtype ", m$isSingleton, "cannot load set ", m$name))
               }
           }
-          else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {
+          else if (m$type == "Variable") {
               type = m$subtype
               if (tolower(type) == "unknown") type = "free"
-              # type = which(.VarTypeSubtype() == m$subtype)
-              # if (is.integer0(type)) {
-              #   type = "free"
-              # }
-              # else {
-              #   type = names(.VarTypeSubtype())[[type]]
-              # }
               Variable$new(
               self, m$name, type, domain,
               domainForwarding = FALSE,
               description = m$description)
           }
-          else if (m$type == .gdxSymbolTypes()[["GMS_DT_EQU"]]) {
+          else if (m$type == "Equation") {
               type = m$subtype
               # type = which(.EqTypeSubtype() == m$subtype)
               # if (is.integer0(type)) {
@@ -1535,7 +1528,7 @@ Container <- R6::R6Class (
               domainForwarding = FALSE,
               description = m$description)
           }
-          else if (m$type == .gdxSymbolTypes()[["GMS_DT_ALIAS"]]) {
+          else if (m$type == "Alias") {
               if (m$aliasWith == "*") {
                 # universe alias
                 UniverseAlias$new(self, m$name)
@@ -1608,7 +1601,7 @@ Container <- R6::R6Class (
     },
 
     .getDomainGDXRead = function(m, symbolsToRead) {
-      if (m$type == .gdxSymbolTypes()[["GMS_DT_ALIAS"]]) return(NULL)
+      if (m$type == "Alias") return(NULL)
       if(m$domainType == "none" || m$domainType == "relaxed") {
         return(m$domain)
       }

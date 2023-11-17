@@ -51,11 +51,7 @@ Variable <- R6Class(
 
       self$type = type
 
-      symtype = .gdxSymbolTypes()[["GMS_DT_VAR"]]
-      symsubtype = .VarTypeSubtype()[[tolower(type)]]
-
       super$initialize(container, name,
-                      symtype, symsubtype, 
                       domain, description, domainForwarding)
 
       if (!is.null(records)) {
@@ -406,7 +402,7 @@ Variable <- R6Class(
 
     toList = function() {
       l = list(
-               type = .gdxSymbolTypes()[["GMS_DT_VAR"]],
+               type = "Variable",
                name= self$name,
                description = self$description,
                subtype = self$type,

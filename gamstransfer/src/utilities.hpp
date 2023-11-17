@@ -62,6 +62,15 @@ static const char* const gmsEquTypeText[GMS_EQUTYPE_MAX] = {
    "boolean"
 };
 
+const std::map<std::string, int> symTypeText_to_int
+{  {"Set", 0},
+   {"Parameter", 1},
+   {"Variable", 2},
+   {"Equation", 3},
+   {"Alias", 4},
+   {"UniverseAlias", 4}
+};
+
 const std::map<std::string, int> varTypeText_to_int
 {{"unknown", 0}, {"binary", 1}, {"integer", 2},
 {"positive", 3}, {"negative", 4},{"free", 5},

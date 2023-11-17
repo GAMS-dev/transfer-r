@@ -5,28 +5,8 @@ CPP_readSuper <- function(symNames_, gdxName, sysDir, records) {
     .Call(`_gamstransfer_CPP_readSuper`, symNames_, gdxName, sysDir, records)
 }
 
-CPP_getGDXSymbolTypes <- function() {
-    .Call(`_gamstransfer_CPP_getGDXSymbolTypes`)
-}
-
-CPP_getGDXVarTypes <- function() {
-    .Call(`_gamstransfer_CPP_getGDXVarTypes`)
-}
-
-CPP_getGDXEqTypes <- function() {
-    .Call(`_gamstransfer_CPP_getGDXEqTypes`)
-}
-
-CPP_getGDXVarTypeSubtype <- function() {
-    .Call(`_gamstransfer_CPP_getGDXVarTypeSubtype`)
-}
-
-CPP_getGDXEqTypeSubtype <- function() {
-    .Call(`_gamstransfer_CPP_getGDXEqTypeSubtype`)
-}
-
-CPP_getGDXSetTypeSubtype <- function() {
-    .Call(`_gamstransfer_CPP_getGDXSetTypeSubtype`)
+CPP_getMaxDim <- function() {
+    .Call(`_gamstransfer_CPP_getMaxDim`)
 }
 
 CPP_gdxWriteSuper <- function(writeList, sysDir, enable, fileName, uel_priority_, compress, mode) {

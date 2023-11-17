@@ -144,7 +144,7 @@ UniverseAlias <- R6Class(
 
     toList = function() {
       l = list(
-        type = .gdxSymbolTypes()[["GMS_DT_ALIAS"]],
+        type = "Alias",
         name = self$name,
         aliasWith = "*"
       )
