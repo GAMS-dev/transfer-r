@@ -11,16 +11,16 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // CPP_readSuper
-List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, CharacterVector sysDir, LogicalVector records);
-RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP recordsSEXP) {
+List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, CharacterVector sysDir, LogicalVector read_records);
+RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP read_recordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type symNames_(symNames_SEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type records(recordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, sysDir, records));
+    Rcpp::traits::input_parameter< LogicalVector >::type read_records(read_recordsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, sysDir, read_records));
     return rcpp_result_gen;
 END_RCPP
 }
