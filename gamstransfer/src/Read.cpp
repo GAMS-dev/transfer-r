@@ -159,7 +159,6 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
   stop("gt_read_symbol:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain)");
 
   std::vector<int> all_dom_nrecs(dim);
-  // int all_dom_nrecs[dim];
   for (int d = 0; d < dim; d++) {
     // get sym info for domain d
     if (!gdxSymbolInfo(PGX, dom_symid[d], buf, &dom_dim, &dom_type))
