@@ -38,13 +38,13 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   std::string rec_name;
   if (mode == 1) {
     GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
-    for (int D=0; D < mysym_info.dim; D++) {
-      strcpy(Indx[D], names[D]);
+    for (int d=0; d < mysym_info.dim; d++) {
+      strcpy(Indx[d], names[d]);
     }
   }
   else {
-    for (int D=0; D < mysym_info.dim; D++) {
-      gdx_uel_index[D] = uel_ids[D];
+    for (int d=0; d < mysym_info.dim; d++) {
+      gdx_uel_index[d] = uel_ids[d];
     }
   }
 
@@ -104,27 +104,27 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   if (!rc) {
     StringVector s(mysym_info.dim);
     if (mode != 1) {
-      for (int i = 0; i < mysym_info.dim; i++) {
-        if (!gdxUMUelGet(PGX, gdx_uel_index[i], Msg, &iDummy)) {
+      for (int d = 0; d < mysym_info.dim; d++) {
+        if (!gdxUMUelGet(PGX, gdx_uel_index[d], Msg, &iDummy)) {
           stop("WriteData:gdxUMUelGet GDX error(gdxUMUelGet)");
         }
-        s[i] = Msg;
+        s[d] = Msg;
       }
     }
     else {
-      for (int i = 0; i < mysym_info.dim; i++) {
-        s[i] = names[i];
+      for (int d = 0; d < mysym_info.dim; d++) {
+        s[d] = names[d];
       }
     }
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
 
     rec_name = rec_name + mysym_info.name;
     rec_name = rec_name + "(";
-    for (int i = 0; i < mysym_info.dim; i++)
+    for (int d = 0; d < mysym_info.dim; d++)
     {
-        if (i > 0)
+        if (d > 0)
            rec_name = rec_name + ",";
-        rec_name = rec_name + s[i];
+        rec_name = rec_name + s[d];
     }
 
     rec_name = rec_name + ")";
@@ -171,22 +171,6 @@ void gt_open_write(gt_gdx& gdxobj, std::string filename, bool compress) {
     rc = gdxOpenWriteEx(gdxobj.gdx, filename.c_str(), "GAMS Transfer", 1, &err_nr);
     if (!rc) stop("gt_open_write:gdxOpenWriteEx Error opening the file %s with error code %i", filename, err_nr);
   }
-}
-
-void gt_set_special_values(gt_gdx& gdxobj) {
-  gdxSVals_t sVals;
-  gdxGetSpecialValues(gdxobj.gdx, sVals);
-  int rc;
-
-  sVals[GMS_SVIDX_NA] = NA_REAL;
-  sVals[GMS_SVIDX_EPS] = -0.0;
-  sVals[GMS_SVIDX_UNDEF] = R_NaN;
-  sVals[GMS_SVIDX_PINF] = R_PosInf;
-  sVals[GMS_SVIDX_MINF] = R_NegInf;
-
-  rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
-  if (!rc) stop("gt_set_special_values:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
-  return;
 }
 
 void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
@@ -252,8 +236,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart)");
     }
 
-    for (int D=0; D < info.dim; D++) {
-      strcpy(domains_ptr[D], info.domain[D].c_str());
+    for (int d=0; d < info.dim; d++) {
+      strcpy(domains_ptr[d], info.domain[d].c_str());
     }
 
     if (info.domain_type == "regular") {
@@ -304,8 +288,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           info.missing_attributes[GMS_VAL_LEVEL] = true;
         }
         else {
-          for (int d = 0; d < n_attr; d++) {
-            info.missing_attributes[d] = true;
+          for (int i = 0; i < n_attr; i++) {
+            info.missing_attributes[i] = true;
           }
         }
 
@@ -387,8 +371,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
             info.missing_attributes[GMS_VAL_LEVEL] = true;
           }
           else {
-            for (int d = 0; d < n_attr; d++) {
-              info.missing_attributes[d] = true;
+            for (int i = 0; i < n_attr; i++) {
+              info.missing_attributes[i] = true;
             }
           }
         }
@@ -467,17 +451,17 @@ bool compress, int mode) {
 
   DataFrame df;
   List domain;
-  int Dim, sym_nr;
+  int sym_nr;
   StringVector colString, colElemText;
   NumericVector colDouble;
   sym_nr = 0;
 
-  for (int d=0; d < writeList.length(); d++) {
-    if (!enable[d]) continue;
+  for (int i=0; i < writeList.length(); i++) {
+    if (!enable[i]) continue;
 
     sym_info mysym_info;
     sym_nr++;
-    List sym_data = writeList[d];
+    List sym_data = writeList[i];
 
     // get all data from the object
     std::string sym_name = sym_data["name"];
@@ -530,8 +514,8 @@ bool compress, int mode) {
       mysym_info.domain = new std::string[mysym_info.dim];
     }
 
-    for (int s = 0; s < mysym_info.dim; s++) {
-      mysym_info.domain[s] = Rcpp::as<std::string>(domain[s]);
+    for (int d = 0; d < mysym_info.dim; d++) {
+      mysym_info.domain[d] = Rcpp::as<std::string>(domain[d]);
     }
 
     if (df_is_null) {
@@ -582,12 +566,12 @@ bool compress, int mode) {
   NumericVector colDouble;
   sym_nr = 0;
 
-  for (int d=0; d < data.length(); d++) {
-    if (!enable[d]) continue;
+  for (int i=0; i < data.length(); i++) {
+    if (!enable[i]) continue;
 
     sym_info mysym_info;
     sym_nr++;
-    Environment sym_obj = data[d];
+    Environment sym_obj = data[i];
 
     // get all data from the object
     std::string sym_name = sym_obj["name"];
@@ -622,8 +606,8 @@ bool compress, int mode) {
       mysym_info.domain = new std::string[mysym_info.dim];
     }
 
-    for (int s = 0; s < mysym_info.dim; s++) {
-      mysym_info.domain[s] = Rcpp::as<std::string>(domainstr[s]);
+    for (int d = 0; d < mysym_info.dim; d++) {
+      mysym_info.domain[d] = Rcpp::as<std::string>(domainstr[d]);
     }
 
     std::string alias_with;
