@@ -24,10 +24,27 @@
 #include <Rcpp.h>
 #include "gdxcc.h"
 #include "gclgms.h"
+#include "utilities.hpp"
 using namespace Rcpp;
 
 // [[Rcpp::export]]
 IntegerVector CPP_getMaxDim() {
   IntegerVector v {GMS_MAX_INDEX_DIM};
   return(v);
+}
+
+void gt_set_special_values(gt_gdx& gdxobj) {
+  gdxSVals_t sVals;
+  gdxGetSpecialValues(gdxobj.gdx, sVals);
+  int rc;
+
+  sVals[GMS_SVIDX_NA] = NA_REAL;
+  sVals[GMS_SVIDX_EPS] = -0.0;
+  sVals[GMS_SVIDX_UNDEF] = R_NaN;
+  sVals[GMS_SVIDX_PINF] = R_PosInf;
+  sVals[GMS_SVIDX_MINF] = R_NegInf;
+
+  rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
+  if (!rc) stop("gt_set_special_values:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
+  return;
 }

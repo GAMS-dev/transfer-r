@@ -41,10 +41,6 @@ class sym_info
     bool missing_attributes[5] = {false};
     DataFrame* records;
 
-    // sym_info() {
-    //   // domain = new std::string[dim];
-    // }
-
     ~sym_info() {
       if (dim != 0 && type != GMS_DT_ALIAS) {
         delete[] domain;
@@ -82,3 +78,5 @@ const std::map<std::string, int> equTypeText_to_int
 {{"eq", 0}, {"geq", 1}, {"leq", 2},
 {"nonbinding", 3}, {"external", 4},{"cone", 5},
 {"boolean", 6}};
+
+void gt_set_special_values(gt_gdx& );
