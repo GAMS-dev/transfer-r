@@ -38,6 +38,8 @@ readSuper = function(loadFrom, symbols=NULL, records=TRUE, systemDirectory = NUL
         # read call here
         readlist = CPP_readSuper(symbols, loadFrom, 
             systemDirectory, records)
+        sym_names = unlist(lapply(readlist, "[[", 2), use.names = FALSE)
+        names(readlist) = sym_names
     }
     else {
         stop(paste0("Argument `loadFrom` must be type character\n"))
