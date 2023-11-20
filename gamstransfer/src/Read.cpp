@@ -131,7 +131,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
         sym_list["subtype"] = gmsEquTypeText[subtype - GMS_EQU_USERINFO_BASE];
       }
       else if (sym_type == GMS_DT_SET) {
-        sym_list["isSingleton"] = subtype;
+        sym_list["isSingleton"] = bool(subtype);
       }
 
       sym_list["description"] = description;

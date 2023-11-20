@@ -1495,15 +1495,15 @@ Container <- R6::R6Class (
               description = m$description)
           }
           else if (m$type == "Set") {
-              Set$new(
-              self, m$name, domain, as.logical(m$isSingleton),
-              records = NULL,
-              domainForwarding=FALSE,
-              m$description)
-              if (m$isSingleton != 0 && m$isSingleton != 1) {
+              if (!is.logical(m$isSingleton)) {
                 stop(paste0("Unknown set classification with ",
                 "GAMS Subtype ", m$isSingleton, "cannot load set ", m$name))
               }
+              Set$new(
+              self, m$name, domain, m$isSingleton,
+              records = NULL,
+              domainForwarding=FALSE,
+              m$description)
           }
           else if (m$type == "Variable") {
               type = m$subtype
