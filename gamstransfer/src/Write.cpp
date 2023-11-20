@@ -467,7 +467,7 @@ bool compress, int mode) {
     std::string sym_name = sym_data["name"];
     mysym_info.name = sym_name;
     std::string type_str;
-    type_str = Rcpp::as<std::string>(sym_data["type"]);
+    type_str = Rcpp::as<std::string>(sym_data["class"]);
     mysym_info.type = symTypeText_to_int.at(type_str);
 
     if (mysym_info.type == GMS_DT_ALIAS) {
@@ -481,11 +481,11 @@ bool compress, int mode) {
     std::string subtype_str;
     if (mysym_info.type == GMS_DT_VAR) {
 
-      subtype_str = Rcpp::as<std::string>(sym_data["subtype"]);
+      subtype_str = Rcpp::as<std::string>(sym_data["type"]);
       mysym_info.subtype = varTypeText_to_int.at(subtype_str);
     }
     else if (mysym_info.type == GMS_DT_EQU) {
-      subtype_str = Rcpp::as<std::string>(sym_data["subtype"]);
+      subtype_str = Rcpp::as<std::string>(sym_data["type"]);
       mysym_info.subtype = equTypeText_to_int.at(subtype_str) + GMS_EQU_USERINFO_BASE;
     }
     else if (mysym_info.type == GMS_DT_SET) {

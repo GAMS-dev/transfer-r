@@ -144,7 +144,7 @@ UniverseAlias <- R6Class(
 
     toList = function() {
       l = list(
-        type = "Alias",
+        class = "Alias",
         name = self$name,
         aliasWith = "*"
       )

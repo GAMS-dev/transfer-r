@@ -1481,54 +1481,57 @@ Container <- R6::R6Class (
       }
     },
 
-    fromList = function(readlist, records=TRUE) {
-      symbolsToRead = unlist(lapply(readlist, "[[", 2))
+    fromList = function(readlist, symbols=NULL, records=TRUE) {
+      if (is.null(symbols)) {
+        symbolsToRead = lapply(readlist, "[[", 2)
+      }
+      else {
+        print("here")
+        if (!is.character(symbols)) {
+          stop("The argument `symbols` must be type character\n")
+        }
+        sym_list = names(readlist)
+        for (s in symbols) {
+          if (!any(s == sym_list)) {
+            stop(paste0("The symbol ", s, "is not in the list being read.\n"))
+          }
+        }
+        symbolsToRead = symbols
+      }
 
       # readlist only contains symbols to be read
       for (m in readlist) {
           if (m$name == "*") next
           domain = private$.getDomainGDXRead(m, symbolsToRead)
-          if (m$type == "Parameter") {
+          if (m$class == "Parameter") {
             Parameter$new(
               self, m$name, domain,
               domainForwarding=FALSE,
               description = m$description)
           }
-          else if (m$type == "Set") {
-              if (!is.logical(m$isSingleton)) {
-                stop(paste0("Unknown set classification with ",
-                "GAMS Subtype ", m$isSingleton, "cannot load set ", m$name))
-              }
+          else if (m$class == "Set") {
               Set$new(
               self, m$name, domain, m$isSingleton,
               records = NULL,
               domainForwarding=FALSE,
               m$description)
           }
-          else if (m$type == "Variable") {
-              type = m$subtype
+          else if (m$class == "Variable") {
+              type = m$type
               if (tolower(type) == "unknown") type = "free"
               Variable$new(
               self, m$name, type, domain,
               domainForwarding = FALSE,
               description = m$description)
           }
-          else if (m$type == "Equation") {
-              type = m$subtype
-              # type = which(.EqTypeSubtype() == m$subtype)
-              # if (is.integer0(type)) {
-              #   type = "eq"
-              # }
-              # else {
-              #   type = names(.EqTypeSubtype())[[type]]
-              # }
-
+          else if (m$class == "Equation") {
+              type = m$type
               Equation$new(
               self, m$name, type, domain,
               domainForwarding = FALSE,
               description = m$description)
           }
-          else if (m$type == "Alias") {
+          else if (m$class == "Alias") {
               if (m$aliasWith == "*") {
                 # universe alias
                 UniverseAlias$new(self, m$name)
@@ -1561,12 +1564,21 @@ Container <- R6::R6Class (
       }
     },
 
-    toList = function() {
+    toList = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$values()
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+
       if (length(self$listSymbols()) == 0) return(list())
 
-      return(lapply(self$getSymbols(), function(s) {
+      l = lapply(self$getSymbols(), function(s) {
         return(s$toList())
-      }))
+      })
+      names(l) = symbols
+      return(l)
     },
 
     summary = function() {
@@ -1597,11 +1609,11 @@ Container <- R6::R6Class (
         readlist = CPP_readSuper(symbols, loadFrom, 
         self$systemDirectory, records)
 
-        self$fromList(readlist, records)
+        self$fromList(readlist, NULL, records=records)
     },
 
     .getDomainGDXRead = function(m, symbolsToRead) {
-      if (m$type == "Alias") return(NULL)
+      if (m$class == "Alias") return(NULL)
       if(m$domainType == "none" || m$domainType == "relaxed") {
         return(m$domain)
       }

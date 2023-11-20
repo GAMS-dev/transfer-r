@@ -134,7 +134,7 @@ Set <- R6Class(
 
     toList = function() {
       l = list(
-               type = "Set",
+               class = "Set",
                name= self$name,
                description = self$description,
                isSingleton = self$isSingleton,

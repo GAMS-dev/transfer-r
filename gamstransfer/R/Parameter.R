@@ -298,7 +298,7 @@ Parameter <- R6Class(
 
     toList = function() {
       l = list(
-               type = "Parameter",
+               class = "Parameter",
                name= self$name,
                description = self$description,
                domain = self$domainNames,

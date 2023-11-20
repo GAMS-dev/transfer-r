@@ -402,10 +402,10 @@ Variable <- R6Class(
 
     toList = function() {
       l = list(
-               type = "Variable",
+               class = "Variable",
                name= self$name,
                description = self$description,
-               subtype = self$type,
+               type = self$type,
                domain = self$domainNames,
                domainType = self$domainType,
                dimension = self$dimension,

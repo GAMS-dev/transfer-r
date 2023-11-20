@@ -248,7 +248,7 @@ Alias <- R6Class(
         aliasWithName = selt$aliasWith
       }
       l = list(
-        type = "Alias",
+        class = "Alias",
         name = self$name,
         aliasWith = aliasWithName
       )

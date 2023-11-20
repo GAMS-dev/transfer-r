@@ -432,10 +432,10 @@ Equation <- R6Class(
 
     toList = function() {
       l = list(
-               type = "Equation",
+               class = "Equation",
                name= self$name,
                description = self$description,
-               subtype = self$type,
+               type = self$type,
                domain = self$domainNames,
                domainType = self$domainType,
                dimension = self$dimension,

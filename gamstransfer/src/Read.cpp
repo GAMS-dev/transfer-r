@@ -70,22 +70,22 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     // initialize empty lists for data
     List sym_list;
     if (sym_type == GMS_DT_ALIAS) {
-      sym_list =List::create(_["type"] = -1, _["name"] = "",
+      sym_list =List::create(_["class"] = -1, _["name"] = "",
       _["aliasWith"] = "");
     }
     else if (sym_type == GMS_DT_SET) {
-      sym_list = List::create( _["type"] = -1, _["name"] = "",
+      sym_list = List::create( _["class"] = -1, _["name"] = "",
       _["description"]="", _["isSingleton"] = -1, _["domain"]="", _["domainType"]=-1,
       _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
     }
     else if (sym_type == GMS_DT_PAR) {
-      sym_list = List::create( _["type"] = -1, _["name"] = "",
+      sym_list = List::create( _["class"] = -1, _["name"] = "",
       _["description"]="", _["domain"]="", _["domainType"]=-1,
       _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
     }
     else { // var of equ
-      sym_list = List::create( _["type"] = -1, _["name"] = "",
-      _["description"]="", _["subtype"] = -1, _["domain"]="", _["domainType"]=-1,
+      sym_list = List::create( _["class"] = -1, _["name"] = "",
+      _["description"]="", _["type"] = -1, _["domain"]="", _["domainType"]=-1,
       _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
     }
 
@@ -114,21 +114,21 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
           stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
       }
       sym_list["name"] = sym_id;
-      sym_list["type"] = gmsGdxTypeText[sym_type];
+      sym_list["class"] = gmsGdxTypeText[sym_type];
       sym_list["aliasWith"] = alias_for_id;
       read_list[read_list_size] = clone(sym_list);
     }
     else {
       sym_list["name"] = sym_id;
-      sym_list["type"] = gmsGdxTypeText[sym_type];
+      sym_list["class"] = gmsGdxTypeText[sym_type];
       sym_list["dimension"] = dim;
       sym_list["domain"] = domain;
 
       if (sym_type == GMS_DT_VAR) {
-        sym_list["subtype"] = gmsVarTypeText[subtype];
+        sym_list["type"] = gmsVarTypeText[subtype];
       }
       if (sym_type == GMS_DT_EQU) {
-        sym_list["subtype"] = gmsEquTypeText[subtype - GMS_EQU_USERINFO_BASE];
+        sym_list["type"] = gmsEquTypeText[subtype - GMS_EQU_USERINFO_BASE];
       }
       else if (sym_type == GMS_DT_SET) {
         sym_list["isSingleton"] = bool(subtype);
