@@ -1486,7 +1486,6 @@ Container <- R6::R6Class (
         symbolsToRead = lapply(readlist, "[[", 2)
       }
       else {
-        print("here")
         if (!is.character(symbols)) {
           stop("The argument `symbols` must be type character\n")
         }
@@ -1531,7 +1530,7 @@ Container <- R6::R6Class (
               domainForwarding = FALSE,
               description = m$description)
           }
-          else if (m$class == "Alias") {
+          else if (m$class == "Alias" || m$class == "UniverseAlias") {
               if (m$aliasWith == "*") {
                 # universe alias
                 UniverseAlias$new(self, m$name)
@@ -1613,7 +1612,7 @@ Container <- R6::R6Class (
     },
 
     .getDomainGDXRead = function(m, symbolsToRead) {
-      if (m$class == "Alias") return(NULL)
+      if (m$class == "Alias" || m$class == "UniverseAlias") return(NULL)
       if(m$domainType == "none" || m$domainType == "relaxed") {
         return(m$domain)
       }

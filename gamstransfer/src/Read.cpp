@@ -107,14 +107,15 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
         if (!gdxDataReadRawStart(PGX, sym_Nr, &nr_recs))
         stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
+        sym_list["class"] = "UniverseAlias";
       }
       else {
         // normal Alias
         if (!gdxSymbolInfo(PGX, subtype, alias_for_id, &dim, &dummy))
           stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+        sym_list["class"] = "Alias";
       }
       sym_list["name"] = sym_id;
-      sym_list["class"] = gmsGdxTypeText[sym_type];
       sym_list["aliasWith"] = alias_for_id;
       read_list[read_list_size] = clone(sym_list);
     }
