@@ -9,7 +9,7 @@ test_that("readwritetest", {
   # test supercall read
   rl = readGDX(testthat::test_path("testdata", "biggdxtest.gdx"), systemDirectory = find_gams())
   m2 = Container$new()
-  m2$fromList(rl)
+  m2$readList(rl)
 
   # expect_equal(m$equals(m2), TRUE)
 

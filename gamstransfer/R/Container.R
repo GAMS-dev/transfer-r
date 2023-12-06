@@ -1481,7 +1481,7 @@ Container <- R6::R6Class (
       }
     },
 
-    fromList = function(readlist, symbols=NULL, records=TRUE) {
+    readList = function(readlist, symbols=NULL, records=TRUE) {
       if (is.null(symbols)) {
         symbolsToRead = lapply(readlist, "[[", 2)
       }
@@ -1608,7 +1608,7 @@ Container <- R6::R6Class (
         readlist = CPP_readSuper(symbols, loadFrom, 
         self$systemDirectory, records)
 
-        self$fromList(readlist, NULL, records=records)
+        self$readList(readlist, NULL, records=records)
     },
 
     .getDomainGDXRead = function(m, symbolsToRead) {
