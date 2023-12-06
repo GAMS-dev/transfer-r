@@ -1,4 +1,5 @@
-readSuper = function(loadFrom, symbols=NULL, records=TRUE, systemDirectory = NULL) {
+readGDX = function(loadFrom, symbols=NULL, records=TRUE, 
+ systemDirectory = NULL) {
     # check if records is logical
     if (!is.logical(records) && length(records) != 1) {
     stop("records must be type logical\n")
@@ -48,8 +49,9 @@ readSuper = function(loadFrom, symbols=NULL, records=TRUE, systemDirectory = NUL
     return(readlist)
 }
 
-writeSuper = function(writeList, writeTo, symbols=NULL, 
-    compress = FALSE, uelPriority = NULL, mode = NULL, systemDirectory = NULL) {
+writeGDX = function(writeList, writeTo, symbols=NULL, 
+    compress = FALSE, uelPriority = NULL, mode = NULL, 
+    systemDirectory = NULL) {
     if (!is.logical(compress)) {
     stop(paste0("'compress' must be of type logical; ",
     "default False (no compression)\n"))
