@@ -6,6 +6,13 @@ test_that("readwritetest", {
   # read all symbols
   m$read(testthat::test_path("testdata", "biggdxtest.gdx"))
 
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "biggdxtest.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+
+  # expect_equal(m$equals(m2), TRUE)
+
   # write everything
   m$write(testthat::test_path("gt.gdx"))
 
@@ -16,6 +23,23 @@ test_that("readwritetest", {
 
   # write everything
   m$write(testthat::test_path("gt.gdx"), mode = "string")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+  # test the super call write from the read super call
+  writeGDX(rl, "gt.gdx", systemDirectory = find_gams())
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -58,6 +82,15 @@ test_that("test_num_1", {
   stdout = FALSE)
 
   expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test1.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -95,6 +128,15 @@ test_that("test_num_2", {
   paste0(testthat::test_path("testdata", "test2.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
 
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test2.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
   expect_equal(ret, 0)
 }
 )
@@ -134,6 +176,15 @@ test_that("test_num_3", {
   paste0(testthat::test_path("testdata", "test3.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
 
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test3.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
   expect_equal(ret, 0)
 }
 )
@@ -177,6 +228,15 @@ test_that("test_num_4", {
   paste0(testthat::test_path("testdata", "test4.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
 
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test4.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
   expect_equal(ret, 0)
 }
 )
@@ -228,6 +288,15 @@ test_that("test_num_5", {
   paste0(testthat::test_path("testdata", "test5.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
 
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test5.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
   expect_equal(ret, 0)
 }
 )
@@ -285,6 +354,9 @@ test_that("test_num_8", {
   #try writing
   m$write("out.gdx")
   m$write("out.gdx", mode="string")
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "out.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -305,6 +377,9 @@ test_that("test_num_9", {
   #just try writing to see if there are any errors
   m$write("out.gdx")
   m$write("out.gdx", mode="string")
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "out.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -338,6 +413,9 @@ test_that("test_num_10", {
   #try writing
   m$write("out.gdx")
   m$write("out.gdx", mode="string")
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -362,7 +440,9 @@ test_that("test_num_11", {
   expect_equal(j$toDense(), array(c(1,0,2,0)))
   m$write("out.gdx")
   m$write("out.gdx", mode="string")
-}
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "out.gdx", systemDirectory = find_gams())}
 )
 
 test_that("test_num_12", {
@@ -385,6 +465,9 @@ test_that("test_num_13", {
 
   m$write("out.gdx")
   m$write("out.gdx", mode="string")
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "out.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -400,6 +483,9 @@ test_that("test_num_14", {
 
   m$write("out.gdx")
   m$write("out.gdx", mode="string")
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "out.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -656,6 +742,15 @@ test_that("test_num_27", {
   paste0(testthat::test_path("testdata", "test27.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
   expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test27.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -674,6 +769,9 @@ test_that("test_num_28", {
 
   expect_equal(m$write("gt.gdx"), NULL)
   expect_equal(m$write("gt.gdx", mode="string"), NULL)
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -694,6 +792,9 @@ test_that("test_num_29", {
   # try writing
   expect_equal(m$write("gt.gdx"), NULL)
   expect_equal(m$write("gt.gdx", mode="string"), NULL)
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -705,6 +806,9 @@ test_that("test_num_30", {
   # try writing
   expect_equal(m$write("gt.gdx"), NULL)
   expect_equal(m$write("gt.gdx", mode="string"), NULL)
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 }
 )
 
@@ -1010,6 +1114,13 @@ test_that("test_num_44", {
 
   m2 = Container$new(testthat::test_path("out.gdx"))
   expect_true(m2["i"]$type == "free")
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "out.gdx", systemDirectory = find_gams(), mode="string")
+
+  m2 = Container$new(testthat::test_path("out.gdx"))
+  expect_true(m2["i"]$type == "free")
 }
 )
 
@@ -1043,6 +1154,15 @@ test_that("test_num_46", {
 
   # write everything
   m$write(testthat::test_path("gt.gdx"), mode="string")
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "biggdxtest.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -1091,6 +1211,19 @@ test_that("test_num_48", {
   expect_true(!is.null(m["j"]$records))
   expect_true(!is.null(m["k"]$records))
   expect_true(!is.null(m["l"]$records))
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "data.gdx", systemDirectory = find_gams())
+  expect_true(m["i"]$domainType == "relaxed")
+  expect_true(m["j"]$domainType == "none")
+  expect_true(m["k"]$domainType == "relaxed")
+  expect_true(m["l"]$domainType == "regular")
+
+  expect_true(!is.null(m["i"]$records))
+  expect_true(!is.null(m["j"]$records))
+  expect_true(!is.null(m["k"]$records))
+  expect_true(!is.null(m["l"]$records))
 }
 )
 
@@ -1128,6 +1261,10 @@ test_that("test_num_50", {
   k = Set$new(m, "k", domain = c("*", "l"), records = data.frame(paste0("k", 1:5), paste0("l", 1:5)))
   l = Set$new(m, "l", i, records=paste0("i", 1:2))
   m$write("data.gdx", mode="string")
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 
   m = Container$new()
   m$read(testthat::test_path("data.gdx"), symbols="i")
@@ -2372,6 +2509,15 @@ test_that("test_num_95", {
   paste0(testthat::test_path("testdata", "test95.gdx"), " ", testthat::test_path("gt.gdx")),
   stdout = FALSE)
   expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test95.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
 }
 )
 
@@ -2402,6 +2548,15 @@ test_that("test_num_96", {
   expect_true(inherits(m2["h"], "UniverseAlias"))
   expect_true(inherits(m2["ip"], "Alias"))
   expect_true(inherits(m2["i"], "Set"))
+
+  ret <- system2(command="gdxdiff", args=
+  paste0(testthat::test_path("testdata", "test95.gdx"), " ", testthat::test_path("gt.gdx")),
+  stdout = FALSE)
+  expect_equal(ret, 0)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 
   ret <- system2(command="gdxdiff", args=
   paste0(testthat::test_path("testdata", "test95.gdx"), " ", testthat::test_path("gt.gdx")),
@@ -2671,6 +2826,14 @@ expect_equal(m1["a"]$domain, "i")
 expect_equal(m1["a"]$domainType, "relaxed")
 
 m$write("partial_write.gdx", symbols="a", mode="string")
+
+m1 = Container$new("partial_write.gdx")
+expect_equal(m1["a"]$domain, "i")
+expect_equal(m1["a"]$domainType, "relaxed")
+
+# test the super call write
+writeList = m$asList()
+writeGDX(writeList, "partial_write.gdx", systemDirectory = find_gams(), symbols="a")
 
 m1 = Container$new("partial_write.gdx")
 expect_equal(m1["a"]$domain, "i")
@@ -3139,10 +3302,26 @@ test_that("test_num_111", {
 m = Container$new()
 expect_true(is.null(m$write("empty.gdx")))
 expect_true(is.null(m$write("empty.gdx", mode="string")))
+# test the super call write
+writeList = m$asList()
+writeGDX(writeList, "empty.gdx", systemDirectory = find_gams())
 
 # write empty gdx with uelPriority
 m$write("gt.gdx", uelPriority = c("i1","i2","i3"))
 
+system2(command="gdxdump", args=
+"gt.gdx uelTable=foo",
+stdout = "foo.gms")
+
+system2(command="gams", args=
+"foo.gms gdx=foo.gdx lo=0",
+stdout = FALSE)
+
+m = Container$new("foo.gdx")
+expect_equal(m$getUELs(), c("i1","i2","i3"))
+
+
+writeGDX(writeList, "gt.gdx", systemDirectory = find_gams(), uelPriority = c("i1","i2","i3"))
 system2(command="gdxdump", args=
 "gt.gdx uelTable=foo",
 stdout = "foo.gms")
@@ -3314,6 +3493,14 @@ test_that("test_num_117", {
   m2 = Container$new(testthat::test_path("gt.gdx"))
 
   expect_equal(m["isub"]$getUELs(), paste0("i",1:5))
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+
+  m2 = Container$new(testthat::test_path("gt.gdx"))
+
+  expect_equal(m["isub"]$getUELs(), paste0("i",1:5))
 }
 )
 
@@ -3338,6 +3525,16 @@ test_that("test_num_118", {
   expect_true(m2["e"]$isScalar)
 
   m$write("gt.gdx", mode="string")
+  m2 = Container$new()
+  m2$read(testthat::test_path("gt.gdx"))
+
+  expect_true(m2["p"]$isScalar)
+  expect_true(m2["v"]$isScalar)
+  expect_true(m2["e"]$isScalar)
+
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
   m2 = Container$new()
   m2$read(testthat::test_path("gt.gdx"))
 
@@ -3480,6 +3677,7 @@ test_that("test_num_124", {
   i = Set$new(m, "i", records=paste0("i",1:10))
   p = Parameter$new(m, "p", domain=c("j"), records = data.frame(j=paste0("i",1:10), 1:10))
   m$write("gt.gdx")
+  writeList = m$asList()
 
   m = Container$new("gt.gdx")
   expect_equal(m["p"]$domain, "j")
@@ -3493,6 +3691,17 @@ test_that("test_num_124", {
 
   m$write("gt.gdx", mode="string")
 
+  m = Container$new("gt.gdx")
+  expect_equal(m["p"]$domain, "j")
+  expect_false(m["p"]$hasDomainViolations())
+
+  # check the same for container read
+  m2 = Container$new()
+  m2$read(m)
+  expect_equal(m2["p"]$domain, "j")
+  expect_false(m2["p"]$hasDomainViolations())
+
+  writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
   m = Container$new("gt.gdx")
   expect_equal(m["p"]$domain, "j")
   expect_false(m["p"]$hasDomainViolations())
@@ -3544,6 +3753,18 @@ test_that("test_num_126", {
     for (i in c("level", "marginal", "lower", "upper", "scale")) {
       expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
     }
+
+    # test the super call write
+    writeList = m$asList()
+    writeGDX(writeList, "partial_equation.gdx", systemDirectory = find_gams())
+
+    m1 = Container$new("partial_equation.gdx")
+    expect_equal(m1$listSymbols(), "e")
+    expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["e"]$records), 6)
+    for (i in c("level", "marginal", "lower", "upper", "scale")) {
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
+    }
   }
 
   # data frames with only domain - variable
@@ -3565,6 +3786,18 @@ test_that("test_num_126", {
     }
 
     m$write("partial_variable.gdx", mode="string")
+
+    m1 = Container$new("partial_variable.gdx")
+    expect_equal(m1$listSymbols(), "v")
+    expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["v"]$records), 6)
+    for (i in c("level", "marginal", "lower", "upper", "scale")) {
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$defaultValues[[i]]))
+    }
+
+    # test the super call write
+    writeList = m$asList()
+    writeGDX(writeList, "partial_variable.gdx", systemDirectory = find_gams())
 
     m1 = Container$new("partial_variable.gdx")
     expect_equal(m1$listSymbols(), "v")
@@ -3599,6 +3832,16 @@ test_that("test_num_126", {
   expect_equal(length(m1["p"]$records), 2)
   expect_equal(m1["p"]$records[,"value"], replicate(m["p"]$numberRecords, 0))
 
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "partial_parameter.gdx", systemDirectory = find_gams())
+
+  m1 = Container$new("partial_parameter.gdx")
+  expect_equal(m1$listSymbols(), "p")
+  expect_equal(colnames(m1["p"]$records), c("uni", "value"))
+  expect_equal(length(m1["p"]$records), 2)
+  expect_equal(m1["p"]$records[,"value"], replicate(m["p"]$numberRecords, 0))
+
   # data frames with only domain - set
   m = Container$new()
   s = Set$new(m, "s", records = data.frame(i=c("i1","i2","i3")))
@@ -3620,6 +3863,14 @@ test_that("test_num_126", {
   expect_equal(colnames(m1["s"]$records), c("uni", "element_text"))
   expect_equal(length(m1["s"]$records), 2)
 
+  # test the super call write
+  writeList = m$asList()
+  writeGDX(writeList, "partial_set.gdx", systemDirectory = find_gams())
+
+  m1 = Container$new("partial_set.gdx")
+  expect_equal(m1$listSymbols(), "s")
+  expect_equal(colnames(m1["s"]$records), c("uni", "element_text"))
+  expect_equal(length(m1["s"]$records), 2)
 
   # data frames with domain + missing attribute columns - equation
   for (t in c("eq","geq","leq","nonbinding", "cone", "external", "boolean")) {
@@ -3635,6 +3886,10 @@ test_that("test_num_126", {
     expect_equal(m1$listSymbols(), "e")
     expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["e"]$records), 6)
+    for (i in c("level", "lower", "upper", "scale")) {
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
+    }
+    expect_equal(m1["e"]$records[,"marginal"], replicate(m["e"]$numberRecords, 10))
 
     m$write("partial_equation.gdx", mode="string")
 
@@ -3648,6 +3903,19 @@ test_that("test_num_126", {
     }
     expect_equal(m1["e"]$records[,"marginal"], replicate(m["e"]$numberRecords, 10))
 
+    # test the super call write
+    writeList = m$asList()
+    writeGDX(writeList, "partial_equation.gdx", systemDirectory = find_gams())
+
+    m1 = Container$new("partial_equation.gdx")
+    expect_equal(m1$listSymbols(), "e")
+    expect_equal(colnames(m1["e"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["e"]$records), 6)
+
+    for (i in c("level", "lower", "upper", "scale")) {
+      expect_equal(m1["e"]$records[,i], replicate(m["e"]$numberRecords, m["e"]$defaultValues[[i]]))
+    }
+    expect_equal(m1["e"]$records[,"marginal"], replicate(m["e"]$numberRecords, 10))
   }
 
   # data frames with domain + missing attribute columns - variable
@@ -3664,6 +3932,10 @@ test_that("test_num_126", {
     expect_equal(m1$listSymbols(), "v")
     expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
     expect_equal(length(m1["v"]$records), 6)
+    for (i in c("level", "lower", "upper", "scale")) {
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$defaultValues[[i]]))
+    }
+    expect_equal(m1["v"]$records[,"marginal"], replicate(m["v"]$numberRecords, 10))
 
     m$write("partial_variable.gdx", mode="string")
 
@@ -3676,6 +3948,18 @@ test_that("test_num_126", {
     }
     expect_equal(m1["v"]$records[,"marginal"], replicate(m["v"]$numberRecords, 10))
 
+    # test the super call write
+    writeList = m$asList()
+    writeGDX(writeList, "partial_variable.gdx", systemDirectory = find_gams())
+
+    m1 = Container$new("partial_variable.gdx")
+    expect_equal(m1$listSymbols(), "v")
+    expect_equal(colnames(m1["v"]$records), c("uni", "level", "marginal", "lower", "upper", "scale"))
+    expect_equal(length(m1["v"]$records), 6)
+    for (i in c("level", "lower", "upper", "scale")) {
+      expect_equal(m1["v"]$records[,i], replicate(m["v"]$numberRecords, m["v"]$defaultValues[[i]]))
+    }
+    expect_equal(m1["v"]$records[,"marginal"], replicate(m["v"]$numberRecords, 10))
   }
 }
 )
@@ -3690,6 +3974,12 @@ m1 = Container$new("partial_scalar.gdx")
 expect_equal(m1["p"]$records$value, 0)
 
 m$write("partial_scalar.gdx", mode="string")
+m1 = Container$new("partial_scalar.gdx")
+expect_equal(m1["p"]$records$value, 0)
+
+# test the super call write
+writeList = m$asList()
+writeGDX(writeList, "partial_scalar.gdx", systemDirectory = find_gams())
 m1 = Container$new("partial_scalar.gdx")
 expect_equal(m1["p"]$records$value, 0)
 
@@ -3708,6 +3998,13 @@ for (i in c("level", "marginal", "lower", "upper", "scale")) {
   expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
 }
 
+# test the super call write
+writeList = m$asList()
+writeGDX(writeList, "partial_scalar_variable.gdx", systemDirectory = find_gams())
+m1 = Container$new("partial_scalar_variable.gdx")
+for (i in c("level", "marginal", "lower", "upper", "scale")) {
+  expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
+}
 
 #equation
 m = Container$new()
@@ -3724,12 +4021,26 @@ for (i in c("level", "marginal", "lower", "upper", "scale")) {
   expect_equal(m1["e"]$records[[i]], m["e"]$defaultValues[[i]])
 }
 
+# test the super call write
+writeList = m$asList()
+writeGDX(writeList, "partial_scalar_equation.gdx", systemDirectory = find_gams())
+m1 = Container$new("partial_scalar_equation.gdx")
+for (i in c("level", "marginal", "lower", "upper", "scale")) {
+  expect_equal(m1["e"]$records[[i]], m["e"]$defaultValues[[i]])
+}
 
 #variable partial column
 m = Container$new()
 v = Variable$new(m, "v", records=data.frame(marginal=10))
 m$write("partial_scalar_variable.gdx")
 m1 = Container$new("partial_scalar_variable.gdx")
+for (i in c("level", "lower", "upper", "scale")) {
+  expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
+}
+expect_equal(m1["v"]$records[["marginal"]], 10)
+
+writeList = m$asList()
+writeGDX(writeList, "partial_scalar_variable.gdx", systemDirectory = find_gams())
 for (i in c("level", "lower", "upper", "scale")) {
   expect_equal(m1["v"]$records[[i]], m["v"]$defaultValues[[i]])
 }
@@ -4049,6 +4360,7 @@ expect_true(is.factor(p$records[,1]))
 expect_equal(colnames(p$records), "i")
 expect_equal(levels(p$records[, 1]), c("i1","i2","i3"))
 
+writeList = m$asList()
 m$write("gt.gdx", symbols="p")
 
 system2(command="gdxdump", args=
@@ -4063,6 +4375,18 @@ m = Container$new("foo.gdx")
 
 expect_equal(m$getUELs(), c("i1","i2","i3"))
 
+writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
+system2(command="gdxdump", args=
+"gt.gdx uelTable=foo",
+stdout = "foo.gms")
+
+system2(command="gams", args=
+"foo.gms gdx=foo.gdx lo=0",
+stdout = FALSE)
+
+m = Container$new("foo.gdx")
+
+expect_equal(m$getUELs(), c("i1","i2","i3"))
 
 m = Container$new()
 i = Set$new(m, "i", records=paste0("i", 1:3))
@@ -4070,8 +4394,22 @@ p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
 expect_true(is.factor(p$records[,1]))
 expect_equal(colnames(p$records), "i")
 expect_equal(levels(p$records[, 1]), c("i1","i2","i3"))
+writeList = m$asList()
 m$write("gt.gdx", symbols="p", mode="string")
 
+system2(command="gdxdump", args=
+"gt.gdx uelTable=foo",
+stdout = "foo.gms")
+
+system2(command="gams", args=
+"foo.gms gdx=foo.gdx lo=0",
+stdout = FALSE)
+
+m = Container$new("foo.gdx")
+
+expect_equal(m$getUELs(), c("i1","i2","i3"))
+
+writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 system2(command="gdxdump", args=
 "gt.gdx uelTable=foo",
 stdout = "foo.gms")
@@ -4100,6 +4438,8 @@ m = Container$new()
 m$read(testthat::test_path("testdata", "trnsport.gdx"), records=FALSE)
 m$write("gt.gdx", mode="mapped")
 m$write("gt.gdx", mode="string")
+writeList = m$asList()
+writeGDX(writeList, "gt.gdx", systemDirectory = find_gams())
 
 })
 
@@ -4163,5 +4503,18 @@ m = Container$new(testthat::test_path("testdata", "universe_order.gdx"))
 expect_equal(m["p"]$getUELs(), c("i2","i5","i9","i1","i3"))
 expect_equal(m["p"]$getUELs(1), c("i2","i5","i9"))
 expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
+}
+)
+
+# acronyms
+test_that("test_num_141", {
+  f = function() {
+    return(Container$new(testthat::test_path("testdata", "acronym_test.gdx")))
+  }
+expect_warning(m <- f())
+expect_equal(m["shutdown"]$records[["value"]], replicate(5, as.numeric(NA)))
+expect_equal(m["v"]$records[["level"]], c(1, NA, NA, NA, 2))
+expect_equal(m["e"]$records[["marginal"]], c(1, NA, NA, NA, 2))
+
 }
 )

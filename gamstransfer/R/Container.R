@@ -39,7 +39,6 @@ Container <- R6::R6Class (
     systemDirectory = NULL,
     data = NULL,
     .lc_data = NULL,
-    acronyms = NULL,
     .requiresStateCheck = NULL,
     #' @description
     #' Create a new container simply by initializing an object.
@@ -71,7 +70,6 @@ Container <- R6::R6Class (
         }
       }
 
-      self$acronyms = list()
       self$data = collections::ordered_dict()
       # another dict for lowercase names to original case
       self$.lc_data = collections::dict()
@@ -247,7 +245,7 @@ Container <- R6::R6Class (
       }
 
       for (t in types) {
-        if (!any(.varTypes == t)) {
+        if (!any(.varTypes == tolower(t))) {
           stop(paste0("User input unrecognized variable type: ", t, " \n"))
         }
       }
@@ -288,7 +286,7 @@ Container <- R6::R6Class (
       }
 
       for (t in types) {
-        if (is.null(.EquationTypes[[t]])) {
+        if (is.null(.EquationTypes[[tolower(t)]])) {
           stop(paste0("User input unrecognized equation type: ", t, " \n"))
         }
       }
@@ -1210,7 +1208,7 @@ Container <- R6::R6Class (
         }
       }
 
-      CPP_gdxWriteSuper(self, enable,
+      CPP_gdxWrite(self, enable,
       writeTo, uelPriority, compress, mode_int)
     },
 
@@ -1483,6 +1481,105 @@ Container <- R6::R6Class (
       }
     },
 
+    readList = function(readlist, symbols=NULL, records=TRUE) {
+      if (is.null(symbols)) {
+        symbolsToRead = lapply(readlist, "[[", 2)
+      }
+      else {
+        if (!is.character(symbols)) {
+          stop("The argument `symbols` must be type character\n")
+        }
+        sym_list = names(readlist)
+        for (s in symbols) {
+          if (!any(s == sym_list)) {
+            stop(paste0("The symbol ", s, "is not in the list being read.\n"))
+          }
+        }
+        symbolsToRead = symbols
+      }
+
+      # readlist only contains symbols to be read
+      for (m in readlist) {
+          if (m$name == "*") next
+          domain = private$.getDomainGDXRead(m, symbolsToRead)
+          if (m$class == "Parameter") {
+            Parameter$new(
+              self, m$name, domain,
+              domainForwarding=FALSE,
+              description = m$description)
+          }
+          else if (m$class == "Set") {
+              Set$new(
+              self, m$name, domain, m$isSingleton,
+              records = NULL,
+              domainForwarding=FALSE,
+              m$description)
+          }
+          else if (m$class == "Variable") {
+              type = m$type
+              if (tolower(type) == "unknown") type = "free"
+              Variable$new(
+              self, m$name, type, domain,
+              domainForwarding = FALSE,
+              description = m$description)
+          }
+          else if (m$class == "Equation") {
+              type = m$type
+              Equation$new(
+              self, m$name, type, domain,
+              domainForwarding = FALSE,
+              description = m$description)
+          }
+          else if (m$class == "Alias" || m$class == "UniverseAlias") {
+              if (m$aliasWith == "*") {
+                # universe alias
+                UniverseAlias$new(self, m$name)
+              }
+              else {
+                if (!any(symbolsToRead == m$aliasWith)) {
+                  stop(paste0("Cannot create the Alias symbol ", m$name,
+                  " because the parent set (", m$aliasWith, ") is not ",
+                  "being read into the Container. Alias symbols ",
+                  "require the parent set object to exist in the Container.",
+                  " Add ", m$aliasWith, " to the list of symbols to read.\n"))
+                }
+                else {
+                  Alias$new(
+                  self, m$name, self[m$aliasWith])
+                }
+              }
+          }
+      }
+
+      if (records == TRUE) {
+        for (s in readlist) {
+          if (is.null(s$records) || inherits(self[s$name], 
+          ".BaseAlias")) {
+            next
+          }
+
+          self[s$name]$records = s$records;
+        }
+      }
+    },
+
+    asList = function(symbols=NULL) {
+      if (is.null(symbols)) {
+        symbols = self$data$values()
+      }
+      else {
+        symbols = self$getSymbols(symbols)
+      }
+
+      if (length(self$listSymbols()) == 0) return(list())
+
+      l = lapply(self$getSymbols(), function(s) {
+        return(s$asList())
+      })
+      names(l) = symbols
+      return(l)
+    },
+
     summary = function() {
       return(list(
         systemDirectory = self$systemDirectory,
@@ -1511,141 +1608,12 @@ Container <- R6::R6Class (
         readlist = CPP_readSuper(symbols, loadFrom, 
         self$systemDirectory, records)
 
-        acronyms = readlist[[1]]
-
-        if (acronyms$nAcronyms == 0) {
-          self$acronyms = acronyms[["acronyms"]]
-        }
-
-        readData = readlist[-1]
-        rm("readlist")
-
-        symbolsToRead = unlist(lapply(readData, "[[", 1))
-
-        # readData only contains symbols to be read
-        for (m in readData) {
-            if (m$name == "*") next
-
-            domain = private$.getDomainGDXRead(m, symbolsToRead)
-            if (m$type == .gdxSymbolTypes()[["GMS_DT_PAR"]]) {
-              Parameter$new(
-                self, m$name, domain,
-                domainForwarding=FALSE,
-                description = m$expltext)
-            }
-            else if (m$type == .gdxSymbolTypes()[["GMS_DT_SET"]]) {
-                Set$new(
-                self, m$name, domain, as.logical(m$subtype),
-                records = NULL,
-                domainForwarding=FALSE,
-                m$expltext)
-                if (m$subtype != 0 && m$subtype != 1) {
-                  stop(paste0("Unknown set classification with ",
-                  "GAMS Subtype ", m$subtype, "cannot load set ", m$name))
-                }
-            }
-            else if (m$type == .gdxSymbolTypes()[["GMS_DT_VAR"]]) {
-                type = which(.VarTypeSubtype() == m$subtype)
-                if (is.integer0(type)) {
-                  type = "free"
-                }
-                else {
-                  type = names(.VarTypeSubtype())[[type]]
-                }
-                Variable$new(
-                self, m$name, type, domain,
-                domainForwarding = FALSE,
-                description = m$expltext)
-            }
-            else if (m$type == .gdxSymbolTypes()[["GMS_DT_EQU"]]) {
-                type = which(.EqTypeSubtype() == m$subtype)
-                if (is.integer0(type)) {
-                  type = "eq"
-                }
-                else {
-                  type = names(.EqTypeSubtype())[[type]]
-                }
-
-                Equation$new(
-                self, m$name, type, domain,
-                domainForwarding = FALSE,
-                description = m$expltext)
-            }
-            else if (m$type == .gdxSymbolTypes()[["GMS_DT_ALIAS"]]) {
-                if (m$aliasfor == "*") {
-                  # universe alias
-                  UniverseAlias$new(self, m$name)
-                }
-                else {
-                  if (!any(symbolsToRead == m$aliasfor)) {
-                    stop(paste0("Cannot create the Alias symbol ", m$name,
-                    " because the parent set (", m$aliasfor, ") is not ",
-                    "being read into the Container. Alias symbols ",
-                    "require the parent set object to exist in the Container.",
-                    " Add ", m$aliasfor, " to the list of symbols to read.\n"))
-                  }
-                  else {
-                    Alias$new(
-                    self, m$name, self[m$aliasfor])
-                  }
-                }
-            }
-
-        }
-
-        if (records == TRUE) {
-          for (s in readData) {
-            if (is.null(s$records) || inherits(self[s$name], 
-            ".BaseAlias")) {
-              next
-            }
-
-            # recs = data.frame(s$records)
-            recs = s$records
-            common_attr = colnames(recs)[(self[s$name]$dimension+1):length(recs)]
-
-            if (self[s$name]$dimension == 0) {
-              dlabels = c()
-            }
-            else {
-              dnames = self[s$name]$domainNames
-              dnames[dnames == "*"] = "uni"
-              is_dup = duplicated(dnames)
-
-              if (any(is_dup)) {
-                dlabels = paste0(dnames, "_", 1:self[s$name]$dimension)
-              }
-              else {
-                dlabels = dnames
-              }
-            }
-
-            columnNames = append(dlabels, common_attr)
-            colnames(recs) = columnNames
-            self[s$name]$records = recs
-            # self[s$name]$setRecords(recs)
-
-            # map acronyms to NA
-            if (!is.null(self$acronyms)) {
-               if (inherits(self[s$name], c("Parameter", 
-              "Variable", "Equation"))) {
-                records = self[s$name]$records
-                for (a in self$acronyms) {
-                  records[(records 
-                  == a * 1e301)] = SpecialValues[["NA"]]
-                }
-                self[s$name]$records = records
-              }
-            }
-          }
-
-          # private$.linkDomainObjects(symbolsToRead)
-        }
-
+        self$readList(readlist, NULL, records=records)
     },
 
     .getDomainGDXRead = function(m, symbolsToRead) {
-      if(m$domaintype == 1 || m$domaintype == 2) {
+      if (m$class == "Alias" || m$class == "UniverseAlias") return(NULL)
+      if(m$domainType == "none" || m$domainType == "relaxed") {
         return(m$domain)
       }
       else {

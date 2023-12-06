@@ -1,20 +1,3 @@
-.gdxSymbolTypes = function(){
-  return(CPP_getGDXSymbolTypes())
-}
-
-
-.VarTypeSubtype = function() {
-  return(CPP_getGDXVarTypeSubtype())
-}
-
-.EqTypeSubtype = function() {
-  return(CPP_getGDXEqTypeSubtype())
-}
-
-.SetTypeSubtype = function() {
-  return(CPP_getGDXSetTypeSubtype())
-}
-
 .EquationTypes = c(
 eq = "eq",
 E = "eq",

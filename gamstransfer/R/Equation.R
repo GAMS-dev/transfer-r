@@ -78,12 +78,7 @@ Equation <- R6Class(
       # call from outside
       type = .EquationTypes[[type]]
 
-      symtype = .gdxSymbolTypes()[["GMS_DT_EQU"]]
-      symsubtype = .EqTypeSubtype()[[type]]
-
-
       super$initialize(container, name,
-                      symtype, symsubtype, 
                       domain, description, domainForwarding)
       if (!is.null(records)) {
         self$setRecords(records)
@@ -433,6 +428,21 @@ Equation <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$type = self$type
+    },
+
+    asList = function() {
+      l = list(
+               class = "Equation",
+               name= self$name,
+               description = self$description,
+               type = self$type,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
     }
   ),
 
@@ -450,7 +460,7 @@ Equation <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.EquationTypes == type_input)) {
+        if (!any(.EquationTypes == tolower(type_input))) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
               "1. 'eq', 'E', or 'e' -- equality\n",
               "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
@@ -462,7 +472,7 @@ Equation <- R6Class(
           )))
         }
 
-        private$.type = type_input
+        private$.type = tolower(type_input)
       }
     },
 

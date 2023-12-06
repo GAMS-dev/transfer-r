@@ -140,6 +140,15 @@ UniverseAlias <- R6Class(
       # copy alias
       private$.copy(destination, overwrite)
       return(invisible(NULL))
+    },
+
+    asList = function() {
+      l = list(
+        class = "Alias",
+        name = self$name,
+        aliasWith = "*"
+      )
+      return(l)
     }
   ),
 

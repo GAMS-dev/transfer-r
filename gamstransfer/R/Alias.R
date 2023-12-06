@@ -238,6 +238,21 @@ Alias <- R6Class(
 
       # copy alias
       private$.copy(destination, overwrite)
+    },
+
+    asList = function() {
+      if (inherits(self$aliasWith, c("Set", "Alias"))) {
+        aliasWithName = self$aliasWith$name
+      }
+      else {
+        aliasWithName = selt$aliasWith
+      }
+      l = list(
+        class = "Alias",
+        name = self$name,
+        aliasWith = aliasWithName
+      )
+      return(l)
     }
   ),
 

@@ -42,17 +42,8 @@ Set <- R6Class(
                           domainForwarding = FALSE,
                           description="") {
       self$isSingleton <- isSingleton
-      type = .gdxSymbolTypes()[["GMS_DT_SET"]]
-
-      if (!isSingleton) {
-        subtype = .SetTypeSubtype()[["set"]]
-      }
-      else {
-        subtype = .SetTypeSubtype()[["singleton_set"]]
-      }
 
       super$initialize(container, name,
-                      type, subtype,
                       domain, description, domainForwarding)
 
       if (!is.null(records)) {
@@ -139,6 +130,21 @@ Set <- R6Class(
 
       newsym$isSingleton = self$isSingleton
       return(invisible(NULL))
+    },
+
+    asList = function() {
+      l = list(
+               class = "Set",
+               name= self$name,
+               description = self$description,
+               isSingleton = self$isSingleton,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
     }
   ),
 

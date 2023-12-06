@@ -51,11 +51,7 @@ Variable <- R6Class(
 
       self$type = type
 
-      symtype = .gdxSymbolTypes()[["GMS_DT_VAR"]]
-      symsubtype = .VarTypeSubtype()[[type]]
-
       super$initialize(container, name,
-                      symtype, symsubtype, 
                       domain, description, domainForwarding)
 
       if (!is.null(records)) {
@@ -402,8 +398,22 @@ Variable <- R6Class(
       if (is.null(newsym)) return(invisible(NULL))
 
       newsym$type = self$type
-    }
+    },
 
+    asList = function() {
+      l = list(
+               class = "Variable",
+               name= self$name,
+               description = self$description,
+               type = self$type,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
+    }
   ),
 
   active = list(
@@ -420,7 +430,7 @@ Variable <- R6Class(
         return(private$.type)
       }
       else {
-        if (!any(.varTypes == type_input)) {
+        if (!any(.varTypes == tolower(type_input))) {
           stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
           " 1. 'binary' \n",
           " 2. 'integer' \n",
@@ -434,7 +444,7 @@ Variable <- R6Class(
           )))
         }
 
-        private$.type = type_input
+        private$.type = tolower(type_input)
       }
     },
 

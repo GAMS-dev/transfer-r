@@ -11,82 +11,48 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // CPP_readSuper
-List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, CharacterVector sysDir, LogicalVector records);
-RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP recordsSEXP) {
+List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, CharacterVector sysDir, LogicalVector read_records);
+RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP read_recordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type symNames_(symNames_SEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type records(recordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, sysDir, records));
+    Rcpp::traits::input_parameter< LogicalVector >::type read_records(read_recordsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, sysDir, read_records));
     return rcpp_result_gen;
 END_RCPP
 }
-// CPP_getGDXSymbolTypes
-List CPP_getGDXSymbolTypes();
-RcppExport SEXP _gamstransfer_CPP_getGDXSymbolTypes() {
+// CPP_getMaxDim
+IntegerVector CPP_getMaxDim();
+RcppExport SEXP _gamstransfer_CPP_getMaxDim() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(CPP_getGDXSymbolTypes());
-    return rcpp_result_gen;
-END_RCPP
-}
-// CPP_getGDXVarTypes
-List CPP_getGDXVarTypes();
-RcppExport SEXP _gamstransfer_CPP_getGDXVarTypes() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(CPP_getGDXVarTypes());
-    return rcpp_result_gen;
-END_RCPP
-}
-// CPP_getGDXEqTypes
-List CPP_getGDXEqTypes();
-RcppExport SEXP _gamstransfer_CPP_getGDXEqTypes() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(CPP_getGDXEqTypes());
-    return rcpp_result_gen;
-END_RCPP
-}
-// CPP_getGDXVarTypeSubtype
-List CPP_getGDXVarTypeSubtype();
-RcppExport SEXP _gamstransfer_CPP_getGDXVarTypeSubtype() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(CPP_getGDXVarTypeSubtype());
-    return rcpp_result_gen;
-END_RCPP
-}
-// CPP_getGDXEqTypeSubtype
-List CPP_getGDXEqTypeSubtype();
-RcppExport SEXP _gamstransfer_CPP_getGDXEqTypeSubtype() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(CPP_getGDXEqTypeSubtype());
-    return rcpp_result_gen;
-END_RCPP
-}
-// CPP_getGDXSetTypeSubtype
-List CPP_getGDXSetTypeSubtype();
-RcppExport SEXP _gamstransfer_CPP_getGDXSetTypeSubtype() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(CPP_getGDXSetTypeSubtype());
+    rcpp_result_gen = Rcpp::wrap(CPP_getMaxDim());
     return rcpp_result_gen;
 END_RCPP
 }
 // CPP_gdxWriteSuper
-void CPP_gdxWriteSuper(Environment container, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress, int mode);
-RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP containerSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
+void CPP_gdxWriteSuper(List writeList, CharacterVector sysDir, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress, int mode);
+RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP writeListSEXP, SEXP sysDirSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type writeList(writeListSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type enable(enableSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type uel_priority_(uel_priority_SEXP);
+    Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
+    Rcpp::traits::input_parameter< int >::type mode(modeSEXP);
+    CPP_gdxWriteSuper(writeList, sysDir, enable, fileName, uel_priority_, compress, mode);
+    return R_NilValue;
+END_RCPP
+}
+// CPP_gdxWrite
+void CPP_gdxWrite(Environment container, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress, int mode);
+RcppExport SEXP _gamstransfer_CPP_gdxWrite(SEXP containerSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Environment >::type container(containerSEXP);
@@ -95,20 +61,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type uel_priority_(uel_priority_SEXP);
     Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
     Rcpp::traits::input_parameter< int >::type mode(modeSEXP);
-    CPP_gdxWriteSuper(container, enable, fileName, uel_priority_, compress, mode);
+    CPP_gdxWrite(container, enable, fileName, uel_priority_, compress, mode);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 4},
-    {"_gamstransfer_CPP_getGDXSymbolTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXSymbolTypes, 0},
-    {"_gamstransfer_CPP_getGDXVarTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypes, 0},
-    {"_gamstransfer_CPP_getGDXEqTypes", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypes, 0},
-    {"_gamstransfer_CPP_getGDXVarTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXVarTypeSubtype, 0},
-    {"_gamstransfer_CPP_getGDXEqTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXEqTypeSubtype, 0},
-    {"_gamstransfer_CPP_getGDXSetTypeSubtype", (DL_FUNC) &_gamstransfer_CPP_getGDXSetTypeSubtype, 0},
-    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 6},
+    {"_gamstransfer_CPP_getMaxDim", (DL_FUNC) &_gamstransfer_CPP_getMaxDim, 0},
+    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 7},
+    {"_gamstransfer_CPP_gdxWrite", (DL_FUNC) &_gamstransfer_CPP_gdxWrite, 6},
     {NULL, NULL, 0}
 };
 

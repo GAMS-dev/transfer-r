@@ -69,9 +69,7 @@ Parameter <- R6Class(
                           domainForwarding = FALSE,
                           description="") {
 
-      type = .gdxSymbolTypes()[["GMS_DT_PAR"]]
       super$initialize(container, name,
-                      type, 0, 
                       domain, description, domainForwarding)
 
       if (!is.null(records)) {
@@ -296,6 +294,20 @@ Parameter <- R6Class(
 
       private$.records = recs
       set.seed(NULL)
+    },
+
+    asList = function() {
+      l = list(
+               class = "Parameter",
+               name= self$name,
+               description = self$description,
+               domain = self$domainNames,
+               domainType = self$domainType,
+               dimension = self$dimension,
+               numberRecords = self$numberRecords,
+               records = self$records
+      )
+      return(l)
     }
   ),
 

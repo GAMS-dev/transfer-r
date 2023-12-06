@@ -26,8 +26,6 @@
 .BaseAlias <- R6Class(
   ".BaseAlias",
   public = list(
-    .gams_type = NULL,
-    .gams_subtype = NULL,
     .isUniverseAlias = NULL,
     .requiresStateCheck = NULL,
 
@@ -45,10 +43,7 @@
       self$.requiresStateCheck = TRUE
       self$container = container
       self$name = name
-      # container = self$container
       container[name] = self
-      self$.gams_type = .gdxSymbolTypes()[["GMS_DT_ALIAS"]]
-      self$.gams_subtype = 1
     }
   ),
 

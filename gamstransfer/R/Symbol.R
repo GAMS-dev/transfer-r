@@ -7,16 +7,10 @@
   public = list(
   .requiresStateCheck = NULL,
   .gams_type = NULL,
-  .gams_subtype = NULL,
   initialize = function(container, name,
-                        type, subtype, 
                         domain,
                         description,
                         domainForwarding) {
-
-    self$.gams_type = type
-    self$.gams_subtype = subtype
-
 
     self$.requiresStateCheck = TRUE
 
@@ -1067,9 +1061,9 @@
       else {
         if (!((inherits(dimension_input, c("numeric", "integer"))) && 
            (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
-           (dimension_input <= .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]))) {
+           (dimension_input <= CPP_getMaxDim()))) {
             stop(paste0("Symbol 'dimension' must be ",
-           "an integer in [0, ", .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "]\n"))
+           "an integer in [0, ", CPP_getMaxDim(), "]\n"))
            }
 
         if (length(self$domain) > dimension_input) {
@@ -1105,9 +1099,9 @@
           domain_input = list(domain_input)
         }
 
-        if (length(domain_input) > .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]]) {
+        if (length(domain_input) > CPP_getMaxDim()) {
           stop(paste0("Argument 'domain' length cannot be > ", 
-          .gdxSymbolTypes()[["GMS_MAX_INDEX_DIM"]], "\n"))
+          CPP_getMaxDim(), "\n"))
         }
 
         lapply(domain_input, function(d) {
