@@ -132,7 +132,7 @@ Set <- R6Class(
       return(invisible(NULL))
     },
 
-    toList = function() {
+    asList = function() {
       l = list(
                class = "Set",
                name= self$name,

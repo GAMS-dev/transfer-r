@@ -296,7 +296,7 @@ Parameter <- R6Class(
       set.seed(NULL)
     },
 
-    toList = function() {
+    asList = function() {
       l = list(
                class = "Parameter",
                name= self$name,

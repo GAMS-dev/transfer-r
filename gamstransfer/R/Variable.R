@@ -400,7 +400,7 @@ Variable <- R6Class(
       newsym$type = self$type
     },
 
-    toList = function() {
+    asList = function() {
       l = list(
                class = "Variable",
                name= self$name,

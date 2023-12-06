@@ -1563,7 +1563,7 @@ Container <- R6::R6Class (
       }
     },
 
-    toList = function(symbols=NULL) {
+    asList = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$data$values()
       }
@@ -1574,7 +1574,7 @@ Container <- R6::R6Class (
       if (length(self$listSymbols()) == 0) return(list())
 
       l = lapply(self$getSymbols(), function(s) {
-        return(s$toList())
+        return(s$asList())
       })
       names(l) = symbols
       return(l)

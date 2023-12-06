@@ -430,7 +430,7 @@ Equation <- R6Class(
       newsym$type = self$type
     },
 
-    toList = function() {
+    asList = function() {
       l = list(
                class = "Equation",
                name= self$name,
