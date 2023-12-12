@@ -1578,16 +1578,17 @@ Container <- R6::R6Class (
       })
       names(l) = symbols
       return(l)
-    },
-
+    }
+  ),
+  active = list(
     summary = function() {
       return(list(
         systemDirectory = self$systemDirectory,
         numberSymbols = length(self$listSymbols())
       ))
     }
-
   ),
+
   private = list(
     gdx_specVals_write = list(),
 

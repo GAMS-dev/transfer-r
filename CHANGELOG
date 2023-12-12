@@ -1,3 +1,7 @@
+GAMS Transfer R
+==================
+- `Container` property `summary` changed from a method to active binding
+
 GAMS Transfer R v2.8.0
 ==================
 - bug fix in reading symbols with unused UELs
