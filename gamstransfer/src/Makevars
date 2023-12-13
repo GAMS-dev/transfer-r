@@ -1,4 +1,3 @@
 CXX = clang++
-PKG_CXXFLAGS = -DGC_NO_MUTEX -m64 -ldl -lpthread -O3 -Wall -pipe -pedantic -Wno-unused -DNDEBUG
+PKG_CXXFLAGS = -D_GCL_RHACK_ -DGC_NO_MUTEX -m64 -ldl -lpthread -O3 -Wall -pipe -pedantic -Wno-unused -DNDEBUG
 PKG_CFLAGS = -D_GCL_RHACK_
-PKG_CXXFLAGS = -D_GCL_RHACK_
