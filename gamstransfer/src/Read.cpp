@@ -209,7 +209,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
   }
   else {
     // indx_matrix stores positions of UELs in the domain set
-    IntegerMatrix indx_matrix(nr_recs, dim);
+    IntegerMatrix indx_matrix = Rcpp::no_init(nr_recs, dim);
     int n_attr;
     if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
       n_attr = 5;
@@ -217,7 +217,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     else {
       n_attr = 1;
     }
-    NumericMatrix record_values(nr_recs, n_attr);
+    NumericMatrix record_values = Rcpp::no_init(nr_recs, n_attr);
     CharacterVector elem_text(nr_recs); // for elem_text
     int rec_nr = -1;
     while (gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &dummy)) {
