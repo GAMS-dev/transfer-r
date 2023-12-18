@@ -1,6 +1,7 @@
 GAMS Transfer R
 ==================
 - `Container` property `summary` changed from a method to active binding
+- Fixed overriding PKG_CXXFLAGS in Makevars
 
 GAMS Transfer R v2.8.0
 ==================

@@ -209,7 +209,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
   }
   else {
     // indx_matrix stores positions of UELs in the domain set
-    NumericMatrix indx_matrix(nr_recs, dim);
+    IntegerMatrix indx_matrix(nr_recs, dim);
     int n_attr;
     if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
       n_attr = 5;
@@ -298,11 +298,11 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
       // shift domain indices
       for (int k = 0; k < nrecs; k++) {
-        indx_matrix(k, d) = dom_uel_used[d][(int) indx_matrix(k, d) - 1] + 1;
+        indx_matrix(k, d) = dom_uel_used[d][indx_matrix(k, d) - 1] + 1;
       }
 
       // create a factor v
-      IntegerVector v = wrap(indx_matrix(_, d));
+      IntegerVector v = indx_matrix(_, d);
       CharacterVector ch = wrap(used_uels);
       v.attr("class") = "factor";
       v.attr("levels") = ch;

@@ -197,7 +197,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     int** uel_map = new int*[info.dim];
     IntegerVector uel_ids(info.dim);
     IntegerVector tempcol;
-    int ncols, nrows, rc;
+    int ncols{0}, nrows, rc;
     char Msg[GMS_SSSIZE];
 
     gdxStrIndexPtrs_t domains_ptr;
