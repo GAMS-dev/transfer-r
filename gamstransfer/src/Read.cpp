@@ -156,15 +156,15 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     }
 
   // if we just need metadata, stop here and return
-  if (!read_records) {
+  if (!read_records)
     return;
-  }
+
   int dom_dim, dom_type, dom_nrecs;
   // get domain symbol number and read if records is true
   if (!gdxSymbolGetDomain(PGX, sym_Nr, dom_symid))
-  stop("gt_read_symbol:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain). Symbol name = "s + sym_id);
+    stop("gt_read_symbol:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain). Symbol name = "s + sym_id);
 
-  std::vector<int> all_dom_nrecs(dim);
+  int all_dom_nrecs[dim];
   for (int d = 0; d < dim; d++) {
     // get sym info for domain d
     if (!gdxSymbolInfo(PGX, dom_symid[d], buf.data(), &dom_dim, &dom_type))
@@ -178,7 +178,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     if (!gdxDataReadRawStart(PGX, dom_symid[d], &dom_nrecs))
     stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + domain[d]);
     if (dom_nrecs < 0) stop("Invalid number of symbol records. Symbol name = "s + domain[d]);
-    all_dom_nrecs.at(d) = dom_nrecs;
+    all_dom_nrecs[d] = dom_nrecs;
 
     dom_uel_used[d] = new int[dom_nrecs];
     std::fill_n(dom_uel_used[d], dom_nrecs, 0); // initialize all to false
@@ -285,7 +285,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
       // change dom_uel_used from true/false to position in the symbol records
       int num_used = 0;
-      for (int k = 0; k < all_dom_nrecs.at(d); k++) {
+      for (int k = 0; k < all_dom_nrecs[d]; k++) {
         if (dom_uel_used[d][k] > 0) {
           dom_uel_used[d][k] = num_used++;
         }
