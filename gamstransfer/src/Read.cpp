@@ -188,7 +188,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       std::vector<int> uel_map (uel_count + 1, -1); //for each symbol
       for (int k=0; k < dom_nrecs; k++) {
         if (!gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &dummy))
-        stop("gt_read_symbol:gdxDataReadRaw GDX error (gdxDataReadRaw). Symbol name = "s + domain[d]);
+          stop("gt_read_symbol:gdxDataReadRaw GDX error (gdxDataReadRaw). Symbol name = "s + domain[d]);
 
         // uel_map.insert(std::make_pair(gdx_uel_index[0], k));
         uel_map[gdx_uel_index[0]] = k;
@@ -208,7 +208,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + sym_id);
   }
 
-  if (nr_recs == 0) {
+  if (!nr_recs) {
     if (sym_type != GMS_DT_ALIAS) {
       sym_list["records"] = R_NilValue;
       read_list[read_list_size] = clone(sym_list);
@@ -294,7 +294,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
       for (int k = 1; k <= uel_count; k++) {
         // if (dom_symid[d] == 0 || sym_uel_map.at((int) dom_symid[d]).count(k) != 0) {
-        if (dom_symid[d] == 0 || sym_uel_map[(int) dom_symid[d]][k] >= 0) {
+        if (!dom_symid[d] || sym_uel_map[(int) dom_symid[d]][k] >= 0) {
           idx = GET_DOM_MAP(d, k);
           if (dom_uel_used[d][idx] < 0) continue; // if not used, continue
           if (!gdxUMUelGet(PGX, k, Msg.data(), &iDummy)) {
@@ -319,7 +319,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       std::set<std::string> unique_domain(domain.begin(), domain.end());
       is_duplicated = (unique_domain.size() != domain.size());
       if (is_duplicated) {
-        if (domain.at(d).compare("*") == 0) {
+        if (!domain.at(d).compare("*")) {
           d_col_name = "uni_" + std::to_string(d + 1);
         }
         else {
@@ -327,7 +327,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
         }
       }
       else {
-        if (domain.at(d).compare("*") == 0) {
+        if (!domain.at(d).compare("*")) {
           d_col_name = "uni";
         }
         else {

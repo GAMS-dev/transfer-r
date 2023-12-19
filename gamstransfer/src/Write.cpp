@@ -277,7 +277,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
     NumericMatrix rec_vals(nrows, n_attr);
 
-    if (nrows == 0) {
+    if (!nrows) {
       if (info.dim != 0 || info.type == GMS_DT_SET) {
         if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       }
