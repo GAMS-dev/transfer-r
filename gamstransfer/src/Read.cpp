@@ -55,7 +55,6 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     gdxStrIndexPtrs_t domains_ptr;
     gdxStrIndex_t domains;
     GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
-    std::vector<double> levels, marginals, lower, upper, scale;
     int nr_recs, dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
     domain_type, idx;
     gdxUelIndex_t dom_symid;
@@ -64,8 +63,6 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
     std::string d_col_name;
     bool is_duplicated;
-    std::vector<std::string> domain, index, elemText;
-    std::vector<std::vector<std::string>> indices;
     char alias_for_id[GMS_SSSIZE], description[GMS_SSSIZE];
 
     // std::unordered_map<int, int> uel_map; //for each symbol
@@ -104,11 +101,12 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     domain_type = gdxSymbolGetDomainX(PGX, sym_Nr, domains_ptr);
     if (!domain_type) stop("gt_read_symbol:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX). Symbol name = "s + sym_id);
 
+    std::vector<std::string> domain(dim);
     for (int d=0; d < dim; d++) {
-      domain.push_back(domains_ptr[d]);
+      domain[d] = domains_ptr[d];
     }
     if (sym_type == GMS_DT_ALIAS) {
-      if (subtype == 0) {
+      if (!subtype) {
         // alias to the Universe
         strcpy(alias_for_id, "*");
 
@@ -304,7 +302,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
           if (!gdxUMUelGet(PGX, k, Msg.data(), &iDummy)) {
             stop("gt_read_symbol:gdxUMUelGet GDX error(gdxUMUelGet)");
           }
-          used_uels.push_back(Msg.data());
+          used_uels.emplace_back(Msg.data());
         }
       }
 
@@ -402,7 +400,7 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   // check for acronyms
   int n_acronyms;
   n_acronyms = gdxAcronymCount(gdxobj.gdx);
-  std::vector<int> acronyms;
+  std::vector<int> acronyms(n_acronyms);
   std::array<char, GMS_SSSIZE> acrName {};
   if (n_acronyms > 0) {
     warning("GDX file contains acronyms. "
@@ -410,7 +408,7 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
     int acrID;
     for (int i=0; i < n_acronyms; i++){
       gdxAcronymGetInfo(gdxobj.gdx, i+1, acrName.data(), Msg.data(), &acrID);
-      acronyms.push_back(acrID);
+      acronyms[i] = acrID;
     }
   }
 
