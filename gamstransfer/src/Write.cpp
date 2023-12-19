@@ -22,10 +22,13 @@
 // SOFTWARE.
 
 #include <Rcpp.h>
+#include <array>
 #include "gdxcc.h"
 #include "gclgms.h"
 #include "utilities.hpp"
+
 using namespace Rcpp;
+using namespace std::literals::string_literals;
 
 void WriteData(gdxHandle_t PGX, sym_info& mysym_info, StringVector names,
 IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
@@ -34,7 +37,7 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
   int rc, iDummy;
-  char gdx_err_msg[GMS_SSSIZE], Msg[GMS_SSSIZE];
+  std::array<char, GMS_SSSIZE> gdx_err_msg {}, Msg {};
   std::string rec_name;
   if (mode == 1) {
     GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
@@ -105,10 +108,10 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
     StringVector s(mysym_info.dim);
     if (mode != 1) {
       for (int d = 0; d < mysym_info.dim; d++) {
-        if (!gdxUMUelGet(PGX, gdx_uel_index[d], Msg, &iDummy)) {
+        if (!gdxUMUelGet(PGX, gdx_uel_index[d], Msg.data(), &iDummy)) {
           stop("WriteData:gdxUMUelGet GDX error(gdxUMUelGet)");
         }
-        s[d] = Msg;
+        s[d] = Msg.data();
       }
     }
     else {
@@ -116,7 +119,7 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
         s[d] = names[d];
       }
     }
-    gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg);
+    gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg.data());
 
     rec_name = rec_name + mysym_info.name;
     rec_name = rec_name + "(";
@@ -130,10 +133,10 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
     rec_name = rec_name + ")";
 
     if (mode == 1) {
-      stop("WriteData:gdxDataWriteStr GDX error in record %s:%s", rec_name, gdx_err_msg );
+      stop("WriteData:gdxDataWriteStr GDX error in record %s:%s", rec_name, gdx_err_msg.data() );
     }
     else {
-      stop("WriteData:gdxDataWriteMap GDX error in record %s:%s", rec_name, gdx_err_msg );
+      stop("WriteData:gdxDataWriteMap GDX error in record %s:%s", rec_name, gdx_err_msg.data() );
     }
   }
 
@@ -198,8 +201,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     IntegerVector uel_ids(info.dim);
     IntegerVector tempcol;
     int ncols{0}, nrows, rc;
-    char Msg[GMS_SSSIZE];
-
+    std::array<char, GMS_SSSIZE> Msg {};
     gdxStrIndexPtrs_t domains_ptr;
     gdxStrIndex_t domains;
     GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
@@ -246,16 +248,16 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         gdxGetLastError(gdxobj.gdx); // clears last error
         rc = gdxSymbolSetDomainX(gdxobj.gdx, info.sym_nr, (const char **)domains_ptr);
         if (!rc) {
-          gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
-          stop("gt_write_symbol:gdxSymbolSetDomain GDX error: %s",Msg);
+          gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg.data());
+          stop("gt_write_symbol:gdxSymbolSetDomain GDX error: %s",Msg.data());
         }
       }
     }
     else if (info.domain_type == "relaxed") {
       rc = gdxSymbolSetDomainX(gdxobj.gdx, info.sym_nr, (const char **)domains_ptr);
       if (!rc) {
-        gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
-        stop("gt_write_symbol:gdxSymbolSetDomainX GDX error: %s",Msg);
+        gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg.data());
+        stop("gt_write_symbol:gdxSymbolSetDomainX GDX error: %s",Msg.data());
       }
     }
 
@@ -425,8 +427,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
   // get the error count
   if (gdxDataErrorCount(gdxobj.gdx)) {
-      gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg);
-      stop("gt_write_symbol:gdxError GDX error for %s: %s", info.name, Msg);
+      gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg.data());
+      stop("gt_write_symbol:gdxError GDX error for %s: %s", info.name, Msg.data());
   }
 }
 

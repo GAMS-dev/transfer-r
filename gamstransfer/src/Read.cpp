@@ -22,10 +22,14 @@
 // SOFTWARE.
 
 #include <Rcpp.h>
+#include <array>
 #include "gdxcc.h"
 #include "gclgms.h"
 #include "utilities.hpp"
 using namespace Rcpp;
+
+
+using namespace std::literals::string_literals;
 
 // #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]].at(idx))
 #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])
@@ -55,7 +59,8 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     int nr_recs, dim, rc, iDummy, sym_type, nrecs, dummy, subtype,
     domain_type, idx;
     gdxUelIndex_t dom_symid;
-    char sym_id[GMS_SSSIZE], Msg[GMS_SSSIZE], buf[GMS_SSSIZE];
+    char sym_id[GMS_SSSIZE];
+    std::array<char, GMS_SSSIZE> Msg {}, buf {};
 
     std::string d_col_name;
     bool is_duplicated;
@@ -164,7 +169,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
   std::vector<int> all_dom_nrecs(dim);
   for (int d = 0; d < dim; d++) {
     // get sym info for domain d
-    if (!gdxSymbolInfo(PGX, dom_symid[d], buf, &dom_dim, &dom_type))
+    if (!gdxSymbolInfo(PGX, dom_symid[d], buf.data(), &dom_dim, &dom_type))
       stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
     if (!(dom_type == GMS_DT_SET || dom_type == GMS_DT_ALIAS)) {
       stop("Invalid domain data type.");
@@ -230,9 +235,9 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       rec_nr++;
       if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR || sym_type == GMS_DT_ALIAS) {
         if (sym_type == GMS_DT_SET || sym_type == GMS_DT_ALIAS) {
-          rc = gdxGetElemText(PGX, gdx_values[GMS_VAL_LEVEL], Msg, &iDummy);
+          rc = gdxGetElemText(PGX, gdx_values[GMS_VAL_LEVEL], Msg.data(), &iDummy);
           if (rc != 0) {
-            elem_text(rec_nr) = Msg;
+            elem_text(rec_nr) = Msg.data();
           }
           else {
             elem_text(rec_nr) = "";
@@ -296,10 +301,10 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
         if (dom_symid[d] == 0 || sym_uel_map[(int) dom_symid[d]][k] >= 0) {
           idx = GET_DOM_MAP(d, k);
           if (dom_uel_used[d][idx] < 0) continue; // if not used, continue
-          if (!gdxUMUelGet(PGX, k, Msg, &iDummy)) {
+          if (!gdxUMUelGet(PGX, k, Msg.data(), &iDummy)) {
             stop("gt_read_symbol:gdxUMUelGet GDX error(gdxUMUelGet)");
           }
-          used_uels.push_back(Msg);
+          used_uels.push_back(Msg.data());
         }
       }
 
@@ -377,7 +382,6 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
                 CharacterVector sysDir, LogicalVector read_records) {
   // gdxHandle_t PGX = NULL;
-  char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], acrName[GMS_SSSIZE];
   int         ErrNr, sym_Nr;
 
   std::string sym_name;
@@ -393,18 +397,19 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   gdxOpenRead(gdxobj.gdx, gdx_name.c_str(), &ErrNr);
   if (ErrNr) stop("CPP_readSuper:gdxOpenRead GDX error with error code %i", ErrNr);
 
-  gdxFileVersion(gdxobj.gdx, Msg, Producer);
+  std::array<char, GMS_SSSIZE> Msg {}, Producer {};
+  gdxFileVersion(gdxobj.gdx, Msg.data(), Producer.data());
   // check for acronyms
   int n_acronyms;
   n_acronyms = gdxAcronymCount(gdxobj.gdx);
   std::vector<int> acronyms;
-
+  std::array<char, GMS_SSSIZE> acrName {};
   if (n_acronyms > 0) {
     warning("GDX file contains acronyms. "
           "Acronyms are not supported and are set to GAMS NA.\n");
     int acrID;
     for (int i=0; i < n_acronyms; i++){
-      gdxAcronymGetInfo(gdxobj.gdx, i+1, acrName, Msg, &acrID);
+      gdxAcronymGetInfo(gdxobj.gdx, i+1, acrName.data(), Msg.data(), &acrID);
       acronyms.push_back(acrID);
     }
   }
