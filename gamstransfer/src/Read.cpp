@@ -71,7 +71,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     // std::unordered_map<int, int> uel_map; //for each symbol
     // loop over symbols to get metadata
     if (!gdxSymbolInfo(PGX, sym_Nr, sym_id, &dim, &sym_type))
-      stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+      stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo). Symbol name = "s + sym_id );
 
 
     // initialize empty lists for data
@@ -99,10 +99,10 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     int** dom_uel_used =new int*[dim];
 
     if (!gdxSymbolInfoX(PGX, sym_Nr, &nrecs, &subtype, description))
-      stop("gt_read_symbol:gdxSymbolInfoX GDX error (gdxSymbolInfoX)");
+      stop("gt_read_symbol:gdxSymbolInfoX GDX error (gdxSymbolInfoX). Symbol name = "s + sym_id);
 
     domain_type = gdxSymbolGetDomainX(PGX, sym_Nr, domains_ptr);
-    if (!domain_type) stop("gt_read_symbol:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX)");
+    if (!domain_type) stop("gt_read_symbol:gdxSymbolGetDomainX GDX error (gdxSymbolGetDomainX). Symbol name = "s + sym_id);
 
     for (int d=0; d < dim; d++) {
       domain.push_back(domains_ptr[d]);
@@ -113,13 +113,13 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
         strcpy(alias_for_id, "*");
 
         if (!gdxDataReadRawStart(PGX, sym_Nr, &nr_recs))
-        stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
+        stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + sym_id);
         sym_list["class"] = "UniverseAlias";
       }
       else {
         // normal Alias
         if (!gdxSymbolInfo(PGX, subtype, alias_for_id, &dim, &dummy))
-          stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+          stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo). Symbol name = "s + sym_id);
         sym_list["class"] = "Alias";
       }
       sym_list["name"] = sym_id;
@@ -164,22 +164,22 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
   int dom_dim, dom_type, dom_nrecs;
   // get domain symbol number and read if records is true
   if (!gdxSymbolGetDomain(PGX, sym_Nr, dom_symid))
-  stop("gt_read_symbol:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain)");
+  stop("gt_read_symbol:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain). Symbol name = "s + sym_id);
 
   std::vector<int> all_dom_nrecs(dim);
   for (int d = 0; d < dim; d++) {
     // get sym info for domain d
     if (!gdxSymbolInfo(PGX, dom_symid[d], buf.data(), &dom_dim, &dom_type))
-      stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
+      stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo). Symbol name = "s + domain[d]);
     if (!(dom_type == GMS_DT_SET || dom_type == GMS_DT_ALIAS)) {
-      stop("Invalid domain data type.");
+      stop("Invalid domain data type. Symbol name = "s + sym_id);
     }
-    if (dom_dim != 1) stop("Invalid domain dimension.");
+    if (dom_dim != 1) stop("Invalid domain dimension. Symbol name = "s + sym_id);
 
     // read raw start for domain d
     if (!gdxDataReadRawStart(PGX, dom_symid[d], &dom_nrecs))
-    stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
-    if (dom_nrecs < 0) stop("Invalid number of symbol records.");
+    stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + domain[d]);
+    if (dom_nrecs < 0) stop("Invalid number of symbol records. Symbol name = "s + domain[d]);
     all_dom_nrecs.at(d) = dom_nrecs;
 
     dom_uel_used[d] = new int[dom_nrecs];
@@ -192,7 +192,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       std::vector<int> uel_map (uel_count + 1, -1); //for each symbol
       for (int k=0; k < dom_nrecs; k++) {
         if (!gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &dummy))
-        stop("gt_read_symbol:gdxDataReadRaw GDX error (gdxDataReadRaw)");
+        stop("gt_read_symbol:gdxDataReadRaw GDX error (gdxDataReadRaw). Symbol name = "s + domain[d]);
 
         // uel_map.insert(std::make_pair(gdx_uel_index[0], k));
         uel_map[gdx_uel_index[0]] = k;
@@ -204,12 +204,12 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
     // read done for domain
     if (!gdxDataReadDone(PGX))
-      stop("gt_read_symbol:gdxDataReadDone GDX error (gdxDataReadDone)");
+      stop("gt_read_symbol:gdxDataReadDone GDX error (gdxDataReadDone). Symbol name = "s + domain[d]);
   }
 
   // start reading the symbol
   if (!gdxDataReadRawStart(PGX, sym_Nr, &nr_recs)) {
-    stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart)");
+    stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + sym_id);
   }
 
   if (nr_recs == 0) {

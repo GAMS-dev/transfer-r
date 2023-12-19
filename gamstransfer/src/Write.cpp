@@ -75,7 +75,7 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
     if (elemText.compare("") != 0 ) {
       int txtnr;
       if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr)) {
-        stop("WriteData:gdxAddSetText GDX error (gdxAddSetText)");
+        stop("WriteData:gdxAddSetText GDX error (gdxAddSetText). Symbol name = "s + mysym_info.name);
       }
       Values[GMS_VAL_LEVEL] = txtnr;
       Values[GMS_VAL_MARGINAL] = 0;
@@ -133,10 +133,10 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
     rec_name = rec_name + ")";
 
     if (mode == 1) {
-      stop("WriteData:gdxDataWriteStr GDX error in record %s:%s", rec_name, gdx_err_msg.data() );
+      stop("WriteData:gdxDataWriteStr GDX error for symbol %s in record %s:%s", mysym_info.name, rec_name, gdx_err_msg.data() );
     }
     else {
-      stop("WriteData:gdxDataWriteMap GDX error in record %s:%s", rec_name, gdx_err_msg.data() );
+      stop("WriteData:gdxDataWriteMap GDX error for symbol %s in record %s:%s", mysym_info.name, rec_name, gdx_err_msg.data() );
     }
   }
 
@@ -230,12 +230,12 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     if (mode == 1) {
       if (!gdxDataWriteStrStart(gdxobj.gdx, info.name.c_str(),
       info.description.c_str(), info.dim, info.type, info.subtype))
-      stop("gt_write_symbol:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart)");
+      stop("gt_write_symbol:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart). Symbol name = "s + info.name);
     }
     else {
       if (!gdxDataWriteMapStart(gdxobj.gdx, info.name.c_str(),
       info.description.c_str(), info.dim, info.type, info.subtype))
-      stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart)");
+      stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart). Symbol name = "s + info.name);
     }
 
     for (int d=0; d < info.dim; d++) {
@@ -249,7 +249,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         rc = gdxSymbolSetDomainX(gdxobj.gdx, info.sym_nr, (const char **)domains_ptr);
         if (!rc) {
           gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg.data());
-          stop("gt_write_symbol:gdxSymbolSetDomain GDX error: %s",Msg.data());
+          stop("gt_write_symbol:gdxSymbolSetDomain GDX error: %s, Symbol name: %s",Msg.data(), info.name);
         }
       }
     }
@@ -257,12 +257,12 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       rc = gdxSymbolSetDomainX(gdxobj.gdx, info.sym_nr, (const char **)domains_ptr);
       if (!rc) {
         gdxErrorStr(gdxobj.gdx, gdxGetLastError(gdxobj.gdx), Msg.data());
-        stop("gt_write_symbol:gdxSymbolSetDomainX GDX error: %s",Msg.data());
+        stop("gt_write_symbol:gdxSymbolSetDomainX GDX error: %s, Symbol name: %s", Msg.data(), info.name);
       }
     }
 
     if (!info.records) {
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       delete[] uel_map;
       return;
     }
@@ -279,7 +279,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
     if (nrows == 0) {
       if (info.dim != 0 || info.type == GMS_DT_SET) {
-        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       }
       else {
         NumericVector dummyvec;
@@ -297,7 +297,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
         WriteData(gdxobj.gdx, info, "", dummyintvec, dummyvec, "", mode);
 
-        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       }
     }
     else {
@@ -415,7 +415,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           }
         }
       }
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone)");
+      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
     }
 
     if (mode != 1) {
