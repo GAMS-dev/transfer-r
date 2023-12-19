@@ -93,8 +93,6 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
     }
 
-    int** dom_uel_used =new int*[dim];
-
     if (!gdxSymbolInfoX(PGX, sym_Nr, &nrecs, &subtype, description))
       stop("gt_read_symbol:gdxSymbolInfoX GDX error (gdxSymbolInfoX). Symbol name = "s + sym_id);
 
@@ -165,6 +163,8 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     stop("gt_read_symbol:gdxSymbolGetDomain GDX error (gdxSymbolGetDomain). Symbol name = "s + sym_id);
 
   int all_dom_nrecs[dim];
+  std::vector<std::vector<int>> dom_uel_used(dim);
+
   for (int d = 0; d < dim; d++) {
     // get sym info for domain d
     if (!gdxSymbolInfo(PGX, dom_symid[d], buf.data(), &dom_dim, &dom_type))
@@ -179,9 +179,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + domain[d]);
     if (dom_nrecs < 0) stop("Invalid number of symbol records. Symbol name = "s + domain[d]);
     all_dom_nrecs[d] = dom_nrecs;
-
-    dom_uel_used[d] = new int[dom_nrecs];
-    std::fill_n(dom_uel_used[d], dom_nrecs, 0); // initialize all to false
+    dom_uel_used[d] = std::vector(dom_nrecs, 0);
 
     // if domain is not read before store a sym uel map
     // sym uel map gives the place of a given uel in given domain sym id.
@@ -363,12 +361,6 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       read_list[read_list_size] = clone(sym_list);
     }
   }
-
-  // delete used uel array
-  for (int d = 0; d < dim; d++) {
-    delete[] dom_uel_used[d];
-  }
-  delete[] dom_uel_used;
 
   if (!gdxDataReadDone(PGX))
     stop("gt_read_symbol:gdxDataReadDone GDX error (gdxDataReadDone)");
