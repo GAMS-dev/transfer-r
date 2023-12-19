@@ -226,12 +226,12 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     }
 
     if (mode == 1) {
-      if (!gdxDataWriteStrStart(gdxobj.gdx, info.name.c_str(), 
+      if (!gdxDataWriteStrStart(gdxobj.gdx, info.name.c_str(),
       info.description.c_str(), info.dim, info.type, info.subtype))
       stop("gt_write_symbol:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart)");
     }
     else {
-      if (!gdxDataWriteMapStart(gdxobj.gdx, info.name.c_str(), 
+      if (!gdxDataWriteMapStart(gdxobj.gdx, info.name.c_str(),
       info.description.c_str(), info.dim, info.type, info.subtype))
       stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart)");
     }

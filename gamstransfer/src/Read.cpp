@@ -27,6 +27,7 @@
 #include "utilities.hpp"
 using namespace Rcpp;
 
+// #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]].at(idx))
 #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])
 
 double gt_map_acronyms(std::vector<int> acronyms, double value) {
@@ -38,9 +39,10 @@ for (auto &a:acronyms) {
 return value;
 }
 
-void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records, 
+void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     List &read_list, int read_list_size,
-    std::map<int, std::map<int, int>> &sym_uel_map, int uel_count,
+    // std::unordered_map<int, std::unordered_map<int, int>> &sym_uel_map, int uel_count,
+    std::vector<std::vector<int>> &sym_uel_map, int uel_count,
     int n_acronyms, std::vector<int> acronyms) {
 
     gdxUelIndex_t gdx_uel_index;
@@ -61,7 +63,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
     std::vector<std::vector<std::string>> indices;
     char alias_for_id[GMS_SSSIZE], description[GMS_SSSIZE];
 
-    std::map<int, int> uel_map; //for each symbol
+    // std::unordered_map<int, int> uel_map; //for each symbol
     // loop over symbols to get metadata
     if (!gdxSymbolInfo(PGX, sym_Nr, sym_id, &dim, &sym_type))
       stop("gt_read_symbol:gdxSymbolInfo GDX error (gdxSymbolInfo)");
@@ -180,14 +182,18 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
 
     // if domain is not read before store a sym uel map
     // sym uel map gives the place of a given uel in given domain sym id.
-    if (dom_symid[d] > 0 || sym_uel_map.count(dom_symid[d]) == 0) {
+    if (dom_symid[d] > 0 || sym_uel_map[dom_symid[d]].empty()) {
+    // if (dom_symid[d] > 0 || sym_uel_map.count(dom_symid[d]) == 0) {
+      std::vector<int> uel_map (uel_count + 1, -1); //for each symbol
       for (int k=0; k < dom_nrecs; k++) {
         if (!gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &dummy))
         stop("gt_read_symbol:gdxDataReadRaw GDX error (gdxDataReadRaw)");
 
-        uel_map.insert(std::make_pair(gdx_uel_index[0], k));
+        // uel_map.insert(std::make_pair(gdx_uel_index[0], k));
+        uel_map[gdx_uel_index[0]] = k;
       }
-      sym_uel_map.insert(std::make_pair(dom_symid[d], uel_map));
+      // sym_uel_map.insert(std::make_pair(dom_symid[d], uel_map));
+      sym_uel_map[dom_symid[d]] = uel_map;
       uel_map.clear();
     }
 
@@ -258,7 +264,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
         }
       }
         //store domain labels
-        //dom_uel_used is true if idx positioned UEL for domain d, 
+        //dom_uel_used is true if idx positioned UEL for domain d,
         // is used in the symbol
         for (int d = 0; d < dim; d++) {
           idx = GET_DOM_MAP(d, gdx_uel_index[d]);
@@ -286,7 +292,8 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       }
 
       for (int k = 1; k <= uel_count; k++) {
-        if (dom_symid[d] == 0 || sym_uel_map.at((int) dom_symid[d]).count(k) != 0) {
+        // if (dom_symid[d] == 0 || sym_uel_map.at((int) dom_symid[d]).count(k) != 0) {
+        if (dom_symid[d] == 0 || sym_uel_map[(int) dom_symid[d]][k] >= 0) {
           idx = GET_DOM_MAP(d, k);
           if (dom_uel_used[d][idx] < 0) continue; // if not used, continue
           if (!gdxUMUelGet(PGX, k, Msg, &iDummy)) {
@@ -408,8 +415,8 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
 
   std::vector<bool> sym_enabled(symCount + 1, false); // initialize sym_enabled with false
 
-  std::map<int, std::map<int, int>> sym_uel_map;
-
+  // std::unordered_map<int, std::unordered_map<int, int>> sym_uel_map;
+  std::vector<std::vector<int>> sym_uel_map (symCount + 1);
   int l1_preallocate_size;
   CharacterVector symNames;
 
