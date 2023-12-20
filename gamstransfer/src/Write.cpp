@@ -31,7 +31,7 @@ using namespace Rcpp;
 using namespace std::literals::string_literals;
 
 void WriteData(gdxHandle_t PGX, sym_info& mysym_info, StringVector names,
-IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
+std::vector<int> uel_ids, NumericVector V, std::string elemText, int mode) {
   gdxUelIndex_t gdx_uel_index;
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
@@ -187,8 +187,6 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
 
 
 void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
-    IntegerVector uel_ids(info.dim);
-    IntegerVector tempcol;
     int ncols{0}, nrows, rc;
     std::array<char, GMS_SSSIZE> Msg {};
     gdxStrIndexPtrs_t domains_ptr;
@@ -202,11 +200,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
       // register UELs
       CharacterVector dom_col_string(nrows);
-      IntegerVector tempcol(nrows);
-
       for (int d = 0; d < info.dim; d++) {
-        tempcol = (*info.records)[d];
-        dom_col_string = tempcol.attr("levels");
+        dom_col_string = static_cast<IntegerVector>((*info.records)[d]).attr("levels");
         if (mode == 1) {
           gt_register_uels(gdxobj, dom_col_string, NULL);
         }
@@ -262,6 +257,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
     NumericMatrix rec_vals(nrows, n_attr);
 
+    std::vector<int> dummy_int_vec;
     if (!nrows) {
       if (info.dim != 0 || info.type == GMS_DT_SET) {
         if (!gdxDataWriteDone(gdxobj.gdx))
@@ -269,7 +265,6 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       }
       else {
         NumericVector dummyvec;
-        IntegerVector dummyintvec;
         // for scalars, write the default values
         // no attribute column. Fill all values with default
         if (info.type == GMS_DT_PAR) {
@@ -280,7 +275,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
             info.missing_attributes[i] = true;
         }
 
-        WriteData(gdxobj.gdx, info, "", dummyintvec, dummyvec, "", mode);
+        WriteData(gdxobj.gdx, info, "", dummy_int_vec, dummyvec, "", mode);
 
         if (!gdxDataWriteDone(gdxobj.gdx))
           stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
@@ -289,19 +284,14 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     else {
       StringMatrix rec_domain_str(nrows, info.dim);
       IntegerMatrix rec_domain_int(nrows, info.dim);
-      StringVector tempcol_str(nrows);
 
       if (mode == 1) {
-        for (int d = 0; d < info.dim; d++) {
-          tempcol_str = (*info.records)[d];
-          rec_domain_str(_, d) = tempcol_str;
-        }
+        for (int d = 0; d < info.dim; d++)
+          rec_domain_str(_, d) = static_cast<StringVector>((*info.records)[d]);
       }
       else {
-        for (int d = 0; d < info.dim; d++) {
-          tempcol = (*info.records)[d];
-          rec_domain_int(_, d) = tempcol;
-        }
+        for (int d = 0; d < info.dim; d++)
+          rec_domain_int(_, d) = static_cast<IntegerVector>((*info.records)[d]);
       }
 
       StringVector elem_text(nrows);
@@ -314,15 +304,13 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         }
       }
       else {
-        NumericVector temp_num_col(nrows);
         if (ncols > info.dim) {
           // one or more attribute columns
           // for parameters this is enough to say all attributes are present
           if (ncols - info.dim == n_attr) {
             // all attribute columns are present
             for (int d = info.dim; d < ncols; d++) {
-              temp_num_col = (*info.records)[d];
-              rec_vals(_, d-info.dim) = temp_num_col;
+              rec_vals(_, d-info.dim) = static_cast<NumericVector>((*info.records)[d]);
             }
           }
           else {
@@ -341,8 +329,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
               std::string attr = attributes[i];
 
               if ( std::any_of(colnames_vec.begin(), colnames_vec.end(), [attr](std::string i){return i==attr;}) ) {
-                temp_num_col = (*info.records)[attr];
-                rec_vals(_, rec_val_column_count) = temp_num_col;
+                rec_vals(_, rec_val_column_count) = static_cast<NumericVector>((*info.records)[attr]);
                 rec_val_column_count++;
               }
               else {
@@ -359,6 +346,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       }
 
       int rel_id;
+      std::vector<int> uel_ids(info.dim);
       StringVector names(info.dim);
       for (int i =0; i < nrows; i++) {
         if (mode != 1) {
@@ -372,7 +360,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
         if (info.type != GMS_DT_SET) {
           if (mode == 1) {
-            WriteData(gdxobj.gdx, info, names, 0, rec_vals(i, _), "", mode);
+            WriteData(gdxobj.gdx, info, names, dummy_int_vec, rec_vals(i, _), "", mode);
           }
           else {
             WriteData(gdxobj.gdx, info, "", uel_ids, rec_vals(i, _), "", mode);
@@ -384,7 +372,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           text = info.records->length() == info.dim + 1 ? Rcpp::as<std::string>(elem_text[i]) : "";
 
           if (mode == 1) {
-            WriteData(gdxobj.gdx, info, names, 0, zero_vec, text, mode);
+            WriteData(gdxobj.gdx, info, names, dummy_int_vec, zero_vec, text, mode);
           }
           else {
             WriteData(gdxobj.gdx, info, "", uel_ids, zero_vec, text, mode);
