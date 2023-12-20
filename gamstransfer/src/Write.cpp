@@ -36,9 +36,7 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
   gdxValues_t       Values;
-  int rc, iDummy;
-  std::array<char, GMS_SSSIZE> gdx_err_msg {}, Msg {};
-  std::string rec_name;
+
   if (mode == 1) {
     GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
     for (int d=0; d < mysym_info.dim; d++)
@@ -53,12 +51,6 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   const double* default_values;
   if (mysym_info.type == GMS_DT_VAR || mysym_info.type == GMS_DT_EQU) {
     default_values = mysym_info.type == GMS_DT_VAR ? gmsDefRecVar[mysym_info.subtype] : gmsDefRecEqu[mysym_info.subtype - GMS_EQU_USERINFO_BASE];
-    // if (mysym_info.type == GMS_DT_VAR) {
-    //   default_values = gmsDefRecVar[mysym_info.subtype];
-    // }
-    // else {
-    //   default_values = gmsDefRecEqu[mysym_info.subtype - GMS_EQU_USERINFO_BASE];
-    // }
 
     for (int i =0; i < 5; i++) {
       if (mysym_info.missing_attributes[i]) {
@@ -90,6 +82,7 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
     // parameter
     Values[GMS_VAL_LEVEL] = mysym_info.missing_attributes[GMS_VAL_LEVEL] ? 0 : V[GMS_VAL_LEVEL];
 
+  int rc;
   if (mode == 1) {
     rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   }
@@ -99,6 +92,8 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   if (!rc) {
     StringVector s(mysym_info.dim);
     if (mode != 1) {
+      int iDummy;
+      std::array<char, GMS_SSSIZE> Msg {};
       for (int d = 0; d < mysym_info.dim; d++) {
         if (!gdxUMUelGet(PGX, gdx_uel_index[d], Msg.data(), &iDummy))
           stop("WriteData:gdxUMUelGet GDX error(gdxUMUelGet)");
@@ -110,8 +105,10 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
         s[d] = names[d];
     }
 
+    std::array<char, GMS_SSSIZE> gdx_err_msg {};
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg.data());
 
+    std::string rec_name;
     rec_name = rec_name + mysym_info.name;
     rec_name = rec_name + "(";
     for (int d = 0; d < mysym_info.dim; d++)
@@ -190,8 +187,6 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
 
 
 void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
-    StringVector names(info.dim);
-    int** uel_map = new int*[info.dim];
     IntegerVector uel_ids(info.dim);
     IntegerVector tempcol;
     int ncols{0}, nrows, rc;
@@ -200,6 +195,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     gdxStrIndex_t domains;
     GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
 
+    std::vector<std::vector<int>> uel_map (info.dim);
     if (info.records) {
       nrows = info.records->nrows();
       ncols = info.records->size();
@@ -216,8 +212,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         }
         else {
           // mapped mode
-          uel_map[d] = new int[dom_col_string.length()];
-          gt_register_uels(gdxobj, dom_col_string, uel_map[d]);
+          uel_map[d] = std::vector<int>(dom_col_string.length());
+          gt_register_uels(gdxobj, dom_col_string, uel_map[d].data());
         }
       }
     }
@@ -258,7 +254,6 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     if (!info.records) {
       if (!gdxDataWriteDone(gdxobj.gdx))
         stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
-      delete[] uel_map;
       return;
     }
 
@@ -364,6 +359,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       }
 
       int rel_id;
+      StringVector names(info.dim);
       for (int i =0; i < nrows; i++) {
         if (mode != 1) {
           for (int d =0; d< info.dim; d++) {
@@ -386,12 +382,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           NumericVector zero_vec = {0};
           std::string text;
           text = info.records->length() == info.dim + 1 ? Rcpp::as<std::string>(elem_text[i]) : "";
-          // if (info.records->length() == info.dim + 1) {
-          //   text = Rcpp::as<std::string>(elem_text[i]);
-          // }
-          // else {
-          //   text = "";
-          // }
+
           if (mode == 1) {
             WriteData(gdxobj.gdx, info, names, 0, zero_vec, text, mode);
           }
@@ -403,12 +394,6 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       if (!gdxDataWriteDone(gdxobj.gdx))
         stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
     }
-
-    if (mode != 1) {
-      for (int d =0; d < info.dim; d++)
-        delete[] uel_map[d];
-    }
-    delete[] uel_map;
 
   // get the error count
   if (gdxDataErrorCount(gdxobj.gdx)) {
