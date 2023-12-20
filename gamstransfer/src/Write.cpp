@@ -41,25 +41,24 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   std::string rec_name;
   if (mode == 1) {
     GDXSTRINDEXPTRS_INIT(Indx_labels, Indx);
-    for (int d=0; d < mysym_info.dim; d++) {
+    for (int d=0; d < mysym_info.dim; d++)
       strcpy(Indx[d], names[d]);
-    }
   }
   else {
-    for (int d=0; d < mysym_info.dim; d++) {
+    for (int d=0; d < mysym_info.dim; d++)
       gdx_uel_index[d] = uel_ids[d];
-    }
   }
 
   int v_count = 0;
   const double* default_values;
   if (mysym_info.type == GMS_DT_VAR || mysym_info.type == GMS_DT_EQU) {
-    if (mysym_info.type == GMS_DT_VAR) {
-      default_values = gmsDefRecVar[mysym_info.subtype];
-    }
-    else {
-      default_values = gmsDefRecEqu[mysym_info.subtype - GMS_EQU_USERINFO_BASE];
-    }
+    default_values = mysym_info.type == GMS_DT_VAR ? gmsDefRecVar[mysym_info.subtype] : gmsDefRecEqu[mysym_info.subtype - GMS_EQU_USERINFO_BASE];
+    // if (mysym_info.type == GMS_DT_VAR) {
+    //   default_values = gmsDefRecVar[mysym_info.subtype];
+    // }
+    // else {
+    //   default_values = gmsDefRecEqu[mysym_info.subtype - GMS_EQU_USERINFO_BASE];
+    // }
 
     for (int i =0; i < 5; i++) {
       if (mysym_info.missing_attributes[i]) {
@@ -74,9 +73,9 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
   else if (mysym_info.type == GMS_DT_SET) {
     if (elemText.compare("") != 0 ) {
       int txtnr;
-      if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr)) {
+      if (!gdxAddSetText(PGX, elemText.c_str(), &txtnr))
         stop("WriteData:gdxAddSetText GDX error (gdxAddSetText). Symbol name = "s + mysym_info.name);
-      }
+
       Values[GMS_VAL_LEVEL] = txtnr;
       Values[GMS_VAL_MARGINAL] = 0;
       Values[GMS_VAL_UPPER] = 0;
@@ -84,41 +83,33 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
       Values[GMS_VAL_SCALE] = 0;
 
     }
-    else {
+    else
       Values[GMS_VAL_LEVEL]=0;
-    }
   }
-  else {
+  else
     // parameter
-    if (mysym_info.missing_attributes[GMS_VAL_LEVEL]) {
-      Values[GMS_VAL_LEVEL] = 0;
-    }
-    else {
-      Values[GMS_VAL_LEVEL] = V[GMS_VAL_LEVEL];
-    }
-  }
+    Values[GMS_VAL_LEVEL] = mysym_info.missing_attributes[GMS_VAL_LEVEL] ? 0 : V[GMS_VAL_LEVEL];
+
   if (mode == 1) {
     rc = gdxDataWriteStr(PGX, (const char **)Indx, Values);
   }
-  else {
+  else
     rc = gdxDataWriteMap(PGX, gdx_uel_index, Values);
-  }
 
   if (!rc) {
     StringVector s(mysym_info.dim);
     if (mode != 1) {
       for (int d = 0; d < mysym_info.dim; d++) {
-        if (!gdxUMUelGet(PGX, gdx_uel_index[d], Msg.data(), &iDummy)) {
+        if (!gdxUMUelGet(PGX, gdx_uel_index[d], Msg.data(), &iDummy))
           stop("WriteData:gdxUMUelGet GDX error(gdxUMUelGet)");
-        }
         s[d] = Msg.data();
       }
     }
     else {
-      for (int d = 0; d < mysym_info.dim; d++) {
+      for (int d = 0; d < mysym_info.dim; d++)
         s[d] = names[d];
-      }
     }
+
     gdxErrorStr(PGX, gdxGetLastError(PGX), gdx_err_msg.data());
 
     rec_name = rec_name + mysym_info.name;
@@ -135,9 +126,8 @@ IntegerVector uel_ids, NumericVector V, std::string elemText, int mode) {
     if (mode == 1) {
       stop("WriteData:gdxDataWriteStr GDX error for symbol %s in record %s:%s", mysym_info.name, rec_name, gdx_err_msg.data() );
     }
-    else {
+    else
       stop("WriteData:gdxDataWriteMap GDX error for symbol %s in record %s:%s", mysym_info.name, rec_name, gdx_err_msg.data() );
-    }
   }
 
   return;
@@ -147,32 +137,35 @@ void gt_register_uels(gt_gdx& gdxobj, CharacterVector arr, int* uel_id ) {
   int uel_no, N, rc;
   std::string myUEL;
   rc = gdxUELRegisterStrStart(gdxobj.gdx);
-  if (!rc) stop("gt_register_uels:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
+  if (!rc)
+    stop("gt_register_uels:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
 
   N = arr.length();
   for (int i = 0; i < N; i++) {
     myUEL = arr[i];
     rc = gdxUELRegisterStr(gdxobj.gdx, myUEL.c_str(), &uel_no);
-    if (!rc) stop("Error registering UEL: %s", myUEL);
+    if (!rc)
+      stop("Error registering UEL: %s", myUEL);
 
-    if (uel_id) {
+    if (uel_id)
       uel_id[i] = uel_no;
-    }
   }
+
   if (!gdxUELRegisterDone(gdxobj.gdx))
     stop("gt_register_uels:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
-
 }
 
 void gt_open_write(gt_gdx& gdxobj, std::string filename, bool compress) {
   int rc, err_nr;
   if (!compress) {
     rc = gdxOpenWrite(gdxobj.gdx, filename.c_str(), "GAMS Transfer", &err_nr);
-    if (!rc) stop("gt_open_write:gdxOpenWrite Error opening the file %s with error code %i", filename, err_nr);
+    if (!rc)
+      stop("gt_open_write:gdxOpenWrite Error opening the file %s with error code %i", filename, err_nr);
   }
   else {
     rc = gdxOpenWriteEx(gdxobj.gdx, filename.c_str(), "GAMS Transfer", 1, &err_nr);
-    if (!rc) stop("gt_open_write:gdxOpenWriteEx Error opening the file %s with error code %i", filename, err_nr);
+    if (!rc)
+      stop("gt_open_write:gdxOpenWriteEx Error opening the file %s with error code %i", filename, err_nr);
   }
 }
 
@@ -181,17 +174,18 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
   std::string uel;
 
   rc = gdxUELRegisterStrStart(gdxobj.gdx);
-  if (!rc) stop("gt_register_priority_uels:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
+  if (!rc)
+    stop("gt_register_priority_uels:gdxUELRegisterStrStart GDX error (gdxUELRegisterStrStart)");
 
   for (int i = 0; i < uel_priority.length(); i++) {
     uel = Rcpp::as<std::string>(uel_priority[i]);
     rc = gdxUELRegisterStr(gdxobj.gdx, uel.c_str(), &uel_no);
-    if (!rc) stop("Error registering UEL: %s", uel);
+    if (!rc)
+      stop("Error registering UEL: %s", uel);
   }
 
   if (!gdxUELRegisterDone(gdxobj.gdx))
-  stop("gt_register_priority_uels:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
-
+    stop("gt_register_priority_uels:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
 }
 
 
@@ -213,6 +207,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       // register UELs
       CharacterVector dom_col_string(nrows);
       IntegerVector tempcol(nrows);
+
       for (int d = 0; d < info.dim; d++) {
         tempcol = (*info.records)[d];
         dom_col_string = tempcol.attr("levels");
@@ -230,17 +225,16 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     if (mode == 1) {
       if (!gdxDataWriteStrStart(gdxobj.gdx, info.name.c_str(),
       info.description.c_str(), info.dim, info.type, info.subtype))
-      stop("gt_write_symbol:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart). Symbol name = "s + info.name);
+        stop("gt_write_symbol:gdxDataWriteStrStart GDX error (gdxDataWriteStrStart). Symbol name = "s + info.name);
     }
     else {
       if (!gdxDataWriteMapStart(gdxobj.gdx, info.name.c_str(),
       info.description.c_str(), info.dim, info.type, info.subtype))
-      stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart). Symbol name = "s + info.name);
+        stop("gt_write_symbol:gdxDataWriteMapStart GDX error (gdxDataWriteMapStart). Symbol name = "s + info.name);
     }
 
-    for (int d=0; d < info.dim; d++) {
+    for (int d=0; d < info.dim; d++)
       strcpy(domains_ptr[d], info.domain[d].c_str());
-    }
 
     if (info.domain_type == "regular") {
       rc = gdxSymbolSetDomain(gdxobj.gdx, (const char **)domains_ptr);
@@ -262,24 +256,21 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     }
 
     if (!info.records) {
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
+      if (!gdxDataWriteDone(gdxobj.gdx))
+        stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       delete[] uel_map;
       return;
     }
 
     int n_attr;
-    if (info.type == GMS_DT_PAR) {
-      n_attr = 1;
-    }
-    else {
-      n_attr = 5;
-    }
+    n_attr = info.type == GMS_DT_PAR ? 1 : 5;
 
     NumericMatrix rec_vals(nrows, n_attr);
 
     if (!nrows) {
       if (info.dim != 0 || info.type == GMS_DT_SET) {
-        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
+        if (!gdxDataWriteDone(gdxobj.gdx))
+          stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       }
       else {
         NumericVector dummyvec;
@@ -290,14 +281,14 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           info.missing_attributes[GMS_VAL_LEVEL] = true;
         }
         else {
-          for (int i = 0; i < n_attr; i++) {
+          for (int i = 0; i < n_attr; i++)
             info.missing_attributes[i] = true;
-          }
         }
 
         WriteData(gdxobj.gdx, info, "", dummyintvec, dummyvec, "", mode);
 
-        if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
+        if (!gdxDataWriteDone(gdxobj.gdx))
+          stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
       }
     }
     else {
@@ -319,7 +310,6 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       }
 
       StringVector elem_text(nrows);
-      std::string text;
       if (info.type == GMS_DT_SET) {
         if (info.records->length() == info.dim + 1) {
           elem_text = (*info.records)[info.dim];
@@ -348,9 +338,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
             std::vector<std::string> colnames_vec(colnames.size());
 
-            for (int i = 0; i < colnames.size(); i++){
+            for (int i = 0; i < colnames.size(); i++)
                 colnames_vec[i] = colnames(i);
-            }
 
             int rec_val_column_count = 0;
             for (int i =0; i < 5; i++) {
@@ -369,14 +358,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         }
         else {
           // no attribute column. Fill all values with default
-          if (info.type == GMS_DT_PAR) {
-            info.missing_attributes[GMS_VAL_LEVEL] = true;
-          }
-          else {
-            for (int i = 0; i < n_attr; i++) {
-              info.missing_attributes[i] = true;
-            }
-          }
+          for (int i = 0; i < n_attr; i++)
+            info.missing_attributes[i] = true;
         }
       }
 
@@ -388,10 +371,10 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
             uel_ids[d] = uel_map[d][rel_id];
           }
         }
-        else {
+        else
           names = rec_domain_str(i, _);
-        }
-        if (info.type != GMS_DT_SET){
+
+        if (info.type != GMS_DT_SET) {
           if (mode == 1) {
             WriteData(gdxobj.gdx, info, names, 0, rec_vals(i, _), "", mode);
           }
@@ -401,12 +384,14 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
         }
         else {
           NumericVector zero_vec = {0};
-          if (info.records->length() == info.dim + 1) {
-            text = Rcpp::as<std::string>(elem_text[i]);
-          }
-          else {
-            text = "";
-          }
+          std::string text;
+          text = info.records->length() == info.dim + 1 ? Rcpp::as<std::string>(elem_text[i]) : "";
+          // if (info.records->length() == info.dim + 1) {
+          //   text = Rcpp::as<std::string>(elem_text[i]);
+          // }
+          // else {
+          //   text = "";
+          // }
           if (mode == 1) {
             WriteData(gdxobj.gdx, info, names, 0, zero_vec, text, mode);
           }
@@ -415,13 +400,13 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           }
         }
       }
-      if (!gdxDataWriteDone(gdxobj.gdx)) stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
+      if (!gdxDataWriteDone(gdxobj.gdx))
+        stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
     }
 
     if (mode != 1) {
-      for (int d =0; d < info.dim; d++) {
+      for (int d =0; d < info.dim; d++)
         delete[] uel_map[d];
-      }
     }
     delete[] uel_map;
 
@@ -482,7 +467,6 @@ bool compress, int mode) {
     mysym_info.dim =  sym_data["dimension"];
     std::string subtype_str;
     if (mysym_info.type == GMS_DT_VAR) {
-
       subtype_str = Rcpp::as<std::string>(sym_data["type"]);
       mysym_info.subtype = varTypeText_to_int.at(subtype_str);
     }
@@ -501,12 +485,8 @@ bool compress, int mode) {
     mysym_info.domain_type = domaintype;
     mysym_info.sym_nr = sym_nr;
 
-
     bool df_is_null;
-    df_is_null = false;
-    if (Rf_isNull(sym_data["records"])) {
-      df_is_null =  true;
-    }
+    df_is_null = Rf_isNull(sym_data["records"]) ? true : false;
 
     df = sym_data["records"];
 
@@ -516,16 +496,10 @@ bool compress, int mode) {
       mysym_info.domain = new std::string[mysym_info.dim];
     }
 
-    for (int d = 0; d < mysym_info.dim; d++) {
+    for (int d = 0; d < mysym_info.dim; d++)
       mysym_info.domain[d] = Rcpp::as<std::string>(domain[d]);
-    }
 
-    if (df_is_null) {
-      mysym_info.records = NULL;
-    }
-    else {
-      mysym_info.records = &df;
-    }
+    mysym_info.records = df_is_null ? NULL : &df;
 
     gt_write_symbol(gdxobj, mysym_info, mode);
   }
@@ -608,9 +582,8 @@ bool compress, int mode) {
       mysym_info.domain = new std::string[mysym_info.dim];
     }
 
-    for (int d = 0; d < mysym_info.dim; d++) {
+    for (int d = 0; d < mysym_info.dim; d++)
       mysym_info.domain[d] = Rcpp::as<std::string>(domainstr[d]);
-    }
 
     std::string alias_with;
     if (mysym_info.type == GMS_DT_ALIAS) {
@@ -624,22 +597,16 @@ bool compress, int mode) {
       }
 
       if (!gdxAddAlias(gdxobj.gdx, mysym_info.name.c_str(), alias_with.c_str()))
-      stop("CPP_gdxWrite:gdxAddAlias GDX error (gdxAddAlias)");
+        stop("CPP_gdxWrite:gdxAddAlias GDX error (gdxAddAlias)");
       continue;
     }
 
     bool df_is_null;
-    df_is_null = false;
-    if (Rf_isNull(sym_obj["records"])) {
-      df_is_null =  true;
-    }
+
+    df_is_null = Rf_isNull(sym_obj["records"]) ? true : false;
+
     df = sym_obj["records"];
-    if (df_is_null) {
-      mysym_info.records = NULL;
-    }
-    else {
-      mysym_info.records = &df;
-    }
+    mysym_info.records = df_is_null ? NULL : &df;
 
     gt_write_symbol(gdxobj, mysym_info, mode);
   }
