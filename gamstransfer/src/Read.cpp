@@ -217,14 +217,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
   else {
     // indx_matrix stores positions of UELs in the domain set
     IntegerMatrix indx_matrix = Rcpp::no_init(nr_recs, dim);
-    int n_attr;
-    if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
-      n_attr = 5;
-    }
-    else {
-      n_attr = 1;
-    }
-    NumericMatrix record_values = Rcpp::no_init(nr_recs, n_attr);
+    NumericMatrix record_values = Rcpp::no_init(nr_recs, sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU ? 5: 1);
     CharacterVector elem_text(nr_recs); // for elem_text
     int rec_nr = -1;
     while (gdxDataReadRaw(PGX, gdx_uel_index, gdx_values, &dummy)) {
@@ -232,12 +225,7 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_Nr, bool read_records,
       if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR || sym_type == GMS_DT_ALIAS) {
         if (sym_type == GMS_DT_SET || sym_type == GMS_DT_ALIAS) {
           rc = gdxGetElemText(PGX, gdx_values[GMS_VAL_LEVEL], Msg.data(), &iDummy);
-          if (rc != 0) {
-            elem_text(rec_nr) = Msg.data();
-          }
-          else {
-            elem_text(rec_nr) = "";
-          }
+          elem_text(rec_nr) = gdxGetElemText(PGX, static_cast<int>(gdx_values[GMS_VAL_LEVEL]), Msg.data(), &iDummy) ? Msg.data() : "";
         } else {
           if (n_acronyms > 0) {
             record_values(rec_nr, 0) = gt_map_acronyms(acronyms, gdx_values[GMS_VAL_LEVEL]);
