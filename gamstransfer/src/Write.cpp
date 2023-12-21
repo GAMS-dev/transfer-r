@@ -413,7 +413,6 @@ bool compress, int mode) {
   }
 
   DataFrame df;
-  List domain;
   int sym_nr;
   sym_nr = 0;
 
@@ -510,7 +509,6 @@ bool compress, int mode) {
   }
 
   DataFrame df;
-  List domain;
   int sym_nr;
   sym_nr = 0;
 
