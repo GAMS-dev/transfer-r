@@ -187,8 +187,7 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
 
 
 void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
-    int ncols{0}, nrows, rc;
-    std::array<char, GMS_SSSIZE> Msg {};
+    int ncols{0}, nrows;
     gdxStrIndexPtrs_t domains_ptr;
     gdxStrIndex_t domains;
     GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
@@ -227,6 +226,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
     for (int d=0; d < info.dim; d++)
       strcpy(domains_ptr[d], info.domain[d].c_str());
 
+    std::array<char, GMS_SSSIZE> Msg {};
+    int rc;
     if (info.domain_type == "regular") {
       rc = gdxSymbolSetDomain(gdxobj.gdx, (const char **)domains_ptr);
       if (!rc) {
@@ -254,8 +255,6 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
     int n_attr;
     n_attr = info.type == GMS_DT_PAR ? 1 : 5;
-
-    NumericMatrix rec_vals(nrows, n_attr);
 
     std::vector<int> dummy_int_vec;
     if (!nrows) {
@@ -294,6 +293,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           rec_domain_int(_, d) = static_cast<IntegerVector>((*info.records)[d]);
       }
 
+      NumericMatrix rec_vals(nrows, n_attr);
       StringVector elem_text(nrows);
       if (info.type == GMS_DT_SET) {
         if (info.records->length() == info.dim + 1) {
@@ -309,9 +309,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           // for parameters this is enough to say all attributes are present
           if (ncols - info.dim == n_attr) {
             // all attribute columns are present
-            for (int d = info.dim; d < ncols; d++) {
+            for (int d = info.dim; d < ncols; d++)
               rec_vals(_, d-info.dim) = static_cast<NumericVector>((*info.records)[d]);
-            }
           }
           else {
             // some attribute columns are missing
@@ -325,16 +324,20 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
                 colnames_vec[i] = colnames(i);
 
             int rec_val_column_count = 0;
+            std::string attr;
             for (int i =0; i < 5; i++) {
-              std::string attr = attributes[i];
+              attr = attributes[i];
 
               if ( std::any_of(colnames_vec.begin(), colnames_vec.end(), [attr](std::string i){return i==attr;}) ) {
-                rec_vals(_, rec_val_column_count) = static_cast<NumericVector>((*info.records)[attr]);
+                NumericVector temp_num_col(nrwos);
+                temp_num_col = (*info.records)[attr];
+                rec_vals(_, rec_val_column_count) = temp_num_col;
+                // TODO: Why does this fail on Windows?
+                // rec_vals(_, rec_val_column_count) = static_cast<NumericVector>((*info.records)[attr]);
                 rec_val_column_count++;
               }
-              else {
+              else
                 info.missing_attributes[i] = true;
-              }
             }
           }
         }
