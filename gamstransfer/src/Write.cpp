@@ -198,7 +198,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       ncols = info.records->size();
 
       // register UELs
-      CharacterVector dom_col_string(nrows);
+      CharacterVector dom_col_string = Rcpp::no_init(nrows);
       for (int d = 0; d < info.dim; d++) {
         dom_col_string = static_cast<IntegerVector>((*info.records)[d]).attr("levels");
         if (mode == 1) {
@@ -281,8 +281,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       }
     }
     else {
-      StringMatrix rec_domain_str(nrows, info.dim);
-      IntegerMatrix rec_domain_int(nrows, info.dim);
+      StringMatrix rec_domain_str = Rcpp::no_init(nrows, info.dim);
+      IntegerMatrix rec_domain_int = Rcpp::no_init(nrows, info.dim);
 
       if (mode == 1) {
         for (int d = 0; d < info.dim; d++)
@@ -293,8 +293,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           rec_domain_int(_, d) = static_cast<IntegerVector>((*info.records)[d]);
       }
 
-      NumericMatrix rec_vals(nrows, n_attr);
-      StringVector elem_text(nrows);
+      NumericMatrix rec_vals = Rcpp::no_init(nrows, n_attr);
+      StringVector elem_text = Rcpp::no_init(nrows);
       if (info.type == GMS_DT_SET) {
         if (info.records->length() == info.dim + 1) {
           elem_text = (*info.records)[info.dim];
@@ -329,7 +329,7 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
               attr = attributes[i];
 
               if ( std::any_of(colnames_vec.begin(), colnames_vec.end(), [attr](std::string i){return i==attr;}) ) {
-                NumericVector temp_num_col(nrwos);
+                NumericVector temp_num_col = Rcpp::no_init(nrows);
                 temp_num_col = (*info.records)[attr];
                 rec_vals(_, rec_val_column_count) = temp_num_col;
                 // TODO: Why does this fail on Windows?
@@ -415,8 +415,6 @@ bool compress, int mode) {
   DataFrame df;
   List domain;
   int sym_nr;
-  StringVector colString, colElemText;
-  NumericVector colDouble;
   sym_nr = 0;
 
   for (int i=0; i < writeList.length(); i++) {
@@ -514,8 +512,6 @@ bool compress, int mode) {
   DataFrame df;
   List domain;
   int sym_nr;
-  StringVector colString, colElemText;
-  NumericVector colDouble;
   sym_nr = 0;
 
   for (int i=0; i < data.length(); i++) {
