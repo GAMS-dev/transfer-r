@@ -329,9 +329,10 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
               attr = attributes[i];
 
               if ( std::any_of(colnames_vec.begin(), colnames_vec.end(), [attr](std::string i){return i==attr;}) ) {
-                NumericVector temp_num_col = Rcpp::no_init(nrows);
-                temp_num_col = (*info.records)[attr];
-                rec_vals(_, rec_val_column_count) = temp_num_col;
+                // NumericVector temp_num_col = Rcpp::no_init(nrows);
+                // temp_num_col = (*info.records)[attr];
+                // rec_vals(_, rec_val_column_count) = temp_num_col;
+                rec_vals(_, rec_val_column_count) = Rcpp::as<NumericVector>((*info.records)[attr]);
                 // TODO: Why does this fail on Windows?
                 // rec_vals(_, rec_val_column_count) = static_cast<NumericVector>((*info.records)[attr]);
                 rec_val_column_count++;
@@ -577,6 +578,7 @@ bool compress, int mode) {
 
     df = sym_obj["records"];
     mysym_info.records = df_is_null ? NULL : &df;
+    // mysym_info.records = df_is_null ? NULL : &Rcpp::as<DataFrame>(sym_obj["records"]);
 
     gt_write_symbol(gdxobj, mysym_info, mode);
   }
