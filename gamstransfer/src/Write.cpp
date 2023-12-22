@@ -200,7 +200,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
       // register UELs
       CharacterVector dom_col_string = Rcpp::no_init(nrows);
       for (int d = 0; d < info.dim; d++) {
-        dom_col_string = static_cast<IntegerVector>((*info.records)[d]).attr("levels");
+        // dom_col_string = static_cast<IntegerVector>((*info.records)[d]).attr("levels");
+        dom_col_string = Rcpp::as<IntegerVector>((*info.records)[d]).attr("levels");
         if (mode == 1) {
           gt_register_uels(gdxobj, dom_col_string, NULL);
         }
@@ -286,11 +287,13 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
 
       if (mode == 1) {
         for (int d = 0; d < info.dim; d++)
-          rec_domain_str(_, d) = static_cast<StringVector>((*info.records)[d]);
+          rec_domain_str(_, d) = Rcpp::as<StringVector>((*info.records)[d]);
+          // rec_domain_str(_, d) = static_cast<StringVector>((*info.records)[d]);
       }
       else {
         for (int d = 0; d < info.dim; d++)
-          rec_domain_int(_, d) = static_cast<IntegerVector>((*info.records)[d]);
+          rec_domain_int(_, d) = Rcpp::as<IntegerVector>((*info.records)[d]);
+          // rec_domain_int(_, d) = static_cast<IntegerVector>((*info.records)[d]);
       }
 
       NumericMatrix rec_vals = Rcpp::no_init(nrows, n_attr);
@@ -310,7 +313,8 @@ void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
           if (ncols - info.dim == n_attr) {
             // all attribute columns are present
             for (int d = info.dim; d < ncols; d++)
-              rec_vals(_, d-info.dim) = static_cast<NumericVector>((*info.records)[d]);
+              rec_vals(_, d-info.dim) = Rcpp::as<NumericVector>((*info.records)[d]);
+              // rec_vals(_, d-info.dim) = static_cast<NumericVector>((*info.records)[d]);
           }
           else {
             // some attribute columns are missing
