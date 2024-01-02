@@ -187,7 +187,7 @@ void gt_register_priority_uels(gt_gdx& gdxobj, CharacterVector uel_priority) {
 
 
 void gt_write_symbol(gt_gdx& gdxobj, sym_info& info, int mode) {
-    int ncols{0}, nrows;
+    int ncols{0}, nrows{0};
     gdxStrIndexPtrs_t domains_ptr;
     gdxStrIndex_t domains;
     GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
