@@ -384,7 +384,6 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
 
   // if user wants to read all symbols, iterate over gdx symbols
   // otherwise iterate over symbols provided by user
-
   if (read_records)
     gt_set_special_values(gdxobj);
 
