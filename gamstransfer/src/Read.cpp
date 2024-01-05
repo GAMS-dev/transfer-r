@@ -64,17 +64,17 @@ void gt_read_symbol(gdxHandle_t PGX, int sym_nr, bool read_records,
     else if (sym_type == GMS_DT_SET) {
       sym_list = List::create( _["class"] = -1, _["name"] = "",
       _["description"]="", _["isSingleton"] = -1, _["domain"]="", _["domainType"]=-1,
-      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
+      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=R_NilValue);
     }
     else if (sym_type == GMS_DT_PAR) {
       sym_list = List::create( _["class"] = -1, _["name"] = "",
       _["description"]="", _["domain"]="", _["domainType"]=-1,
-      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
+      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=R_NilValue);
     }
     else { // var of equ
       sym_list = List::create( _["class"] = -1, _["name"] = "",
       _["description"]="", _["type"] = -1, _["domain"]="", _["domainType"]=-1,
-      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=-1);
+      _["dimension"]=-1, _["numberRecords"] = -1, _["records"]=R_NilValue);
     }
 
     int nr_recs, subtype;
@@ -393,7 +393,7 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
   for (int i=1; i < symCount + 1; i++) {
     if (symNames_.isNotNull() && !sym_enabled.at(i)) continue;
 
-    gt_read_symbol(gdxobj.gdx, i, read_records, read_list, read_list_size,
+    gt_read_symbol(gdxobj.gdx, i, Rcpp::as<bool>(read_records), read_list, read_list_size,
     sym_uel_map, uel_count, n_acronyms, acronyms);
 
     read_list_size ++;
