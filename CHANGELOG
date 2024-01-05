@@ -3,6 +3,7 @@ GAMS Transfer R
 - Bug fix: `Container` property `summary` changed from a method to active binding
 - Fixed overriding PKG_CXXFLAGS in Makevars
 - Performance improvements in read
+- Bug fix: `Symbol` method `equals` incorrectly returned `FALSE` when the symbol records contain `NA`
 
 GAMS Transfer R v2.8.0
 ==================
