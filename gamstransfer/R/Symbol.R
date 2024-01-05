@@ -1612,29 +1612,23 @@
     .check_set_records_equal = function(other, checkElementText) {
       if (self$numberRecords == 0) return()
       #merge both dataframes by domain column_names
-      merged = merge(self$records, other$records, 
+      self_recs = self$records
+      other_recs = other$records
+      self_recs[[length(self_recs) + 1]] = replicate(nrow(self_recs), 0)
+      other_recs[[length(other_recs) + 1]] = replicate(nrow(other_recs), 0)
+
+      merged = merge(self_recs, other_recs, 
       by.x=self$domainLabels, by.y=other$domainLabels,
       all=TRUE)
 
-      if (self$dimension + 1 < length(merged)) {
-        # element text column exists
-        isna_check = is.na(merged[(self$dimension+1):length(merged)])
+      isna_check = is.na(merged[c(length(self_recs), length(merged))])
 
-        if (any(isna_check)) {
-          error_df = head(merged[as.logical(
-          rowSums(isna_check)),][1:self$dimension])
-          strmsg="symbol records do not match. Unmatched rows below\n"
-          strdf = paste0(capture.output(error_df), collapse="\n")
-          stop(paste0(strmsg, strdf, "\n"))
-        }
-      }
-      else {
-        # no element text column
-        if (nrow(merged) != nrow(self$records)) {
-          # if number of records is the same in self and other
-          # and if the merged dataframe has different number of records
-          stop("symbol records do not match. Unmatched rows are present.\n")
-        }
+      if (any(isna_check)) {
+        error_df = head(merged[as.logical(
+        rowSums(isna_check)),][1:self$dimension])
+        strmsg="symbol records do not match. Unmatched rows below\n"
+        strdf = paste0(capture.output(error_df), collapse="\n")
+        stop(paste0(strmsg, strdf, "\n"))
       }
 
       if (checkElementText) {
@@ -1750,28 +1744,22 @@
       }
       else {
         #merge both dataframes by column_names
-        merged = merge(self$records, other$records, 
+        self_recs = self$records
+        other_recs = other$records
+        self_recs[[length(self_recs) + 1]] = replicate(nrow(self_recs), 0)
+        other_recs[[length(other_recs) + 1]] = replicate(nrow(other_recs), 0)
+
+        merged = merge(self_recs, other_recs, 
         by.x=self$domainLabels, by.y=other$domainLabels,
         all=TRUE)
 
-        if (self$dimension + 1 < length(merged)) {
+        isna_check = is.na(merged[c(length(self_recs), length(merged))])
+        if (any(isna_check)) {
           error_df = head(merged[as.logical(
-            rowSums(is.na(merged[(self$dimension+1):length(merged)]))),][1:self$dimension])
-
+          rowSums(isna_check)),][1:self$dimension])
           strmsg="symbol records do not match. Unmatched rows below\n"
           strdf = paste0(capture.output(error_df), collapse="\n")
-          if (any(is.na(merged[,self$dimension:length(merged)]))) {
-            stop(paste0(strmsg, strdf, "\n"))
-          }
-
-        }
-        else {
-          # no element text column
-          if (nrow(merged) != nrow(self$records)) {
-            # if number of records is the same in self and other
-            # and if the merged dataframe has different number of records
-            stop("symbol records do not match. Unmatched rows are present.\n")
-          }
+          stop(paste0(strmsg, strdf, "\n"))
         }
 
         # now compare numerical records
@@ -1789,13 +1777,13 @@
           if (self_column_exists && !other_column_exists) {
             if (any(self$records[[attr]] != replicate(self$numberRecords, def_values))) {
               stop(paste0("symbol records do not match. ", other$name, "$records is considered to be 
-              at the default value of ", def_values, "\n"))
+              at the default value of ", toString(def_values), "\n"))
             }
           }
           else if (!self_column_exists && other_column_exists) {
             if (any(other$records[[attr]] != replicate(self$numberRecords, def_values))) {
               stop(paste0("symbol records do not match. ", self$name, "$records is considered to be 
-              at the default value of ", def_values, "\n"))
+              at the default value of ", toString(def_values), "\n"))
             }
           }
           else if (!self_column_exists && !other_column_exists) {
