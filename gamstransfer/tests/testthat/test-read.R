@@ -36,7 +36,7 @@ test_that("readwritetest", {
   m2 = Container$new()
   m2$readList(rl)
 
-  # expect_equal(m$equals(m2), TRUE)
+  expect_equal(m$equals(m2), TRUE)
 
   # write everything
   m$write(testthat::test_path("gt.gdx"))
@@ -339,6 +339,13 @@ test_that("test_num_6", {
   expect_true(is.data.frame(m2["foo"]$records))
 
   expect_equal(as.character(m$getUELs()), as.character(m2["foo"]$records$uni))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test6_uels.gdx"), systemDirectory = find_gams())
+  m3 = Container$new()
+  m3$readList(rl)
+  expect_equal(m2$equals(m3), TRUE)
+
 }
 )
 
@@ -357,6 +364,12 @@ test_that("test_num_7", {
   expect_true(is.data.frame(m2["foo"]$records))
 
   expect_equal(c("a", "c", "b"), as.character(m2["foo"]$records$uni))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test7_uels.gdx"), systemDirectory = find_gams())
+  m3 = Container$new()
+  m3$readList(rl)
+  expect_equal(m2$equals(m3), TRUE)
 
 }
 )
@@ -668,6 +681,14 @@ test_that("test_num_22", {
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport.gdx"), records = FALSE)
 
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "trnsport.gdx"), 
+    records=FALSE, systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+
+  expect_equal(m$equals(m2), TRUE)
+
   for (i in m$data$values()) {
     expect_equal(m[i$name]$records, NULL)
   }
@@ -679,6 +700,13 @@ test_that("test_num_23", {
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport.gdx"), c("i", "j", "x"))
 
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "trnsport.gdx"), 
+   symbols = c("i", "j", "x"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
   expect_equal(m["i"]$domainType, "none")
   expect_equal(m["j"]$domainType, "none")
   expect_equal(m["x"]$domainType, "regular")
@@ -688,6 +716,12 @@ test_that("test_num_23", {
 test_that("test_num_24", {
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport.gdx"), c("x"))
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "trnsport.gdx"), 
+   symbols = c("x"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
 
   expect_equal(unlist(m$data$keys()), "x")
   expect_equal(m["x"]$domainType, "relaxed")
@@ -700,6 +734,13 @@ test_that("test_num_25", {
   expect_equal(unlist(m$data$keys()), "i")
   expect_equal(m["i"]$domain, c("i"))
   expect_equal(m["i"]$domainType, "relaxed")
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test25.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
@@ -751,6 +792,12 @@ test_that("test_num_26", {
 test_that("test_num_27", {
   m = Container$new()
   m$read(testthat::test_path("testdata", "test27.gdx"))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test27.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
 
   # write everything
   m$write(testthat::test_path("gt.gdx"))
@@ -973,6 +1020,13 @@ test_that("test_num_40", {
   m = Container$new(testthat::test_path("testdata", "test40.gdx"))
   expect_true(m["a"]$domainType == "regular")
   expect_true(is.null(m["a"]$records))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test40.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
@@ -1132,6 +1186,12 @@ test_that("test_num_44", {
 
   m$write("out.gdx")
 
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test44.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
   m2 = Container$new(testthat::test_path("out.gdx"))
   expect_true(m2["i"]$type == "free")
 
@@ -1200,6 +1260,13 @@ test_that("test_num_47", {
   m = Container$new(testthat::test_path("testdata", "test47.gdx"))
   expect_true(m["a"]$domainType == "regular")
   expect_true(is.null(m["a"]$records))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test47.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
@@ -1256,6 +1323,13 @@ test_that("test_num_48", {
 test_that("test_num_49", {
   m = Container$new(testthat::test_path("testdata", "test49.gdx"))
   expect_equal(m["i"]$domainType, "relaxed")
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test49.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
@@ -1276,6 +1350,13 @@ test_that("test_num_50", {
   m$read(testthat::test_path("data.gdx"), symbols= c("i", "j"))
   expect_true(!is.null(m["i"]))
   expect_true(!is.null(m["j"]))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("data.gdx"), 
+   symbols =c("i", "j"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
 
   m = Container$new()
   expect_error(m$read(testthat::test_path("data.gdx"), symbols= c("i", "j", "dummy")))
@@ -1356,7 +1437,6 @@ test_that("test_num_54", {
   expect_equal(nrow(m$describeEquations(m$listEquations(types = "geq"))), 1)
   expect_equal(nrow(m$describeEquations(m$listEquations(types = "eq"))), 1)
   expect_equal(nrow(m$describeEquations(m$listEquations(types = "leq"))), 1)
-  
 }
 )
 
@@ -1382,6 +1462,13 @@ test_that("test_num_55", {
   }
 
   expect_true(!identical(old_names, new_names))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test55.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
@@ -1802,6 +1889,12 @@ expect_equal(e3$records, e3p$records)}
 test_that("test_num_70", {
   m = Container$new(testthat::test_path("testdata", "test70.gdx"))
 
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test70.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
   e = eigen(m["a"]$toDense())
   val = e$values
   vec = e$vectors
@@ -1862,14 +1955,29 @@ test_that("test_num_72", {
 
   expect_equal(m["dim0"]$shape(), dim(m["dim0"]$toDense()))
   expect_equal(m["dim1"]$shape(), dim(m["dim1"]$toDense()))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test72.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
 test_that("test_num_73", {
   m = Container$new(testthat::test_path("testdata", "test73.gdx"))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test73.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
   m["ProfitA"]$setRecords(cumsum(m["ProfitM"]$toDense()))
 
   expect_equal(m["ProfitA"]$numberRecords, m["t"]$numberRecords)
+
 
 }
 )
@@ -2505,6 +2613,12 @@ test_that("test_num_95", {
   # read all symbols
   m$read(testthat::test_path("testdata", "test95.gdx"))
 
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test95.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
   # write everything
   m$write(testthat::test_path("gt.gdx"))
 
@@ -2733,6 +2847,13 @@ test_that("test_num_102", {
 
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "trnsport_with_alias.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
   expect_equal(m["i"]$summary, list(
     name = "i",
     description = "canning plants",
@@ -2785,7 +2906,6 @@ test_that("test_num_102", {
 
   # container
   m = Container$new()
-  # expect_error(m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"), records="true"))
 
   m = Container$new()
   m$read(testthat::test_path("testdata", "trnsport_with_alias.gdx"))
@@ -3497,6 +3617,13 @@ test_that("test_num_116", {
 
   # expect_equal(m2$listSymbols(), c("i","ii","u"))
   expect_equal(m2$listSymbols(), c("h"))
+
+  # test supercall read
+  rl = readGDX(testthat::test_path("testdata", "test95.gdx"), systemDirectory = find_gams())
+  m2 = Container$new()
+  m2$readList(rl)
+  expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
@@ -4528,6 +4655,13 @@ m = Container$new(testthat::test_path("testdata", "universe_order.gdx"))
 expect_equal(m["p"]$getUELs(), c("i2","i5","i9","i1","i3"))
 expect_equal(m["p"]$getUELs(1), c("i2","i5","i9"))
 expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
+
+# test supercall read
+rl = readGDX(testthat::test_path("testdata", "universe_order.gdx"), systemDirectory = find_gams())
+m2 = Container$new()
+m2$readList(rl)
+expect_equal(m$equals(m2), TRUE)
+
 }
 )
 
