@@ -22,7 +22,6 @@
 // SOFTWARE.
 
 #include <Rcpp.h>
-#include "gdxcc.h"
 #include "gclgms.h"
 #include "utilities.hpp"
 using namespace Rcpp;
@@ -33,9 +32,9 @@ IntegerVector CPP_getMaxDim() {
   return(v);
 }
 
-void gt_set_special_values(gt_gdx& gdxobj) {
+void gt_set_special_values(gdx::TGXFileObj & gdx) {
   gdxSVals_t sVals;
-  gdxGetSpecialValues(gdxobj.gdx, sVals);
+  gdx.gdxGetSpecialValues(sVals);
   int rc;
 
   sVals[GMS_SVIDX_NA] = NA_REAL;
@@ -44,7 +43,7 @@ void gt_set_special_values(gt_gdx& gdxobj) {
   sVals[GMS_SVIDX_PINF] = R_PosInf;
   sVals[GMS_SVIDX_MINF] = R_NegInf;
 
-  rc = gdxSetSpecialValues(gdxobj.gdx, sVals);
+  rc = gdx.gdxSetSpecialValues(sVals);
   if (!rc) stop("gt_set_special_values:gdxSetSpecialValues GDX error (gdxSetSpecialValues)");
   return;
 }
