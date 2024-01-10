@@ -91,6 +91,7 @@ build_r_linux_binary:
     image: 
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
+        - configure # move necessary files from GDX API to GTR
         - R CMD INSTALL gamstransfer --build
         - mkdir binary
         - mv gamstransfer_*.tar.gz binary/gamstransfer_r_linux.tar.gz
@@ -107,6 +108,7 @@ build_r_source:
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
+        - configure # move necessary files from GDX API to GTR
         - R CMD build gamstransfer
         - mkdir source
         - mv gamstransfer_*.tar.gz source/gamstransfer_r.tar.gz
@@ -122,6 +124,7 @@ build_r_macos:
     tags: [macos]
     needs: [install-gamsdist-deg]
     script:
+        - configure # move necessary files from GDX API to GTR
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos.tgz
@@ -136,6 +139,7 @@ build_r_macos_arm64:
     tags: [macos-arm64]
     needs: [install-gamsdist-arm64]
     script:
+        - configure # move necessary files from GDX API to GTR
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos_arm64.tgz
@@ -152,6 +156,7 @@ build_r_windows:
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
+        - configure # move necessary files from GDX API to GTR
         - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD build gamstransfer
         - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
