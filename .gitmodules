@@ -1,0 +1,3 @@
+[submodule "gdx"]
+	path = gdx
+	url = git@git.gams.com:devel/gdx.git
