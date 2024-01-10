@@ -88,10 +88,10 @@ build_r_linux_binary:
     stage: build
     tags: [linux]
     needs: [install-gamsdist-leg]
-    image: 
+    image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
-        - configure # move necessary files from GDX API to GTR
+        - ./configure # move necessary files from GDX API to GTR
         - R CMD INSTALL gamstransfer --build
         - mkdir binary
         - mv gamstransfer_*.tar.gz binary/gamstransfer_r_linux.tar.gz
@@ -108,7 +108,7 @@ build_r_source:
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
-        - configure # move necessary files from GDX API to GTR
+        - ./configure # move necessary files from GDX API to GTR
         - R CMD build gamstransfer
         - mkdir source
         - mv gamstransfer_*.tar.gz source/gamstransfer_r.tar.gz
@@ -124,7 +124,7 @@ build_r_macos:
     tags: [macos]
     needs: [install-gamsdist-deg]
     script:
-        - configure # move necessary files from GDX API to GTR
+        - ./configure # move necessary files from GDX API to GTR
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos.tgz
@@ -139,7 +139,7 @@ build_r_macos_arm64:
     tags: [macos-arm64]
     needs: [install-gamsdist-arm64]
     script:
-        - configure # move necessary files from GDX API to GTR
+        - ./configure # move necessary files from GDX API to GTR
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos_arm64.tgz
@@ -176,9 +176,15 @@ test_r_linux:
     script:
         - PATH=/cache/gams-installs/`cat gams_folder_leg.txt`:$PATH
         - echo $PATH
-        - R CMD check ./gamstransfer --no-manual --no-tests
+        - cd source
+        - cp gamstransfer_r.tar.gz gamstransfer.tar.gz
+        - R CMD check ./gamstransfer --no-manual # run tests as part of check
+        - rm gamstransfer.tar.gz && cd ..
+        # - R CMD check ./gamstransfer --no-manual --no-tests
+        # - Rscript -e "testthat::test_dir('gamstransfer/tests')"
+        # test installation
         - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
-        - Rscript -e "testthat::test_dir('gamstransfer/tests')"
+        # - Rscript -e "install.packages('binary/gamstransfer_r_linux.tar.gz')"
     needs: [install-gamsdist-leg,build_r_linux_binary,build_r_source]
     only: [merge_requests, main, tags]
 
@@ -189,6 +195,7 @@ test_r_macos:
         - PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$PATH
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
+        - ./configure
         - R CMD check ./gamstransfer --no-manual
     needs: [install-gamsdist-deg,build_r_macos,build_r_source]
     only: [merge_requests, main, tags]
@@ -200,6 +207,7 @@ test_r_macos_arm64:
         - PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$PATH
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
+        - ./configure
         - R CMD check ./gamstransfer --no-manual
     needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
     only: [merge_requests, main, tags]
