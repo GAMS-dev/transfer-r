@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 
 # copy files to gamstransfer src
-cp -r ../gdx/src/* ./src
+cp ./gdx/src/* ./gamstransfer/src
+cp -r ./gdx/src/templates ./gamstransfer/src
