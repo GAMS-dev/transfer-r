@@ -152,8 +152,8 @@ build_r_windows:
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
-        - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD build gamstransfer
-        - C:\'Program Files'\R\R-4.2.1\bin\R.exe CMD INSTALL gamstransfer --build
+        - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD build gamstransfer
+        - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
     only: [merge_requests, main, tags]
     artifacts:
@@ -212,7 +212,7 @@ test_r_windows:
         - echo $env:PATH
         - mv gamstransfer_r_windows.zip gamstransfer.zip
         - Rscript -e "install.packages('gamstransfer.zip', type='binary')"; $null
-        - C:\'Program Files'\R\R-4.2.1\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
+        - C:\'Program Files'\R\R-4.3.2\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
     only: [merge_requests, main, tags]
 
 #============================================================================================================
