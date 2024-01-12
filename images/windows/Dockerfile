@@ -2,6 +2,8 @@ FROM mcr.microsoft.com/windows/server:ltsc2022
 
 SHELL ["powershell", "-command"]
 
+COPY zlibwapi.lib zlibwapi.dll C:/
+
 WORKDIR C:/
 
 RUN	echo 'Installing chocolatey windows package manager' ; \
