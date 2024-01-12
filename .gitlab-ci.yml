@@ -157,9 +157,9 @@ build_r_windows:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
         - cp ./gdx/src/* ./gamstransfer/src
-        # - cp -R ./gdx/src/templates ./gamstransfer/src
-        # - ./configure # move necessary files from GDX API to GTR
-        # - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD build gamstransfer
+        - cd ./gamstransfer/src
+        - rm tests examples *.py *.yaml
+        - cd ..
         - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --configure-vars="LIB_DIR='C:'" --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
     only: [merge_requests, main, tags]
@@ -182,11 +182,8 @@ test_r_linux:
         - cp gamstransfer_r.tar.gz gamstransfer.tar.gz
         - R CMD check ./gamstransfer --no-manual # run tests as part of check
         - rm gamstransfer.tar.gz && cd ..
-        # - R CMD check ./gamstransfer --no-manual --no-tests
-        # - Rscript -e "testthat::test_dir('gamstransfer/tests')"
         # test installation
         - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
-        # - Rscript -e "install.packages('binary/gamstransfer_r_linux.tar.gz')"
     needs: [install-gamsdist-leg,build_r_linux_binary,build_r_source]
     only: [merge_requests, main, tags]
 
@@ -239,7 +236,7 @@ package:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
         - cd source
-        - | 
+        - |
             curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file gamstransfer_r.tar.gz ${PACKAGE_REGISTRY_URL}
         - cd ..
         - cd binary

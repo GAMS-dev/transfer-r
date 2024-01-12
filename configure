@@ -3,3 +3,4 @@
 # copy files to gamstransfer src
 cp ./gdx/src/* ./gamstransfer/src
 cp -r ./gdx/src/templates ./gamstransfer/src
+rm -r ./gamstransfer/src/*.py ./gamstransfer/src/*.yaml
