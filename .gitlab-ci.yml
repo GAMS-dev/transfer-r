@@ -160,7 +160,7 @@ build_r_windows:
         # - cp -R ./gdx/src/templates ./gamstransfer/src
         # - ./configure # move necessary files from GDX API to GTR
         # - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD build gamstransfer
-        - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --configure-vars="LIB_DIR='C:' --build
+        - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --configure-vars="LIB_DIR='C:'" --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
     only: [merge_requests, main, tags]
     artifacts:
