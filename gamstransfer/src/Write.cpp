@@ -391,11 +391,10 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
 }
 
 // [[Rcpp::export]]
-void CPP_gdxWriteSuper(List writeList, CharacterVector sysDir, LogicalVector enable,
+void CPP_gdxWriteSuper(List writeList, LogicalVector enable,
 CharacterVector fileName, Nullable<CharacterVector> uel_priority_,
 bool compress, int mode) {
 // takes list input instead of container input
-  std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
 
   // create gdx object
@@ -488,9 +487,6 @@ bool compress, int mode) {
   Function as_list = data_dict["as_list"];
   List data = as_list();
 
-  CharacterVector sysDir = container["systemDirectory"];
-
-  std::string mysysDir = Rcpp::as<std::string>(sysDir);
   std::string myFileName = Rcpp::as<std::string>(fileName);
 
   // create gdx object

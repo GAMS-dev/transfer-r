@@ -322,9 +322,8 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
 
 // [[Rcpp::export]]
 List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
-                CharacterVector sysDir, LogicalVector read_records) {
+                LogicalVector read_records) {
   auto gdx_name {Rcpp::as<std::string>(gdxName)};
-  auto sys_dir  {Rcpp::as<std::string>(sysDir)};
 
   // create gdx object
   gt_gdx gdxobj;
