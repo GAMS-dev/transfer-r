@@ -223,7 +223,7 @@ test_r_windows:
         - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
         - echo $env:PATH
         - mv gamstransfer_r_windows.zip gamstransfer.zip
-        - Rscript -e "install.packages('gamstransfer.zip', type='binary')"; $null
+        - C:\'Program Files'\R\R-4.3.2\bin\Rscript.exe -e "install.packages('gamstransfer.zip', type='binary')"; $null
         - C:\'Program Files'\R\R-4.3.2\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
     only: [merge_requests, main, tags]
 
