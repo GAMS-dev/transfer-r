@@ -1,7 +1,7 @@
 # GAMS Transfer R
 
 gamstransfer: data exchange between GAMS and R
-# Dependencies#
+# Dependencies
 gamstransfer depends on the following R packages:
 - R6
 - collections
@@ -11,7 +11,7 @@ gamstransfer depends on the following R packages:
 To build this package from source, following libraries must be installed:
 - zlib
 
-# How to install#
+# How to install
 
 To install given a package (.zip, .tar.gz etc. file)
 for binary packages:
@@ -22,7 +22,7 @@ for source:
 ```
 install.packages("[binary_package_name]")
 ```
-# How to build#
+# How to build
 If you are trying to build from the clone of this repository, you first have
  to run the `configure` script that is at the root of this package. This sript
  moves the necessary source files from the GDX submodule to the src directory
@@ -53,3 +53,7 @@ Ideally, if you have `zlib` in your environment variable `PATH`, the configure s
 If you are trying to install from source on Windows, the `configure`script will not be executed. Instead,
 a warning will be displayed. Since there is only one dependency i.e., zlib, if the installation fails and
 throws errors with `compress` and `uncompress`, it is suggested that `zlib` should be inspected first.
+
+Note:
+The configure script is generated using `autoconfig` with the help of configure.ac file
+ and should be modified only by modifying the configure.ac and running `autoconfig configure.ac`.
