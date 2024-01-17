@@ -31,8 +31,8 @@
 using namespace Rcpp;
 using namespace std::literals::string_literals;
 
-void WriteData(gdx::TGXFileObj & PGX, sym_info& mysym_info, StringVector names,
-std::vector<int> uel_ids, NumericVector V, std::string elemText, int mode) {
+void WriteData(gdx::TGXFileObj & PGX, const sym_info& mysym_info, const bool missing_attr[], const StringVector & names,
+const std::vector<int>& uel_ids, const NumericVector & V, const std::string & elemText, int mode) {
   gdxUelIndex_t gdx_uel_index;
   gdxStrIndexPtrs_t Indx;
   gdxStrIndex_t Indx_labels;
@@ -54,7 +54,7 @@ std::vector<int> uel_ids, NumericVector V, std::string elemText, int mode) {
     default_values = mysym_info.type == GMS_DT_VAR ? gmsDefRecVar[mysym_info.subtype] : gmsDefRecEqu[mysym_info.subtype - GMS_EQU_USERINFO_BASE];
 
     for (int i =0; i < 5; i++) {
-      if (mysym_info.missing_attributes[i]) {
+      if (missing_attr[i]) {
         Values[i] = default_values[i] == GMS_SV_MINF ? R_NegInf : (default_values[i] == GMS_SV_PINF ? R_PosInf : default_values[i]);
       }
       else {
@@ -81,7 +81,7 @@ std::vector<int> uel_ids, NumericVector V, std::string elemText, int mode) {
   }
   else
     // parameter
-    Values[GMS_VAL_LEVEL] = mysym_info.missing_attributes[GMS_VAL_LEVEL] ? 0 : V[GMS_VAL_LEVEL];
+    Values[GMS_VAL_LEVEL] = missing_attr[GMS_VAL_LEVEL] ? 0 : V[GMS_VAL_LEVEL];
 
   int rc;
   if (mode == 1) {
@@ -131,7 +131,7 @@ std::vector<int> uel_ids, NumericVector V, std::string elemText, int mode) {
   return;
 }
 
-void gt_register_uels(gdx::TGXFileObj & gdx, CharacterVector arr, int* uel_id ) {
+void gt_register_uels(gdx::TGXFileObj & gdx, const CharacterVector & arr, int* uel_id ) {
   int uel_no, N, rc;
   std::string myUEL;
   rc = gdx.gdxUELRegisterStrStart();
@@ -153,7 +153,7 @@ void gt_register_uels(gdx::TGXFileObj & gdx, CharacterVector arr, int* uel_id ) 
     stop("gt_register_uels:gdxUELRegisterDone GDX error (gdxUELRegisterDone)");
 }
 
-void gt_open_write(gdx::TGXFileObj & gdx, std::string filename, bool compress) {
+void gt_open_write(gdx::TGXFileObj & gdx, const std::string & filename, bool compress) {
   int rc, err_nr;
   if (!compress) {
     rc = gdx.gdxOpenWrite(filename.c_str(), "GAMS Transfer", err_nr);
@@ -167,7 +167,7 @@ void gt_open_write(gdx::TGXFileObj & gdx, std::string filename, bool compress) {
   }
 }
 
-void gt_register_priority_uels(gdx::TGXFileObj & gdx, CharacterVector uel_priority) {
+void gt_register_priority_uels(gdx::TGXFileObj & gdx, const CharacterVector & uel_priority) {
   int rc, uel_no;
   std::string uel;
 
@@ -187,7 +187,7 @@ void gt_register_priority_uels(gdx::TGXFileObj & gdx, CharacterVector uel_priori
 }
 
 
-void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
+void gt_write_symbol(gdx::TGXFileObj & gdx, const sym_info & info, int mode) {
     int ncols{0}, nrows{0};
     gdxStrIndexPtrs_t domains_ptr;
     gdxStrIndex_t domains;
@@ -256,6 +256,7 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
 
     int n_attr;
     n_attr = info.type == GMS_DT_PAR ? 1 : 5;
+    bool missing_attr[5] = {false};
 
     std::vector<int> dummy_int_vec;
     if (!nrows) {
@@ -268,14 +269,14 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
         // for scalars, write the default values
         // no attribute column. Fill all values with default
         if (info.type == GMS_DT_PAR) {
-          info.missing_attributes[GMS_VAL_LEVEL] = true;
+          missing_attr[GMS_VAL_LEVEL] = true;
         }
         else {
           for (int i = 0; i < n_attr; i++)
-            info.missing_attributes[i] = true;
+            missing_attr[i] = true;
         }
 
-        WriteData(gdx, info, "", dummy_int_vec, dummyvec, "", mode);
+        WriteData(gdx, info, missing_attr, "", dummy_int_vec, dummyvec, "", mode);
 
         if (!gdx.gdxDataWriteDone())
           stop("gt_write_symbol:gdxDataWriteDone GDX error (gdxDataWriteDone). Symbol name = "s + info.name);
@@ -334,14 +335,14 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
                 rec_val_column_count++;
               }
               else
-                info.missing_attributes[i] = true;
+                missing_attr[i] = true;
             }
           }
         }
         else {
           // no attribute column. Fill all values with default
           for (int i = 0; i < n_attr; i++)
-            info.missing_attributes[i] = true;
+            missing_attr[i] = true;
         }
       }
 
@@ -360,10 +361,10 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
 
         if (info.type != GMS_DT_SET) {
           if (mode == 1) {
-            WriteData(gdx, info, names, dummy_int_vec, rec_vals(i, _), "", mode);
+            WriteData(gdx, info, missing_attr, names, dummy_int_vec, rec_vals(i, _), "", mode);
           }
           else {
-            WriteData(gdx, info, "", uel_ids, rec_vals(i, _), "", mode);
+            WriteData(gdx, info, missing_attr, "", uel_ids, rec_vals(i, _), "", mode);
           }
         }
         else {
@@ -372,10 +373,10 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
           text = info.records->length() == info.dim + 1 ? Rcpp::as<std::string>(elem_text[i]) : "";
 
           if (mode == 1) {
-            WriteData(gdx, info, names, dummy_int_vec, zero_vec, text, mode);
+            WriteData(gdx, info, missing_attr, names, dummy_int_vec, zero_vec, text, mode);
           }
           else {
-            WriteData(gdx, info, "", uel_ids, zero_vec, text, mode);
+            WriteData(gdx, info, missing_attr, "", uel_ids, zero_vec, text, mode);
           }
         }
       }
@@ -391,8 +392,8 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, sym_info& info, int mode) {
 }
 
 // [[Rcpp::export]]
-void CPP_gdxWriteSuper(List writeList, LogicalVector enable,
-CharacterVector fileName, Nullable<CharacterVector> uel_priority_,
+void CPP_gdxWriteSuper(const List & writeList, const LogicalVector & enable,
+const CharacterVector & fileName, const Nullable<CharacterVector> & uel_priority_,
 bool compress, int mode) {
 // takes list input instead of container input
   std::string myFileName = Rcpp::as<std::string>(fileName);

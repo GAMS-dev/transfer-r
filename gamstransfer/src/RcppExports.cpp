@@ -34,14 +34,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // CPP_gdxWriteSuper
-void CPP_gdxWriteSuper(List writeList, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress, int mode);
+void CPP_gdxWriteSuper(const List& writeList, const LogicalVector& enable, const CharacterVector& fileName, const Nullable<CharacterVector>& uel_priority_, bool compress, int mode);
 RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP writeListSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type writeList(writeListSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type enable(enableSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
-    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type uel_priority_(uel_priority_SEXP);
+    Rcpp::traits::input_parameter< const List& >::type writeList(writeListSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type enable(enableSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type fileName(fileNameSEXP);
+    Rcpp::traits::input_parameter< const Nullable<CharacterVector>& >::type uel_priority_(uel_priority_SEXP);
     Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
     Rcpp::traits::input_parameter< int >::type mode(modeSEXP);
     CPP_gdxWriteSuper(writeList, enable, fileName, uel_priority_, compress, mode);

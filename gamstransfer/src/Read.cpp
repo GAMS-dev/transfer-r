@@ -32,7 +32,7 @@ using namespace std::literals::string_literals;
 
 #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])
 
-double gt_map_acronyms(std::vector<int> acronyms, double value) {
+double gt_map_acronyms(const std::vector<int> & acronyms, double value) {
 for (auto &a:acronyms) {
     if (value == a * GMS_SV_ACR)
       return NA_REAL;
@@ -43,7 +43,7 @@ return value;
 void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
     List &read_list, int read_list_size,
     std::vector<std::vector<int>> &sym_uel_map, int uel_count,
-    int n_acronyms, std::vector<int> acronyms) {
+    int n_acronyms, const std::vector<int> & acronyms) {
 
     char sym_id[GMS_SSSIZE];
     char alias_for_id[GMS_SSSIZE], description[GMS_SSSIZE];
