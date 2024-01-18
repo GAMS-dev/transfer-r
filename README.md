@@ -23,7 +23,7 @@ gamstransfer depends on the following R packages:
 - Rcpp
 - R.utils
 
-To build this package from source, following libraries must be installed:
+To build this package from source, the following libraries must be installed:
 - zlib
 
 # How to install
