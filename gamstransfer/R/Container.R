@@ -52,7 +52,7 @@ Container <- R6::R6Class (
       if (!is.null(systemDirectory)) {
         warning(paste0("The argument `systemDirectory` is deprecated as ",
         "of gamstransfer 3.0. This argument is no longer needed and ",
-        "will be removed in the upcoming version of the package\n"))
+        "will be removed in some future version of the package\n"))
       }
       self$data = collections::ordered_dict()
       # another dict for lowercase names to original case
