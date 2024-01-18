@@ -663,7 +663,7 @@ Container <- R6::R6Class (
 
       if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
-        ext = tail(unlist(namesplit), 1)
+        ext = utils::tail(unlist(namesplit), 1)
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx\n")
         }
@@ -1128,7 +1128,7 @@ Container <- R6::R6Class (
       }
       else {
         namesplit = strsplit(writeTo, "\\.")
-        ext = tail(unlist(namesplit), 1)
+        ext = utils::tail(unlist(namesplit), 1)
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx\n")
         }
