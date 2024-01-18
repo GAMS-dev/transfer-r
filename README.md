@@ -57,7 +57,13 @@ If the issue persists and you know that you have `zlib` on your system, you
 can manually point the installer to it using `configure-vars` arguemnt
 as follows:
 
-R CMD INSTALL gamstransfer --configure-vars="LIB_DIR='[path_to_dll]'" or R CMD INSTALL gamstransfer --configure-vars="INCLUDE_DIR='[path_to_include]' LIB_DIR='[path_to_bin]'"
+```
+R CMD INSTALL gamstransfer --configure-vars="LIB_DIR='[path_to_dll]'"
+```
+or
+```
+R CMD INSTALL gamstransfer --configure-vars="INCLUDE_DIR='[path_to_include]' LIB_DIR='[path_to_bin]'"
+```
 
 The `configure` script generates some log and cache files. To remove these files
 automatically after installation, use the following command.
