@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
 # copy files to gamstransfer src
-cp ./gdx/src/* ./gamstransfer/src
+cp ./gdx/src/*.h ./gdx/src/*.cpp ./gamstransfer/src
 cp -r ./gdx/src/templates ./gamstransfer/src
-rm -r ./gamstransfer/src/*.py ./gamstransfer/src/*.yaml
