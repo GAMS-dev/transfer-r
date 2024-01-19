@@ -23,8 +23,7 @@
 # SOFTWARE.
 #
 
-readGDX = function(loadFrom, symbols=NULL, records=TRUE, 
- systemDirectory = NULL) {
+readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
     # check if records is logical
     if (!is.logical(records) && length(records) != 1) {
     stop("records must be type logical\n")
@@ -35,25 +34,9 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE,
     stop("argument symbols must be of the type character or NULL\n")
     }
 
-    if (is.null(systemDirectory)) {
-        sysDirPath = find_gams()
-        if (is.null(sysDirPath)) {
-        stop("Could not find a GAMS installation in the environment ", 
-        "variable `PATH`. Specify the GAMS system ",
-        "directory via the argument `systemDirectory`\n")
-        }
-        systemDirectory = sysDirPath
-    }
-    else {
-        if (!R.utils::isAbsolutePath(systemDirectory)) {
-            stop(paste0("must enter valid full (absolute) path to the",
-            "GAMS system directory\n"))
-        }
-    }
-
     if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
-        ext = tail(unlist(namesplit), 1)
+        ext = utils::tail(unlist(namesplit), 1)
         if (ext != "gdx") {
             stop("check filename extension, must be .gdx\n")
         }
@@ -62,8 +45,8 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE,
             stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
         # read call here
-        readlist = CPP_readSuper(symbols, loadFrom, 
-            systemDirectory, records)
+        readlist = CPP_readSuper(symbols, loadFrom,
+            records)
         sym_names = unlist(lapply(readlist, "[[", 2), use.names = FALSE)
         names(readlist) = sym_names
     }
@@ -75,8 +58,7 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE,
 }
 
 writeGDX = function(writeList, writeTo, symbols=NULL, 
-    compress = FALSE, uelPriority = NULL, mode = NULL, 
-    systemDirectory = NULL) {
+    compress = FALSE, uelPriority = NULL, mode = NULL) {
     if (!is.logical(compress)) {
     stop(paste0("'compress' must be of type logical; ",
     "default False (no compression)\n"))
@@ -87,7 +69,7 @@ writeGDX = function(writeList, writeTo, symbols=NULL,
     }
     else {
     namesplit = strsplit(writeTo, "\\.")
-    ext = tail(unlist(namesplit), 1)
+    ext = utils::tail(unlist(namesplit), 1)
     if (ext != "gdx") {
         stop("check filename extension, must be .gdx\n")
     }
@@ -149,7 +131,7 @@ writeGDX = function(writeList, writeTo, symbols=NULL,
         # }
       }
 
-      CPP_gdxWriteSuper(writeList, systemDirectory, enable,
+      CPP_gdxWriteSuper(writeList, enable,
       writeTo, uelPriority, compress, mode_int)
 
 }

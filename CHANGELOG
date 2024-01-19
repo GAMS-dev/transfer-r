@@ -1,5 +1,7 @@
 GAMS Transfer R 2.9.0
 ==================
+- GDX API changed to the new GDX C++ API - significant performance improvements and no dependency on the GAMS system directory
+- `systemDirectory` argument in the `Container` constructor is deprecated and will be removed in the future
 - Bug fix: `Container` property `summary` changed from a method to active binding
 - Fixed overriding PKG_CXXFLAGS in Makevars
 - Performance improvements in read

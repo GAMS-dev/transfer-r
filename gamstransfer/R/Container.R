@@ -36,7 +36,6 @@
 Container <- R6::R6Class (
   "Container",
   public = list(
-    systemDirectory = NULL,
     data = NULL,
     .lc_data = NULL,
     .requiresStateCheck = NULL,
@@ -49,27 +48,12 @@ Container <- R6::R6Class (
     #' @examples
     #' Container$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
-
-      if (is.null(systemDirectory)) {
-          sysDirPath = find_gams()
-          if (is.null(sysDirPath)) {
-            stop("Could not find a GAMS installation in the environment ", 
-            "variable `PATH`. Specify the GAMS system ",
-            "directory via the Container constructor argument ",
-             "`systemDirectory`\n")
-          }
-        self$systemDirectory = sysDirPath
+      # systemDirectory can be passed but won't be used
+      if (!is.null(systemDirectory)) {
+        warning(paste0("The argument `systemDirectory` is deprecated as ",
+        "of gamstransfer 3.0. This argument is no longer needed and ",
+        "will be removed in some future version of the package\n"))
       }
-      else {
-        if (R.utils::isAbsolutePath(systemDirectory)) {
-          self$systemDirectory = systemDirectory
-        }
-        else {
-          stop(paste0("must enter valid full (absolute) path to the",
-          "GAMS system directory\n"))
-        }
-      }
-
       self$data = collections::ordered_dict()
       # another dict for lowercase names to original case
       self$.lc_data = collections::dict()
@@ -679,7 +663,7 @@ Container <- R6::R6Class (
 
       if (is.character(loadFrom)) {
         namesplit = strsplit(loadFrom, "\\.")
-        ext = tail(unlist(namesplit), 1)
+        ext = utils::tail(unlist(namesplit), 1)
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx\n")
         }
@@ -1144,7 +1128,7 @@ Container <- R6::R6Class (
       }
       else {
         namesplit = strsplit(writeTo, "\\.")
-        ext = tail(unlist(namesplit), 1)
+        ext = utils::tail(unlist(namesplit), 1)
         if (ext != "gdx") {
           stop("check filename extension, must be .gdx\n")
         }
@@ -1583,7 +1567,6 @@ Container <- R6::R6Class (
   active = list(
     summary = function() {
       return(list(
-        systemDirectory = self$systemDirectory,
         numberSymbols = length(self$listSymbols())
       ))
     }
@@ -1607,7 +1590,7 @@ Container <- R6::R6Class (
         }
 
         readlist = CPP_readSuper(symbols, loadFrom, 
-        self$systemDirectory, records)
+        records)
 
         self$readList(readlist, NULL, records=records)
     },

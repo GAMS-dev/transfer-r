@@ -25,25 +25,6 @@
 
 gams_description_max_length = 255
 
-find_gams <- function() {
-  if (Sys.info()['sysname'] == "Windows") {
-    gams_exe = "gams.exe"
-  }
-  else {
-    gams_exe = "gams"
-  }
-  paths = Sys.getenv("PATH")
-  paths_split = unlist(strsplit(paths, .Platform$path.sep))
-  sysDirPath = NULL
-  for (p in paths_split) {
-    if (file.exists(paste0(p, .Platform$file.sep, gams_exe))) {
-      sysDirPath = p
-    }
-  }
-
-  return(sysDirPath)
-}
-
 is.integer0 <- function(x)
 {
   is.integer(x) && length(x) == 0L

@@ -11,16 +11,15 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // CPP_readSuper
-List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, CharacterVector sysDir, LogicalVector read_records);
-RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP sysDirSEXP, SEXP read_recordsSEXP) {
+List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName, LogicalVector read_records);
+RcppExport SEXP _gamstransfer_CPP_readSuper(SEXP symNames_SEXP, SEXP gdxNameSEXP, SEXP read_recordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type symNames_(symNames_SEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type gdxName(gdxNameSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
     Rcpp::traits::input_parameter< LogicalVector >::type read_records(read_recordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, sysDir, read_records));
+    rcpp_result_gen = Rcpp::wrap(CPP_readSuper(symNames_, gdxName, read_records));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -35,18 +34,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // CPP_gdxWriteSuper
-void CPP_gdxWriteSuper(List writeList, CharacterVector sysDir, LogicalVector enable, CharacterVector fileName, Nullable<CharacterVector> uel_priority_, bool compress, int mode);
-RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP writeListSEXP, SEXP sysDirSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
+void CPP_gdxWriteSuper(const List& writeList, const LogicalVector& enable, const CharacterVector& fileName, const Nullable<CharacterVector>& uel_priority_, bool compress, int mode);
+RcppExport SEXP _gamstransfer_CPP_gdxWriteSuper(SEXP writeListSEXP, SEXP enableSEXP, SEXP fileNameSEXP, SEXP uel_priority_SEXP, SEXP compressSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type writeList(writeListSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type sysDir(sysDirSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type enable(enableSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type fileName(fileNameSEXP);
-    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type uel_priority_(uel_priority_SEXP);
+    Rcpp::traits::input_parameter< const List& >::type writeList(writeListSEXP);
+    Rcpp::traits::input_parameter< const LogicalVector& >::type enable(enableSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type fileName(fileNameSEXP);
+    Rcpp::traits::input_parameter< const Nullable<CharacterVector>& >::type uel_priority_(uel_priority_SEXP);
     Rcpp::traits::input_parameter< bool >::type compress(compressSEXP);
     Rcpp::traits::input_parameter< int >::type mode(modeSEXP);
-    CPP_gdxWriteSuper(writeList, sysDir, enable, fileName, uel_priority_, compress, mode);
+    CPP_gdxWriteSuper(writeList, enable, fileName, uel_priority_, compress, mode);
     return R_NilValue;
 END_RCPP
 }
@@ -67,9 +65,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 4},
+    {"_gamstransfer_CPP_readSuper", (DL_FUNC) &_gamstransfer_CPP_readSuper, 3},
     {"_gamstransfer_CPP_getMaxDim", (DL_FUNC) &_gamstransfer_CPP_getMaxDim, 0},
-    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 7},
+    {"_gamstransfer_CPP_gdxWriteSuper", (DL_FUNC) &_gamstransfer_CPP_gdxWriteSuper, 6},
     {"_gamstransfer_CPP_gdxWrite", (DL_FUNC) &_gamstransfer_CPP_gdxWrite, 6},
     {NULL, NULL, 0}
 };

@@ -21,38 +21,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "gdxcc.h"
 #include "gclgms.h"
 using namespace Rcpp;
+#include "gdx.h"
+
 class gt_gdx
 {
   public:
-    gdxHandle_t gdx;
+    std::string msg;
+    gdx::TGXFileObj gdx {msg};
     gt_gdx() {
-      gdx = NULL;
-    }
-    void init_library(std::string mySysDir) {
-      char  Msg[GMS_SSSIZE];
-      int rc;
-      // open GDX file and start reading
-      rc = gdxCreateD(&gdx, mySysDir.c_str(), Msg, sizeof(Msg));
-      if (!rc) stop("gdxCreateD: GDX init failed: %s", Msg);
-    }
-    ~gt_gdx() {
-      // close the file and return
-      if (gdx) {
-        if (gdxClose(gdx)) stop("CPP_readSuper:gdxClose GDX error (gdxClose)");
-        if (!gdxFree(&gdx)) stop("CPP_readSuper:gdxFree GDX error (gdxFree)");
-      }
-
-      if (gdxLibraryLoaded()) {
-        if (!gdxLibraryUnload()) stop("CPP_readSuper:gdxLibraryUnload GDX error (gdxLibraryUnload)");
-      }
-
+      if( !msg.empty() )
+        stop( "CPP_readSuper:Could not load GDX library." );
     }
 };
 
-// struct contains symbol info and missing attributes to 
+// struct contains symbol info and missing attributes to
 // populate default values
 class sym_info
 {
@@ -61,7 +45,6 @@ class sym_info
     int dim, type, sym_nr, subtype;
     std::string* domain;
     std::string description, domain_type;
-    bool missing_attributes[5] = {false};
     DataFrame* records;
 
     ~sym_info() {
@@ -102,4 +85,4 @@ const std::map<std::string, int> equTypeText_to_int
 {"nonbinding", 3}, {"external", 4},{"cone", 5},
 {"boolean", 6}};
 
-void gt_set_special_values(gt_gdx& );
+void gt_set_special_values(gdx::TGXFileObj &);
