@@ -92,5 +92,5 @@ files from the GDX submodule to the src directory of this package.
 
 ## Build ##
 
-A quick and easy way to build `gamstransfer` is by running ```R CMD build gamstransfer```.This will generate the package source file. To build a binary package, run `R CMD INSTALL` with an option `--build`.
+A quick and easy way to build `gamstransfer` source package is by running ```R CMD build gamstransfer```.This will generate the package source file. To build a binary package, run `R CMD INSTALL` with an option `--build`. This command builds a binary package along with installation. Please refer to "how to install" section for more details on installation.
 
