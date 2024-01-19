@@ -45,7 +45,6 @@ class sym_info
     int dim, type, sym_nr, subtype;
     std::string* domain;
     std::string description, domain_type;
-    bool missing_attributes[5] = {false};
     DataFrame* records;
 
     ~sym_info() {
