@@ -23,6 +23,15 @@
 # SOFTWARE.
 #
 
+#' @title DomainViolation Class
+#' @description Contains information about the domain violation
+#' for a symbol.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+#' @field symbol symbol name
+#' @field dimension dimension in which domain violation is present
+#' @field domain domain name
+#' @field violations vector of violations
 DomainViolation <- R6::R6Class (
   "DomainViolation",
   public = list(

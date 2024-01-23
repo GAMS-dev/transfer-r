@@ -26,47 +26,14 @@
 #' @title Equation Class
 #' @description A class for Equation objects. This class inherits from an abstract 
 #' symbol class.The documentation for methods common to all symbols can be
-#' accessed via help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field container reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-#' @field type type of variable (string)
-Equation <- R6Class(
+#' accessed via help(.Symbol).
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+Equation <- R6::R6Class(
   "Equation",
   inherit = .Symbol,
   public = list(
 
-    #' @description There are two different ways to create a GAMS Equation and 
-    #' add it to a Container. One is using the Equation constructor and 
-    #' the other is using addEquation method which calls the Equation 
-    #' constructor internally.
-    #' addEquation is a Container method to add a Equation.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Equation
-    #' @param type Type of equation being created [eq (or E/e), geq 
-    #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Equation object
     initialize = function(container=NULL, name=NULL, 
                           type=NULL,
                           domain=NULL,
@@ -85,9 +52,6 @@ Equation <- R6Class(
       }
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
     setRecords = function(records) {
       if (inherits(records, c("list", "array", "numeric", "integer"))) {
 

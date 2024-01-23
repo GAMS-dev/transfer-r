@@ -23,37 +23,16 @@
 # SOFTWARE.
 #
 
+
 #' @title Alias Class
-#' @description A class for Alias objects.
-#' @field aliasWith aliased object
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field isSingleton if symbol is a singleton set
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field container reference to the Container that the symbol belongs to
-#' @field summary output a list of only the metadata
-Alias <- R6Class(
+#' @description A class for Alias objects. 
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+#' @importFrom R6 R6Class
+Alias <- R6::R6Class(
   "Alias",
   inherit = .BaseAlias,
   public = list(
-
-    #' @description There are two different ways to create a GAMS Alias and 
-    #' add it to a Container. One is using the Alias constructor and 
-    #' the other is using addAlias method which calls the Alias 
-    #' constructor internally.
-    #' addAlias is a Container method to add a Alias.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Alias
-    #' @param aliasFor string argument for the set/alias we want to add
-    #' an alias for
     initialize = function(container=NULL, name=NULL, 
                           aliasFor=NULL) {
       super$initialize(container, name)
@@ -100,18 +79,12 @@ Alias <- R6Class(
       self$aliasWith$renameUELs(uels, dimension, allowMerge)
     },
 
-    #' @description getSparsity get the sparsity of the symbol 
-    #' w.r.t the cardinality
     getSparsity = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$container[self$aliasWith$name]$getSparsity())
     },
 
-    #' @description TRUE if the symbol is in a valid format, 
-    #' throw exceptions if verbose=True, recheck a symbol if force=True
-    #' @param verbose type logical
-    #' @param force type logical
     isValid = function(verbose=FALSE, force=FALSE) {
       if (!is.logical(verbose)) {
         stop("Argument 'verbose' must be logical\n")
@@ -202,8 +175,6 @@ Alias <- R6Class(
       return(self$aliasWith$dropDuplicateRecords(keep))
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
       super$.testContainer()
       private$.testParentSet()

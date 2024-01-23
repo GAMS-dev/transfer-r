@@ -23,9 +23,10 @@
 # SOFTWARE.
 #
 
-gams_description_max_length = 255
 
-is.integer0 <- function(x)
+.gams_description_max_length = 255
+
+.is.integer0 <- function(x)
 {
   is.integer(x) && length(x) == 0L
 }

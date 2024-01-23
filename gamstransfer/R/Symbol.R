@@ -27,7 +27,9 @@
 #' @description An abstract symbol class from 
 #' which the classes Set, Parameter, Variable, 
 #' and Equation are inherited.
-.Symbol <- R6Class(
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+.Symbol <- R6::R6Class(
   ".Symbol",
   public = list(
   .requiresStateCheck = NULL,
@@ -39,8 +41,6 @@
 
     self$.requiresStateCheck = TRUE
 
-    #' @field container reference to the Container that the symbol 
-    #' belongs to. Type Container.
     self$container = container # also sets the check flag
 
     #' @field name name of the symbol
@@ -57,11 +57,6 @@
   format = function(...) paste0("GAMS Transfer: R6 object of class ", 
   class(self)[1], ". Use ", self$name, "$summary for details"),
 
-  #' @description getMaxValue get the maximum value
-  #' @param columns columns over which one wants to get the maximum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   getMaxValue = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -83,11 +78,6 @@
     return(max(max_vals))
   },
 
-  #' @description getMinValue get the minimum value in value column
-  #' @param columns columns over which one wants to get the minimum.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   getMinValue = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -109,11 +99,6 @@
     return(min(min_vals))
   },
 
-  #' @description getMeanValue get the mean value in value column
-  #' @param columns columns over which one wants to get the mean.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   getMeanValue = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -135,12 +120,6 @@
     return(mean(mean_vals))
   },
 
-  #' @description getMaxAbsValue get the maximum absolute value in value column
-  #' @param columns columns over which one wants to get the 
-  #' maximum absolute value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   getMaxAbsValue = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -162,13 +141,6 @@
     return(max(abs(max_abs_vals)))
   },
 
-  #' @description whereMax find the row number in records data frame with a 
-  #' maximum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   whereMax = function(column=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -188,15 +160,6 @@
     }
   },
 
-  #' @description whereMaxAbs find the row number in records data frame 
-  #' with a maximum absolute value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' maximum absolute value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   whereMaxAbs = function(column=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -216,15 +179,6 @@
     }
   },
 
-  #' @description whereMin find the the row number in records data frame 
-  #' with a minimum value (return first instance only)
-  #' @description whereMax find the domain entry of records with a 
-  #' minimum value (return first instance only)
-  #' @param columns columns over which one wants to find the 
-  #' domain entry of records with a maximum value.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   whereMin = function(column=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -244,12 +198,6 @@
     }
   },
 
-  #'@description countNA total number of SpecialValues[["NA"]] in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues[["NA"]].
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   countNA = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -259,12 +207,6 @@
     return(private$.countSpecialValue(columns, "isNA"))
   },
 
-  #' @description countEps total number of SpecialValues$EPS in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$EPS.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   countEps = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -274,12 +216,6 @@
     return(private$.countSpecialValue(columns, "isEps"))
   },
 
-  #'@description countUndef total number of SpecialValues$UNDEF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$UNDEF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   countUndef = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -289,13 +225,6 @@
     return(private$.countSpecialValue(columns, "isUndef"))
   },
 
-  #'@description countPosInf total number of 
-  #' SpecialValues$POSINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$POSINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
   countPosInf = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -306,13 +235,6 @@
 
   },
 
-  #'@description countNegInf total number of 
-  #' SpecialValues$NEGINF in value column
-  #' @param columns columns in which one wants to count the number of 
-  #' SpecialValues$NEGINF.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.  
   countNegInf = function(columns=NULL) {
     if (is.null(self$records) || inherits(self, "Set")) {
       return(NA)
@@ -740,7 +662,7 @@
 
   findDuplicateRecords = function(keep="first") {
     idx = private$.get_duplicate_index(keep)
-    if (is.integer0(idx)) {
+    if (.is.integer0(idx)) {
       return(data.frame())
     }
     else {
@@ -755,14 +677,13 @@
   dropDuplicateRecords = function(keep = "first") {
     idx = private$.get_duplicate_index(keep)
 
-    if (!is.integer0(idx)) {
+    if (!.is.integer0(idx)) {
       self$records = self$records[-idx, , drop=FALSE]
       rownames(self$records) <- NULL
     }
     return(invisible(NULL))
   },
 
-  #' @description getSparsity get the sparsity of the symbol w.r.t the cardinality
   getSparsity = function() {
     tryCatch(
       {
@@ -786,10 +707,6 @@
     )
   },
 
-  #' @description TRUE if the symbol is in a valid format, 
-  #' throw exceptions if verbose=True, recheck a symbol if force=True
-  #' @param verbose type logical
-  #' @param force type logical
   isValid = function(verbose=FALSE, force=FALSE) {
     if (!is.logical(verbose)) {
       stop("Argument 'verbose' must be logical\n")
@@ -850,11 +767,6 @@
     }
   },
 
-  #' @description toDense convert symbol to a dense matrix/array format
-  #' @param column column to be converted to dense format.
-  #' This is an optional argument which defaults to `value` for parameter
-  #'  and `level` for variable and equation. For variables and equations, 
-  #' alternate column/columns can be provided using the columns argument.
   toDense = function(column = "level") {
     if (!is.character(column)) {
       stop("Argument 'column' must be type str\n")
@@ -1064,9 +976,9 @@
           " character vector of length greater than 1\n"))
         }
 
-        if (nchar(description_input) > gams_description_max_length) {
+        if (nchar(description_input) > .gams_description_max_length) {
           stop(paste0("Symbol 'description' must have length ",
-          gams_description_max_length, " or smaller\n"))
+          .gams_description_max_length, " or smaller\n"))
         }
 
         if (!is.null(private$.description)) {
@@ -1348,7 +1260,7 @@
             whereMetricVal = which.max(abs(self$records[,column]))
           }
 
-          if (is.integer0(whereMetricVal)) {
+          if (.is.integer0(whereMetricVal)) {
             return(NA)
           }
           else {

@@ -27,6 +27,10 @@
 #' @name gamstransfer
 #' @docType package
 #' @useDynLib gamstransfer, .registration = TRUE
+#' @exportPattern "^[[:alpha:]]+"
+#' @importFrom Rcpp evalCpp
+#' @importFrom collections dict
+#' @import R.utils
 #' @description A package to maintain GAMS data outside a GAMS script
 #' @details GAMS Transfer is a package to maintain GAMS data outside a GAMS script
 #'  in a programming language like Python, Matlab or R. It allows the user 
@@ -41,5 +45,7 @@
 #' familiar with these data structures, (2) these data structures come with a 
 #' large tool box for various data operations, and (3) optimized methods for 
 #' reading from and writing to GAMS can transfer the data as a bulk - resulting
-#'  in the high performance of this package. 
+#'  in the high performance of this package.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
 NULL

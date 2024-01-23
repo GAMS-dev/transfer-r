@@ -23,22 +23,12 @@
 # SOFTWARE.
 #
 
-.BaseAlias <- R6Class(
+.BaseAlias <- R6::R6Class(
   ".BaseAlias",
   public = list(
     .isUniverseAlias = NULL,
     .requiresStateCheck = NULL,
 
-    #' @description There are two different ways to create a GAMS Alias and 
-    #' add it to a Container. One is using the Alias constructor and 
-    #' the other is using addAlias method which calls the Alias 
-    #' constructor internally.
-    #' addAlias is a Container method to add a Alias.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the Alias
-    #' @param aliasFor string argument for the set/alias we want to add
-    #' an alias for
     initialize = function(container=NULL, name=NULL) {
       self$.requiresStateCheck = TRUE
       self$container = container
