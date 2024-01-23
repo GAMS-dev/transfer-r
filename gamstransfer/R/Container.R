@@ -1192,7 +1192,7 @@ Container <- R6::R6Class (
         }
       }
 
-      CPP_gdxWrite(self, enable,
+      .CPP_gdxWrite(self, enable,
       writeTo, uelPriority, compress, mode_int)
     },
 
@@ -1589,7 +1589,7 @@ Container <- R6::R6Class (
           }
         }
 
-        readlist = CPP_readSuper(symbols, loadFrom, 
+        readlist = .CPP_readSuper(symbols, loadFrom, 
         records)
 
         self$readList(readlist, NULL, records=records)

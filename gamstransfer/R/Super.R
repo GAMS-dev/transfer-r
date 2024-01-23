@@ -45,7 +45,7 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
             stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
         # read call here
-        readlist = CPP_readSuper(symbols, loadFrom,
+        readlist = .CPP_readSuper(symbols, loadFrom,
             records)
         sym_names = unlist(lapply(readlist, "[[", 2), use.names = FALSE)
         names(readlist) = sym_names
@@ -131,7 +131,7 @@ writeGDX = function(writeList, writeTo, symbols=NULL,
         # }
       }
 
-      CPP_gdxWriteSuper(writeList, enable,
+      .CPP_gdxWriteSuper(writeList, enable,
       writeTo, uelPriority, compress, mode_int)
 
 }

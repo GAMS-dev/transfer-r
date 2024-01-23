@@ -318,7 +318,7 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
 
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(.CPP_readSuper)]]
 List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
                 LogicalVector read_records) {
   auto gdx_name {Rcpp::as<std::string>(gdxName)};

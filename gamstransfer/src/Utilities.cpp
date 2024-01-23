@@ -26,7 +26,7 @@
 #include "utilities.hpp"
 using namespace Rcpp;
 
-// [[Rcpp::export]]
+// [[Rcpp::export(.CPP_getMaxDim)]]
 IntegerVector CPP_getMaxDim() {
   IntegerVector v {GMS_MAX_INDEX_DIM};
   return(v);

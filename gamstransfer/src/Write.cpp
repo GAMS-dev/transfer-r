@@ -390,7 +390,7 @@ void gt_write_symbol(gdx::TGXFileObj & gdx, const sym_info & info, int mode) {
   }
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(.CPP_gdxWriteSuper)]]
 void CPP_gdxWriteSuper(const List & writeList, const LogicalVector & enable,
 const CharacterVector & fileName, const Nullable<CharacterVector> & uel_priority_,
 bool compress, int mode) {
@@ -479,7 +479,7 @@ bool compress, int mode) {
   return;
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(.CPP_gdxWrite)]]
 void CPP_gdxWrite(Environment container, LogicalVector enable,
 CharacterVector fileName, Nullable<CharacterVector> uel_priority_,
 bool compress, int mode) {

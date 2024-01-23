@@ -1086,9 +1086,9 @@
       else {
         if (!((inherits(dimension_input, c("numeric", "integer"))) && 
            (dimension_input %% 1 == 0) && (dimension_input >= 0) &&
-           (dimension_input <= CPP_getMaxDim()))) {
+           (dimension_input <= .CPP_getMaxDim()))) {
             stop(paste0("Symbol 'dimension' must be ",
-           "an integer in [0, ", CPP_getMaxDim(), "]\n"))
+           "an integer in [0, ", .CPP_getMaxDim(), "]\n"))
            }
 
         if (length(self$domain) > dimension_input) {
@@ -1124,9 +1124,9 @@
           domain_input = list(domain_input)
         }
 
-        if (length(domain_input) > CPP_getMaxDim()) {
+        if (length(domain_input) > .CPP_getMaxDim()) {
           stop(paste0("Argument 'domain' length cannot be > ", 
-          CPP_getMaxDim(), "\n"))
+          .CPP_getMaxDim(), "\n"))
         }
 
         lapply(domain_input, function(d) {
