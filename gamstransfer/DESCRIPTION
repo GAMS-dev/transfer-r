@@ -27,6 +27,24 @@ LinkingTo: Rcpp
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1
+Roxygen: list(r6 = FALSE)
 SystemRequirements: C++17
 Encoding: UTF-8
+Collate: 
+    'Alias.R'
+    'BaseAlias.R'
+    'Container.R'
+    'DomainViolation.R'
+    'SpecialValues.R'
+    'Equation.R'
+    'Parameter.R'
+    'RcppExports.R'
+    'Set.R'
+    'Super.R'
+    'Symbol.R'
+    'UniverseAlias.R'
+    'Variable.R'
+    'gamstransfer.R'
+    'symbolTypes.R'
+    'utility.R'
