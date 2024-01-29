@@ -26,8 +26,6 @@
 #include "utilities.hpp"
 using namespace Rcpp;
 
-#include "gdx.h"
-
 using namespace std::literals::string_literals;
 
 #define GET_DOM_MAP(dim,idx) ((dom_symid[dim] <= 0) ? idx-1 : sym_uel_map[dom_symid[dim]][idx])

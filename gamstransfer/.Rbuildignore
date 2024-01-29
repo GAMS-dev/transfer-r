@@ -1,1 +1,7 @@
 ^LICENSE\.md$
+^src/gdx/LICENSE
+^src/gdx/assets
+^src/gdx/ci
+^src/gdx/Doxyfile
+^src/gdx/docs
+^src/gdx/generated

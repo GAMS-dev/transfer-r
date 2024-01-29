@@ -1,0 +1,13 @@
+CXX = clang++
+CXX_STD = CXX17
+PKG_CPPFLAGS = -I./gdx/src -I.
+PKG_CXXFLAGS = -ldl -lpthread -pipe -DNDEBUG
+PKG_LIBS = -lz
+SOURCES=src/RcppExports.cpp src/Read.cpp src/Utilities.cpp src/Write.cpp src/gdx/src/gmsstrm.cpp src/gdx/src/gxfile.cpp src/gdx/src/utils.cpp 
+OBJECTS=$(SOURCES:.cpp=.o)
+
+all: $(SHLIB)
+
+# Provide recipe to remove all objects
+clean:
+	@rm -f $(OBJECTS)

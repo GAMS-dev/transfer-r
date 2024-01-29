@@ -26,7 +26,6 @@
 // #include "gdxcc.h"
 #include "gclgms.h"
 #include "utilities.hpp"
-#include "gdx.h"
 
 using namespace Rcpp;
 using namespace std::literals::string_literals;
