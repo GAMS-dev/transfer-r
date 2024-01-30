@@ -2,4 +2,3 @@
 
 # copy files to gamstransfer src
 cp ./gdx/src/*.h ./gdx/src/*.cpp ./gamstransfer/src
-cp -r ./gdx/src/templates ./gamstransfer/src

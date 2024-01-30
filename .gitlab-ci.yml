@@ -156,10 +156,8 @@ build_r_windows:
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
-        - cp ./gdx/src/* ./gamstransfer/src
-        - cd ./gamstransfer/src
-        - rm .\tests, .\examples, *.py, *.yaml
-        - cd ..\..
+        - cp .\gdx\src\*.h .\gamstransfer\src
+        - cp .\gdx\src\*.cpp .\gamstransfer\src
         - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --configure-vars="LIB_DIR='C:'" --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
     only: [merge_requests, main, tags]
