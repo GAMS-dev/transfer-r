@@ -28,6 +28,14 @@
 #' The documentation for methods common to all symbols can be accessed via help(.Symbol).
 #' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
 #' for detailed documentation of this package.
+#'
+#' @examples
+#' # create a container
+#' m = Container$new()
+#' # add a set
+#' i = Set$new(m, "i")
+#' # access records
+#' i$records
 Set <- R6::R6Class(
   "Set",
   inherit = .Symbol,

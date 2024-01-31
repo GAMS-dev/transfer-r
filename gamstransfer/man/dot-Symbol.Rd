@@ -10,9 +10,3 @@ and Equation are inherited.
 Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
 for detailed documentation of this package.
 }
-\section{Fields}{
-
-\describe{
-\item{\code{name}}{name of the symbol}
-}}
-

@@ -23,7 +23,26 @@ Create a new container simply by initializing an object.
 
 \describe{
 \item{\code{data}}{is a named list containing all symbol data}
-
-\item{\code{systemDirectory}}{is the path to GAMS System directory}
 }}
 
+\examples{
+m = Container$new()
+m$addSet("i")
+m$addSet("j")
+m$listSymbols()
+m$describeSets()
+\dontrun{
+# create a container and read the file foo.gdx
+m = Container$new("foo.gdx")
+# access symbol named "x" from the container
+x = m["x"]
+# list all symbols
+m$listSymbols()
+# list all sets
+m$listSets()
+# check if the container contains symbol named "i"
+m$hasSymbols("i")
+# get a summary of the description of all sets in the Container
+m$describeSets()
+}
+}

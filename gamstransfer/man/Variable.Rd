@@ -5,8 +5,15 @@
 \title{Variable Class}
 \description{
 A class for Variable objects. This class inherits from an abstract 
-Symbol class.The documentation for methods common to all symbols can be
-accessed via help(.Symbol).
+Symbol class.
 Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
 for detailed documentation of this package.
+}
+\examples{
+# create a container
+m = Container$new()
+# add a Variable
+v = Variable$new(m, "v")
+# access records
+v$records
 }

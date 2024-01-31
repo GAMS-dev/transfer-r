@@ -13,9 +13,16 @@ readGDX(loadFrom, symbols = NULL, records = TRUE)
 containing the symbol names to be read}
 
 \item{records}{optional logical argument - TRUE (default) to read 
-the symbol records, FALSE to only read the meta data}
+the symbol records, FALSE to only read the meta data.
+Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+for detailed documentation of this package.}
 }
 \description{
 read a GDX file to a list without creating symbol 
 or container objects
+}
+\examples{
+\dontrun{
+read_list = readGDX("foo.gdx")
+}
 }

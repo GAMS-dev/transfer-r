@@ -28,6 +28,16 @@
 #' for a symbol.
 #' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
 #' for detailed documentation of this package.
+#'
+#' @examples
+#' m = Container$new()
+#' i = Set$new(m, "i", records=paste0("i", 1:5))
+#' p = Parameter$new(m, "p", i, records=data.frame(i=c("i1","i3","i6"), value=c(1,5,7)))
+#' dv = p$getDomainViolations()[[1]]
+#' dv$symbol
+#' dv$dimension
+#' dv$domain
+#' dv$violations
 #' @field symbol symbol name
 #' @field dimension dimension in which domain violation is present
 #' @field domain domain name

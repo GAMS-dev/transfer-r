@@ -43,7 +43,6 @@
 
     self$container = container # also sets the check flag
 
-    #' @field name name of the symbol
     self$name <- name
 
     self$domain = domain

@@ -24,13 +24,20 @@
 #
 
 #' @title readGDX
-#' @description read a GDX file to a list without creating symbol 
+#' @description read a GDX file to a list without creating symbol
 #' or container objects
 #' @param loadFrom name of the GDX file being read (string)
 #' @param symbols optional argument - vector of strings
 #' containing the symbol names to be read
-#' @param records optional logical argument - TRUE (default) to read 
-#' the symbol records, FALSE to only read the meta data
+#' @param records optional logical argument - TRUE (default) to read
+#' the symbol records, FALSE to only read the meta data.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' \dontrun{
+#' read_list = readGDX("foo.gdx")
+#' }
 readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
     # check if records is logical
     if (!is.logical(records) && length(records) != 1) {
@@ -72,14 +79,19 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
 #' @param writeTo name of the output GDX file
 #' @param symbols optional argument - vector of strings
 #' containing the symbol names to be read
-#' @param compress optional logical argument. TRUE to produce a 
+#' @param compress optional logical argument. TRUE to produce a
 #' compressed GDX file
 #' @param uelPriority Specify the priority UELs
-#' @param mode optional string argument to specify the write 
+#' @param mode optional string argument to specify the write
 #' mode ("string", "mapped").
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
 #' for detailed documentation of this package.
-writeGDX = function(writeList, writeTo, symbols=NULL, 
+#'
+#' @examples
+#' \dontrun{
+#' writeGDX(list(), "gt.gdx")
+#' }
+writeGDX = function(writeList, writeTo, symbols=NULL,
     compress = FALSE, uelPriority = NULL, mode = NULL) {
     if (!is.logical(compress)) {
     stop(paste0("'compress' must be of type logical; ",

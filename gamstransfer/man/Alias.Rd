@@ -8,3 +8,11 @@ A class for Alias objects.
 Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
 for detailed documentation of this package.
 }
+\examples{
+# create a container
+m = Container$new()
+# add a set
+i = Set$new(m, "i")
+# add an alias to the set "i"
+ii = Alias$new(m, "ii", i)
+}

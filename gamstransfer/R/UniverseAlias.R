@@ -25,8 +25,15 @@
 
 #' @title UniverseAlias Class
 #' @description A class for Alias objects that are aliased to the Universe set.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
 #' for detailed documentation of this package.
+#'
+#' #' @examples
+#' # create a container
+#' m = Container$new()
+#' # add a UniverseAlias
+#' u = UniverseAlias$new(m, "u")
+
 UniverseAlias <- R6::R6Class(
   "UniverseAlias",
   inherit = .BaseAlias,
