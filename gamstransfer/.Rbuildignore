@@ -27,3 +27,4 @@
 ^src/gdx/src/tests$
 ^src/gdx/src/yaml2cwrap\.py$
 ^src/gdx/src/yaml2doxy\.py$
+^README\.Rmd$

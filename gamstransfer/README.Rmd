@@ -1,0 +1,90 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# gamstransfer
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+GAMS Transfer is a package to maintain GAMS data outside a GAMS script
+ in a programming language like Python, Matlab or R. It allows the user
+to add GAMS symbols (Sets, Aliases, Parameters, Variables and Equations),
+ to manipulate GAMS symbols, as well as read/write symbols to different
+data endpoints. GAMS Transfer's main focus is the highly efficient transfer
+ of data between GAMS and the target programming language, while keeping
+those operations as simple as possible for the user. In order to achieve this,
+ symbol records - the actual and potentially large-scale data sets - are
+stored in native data structures of the corresponding programming languages.
+The benefits of this approach are threefold: (1) The user is usually very
+familiar with these data structures, (2) these data structures come with a
+large tool box for various data operations, and (3) optimized methods for
+reading from and writing to GAMS can transfer the data as a bulk - resulting
+ in the high performance of this package.
+
+## Quick Start Guide
+To install `gamstransfer` from GitHub, install the released version of `remotes`
+package from CRAN.
+
+``` r
+install.packages("remotes")
+```
+
+You can then install a particular release of `gamstransfer` from GitHub using the
+following command.
+
+``` r
+remotes::install_github("GAMS-dev/gtr/gamstransfer@vX.Y.Z")
+```
+
+To use `gamstransfer`, load the package using `library(gamstransfer)`. Following
+is the code snippet to read data from a GDX file named `foo.gdx`.
+
+``` r
+library(gamstransfer)
+m = Container$new("foo.gdx")
+```
+
+## Installation
+
+You can install the development version of gamstransfer like so:
+
+``` r
+# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(gamstransfer)
+## basic example code
+```
+
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+
+```{r cars}
+summary(cars)
+```
+
+You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+
+You can also embed plots, for example:
+
+```{r pressure, echo = FALSE}
+plot(pressure)
+```
+
+In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
