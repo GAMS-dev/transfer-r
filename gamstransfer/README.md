@@ -106,9 +106,8 @@ remotes::install_github("GAMS-dev/gtr/gamstransfer@vX.Y.Z", configure.vars=c("LI
 
 ## Documentation
 
-You can view the detailed documentation for `gamstransfer` in \[GAMS
-documentation\]
-(<https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html>)
+You can view the detailed documentation for `gamstransfer` in [GAMS
+documentation](https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html)
 
 ## Feedback
 
