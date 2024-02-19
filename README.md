@@ -27,6 +27,10 @@ gamstransfer depends on the following R packages:
 To build this package from source, the following libraries must be installed:
 - zlib
 
+# How to build #
+
+A quick and easy way to build `gamstransfer` source package is by running ```R CMD build gamstransfer```.This will generate the package source file. To build a binary package, run `R CMD INSTALL gamstransfer --build`. This command builds a binary package along with installation.
+
 # How to install #
 
 This section explains how to install `gamstransfer` using a pre-built package file.
@@ -51,7 +55,7 @@ R CMD INSTALL [source_file_name]
 install.packages("[source_file_name]")
 ```
 
-### configure script ###
+### dependency on zlib ###
 Installation from the source package starts by executing the `configure` script. This script checks for the presence of `zlib` and performs
 basic checks for compilers. If you see an error saying `zlib` is not found,
 make sure that zlib is installed and is in your environment variable `PATH`.
@@ -60,7 +64,7 @@ can manually point the installer to it using `--configure-vars` arguemnt
 as follows.
 
 ```
-R CMD INSTALL gamstransfer --configure-vars="LIB_DIR='[path_to_dll]'"
+R CMD INSTALL gamstransfer --configure-vars="LIB_DIR='[path_to_shared_object]'"
 ```
 or
 ```
@@ -81,16 +85,3 @@ Additional comments about the use of `configure` script:
     and should be modified only by modifying the `configure.ac` and running `autoconfig configure.ac`.
 
 *  For Windows users: If you are trying to install from source on Windows, the `configure`script will not be executed. Instead, a warning will be displayed. Since there is only one dependency i.e., zlib, if the installation fails and throws errors with the functions functions `compress` and `uncompress`, it is suggested that `zlib` should be inspected first.
-
-# How to build #
-
-## Setup ##
-
-To build the package from a clone of this repository, first
-run the `setup` script. This script moves necessary source
-files from the GDX submodule to the src directory of this package.
-
-## Build ##
-
-A quick and easy way to build `gamstransfer` source package is by running ```R CMD build gamstransfer```.This will generate the package source file. To build a binary package, run `R CMD INSTALL` with an option `--build`. This command builds a binary package along with installation. Please refer to "how to install" section for more details on installation.
-
