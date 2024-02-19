@@ -50,13 +50,19 @@ m = Container$new("foo.gdx")
 
 ## Dependencies
 
-gamstransfer depends on the following R packages: - R6 - collections -
-Rcpp - R.utils
+gamstransfer depends on the following R packages:
+
+  - R6
+  - collections
+  - Rcpp
+  - R.utils
 
 To build this package from source, the following libraries must be
-installed: - zlib
+installed:
 
-## Installation of a particular release
+  - zlib
+
+## Install a particular release
 
 It is recommended that the users install released versions of
 `gamstransfer` using
@@ -73,14 +79,18 @@ installed at once using the following command.
 install.packages(c("R6", "collections", "Rcpp", "R.utils"))
 ```
 
-## Installation of the development version
+## Install the development version
 
 Installation from the development version is similar to installation
 from the source. To install the development version, users need to point
 the installer to the `zlib` library dependency. There are a couple ways
-to do it. 1. You can add `zlib` to your system environment variable
-`PATH`. This is the easier and the recommended way. One can then install
-`gamstransfer` using the following command.
+to do it.
+
+1.  You can add `zlib` to your system environment variable `PATH`. This
+    is the easier and the recommended way. One can then install
+    `gamstransfer` using the following command.
+
+<!-- end list -->
 
 ``` r
 remotes::install_github("GAMS-dev/gtr/gamstransfer")
@@ -106,8 +116,8 @@ remotes::install_github("GAMS-dev/gtr/gamstransfer@vX.Y.Z", configure.vars=c("LI
 
 ## Documentation
 
-You can view the detailed documentation for `gamstransfer` in [GAMS
-documentation](https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html)
+You can view the detailed documentation for `gamstransfer`
+[here](https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html).
 
 ## Feedback
 
