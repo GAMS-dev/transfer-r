@@ -62,7 +62,7 @@ installed:
 
   - zlib
 
-## Install a particular release
+## Install a particular release from GitHub
 
 It is recommended that the users install released versions of
 `gamstransfer` using
@@ -79,7 +79,7 @@ installed at once using the following command.
 install.packages(c("R6", "collections", "Rcpp", "R.utils"))
 ```
 
-## Install the development version
+## Install the development version from GitHub
 
 Installation from the development version is similar to installation
 from the source. To install the development version, users need to point
@@ -113,6 +113,49 @@ remotes::install_github("GAMS-dev/gtr/gamstransfer@vX.Y.Z", configure.vars=c("LI
 
 3.  One can also set `LIB_DIR` and `INCLUDE_DIR` permanently in the
     .Renviron file
+
+## Build gamstransfer from source
+
+A quick and easy way to build `gamstransfer` source package is by
+running `R CMD build .` from the package directory. This will generate
+the package source file. To build a binary package, run `R CMD INSTALL .
+--build` from the package directory. This command builds a binary
+package along with installation.
+
+## Install gamstransfer using a pre-build package file
+
+You can install the package from the command line or from the R console.
+
+### binary package
+
+To install `gamstransfer` from command line using a binary package, run
+the following command.
+
+    R CMD INSTALL [binary_file_name]
+
+To install `gamstransfer` from R console using a binary package, run the
+following command.
+
+``` r
+install.packages("[binary_file_name]", type="binary" )
+```
+
+### source package
+
+To install `gamstransfer` from command line using a source package, run
+the following command.
+
+    R CMD INSTALL [source_file_name]
+
+To install `gamstransfer` from R console using a source package, run the
+following command.
+
+``` r
+install.packages("[source_file_name]")
+```
+
+Note that installing from source requires `zlib`. Please refer to
+“installing the development version from GitHub” section in this file.
 
 ## Documentation
 
