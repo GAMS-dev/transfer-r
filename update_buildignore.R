@@ -1,5 +1,5 @@
 setwd("./gamstransfer")
-gdx_ignore = list.files("src/gdx", full.names=TRUE)
+gdx_ignore = list.files("src/gdx", full.names=TRUE, all.files=TRUE)
 gdx_ignore = gdx_ignore[gdx_ignore != "src/gdx/src"]
 
 gdx_src_all = list.files("src/gdx/src", full.names=TRUE)
