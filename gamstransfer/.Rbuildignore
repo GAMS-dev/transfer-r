@@ -16,7 +16,6 @@
 ^src/gdx/gdx\.vcxproj$
 ^src/gdx/gdx\.vcxproj\.filters$
 ^src/gdx/generated$
-^src/gdx/LICENSE$
 ^src/gdx/README\.md$
 ^src/gdx/reformat\.sh$
 ^src/gdx/requirements\.txt$
