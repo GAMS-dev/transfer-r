@@ -188,7 +188,7 @@ test_r_macos:
         - echo $PATH
         - R CMD build ./gamstransfer
         - mv gamstransfer_*.tar.gz gamstransfer.tar.gz
-        - R CMD check gamstransfer.tar.gz
+        - R CMD check gamstransfer.tar.gz --no-manual
     needs: [install-gamsdist-deg,build_r_macos,build_r_source]
     only: [merge_requests, main, tags]
 
@@ -201,7 +201,7 @@ test_r_macos_arm64:
         - echo $PATH
         - R CMD build ./gamstransfer
         - mv gamstransfer_*.tar.gz gamstransfer.tar.gz
-        - R CMD check gamstransfer.tar.gz
+        - R CMD check gamstransfer.tar.gz --no-manual
     needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
     only: [merge_requests, main, tags]
 
