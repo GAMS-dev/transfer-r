@@ -5,9 +5,9 @@ Version: 3.0.0
 Date: 2024-01-29
 Authors@R: c(
     person("Bhosekar", "Atharv", email = "abhosekar@gams.com",
-        role = c("aut", "cre"))
+        role = c("aut", "cre")),
     person("GAMS Development Corp.", email = "support@gams.com",
-        role=c("cph", "fnd"))
+        role=c("cph", "fnd")),
     person("GAMS Software GmbH", email = "support@gams.com",
         role=c("cph", "fnd"))
     )
