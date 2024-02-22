@@ -186,7 +186,7 @@ test_r_macos:
         - PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$PATH
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
-        - Rscript -e "testthat::test_dir("./gamstransfer/tests/testthat")"
+        - Rscript -e "testthat::test_dir('./gamstransfer/tests/testthat')"
     needs: [install-gamsdist-deg,build_r_macos,build_r_source]
     only: [merge_requests, main, tags]
 
@@ -197,7 +197,7 @@ test_r_macos_arm64:
         - PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$PATH
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
-        - Rscript -e "testthat::test_dir("./gamstransfer/tests/testthat")"
+        - Rscript -e "testthat::test_dir('./gamstransfer/tests/testthat')"
     needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
     only: [merge_requests, main, tags]
 
