@@ -187,8 +187,8 @@ test_r_macos:
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD build ./gamstransfer
-        - mv gamstransfer_*.tar.gz gamstransfer_source.tar.gz
-        - R CMD check gamstransfer_source.tar.gz
+        - mv gamstransfer_*.tar.gz gamstransfer.tar.gz
+        - R CMD check gamstransfer.tar.gz
     needs: [install-gamsdist-deg,build_r_macos,build_r_source]
     only: [merge_requests, main, tags]
 
@@ -200,8 +200,8 @@ test_r_macos_arm64:
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD build ./gamstransfer
-        - mv gamstransfer_*.tar.gz gamstransfer_source.tar.gz
-        - R CMD check gamstransfer_source.tar.gz
+        - mv gamstransfer_*.tar.gz gamstransfer.tar.gz
+        - R CMD check gamstransfer.tar.gz
     needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
     only: [merge_requests, main, tags]
 
