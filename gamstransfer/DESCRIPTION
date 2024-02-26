@@ -12,11 +12,13 @@ Authors@R: c(
         role=c("cph", "fnd"))
     )
 Maintainer: Atharv Bhosekar <abhosekar@gams.com>
-Description: A data interface between 'GAMS' and R. The main focus of
-    'gamstransfer' is the highly efficient transfer of data between 'GAMS'
-    and R, while keeping those operations as simple as possible for the user.
-    With the help of `gamstransfer`, users can add, manipulate, read or write
-    data to `GAMS` usually via an intermediate `GDX` file.
+Description: A data interface between 'GAMS' (General Algebraic Modeling
+    System) and R. The main focus of 'gamstransfer' is the highly efficient
+    transfer of data between 'GAMS' and R, while keeping those operations as
+    simple as possible for the user. With the help of `gamstransfer`, users can
+    add, manipulate, read or write data to `GAMS` usually via an intermediate
+    `GDX` (GAMS Data Exchange) file. `gamstransfer` also provides utility
+    functions to quickly and easily analyze `GAMS` data.
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.6), R6 (>= 2.5.1), R.utils (>= 2.11.0), collections(>= 0.3.6)
 LinkingTo: Rcpp
