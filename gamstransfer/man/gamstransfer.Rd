@@ -2,6 +2,7 @@
 % Please edit documentation in R/gamstransfer.R
 \docType{package}
 \name{gamstransfer}
+\alias{gamstransfer-package}
 \alias{gamstransfer}
 \title{gamstransfer}
 \description{
@@ -24,4 +25,14 @@ reading from and writing to GAMS can transfer the data as a bulk - resulting
  in the high performance of this package.
 Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
 for detailed documentation of this package.
+}
+\author{
+\strong{Maintainer}: Atharv Bhosekar \email{abhosekar@gams.com}
+
+Other contributors:
+\itemize{
+  \item GAMS Development Corp. \email{support@gams.com} [copyright holder, funder]
+  \item GAMS Software GmbH \email{support@gams.com} [copyright holder, funder]
+}
+
 }

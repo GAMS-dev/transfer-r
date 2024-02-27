@@ -21,14 +21,14 @@ writeGDX(
 \item{symbols}{optional argument - vector of strings
 containing the symbol names to be read}
 
-\item{compress}{optional logical argument. TRUE to produce a 
+\item{compress}{optional logical argument. TRUE to produce a
 compressed GDX file}
 
 \item{uelPriority}{Specify the priority UELs}
 
-\item{mode}{optional string argument to specify the write 
+\item{mode}{optional string argument to specify the write
 mode ("string", "mapped").
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
 for detailed documentation of this package.}
 }
 \description{
