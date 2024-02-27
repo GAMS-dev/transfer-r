@@ -35,3 +35,4 @@
 ^src/gdx/\.gitignore$
 ^src/gdx/\.gitlab-ci\.yml$
 ^src/gdx/\.gitmodules$
+^cran-comments\.md$
