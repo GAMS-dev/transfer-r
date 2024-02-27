@@ -25,42 +25,21 @@
 
 #' @title Set Class
 #' @description A class for Set objects. This class inherits from an abstract Symbol class.
-#' The documentation for methods common to all symbols can be accessed via help(Symbol).
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of 
-#' domain links
-#' @field isSingleton logical if symbol is a singleton set
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field container reference to the Container that the symbol belongs to
-#' @field summary output a list of only the metadata
-Set <- R6Class(
+#' The documentation for methods common to all symbols can be accessed via help(.Symbol).
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' # create a container
+#' m = Container$new()
+#' # add a set
+#' i = Set$new(m, "i")
+#' # access records
+#' i$records
+Set <- R6::R6Class(
   "Set",
   inherit = .Symbol,
   public = list(
-    #' @description There are two different ways to create a GAMS set and 
-    #' add it to a Container. One is using the Set constructor and 
-    #' the other is using addSet method which calls the Set constructor
-    #' internally.
-    #' addSet is a Container method to add a Set.
-    #' @param container A reference to the Container object that the symbol 
-    #' is being added to
-    #' @param name string argument for name of the set
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
-    #' @param isSingleton an optional logical argument specifying if a set
-    #'  is singleton. Default value is FALSE.
-    #' @param records specify set records as a string vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Set object
     initialize = function(container=NULL, name=NULL,
                           domain="*", isSingleton=FALSE,
                           records = NULL, 
@@ -77,8 +56,6 @@ Set <- R6Class(
       invisible(self)
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a string vector or a dataframe.
     setRecords = function(records) {
       # check if named list
       no_label = FALSE # assume column labels exist

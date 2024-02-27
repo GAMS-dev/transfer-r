@@ -24,50 +24,23 @@
 #
 
 #' @title Variable Class
-#' @description A class for Variable objects. This class inherits from an abstract 
-#' Symbol class.The documentation for methods common to all symbols can be
-#' accessed via help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field container reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-#' @field type type of variable (string)
-Variable <- R6Class(
+#' @description A class for Variable objects. This class inherits from an abstract
+#' Symbol class.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' # create a container
+#' m = Container$new()
+#' # add a Variable
+#' v = Variable$new(m, "v")
+#' # access records
+#' v$records
+Variable <- R6::R6Class(
   "Variable",
   inherit = .Symbol,
   public = list(
 
-    #' @description There are two different ways to create a GAMS Variable and 
-    #' add it to a Container. One is using the Variable constructor and 
-    #' the other is using addVariable method which calls the Parameter 
-    #' constructor internally.
-    #' addVariable is a Container method to add a Variable.
-    #' @param container A reference to the Container object that the 
-    #' symbol is being added to
-    #' @param name string argument for name of the Variable
-    #' @param type Type of variable being created [binary, integer, 
-    #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
-    #' is "free"
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Variable object
     initialize = function(container = NULL, name = NULL, 
                           type = "free",
                           domain = NULL, records = NULL,
@@ -84,9 +57,6 @@ Variable <- R6Class(
       }
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
     setRecords = function(records) {
       # if list containing array or just an array
       # exclude data frame accept everything else

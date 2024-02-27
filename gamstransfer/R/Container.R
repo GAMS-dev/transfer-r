@@ -30,9 +30,30 @@
 #' implicit set definitions, it enables structural manipulations of the 
 #' data (matrix generation), and it allows the user to perform different 
 #' read/write operations.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+#'
 #' @field data is a named list containing all symbol data
-#' @field systemDirectory is the path to GAMS System directory
-#' @export
+#' @examples
+#' m = Container$new()
+#' m$addSet("i")
+#' m$addSet("j")
+#' m$listSymbols()
+#' m$describeSets()
+#' \dontrun{
+#' # create a container and read the file foo.gdx
+#' m = Container$new("foo.gdx")
+#' # access symbol named "x" from the container
+#' x = m["x"]
+#' # list all symbols
+#' m$listSymbols()
+#' # list all sets
+#' m$listSets()
+#' # check if the container contains symbol named "i"
+#' m$hasSymbols("i")
+#' # get a summary of the description of all sets in the Container
+#' m$describeSets()
+#' }
 Container <- R6::R6Class (
   "Container",
   public = list(
@@ -43,10 +64,6 @@ Container <- R6::R6Class (
     #' Create a new container simply by initializing an object.
     #' @param loadFrom optional argument to point to the GDX file being 
     #' read into the Container
-    #' @param systemDirectory optional argument for the absolute path to 
-    #' GAMS system directory
-    #' @examples
-    #' Container$new()
     initialize = function(loadFrom=NULL, systemDirectory=NULL) {
       # systemDirectory can be passed but won't be used
       if (!is.null(systemDirectory)) {
@@ -114,11 +131,6 @@ Container <- R6::R6Class (
       }), use.names = FALSE))
     },
 
-    #' @description list all symbols in the container if isValid = NULL
-    #' list all valid symbols in the container if  isValid = TRUE
-    #' list all invalid symbols in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
     listSymbols = function(isValid = NULL) {
       if (!is.null(isValid)) {
         if (!is.logical(isValid)) {
@@ -139,11 +151,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description list all sets in the container if isValid = NULL
-    #' list all valid sets in the container if  isValid = TRUE
-    #' list all invalid sets in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
     listSets = function(isValid = NULL) {
       if (!(is.logical(isValid) || is.null(isValid))) {
         stop("Argument `isValid` must be type logical or NULL \n")
@@ -162,11 +169,6 @@ Container <- R6::R6Class (
       return(sets)
     },
 
-    #' @description list all parameters in the container if isValid = NULL
-    #' list all valid parameters in the container if  isValid = TRUE
-    #' list all invalid parameters in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
     listParameters = function(isValid = NULL) {
       if (!(is.logical(isValid) || is.null(isValid))) {
         stop("Argument `isValid` must be type logical or NULL \n")
@@ -185,11 +187,6 @@ Container <- R6::R6Class (
       return(parameters)
     },
 
-    #' @description list all aliases in the container if isValid = NULL
-    #' list all valid aliases in the container if  isValid = TRUE
-    #' list all invalid aliases in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @return a vector of symbols
     listAliases = function(isValid = NULL) {
       if (!(is.logical(isValid) || is.null(isValid))) {
         stop("Argument `isValid` must be type logical or NULL \n")
@@ -208,13 +205,6 @@ Container <- R6::R6Class (
       return(aliases)
     },
 
-    #' @description list all variables in the container if isValid = NULL
-    #' list all valid variables in the container if  isValid = TRUE
-    #' list all invalid variables in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
     listVariables = function(isValid = NULL, types = NULL) {
       if (!(is.logical(isValid) || is.null(isValid))) {
         stop("Argument `isValid` must be type logical or NULL \n")
@@ -249,13 +239,6 @@ Container <- R6::R6Class (
       return(variables)
     },
 
-    #' @description list all equations in the container if isValid = NULL
-    #' list all valid equations in the container if  isValid = TRUE
-    #' list all invalid equations in the container if isValid = FALSE
-    #' @param isValid an optional logical argument
-    #' @param types an optional logical argument to list a subset of 
-    #' equation types
-    #' @return a vector of symbols
     listEquations = function(isValid = NULL, types = NULL) {
       if (!(is.logical(isValid) || is.null(isValid))) {
         stop("Argument `isValid` must be type logical or NULL \n")
@@ -290,9 +273,6 @@ Container <- R6::R6Class (
       return(equations)
     },
 
-    #' @description create a summary table with descriptive statistics for Sets
-    #' @param symbols an optional argument of type string or a list of sets 
-    #' to describe. The default value is NULL which assumes all sets.
     describeSets = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listSets()
@@ -365,10 +345,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description create a summary table with descriptive 
-    #' statistics for Aliases
-    #' @param symbols an optional argument of type string or a list of aliases 
-    #' to describe. The default value is NULL which assumes all aliases.
     describeAliases = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listAliases()
@@ -426,11 +402,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description create a summary table with descriptive statistics 
-    #' for Parameters
-    #' @param symbols an optional argument of type string or a 
-    #' list of parameters to describe. The default value is 
-    #' NULL which assumes all parameters.
     describeParameters = function(symbols = NULL) {
       if (is.null(symbols)) {
         symbols = self$listParameters()
@@ -490,11 +461,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description create a summary table with descriptive 
-    #' statistics for Variables
-    #' @param symbols an optional argument of type string 
-    #' or a list of Variables to describe. The default value 
-    #' is NULL which assumes all variables.
     describeVariables = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listVariables()
@@ -554,11 +520,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description create a summary table with descriptive 
-    #' statistics for Equations
-    #' @param symbols an optional argument of type string or 
-    #' a list of equations to describe. The default value is 
-    #' NULL which assumes all equations.
     describeEquations = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listEquations()
@@ -617,7 +578,6 @@ Container <- R6::R6Class (
       }
     },
 
-
     getSets = function(isValid = NULL) {
       return(self$getSymbols(self$listSets(isValid)))
     },
@@ -638,14 +598,6 @@ Container <- R6::R6Class (
       return(self$getSymbols(self$listAliases(isValid)))
     },
 
-    #' @description main method to read loadFrom, can be provided 
-    #' with a list of symbols to read in subsets, `records` controls 
-    #' if symbol records are loaded or just metadata
-    #' @param loadFrom name of the file to load data from as a string
-    #' @param symbols optional argument to specify the names of the 
-    #' symbols to be read (string or a list of strings)
-    #' @param records optional logical argument to specify whether to 
-    #' read symbol records (logical)
     read = function(loadFrom, symbols=NULL, records=TRUE) {
       # read metadata
       # get all symbols and metadata from c++
@@ -682,9 +634,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description removes symbols from the Container
-    #' @param symbols a string specifying the symbol name or a list of symbols 
-    #' to be removed from the container
     removeSymbols = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listSymbols()
@@ -750,9 +699,6 @@ Container <- R6::R6Class (
       self$.requiresStateCheck = TRUE
     },
 
-    #' @description rename a symbol in the Container
-    #' @param oldName string specifying the old name of the symbol
-    #' @param newName string specifying the new name of the symbol
     renameSymbol = function(oldName = NULL, newName = NULL) {
       if (!is.character(oldName)) {
         stop("Argument 'oldName' must be type character\n")
@@ -773,21 +719,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description There are two different ways to create a GAMS set and 
-    #' add it to a Container. One is using the Set constructor and 
-    #' the other is using addSet method which calls the Set constructor
-    #' internally.
-    #' addSet is a Container method to add a Set.
-    #' @param name string argument for name of the set
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
-    #' @param isSingleton an optional logical argument specifying if a set
-    #'  is singleton. Default value is FALSE.
-    #' @param records specify set records as a string vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Set object
     addSet = function(name, domain = "*", isSingleton = FALSE,
     records = NULL, domainForwarding=FALSE, description = "") {
       if (!self$hasSymbols(name)) {
@@ -834,19 +765,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description There are two different ways to create a GAMS parameter and 
-    #' add it to a Container. One is using the Parameter constructor and 
-    #' the other is using addParameter method which calls the 
-    #' Parameter constructor internally.
-    #' addParameter is a Container method to add a Parameter.
-    #' @param name string argument for name of the Parameter
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Parameter object
     addParameter = function(name, domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
       if (!self$hasSymbols(name)) {
@@ -892,22 +810,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description There are two different ways to create a GAMS Variable and 
-    #' add it to a Container. One is using the Variable constructor and 
-    #' the other is using addVariable method which calls the Parameter 
-    #' constructor internally.
-    #' addVariable is a Container method to add a Variable.
-    #' @param name string argument for name of the Variable
-    #' @param type Type of variable being created [binary, integer, 
-    #' positive, negative, free, sos1, sos2, semicont, semiint]. The default
-    #' is "free"
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Variable object
     addVariable = function(name, type="free", domain = NULL,
     records = NULL, domainForwarding=FALSE, description = "") {
       if (!self$hasSymbols(name)) {
@@ -955,21 +857,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description There are two different ways to create a GAMS Equation and 
-    #' add it to a Container. One is using the Equation constructor and 
-    #' the other is using addEquation method which calls the Equation 
-    #' constructor internally.
-    #' addEquation is a Container method to add a Equation.
-    #' @param name string argument for name of the Equation
-    #' @param type Type of equation being created [eq (or E/e), geq 
-    #' (or G/g), leq (or L/l), nonbinding (or N/n), external (or X/x)]
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is "*".
-    #' @param records specify set records as a vector or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Equation object
     addEquation = function(name, type, domain = NULL, 
     records = NULL, domainForwarding=FALSE, description = "") {
       if (!self$hasSymbols(name)) {
@@ -1017,14 +904,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description There are two different ways to create a GAMS Alias and 
-    #' add it to a Container. One is using the Alias constructor and 
-    #' the other is using addAlias method which calls the Alias 
-    #' constructor internally.
-    #' addAlias is a Container method to add a Alias.
-    #' @param name string argument for name of the Alias
-    #' @param aliasWith string argument for the set/alias we want to add
-    #' an alias for
     addAlias = function(name, aliasWith) {
       if (!self$hasSymbols(name)) {
         obj = Alias$new(
@@ -1081,10 +960,6 @@ Container <- R6::R6Class (
       }
     },
 
-    #' @description returns a list of object references for `Symbols`
-    #' @param symbols character, string, or vector of Symbols for which 
-    #' the user wants object references
-    #' @returns a list of object references to symbols
     getSymbols = function(symbols=NULL) {
       if (is.null(symbols)) {
         symbols = self$listSymbols()
@@ -1106,15 +981,6 @@ Container <- R6::R6Class (
       use.names = FALSE))
     },
 
-    #' @description a write method to write to a writeTo GDX file
-    #' @param writeTo name of the GDX file to write to
-    #' @param compress write tge GDX file in compressed format by setting
-    #' compress = TRUE.
-    #' @param uelPriority Advanced users might want to specify an order 
-    #' to their UEL list (i.e., the universe set); The UEL 
-    #' ordering follows that dictated by the data. As a convenience, it 
-    #' is possible to prepend the UEL list with a user specified order 
-    #' using the uel_priority argument.
     write = function(writeTo, symbols=NULL, 
     compress = FALSE, uelPriority = NULL, mode = NULL) {
 
@@ -1192,11 +1058,10 @@ Container <- R6::R6Class (
         }
       }
 
-      CPP_gdxWrite(self, enable,
+      .CPP_gdxWrite(self, enable,
       writeTo, uelPriority, compress, mode_int)
     },
 
-    #' @description reorder symbols in order to avoid domain violations
     reorderSymbols = function() {
       orderedSymbols = private$validSymbolOrder()
       l1 = lapply(orderedSymbols, function(s) self[s])
@@ -1204,11 +1069,6 @@ Container <- R6::R6Class (
       self$data = collections::ordered_dict(l1)
     },
 
-    #' @description TRUE if all the symbols is in the Container are 
-    #' valid, throw exceptions if verbose=True, check all symbols if 
-    #' force=TRUE.
-    #' @param verbose type logical
-    #' @param force type logical
     isValid = function(symbols=NULL, verbose=FALSE, force=FALSE) {
       if (is.null(symbols)) {
         symbols = self$data$as_list()
@@ -1589,7 +1449,7 @@ Container <- R6::R6Class (
           }
         }
 
-        readlist = CPP_readSuper(symbols, loadFrom, 
+        readlist = .CPP_readSuper(symbols, loadFrom, 
         records)
 
         self$readList(readlist, NULL, records=records)
@@ -1863,7 +1723,7 @@ Container <- R6::R6Class (
       }), use.names = FALSE)
 
       set_alias_index = which(isSetAlias)
-      if (is.integer0(set_alias_index)) return(TRUE)
+      if (.is.integer0(set_alias_index)) return(TRUE)
 
       order_valid = unlist(lapply(set_alias_index, function(idx) {
         if (idx <= match(currentOrder[idx], validOrder)) {
@@ -1885,6 +1745,8 @@ Container <- R6::R6Class (
   )
   )
 
-
+#' @export
 `[.Container` <- function(obj, ...) obj$`[`(...)
+
+#' @export
 `[<-.Container` <- function(obj, ..., value) obj$`[<-`(..., value)

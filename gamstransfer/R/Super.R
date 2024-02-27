@@ -23,6 +23,21 @@
 # SOFTWARE.
 #
 
+#' @title readGDX
+#' @description read a GDX file to a list without creating symbol
+#' or container objects
+#' @param loadFrom name of the GDX file being read (string)
+#' @param symbols optional argument - vector of strings
+#' containing the symbol names to be read
+#' @param records optional logical argument - TRUE (default) to read
+#' the symbol records, FALSE to only read the meta data.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' \dontrun{
+#' read_list = readGDX("foo.gdx")
+#' }
 readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
     # check if records is logical
     if (!is.logical(records) && length(records) != 1) {
@@ -45,7 +60,7 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
             stop(paste0("File ", loadFrom, " doesn't exist\n"))
         }
         # read call here
-        readlist = CPP_readSuper(symbols, loadFrom,
+        readlist = .CPP_readSuper(symbols, loadFrom,
             records)
         sym_names = unlist(lapply(readlist, "[[", 2), use.names = FALSE)
         names(readlist) = sym_names
@@ -57,7 +72,26 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
     return(readlist)
 }
 
-writeGDX = function(writeList, writeTo, symbols=NULL, 
+#' @title writeGDX
+#' @description write a GDX file from a list containing symbol data
+#' and metadata
+#' @param writeList list containing symbol data and metadata
+#' @param writeTo name of the output GDX file
+#' @param symbols optional argument - vector of strings
+#' containing the symbol names to be read
+#' @param compress optional logical argument. TRUE to produce a
+#' compressed GDX file
+#' @param uelPriority Specify the priority UELs
+#' @param mode optional string argument to specify the write
+#' mode ("string", "mapped").
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' \dontrun{
+#' writeGDX(list(), "gt.gdx")
+#' }
+writeGDX = function(writeList, writeTo, symbols=NULL,
     compress = FALSE, uelPriority = NULL, mode = NULL) {
     if (!is.logical(compress)) {
     stop(paste0("'compress' must be of type logical; ",
@@ -131,7 +165,7 @@ writeGDX = function(writeList, writeTo, symbols=NULL,
         # }
       }
 
-      CPP_gdxWriteSuper(writeList, enable,
+      .CPP_gdxWriteSuper(writeList, enable,
       writeTo, uelPriority, compress, mode_int)
 
 }

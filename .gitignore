@@ -9,3 +9,4 @@ gamstransfer/src/*.so
 gamstransfer/autom4te.cache
 gamstransfer/config.log
 gamstransfer/config.status
+gamstransfer/src/Makevars

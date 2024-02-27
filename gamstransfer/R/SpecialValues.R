@@ -23,6 +23,20 @@
 # SOFTWARE.
 #
 
+#' @title SpecialValues list object
+#' @description This list contains GAMS special values and
+#' helper functions to check if a given value is a GAMS
+#' special value.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' # check the value of GAMS special value NA
+#' SpecialValues[["NA"]]
+#' # check the value of GAMS special value EPS
+#' SpecialValues[["EPS"]]
+#' # check if a value is GAMS special value `NA`
+#' SpecialValues$isNA(0)
 SpecialValues = list(
   "NA" = NA, # cannot be anything else
   "EPS" = -0.0,

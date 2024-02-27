@@ -22,4 +22,6 @@ familiar with these data structures, (2) these data structures come with a
 large tool box for various data operations, and (3) optimized methods for 
 reading from and writing to GAMS can transfer the data as a bulk - resulting
  in the high performance of this package.
+Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+for detailed documentation of this package.
 }

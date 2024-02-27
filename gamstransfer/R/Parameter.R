@@ -26,44 +26,21 @@
 #' @title Parameter Class
 #' @description A class for Parameter objects. This class inherits from an abstract 
 #' Symbol class.The documentation for methods common to all symbols can be accessed 
-#' via help(Symbol).
-#' countEPS, countNA, countNegInf, countPosInf, countUndef,
-#' getSparsity, getMaxValue, getMinValue, getMeanValue, getMaxAbsValue,
-#' isValid, toDense, whereMax, whereMaxAbs, whereMin.
-#' @field description description of symbol
-#' @field dimension of symbol
-#' @field domainForwarding flag that forces set elements to be recursively 
-#' included in all parent sets (i.e., implicit set growth)
-#' @field domainLabels column headings for the records dataframe
-#' @field domainNames string version of domain names
-#' @field domainType none, relaxed or regular depending on state of domain links
-#' @field name name of symbol
-#' @field numberRecords 	number of symbol records
-#' @field records the main symbol records
-#' @field container reference to the Container that the symbol belongs to
-#' @field shape a list describing the array dimensions if records were
-#'  converted with $toDense()
-#' @field summary output a list of only the metadata
-Parameter <- R6Class(
+#' via help(.Symbol).
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' for detailed documentation of this package.
+#'
+#' @examples
+#' # create a container
+#' m = Container$new()
+#' # add a Parameter
+#' p = Parameter$new(m, "p")
+#' # access records
+#' p$records
+Parameter <- R6::R6Class(
   "Parameter",
   inherit = .Symbol,
   public = list(
-    #' @description There are two different ways to create a GAMS 
-    #' parameter and add it to a Container. One is using the 
-    #' Parameter constructor and the other is using addParameter 
-    #' method which calls the Parameter constructor internally.
-    #' addParameter is a Container method to add a Parameter.
-    #' @param container A reference to the Container object that the symbol is 
-    #' added to
-    #' @param name string argument for name of the Parameter
-    #' @param domain an optional argument specifying a list of strings, 
-    #' a string. default value is NULL.
-    #' @param records specify set records as a vector, matrix, array,
-    #'  or a dataframe.
-    #' @param domainForwarding an optional logical argument to specify 
-    #' domain forwarding. Default value is FALSE.
-    #' @param description string specifying description for the set
-    #' @return a Parameter object
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
                           domainForwarding = FALSE,
@@ -77,9 +54,6 @@ Parameter <- R6Class(
       }
     },
 
-    #' main convenience method to set standard dataframe formatted records
-    #' @param records specify set records as a vector, matrix, 
-    #' array or a dataframe.
     setRecords = function(records) {
       if (inherits(records, c("array", "numeric", "integer"))) { # checks for matrix + arrays + vectors + numbers
         if ((self$dimension != 0) && (self$domainType != "regular")) {
