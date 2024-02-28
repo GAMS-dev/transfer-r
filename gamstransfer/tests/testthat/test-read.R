@@ -25,7 +25,23 @@
 
 library(gamstransfer)
 
+skip_if_no_gams <- function() {
+  ret = system2(command="gams", stdout=NULL, stderr=NULL)
+  if (ret == 127) {
+    testthat::skip("GAMS Unavailable")
+  }
+  # tryCatch(
+  #   {
+  #     system2(command="gams", stdout=NULL, stderr=NULL)
+  #   },
+  #   error= function(cond) {
+  #     testthat::skip("GAMS Unavailable")
+  #   }
+  # )
+}
+
 test_that("readwritetest", {
+  skip_if_no_gams()
   m = Container$new()
 
   # read all symbols
@@ -75,6 +91,7 @@ test_that("readwritetest", {
 
 
 test_that("test_num_1", {
+  skip_if_no_gams()
   m <- Container$new()
   expect_true(inherits(m, "Container"))
 
@@ -120,6 +137,7 @@ test_that("test_num_1", {
 )
 
 test_that("test_num_2", {
+  skip_if_no_gams()
   m <- Container$new()
   expect_true(inherits(m, "Container"))
 
@@ -167,6 +185,7 @@ test_that("test_num_2", {
 )
 
 test_that("test_num_3", {
+  skip_if_no_gams()
   m <- Container$new()
   expect_true(inherits(m, "Container"))
 
@@ -215,6 +234,7 @@ test_that("test_num_3", {
 )
 
 test_that("test_num_4", {
+  skip_if_no_gams()
   m <- Container$new()
 
   i <- Set$new(m, "i")
@@ -267,6 +287,7 @@ test_that("test_num_4", {
 )
 
 test_that("test_num_5", {
+  skip_if_no_gams()
   m <- Container$new()
   expect_true(inherits(m, "Container"))
 
@@ -790,6 +811,7 @@ test_that("test_num_26", {
 )
 
 test_that("test_num_27", {
+  skip_if_no_gams()
   m = Container$new()
   m$read(testthat::test_path("testdata", "test27.gdx"))
 
@@ -1225,6 +1247,7 @@ test_that("test_num_45", {
 )
 
 test_that("test_num_46", {
+  skip_if_no_gams()
   h = Container$new()
   h$read(testthat::test_path("testdata", "biggdxtest.gdx"))
 
@@ -2608,6 +2631,7 @@ expect_equal(i$getUELs(), ip$getUELs())
 
 # test reading and writing UniverseAlias with Container
 test_that("test_num_95", {
+  skip_if_no_gams()
   m = Container$new()
 
   # read all symbols
@@ -2662,6 +2686,7 @@ test_that("test_num_95", {
 
 # test reading and writing UniverseAlias with Container
 test_that("test_num_96", {
+  skip_if_no_gams()
   m = Container$new()
 
   # read all symbols
@@ -3444,6 +3469,7 @@ expect_equal(nrow(a$records), (50**4)/20)
 
 # write empty gdx
 test_that("test_num_111", {
+skip_if_no_gams()
 m = Container$new()
 expect_true(is.null(m$write("empty.gdx")))
 expect_true(is.null(m$write("empty.gdx", mode="string")))
@@ -4505,6 +4531,7 @@ expect_equal(levels(e$records[, 1]), c("i1","i2","i3"))
 
 # dataframe with no rows still have column names and factors
 test_that("test_num_134", {
+skip_if_no_gams()
 m = Container$new()
 i = Set$new(m, "i", records=paste0("i", 1:3))
 p = Parameter$new(m, "p", domain=i, records=c(0, 0, 0))
