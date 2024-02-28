@@ -25,19 +25,23 @@
 
 library(gamstransfer)
 
+
+gams_checked = -1
 skip_if_no_gams <- function() {
-  ret = system2(command="gams", stdout=NULL, stderr=NULL)
-  if (ret == 127) {
+  if (gams_checked == -1) {
+    ret = system2(command="gams", stdout=NULL, stderr=NULL)
+    if (ret == 127) {
+      gams_checked = 0
+    }
+    else {
+      gams_checked = 1
+    }
+  }
+
+  if (gams_checked == 0) {
     testthat::skip("GAMS Unavailable")
   }
-  # tryCatch(
-  #   {
-  #     system2(command="gams", stdout=NULL, stderr=NULL)
-  #   },
-  #   error= function(cond) {
-  #     testthat::skip("GAMS Unavailable")
-  #   }
-  # )
+
 }
 
 test_that("readwritetest", {
