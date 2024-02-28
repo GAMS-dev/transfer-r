@@ -1,4 +1,5 @@
 ^LICENSE\.md$
+[.]o$
 ^src/gdx/LICENSE
 ^src/gdx/assets
 ^src/gdx/ci
@@ -36,3 +37,5 @@
 ^src/gdx/\.gitlab-ci\.yml$
 ^src/gdx/\.gitmodules$
 ^cran-comments\.md$
+^src/gdx/LICENSE$
+^src/gdx/src/rebuildall\.py$
