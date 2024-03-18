@@ -12,18 +12,11 @@ GAMS and R.
 
 ## Quick Start Guide
 
-To install `gamstransfer` from GitHub, install `remotes` package from
-CRAN.
+To install the latest version of `gamstransfer` from CRAN, use the
+following command.
 
 ``` r
-install.packages("remotes")
-```
-
-You can then install a particular release of `gamstransfer` from GitHub
-using the following command.
-
-``` r
-remotes::install_github("GAMS-dev/transfer-r/gamstransfer@vX.Y.Z")
+install.packages("gamstransfer")
 ```
 
 To use `gamstransfer`, load the package using `library(gamstransfer)`.
