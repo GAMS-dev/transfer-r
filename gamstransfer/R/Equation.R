@@ -242,14 +242,14 @@ Equation <- R6::R6Class(
         #check dimensionality
         if ((length(records) < self$dimension) ||
           (length(records) > self$dimension + length(private$.attr()))) {
-          stop(cat(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
+          stop(paste0("Dimensionality of records ", (length(records)-length(private$.attr())),
           " is inconsistent with equation domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
           "NOTE:",
           "columns not named ", toString(private$.attr()),
           " will be interpreted as domain columns, check that the data.frame conforms ",
           "to the required notation.\n",
-          "User passed data.frame with columns: ", toString(usr_colnames), "\n")))
+          "User passed data.frame with columns: ", toString(usr_colnames), "\n"))
         }
 
         # check if numeric
@@ -433,7 +433,7 @@ Equation <- R6::R6Class(
       }
       else {
         if (!any(.EquationTypes == tolower(type_input))) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
+          stop(paste0("Argument 'type' must be one of the following:\n\n",
               "1. 'eq', 'E', or 'e' -- equality\n",
               "2. 'geq', 'G', or 'g' -- greater than or equal to inequality\n",
               "3. 'leq', 'L', or 'l'  -- less than or equal to inequality\n",
@@ -441,7 +441,7 @@ Equation <- R6::R6Class(
               "5. 'cone', 'C', or 'c' -- cone equation\n",
               "6. 'external', 'X', or 'x' -- external equation\n",
               "7. 'boolean', 'B', or 'b' -- boolean equation\n"
-          )))
+          ))
         }
 
         private$.type = tolower(type_input)
