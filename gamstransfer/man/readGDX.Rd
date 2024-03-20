@@ -22,7 +22,5 @@ read a GDX file to a list without creating symbol
 or container objects
 }
 \examples{
-\dontrun{
-read_list = readGDX("foo.gdx")
-}
+read_list = readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
 }

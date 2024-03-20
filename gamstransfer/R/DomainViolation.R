@@ -34,10 +34,10 @@
 #' i = Set$new(m, "i", records=paste0("i", 1:5))
 #' p = Parameter$new(m, "p", i, records=data.frame(i=c("i1","i3","i6"), value=c(1,5,7)))
 #' dv = p$getDomainViolations()[[1]]
-#' dv$symbol
-#' dv$dimension
-#' dv$domain
-#' dv$violations
+#' sym_dv = dv$symbol
+#' dim_dv = dv$dimension
+#' domain_dv = dv$domain
+#' violation_dv = dv$violations
 #' @field symbol symbol name
 #' @field dimension dimension in which domain violation is present
 #' @field domain domain name

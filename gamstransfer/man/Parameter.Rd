@@ -16,5 +16,5 @@ m = Container$new()
 # add a Parameter
 p = Parameter$new(m, "p")
 # access records
-p$records
+p_recs = p$records
 }

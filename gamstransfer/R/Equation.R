@@ -30,13 +30,14 @@
 #' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
 #' for detailed documentation of this package.
 #'
+#' @include SpecialValues.R
 #' @examples
 #' # create a container
 #' m = Container$new()
 #' # add a Variable
 #' e = Equation$new(m, "v", type="eq")
 #' # access records
-#' e$records
+#' e_recs = e$records
 Equation <- R6::R6Class(
   "Equation",
   inherit = .Symbol,

@@ -35,9 +35,8 @@
 #' for detailed documentation of this package.
 #'
 #' @examples
-#' \dontrun{
-#' read_list = readGDX("foo.gdx")
-#' }
+#' read_list = readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
+
 readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
     # check if records is logical
     if (!is.logical(records) && length(records) != 1) {
@@ -88,9 +87,8 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
 #' for detailed documentation of this package.
 #'
 #' @examples
-#' \dontrun{
 #' writeGDX(list(), "gt.gdx")
-#' }
+
 writeGDX = function(writeList, writeTo, symbols=NULL,
     compress = FALSE, uelPriority = NULL, mode = NULL) {
     if (!is.logical(compress)) {

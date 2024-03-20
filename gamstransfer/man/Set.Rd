@@ -15,5 +15,5 @@ m = Container$new()
 # add a set
 i = Set$new(m, "i")
 # access records
-i$records
+i_recs = i$records
 }

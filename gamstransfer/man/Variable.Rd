@@ -15,5 +15,5 @@ m = Container$new()
 # add a Variable
 v = Variable$new(m, "v")
 # access records
-v$records
+v_recs = v$records
 }

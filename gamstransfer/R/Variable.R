@@ -35,7 +35,7 @@
 #' # add a Variable
 #' v = Variable$new(m, "v")
 #' # access records
-#' v$records
+#' v_recs = v$records
 Variable <- R6::R6Class(
   "Variable",
   inherit = .Symbol,

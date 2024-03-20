@@ -23,6 +23,11 @@
 # SOFTWARE.
 #
 
+#' @useDynLib gamstransfer, .registration = TRUE
+#' @exportPattern "^[[:alpha:]]+"
+#' @importFrom Rcpp evalCpp
+#' @importFrom collections dict
+#' @import R.utils
 #' @title Container Class
 #' @description The main object class within GAMS Transfer is called 
 #' Container. The Container is the vessel that allows symbols to be 
@@ -36,24 +41,24 @@
 #' @field data is a named list containing all symbol data
 #' @examples
 #' m = Container$new()
-#' m$addSet("i")
-#' m$addSet("j")
-#' m$listSymbols()
-#' m$describeSets()
-#' \dontrun{
-#' # create a container and read the file foo.gdx
-#' m = Container$new("foo.gdx")
+#' i = m$addSet("i")
+#' j = m$addSet("j")
+#' all_symbols = m$listSymbols()
+#' set_description = m$describeSets()
+
+#' # create a container and read the file trnsport.gdx
+#' m = Container$new(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
 #' # access symbol named "x" from the container
 #' x = m["x"]
 #' # list all symbols
-#' m$listSymbols()
+#' all_symbols = m$listSymbols()
 #' # list all sets
-#' m$listSets()
+#' all_sets = m$listSets()
 #' # check if the container contains symbol named "i"
-#' m$hasSymbols("i")
+#' has_i = m$hasSymbols("i")
 #' # get a summary of the description of all sets in the Container
-#' m$describeSets()
-#' }
+#' set_description = m$describeSets()
+
 Container <- R6::R6Class (
   "Container",
   public = list(

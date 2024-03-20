@@ -35,7 +35,7 @@
 #' # add a set
 #' i = Set$new(m, "i")
 #' # access records
-#' i$records
+#' i_recs = i$records
 Set <- R6::R6Class(
   "Set",
   inherit = .Symbol,

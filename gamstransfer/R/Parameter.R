@@ -36,7 +36,7 @@
 #' # add a Parameter
 #' p = Parameter$new(m, "p")
 #' # access records
-#' p$records
+#' p_recs = p$records
 Parameter <- R6::R6Class(
   "Parameter",
   inherit = .Symbol,
