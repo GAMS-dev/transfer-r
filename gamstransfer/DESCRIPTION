@@ -32,7 +32,7 @@ RoxygenNote: 7.3.1
 Roxygen: list(r6 = FALSE)
 SystemRequirements: C++17
 Encoding: UTF-8
-Collate:
+Collate: 
     'Alias.R'
     'BaseAlias.R'
     'Container.R'
@@ -46,6 +46,6 @@ Collate:
     'Symbol.R'
     'UniverseAlias.R'
     'Variable.R'
-    'gamstransfer.R'
+    'gamstransfer-package.R'
     'symbolTypes.R'
     'utility.R'
