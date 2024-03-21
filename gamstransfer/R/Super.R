@@ -87,9 +87,7 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
 #' for detailed documentation of this package.
 #'
 #' @examples
-#' \dontrun{
-#' writeGDX(list(), "gt.gdx")
-#' }
+#' writeGDX(list(), tempfile(fileext=".gdx"))
 #'
 writeGDX = function(writeList, writeTo, symbols=NULL,
     compress = FALSE, uelPriority = NULL, mode = NULL) {

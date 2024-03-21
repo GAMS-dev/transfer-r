@@ -36,8 +36,6 @@ write a GDX file from a list containing symbol data
 and metadata
 }
 \examples{
-\dontrun{
-writeGDX(list(), "gt.gdx")
-}
+writeGDX(list(), tempfile(fileext=".gdx"))
 
 }
