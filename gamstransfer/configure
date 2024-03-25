@@ -615,7 +615,6 @@ PACKAGE_URL=''
 ac_unique_file=""DESCRIPTION""
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-SUBDIR_SOURCES_C
 SUBDIR_SOURCES_CPP
 OBJEXT
 EXEEXT
@@ -3222,9 +3221,7 @@ fi
 
 
 # Dynamically generate list of sources from subdirectories via shell
-SUBDIR_SOURCES_CPP="$(cd src/ && ls {.,./gdx/src/gdlib,./gdx/src,./gdx/src/global,./gdx/src/rtl}/*.cpp | tr '\n' ' ')"
-SUBDIR_SOURCES_C="$(cd src/ && ls ./gdx/src/rtl/*.c | tr '\n' ' ')"
-
+SUBDIR_SOURCES_CPP="gdx/src/gdlib/gmsstrm.cpp gdx/src/gdlib/utils.cpp gdx/src/gxfile.cpp Read.cpp Write.cpp Utilities.cpp RcppExports.cpp"
 
 
 ac_config_files="$ac_config_files src/Makevars"

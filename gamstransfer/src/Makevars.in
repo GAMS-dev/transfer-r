@@ -4,8 +4,7 @@ PKG_CPPFLAGS = -I./gdx/src -I./gdx/src/gdlib -I./gdx/src/rtl -I.
 PKG_CXXFLAGS = -DNDEBUG
 PKG_LIBS = -ldl -lpthread -lz
 SOURCES_CPP=@SUBDIR_SOURCES_CPP@
-SOURCES_C=@SUBDIR_SOURCES_C@
-OBJECTS=$(SOURCES_CPP:.cpp=.o) $(SOURCES_C:.c=.o)
+OBJECTS=$(SOURCES_CPP:.cpp=.o)
 
 all: $(SHLIB)
 
