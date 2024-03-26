@@ -13,13 +13,12 @@ Authors@R: c(
     )
 Maintainer: Atharv Bhosekar <abhosekar@gams.com>
 Description: Read, analyze, modify, and write 'GAMS' (General Algebraic
-    Modeling System) data using 'R'. The main focus of 'gamstransfer' is the
-    highly efficient transfer of data between 'GAMS' <https://www.gams.com/>
-    and R, while keeping those operations as simple as possible for the user.
-    With the help of 'gamstransfer', users can add, manipulate, read or write
-    data to 'GAMS' usually via an intermediate GDX (GAMS Data Exchange)
-    file. 'gamstransfer' also provides utility functions to quickly and easily
-    analyze 'GAMS' data.
+    Modeling System) data. The main focus of 'gamstransfer' is the
+    highly efficient transfer of data with 'GAMS' <https://www.gams.com/>,
+    while keeping these operations as simple as possible for the user. The
+    transfer of data usually takes place via an intermediate GDX (GAMS Data
+    Exchange) file. Additionally, 'gamstransfer' provides utility
+    functions to get an overview of 'GAMS' data and to check its validity.
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.6), R6 (>= 2.5.1), R.utils (>= 2.11.0), collections(>= 0.3.6)
 LinkingTo: Rcpp
