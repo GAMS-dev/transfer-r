@@ -43,14 +43,12 @@ class sym_info
   public:
     std::string name;
     int dim, type, sym_nr, subtype;
-    std::string* domain;
+    std::string* domain {};
     std::string description, domain_type;
     DataFrame* records;
 
     ~sym_info() {
-      if (dim != 0 && type != GMS_DT_ALIAS) {
         delete[] domain;
-      }
     }
 };
 
