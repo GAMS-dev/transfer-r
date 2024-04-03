@@ -447,6 +447,7 @@ bool compress, int mode) {
     else if (mysym_info.type == GMS_DT_SET) {
       mysym_info.subtype = sym_data["isSingleton"];
     }
+    else mysym_info.subtype = 0;
 
     mysym_info.description = Rcpp::as<std::string>(sym_data["description"]);
 
@@ -536,6 +537,7 @@ bool compress, int mode) {
     else if (mysym_info.type == GMS_DT_SET) {
       mysym_info.subtype = sym_obj["isSingleton"];
     }
+    else mysym_info.subtype = 0;
 
     mysym_info.description = Rcpp::as<std::string>(sym_obj["description"]);
     std::string domaintype = sym_obj["domainType"];
