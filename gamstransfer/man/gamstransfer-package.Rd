@@ -6,7 +6,7 @@
 \alias{gamstransfer-package}
 \title{gamstransfer: A Data Interface Between 'GAMS' and R}
 \description{
-Read, analyze, modify, and write 'GAMS' (General Algebraic Modeling System) data using 'R'. The main focus of 'gamstransfer' is the highly efficient transfer of data between 'GAMS' \url{https://www.gams.com/} and R, while keeping those operations as simple as possible for the user. With the help of 'gamstransfer', users can add, manipulate, read or write data to 'GAMS' usually via an intermediate GDX (GAMS Data Exchange) file. 'gamstransfer' also provides utility functions to quickly and easily analyze 'GAMS' data.
+Read, analyze, modify, and write 'GAMS' (General Algebraic Modeling System) data. The main focus of 'gamstransfer' is the highly efficient transfer of data with 'GAMS' \url{https://www.gams.com/}, while keeping these operations as simple as possible for the user. The transfer of data usually takes place via an intermediate GDX (GAMS Data Exchange) file. Additionally, 'gamstransfer' provides utility functions to get an overview of 'GAMS' data and to check its validity.
 }
 \seealso{
 Useful links:
