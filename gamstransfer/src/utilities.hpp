@@ -42,10 +42,10 @@ class sym_info
 {
   public:
     std::string name;
-    int dim, type, sym_nr, subtype;
+    int dim {}, type {}, sym_nr {}, subtype {};
     std::string* domain {};
     std::string description, domain_type;
-    DataFrame* records;
+    DataFrame* records {};
 
     ~sym_info() {
         delete[] domain;
