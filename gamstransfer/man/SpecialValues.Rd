@@ -19,10 +19,10 @@ for detailed documentation of this package.
 }
 \examples{
 # check the value of GAMS special value NA
-SpecialValues[["NA"]]
+NA_val = SpecialValues[["NA"]]
 # check the value of GAMS special value EPS
-SpecialValues[["EPS"]]
+EPS_val = SpecialValues[["EPS"]]
 # check if a value is GAMS special value `NA`
-SpecialValues$isNA(0)
+isNA_check = SpecialValues$isNA(0)
 }
 \keyword{datasets}

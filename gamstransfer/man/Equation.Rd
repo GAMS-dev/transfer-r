@@ -16,5 +16,5 @@ m = Container$new()
 # add a Variable
 e = Equation$new(m, "v", type="eq")
 # access records
-e$records
+e_recs = e$records
 }

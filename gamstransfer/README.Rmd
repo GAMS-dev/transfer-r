@@ -22,17 +22,10 @@ knitr::opts_chunk$set(
 GAMS and R.
 
 ## Quick Start Guide
-To install `gamstransfer` from GitHub, install `remotes` package from CRAN.
+To install the latest version of `gamstransfer` from CRAN, use the following command.
 
 ``` r
-install.packages("remotes")
-```
-
-You can then install a particular release of `gamstransfer` from GitHub using
-the following command.
-
-``` r
-remotes::install_github("GAMS-dev/transfer-r/gamstransfer@vX.Y.Z")
+install.packages("gamstransfer")
 ```
 
 To use `gamstransfer`, load the package using `library(gamstransfer)`.
@@ -57,7 +50,8 @@ To build this package from source, the following libraries must be installed:
 
 ## Install a particular release from GitHub
 
-It is recommended that the users install released versions of `gamstransfer` using
+It is recommended that the users install released versions of `gamstransfer`
+using
 ``` r
 remotes::install_github("GAMS-dev/transfer-r/gamstransfer@vX.Y.Z")
 ```

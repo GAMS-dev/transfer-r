@@ -3221,10 +3221,11 @@ fi
 
 
 # Dynamically generate list of sources from subdirectories via shell
-SUBDIR_SOURCES="$(cd src/ && ls {.,./gdx/src}/*.cpp | tr '\n' ' ')"
+SUBDIR_SOURCES="gdx/src/gdlib/gmsstrm.cpp gdx/src/gdlib/utils.cpp gdx/src/gxfile.cpp Read.cpp Write.cpp Utilities.cpp RcppExports.cpp"
 
 
 ac_config_files="$ac_config_files src/Makevars"
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

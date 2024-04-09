@@ -35,7 +35,7 @@
 #' # add a Variable
 #' v = Variable$new(m, "v")
 #' # access records
-#' v$records
+#' v_recs = v$records
 Variable <- R6::R6Class(
   "Variable",
   inherit = .Symbol,
@@ -234,7 +234,7 @@ Variable <- R6::R6Class(
         #check dimensionality
         if ((length(records) < self$dimension) ||
           (length(records) > self$dimension + length(private$.attr()))) {
-          stop(cat(paste0("Dimensionality of records ", 
+          stop(paste0("Dimensionality of records ", 
           (length(records)-length(private$.attr())),
           " is inconsistent with the variable domain specification ", 
           self$dimension, " must resolve before records can be added\n\n",
@@ -243,7 +243,7 @@ Variable <- R6::R6Class(
           " will be interpreted as domain columns, check that the ",
           "data.frame conforms to the required notation.\n",
           "User passed data.frame with columns: ", 
-          toString(usr_colnames), "\n")))
+          toString(usr_colnames), "\n"))
         }
 
         # check if numeric
@@ -426,7 +426,7 @@ Variable <- R6::R6Class(
       }
       else {
         if (!any(.varTypes == tolower(type_input))) {
-          stop(cat(paste0("Argument 'type' must be one of the following:\n\n",
+          stop(paste0("Argument 'type' must be one of the following:\n\n",
           " 1. 'binary' \n",
           " 2. 'integer' \n",
           " 3. 'positive' \n",
@@ -436,7 +436,7 @@ Variable <- R6::R6Class(
           " 7. 'sos2' \n",
           " 8. 'semicont' \n",
           " 9. 'semiint'\n"
-          )))
+          ))
         }
 
         private$.type = tolower(type_input)

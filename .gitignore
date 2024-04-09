@@ -1,6 +1,7 @@
 gamstransfer/src/*.o
 gamstransfer/src/*.so
 *.gdx
+!gamstransfer/inst/extdata/*.gdx
 !gamstransfer/tests/testthat/testdata/*.gdx
 *.gms
 *.lst
