@@ -1,3 +1,7 @@
+GAMS Transfer R
+==================
+- Bug fix in corner case equation types from GDX files
+
 GAMS Transfer R v3.0.2
 ==================
 - Fix issues associated with memory checks and uninitialized variables

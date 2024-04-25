@@ -77,7 +77,6 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
     int nr_recs, subtype;
     if (!PGX.gdxSymbolInfoX(sym_nr, nr_recs, subtype, description))
       stop("gt_read_symbol:gdxSymbolInfoX GDX error (gdxSymbolInfoX). Symbol name = "s + sym_id);
-
     gdxStrIndexPtrs_t domains_ptr;
     gdxStrIndex_t domains;
     GDXSTRINDEXPTRS_INIT(domains, domains_ptr);
@@ -119,7 +118,8 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
         sym_list["type"] = gmsVarTypeText[subtype];
       }
       else if (sym_type == GMS_DT_EQU) {
-        sym_list["type"] = gmsEquTypeText[subtype - GMS_EQU_USERINFO_BASE];
+        int subtype_adjusted = subtype - GMS_EQU_USERINFO_BASE;
+        sym_list["type"] = (subtype_adjusted >= 0 && subtype_adjusted <= 6) ? gmsEquTypeText[subtype_adjusted] : gmsEquTypeText[0];
       }
       else if (sym_type == GMS_DT_SET) {
         sym_list["isSingleton"] = bool(subtype);
