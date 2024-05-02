@@ -194,6 +194,7 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
   if (!PGX.gdxDataReadRawStart(sym_nr, nr_recs))
     stop("gt_read_symbol:gdxDataReadRawStart GDX error (gdxDataReadStrStart). Symbol name = "s + sym_id);
 
+  int num_out_of_bounds {};
   if (!nr_recs) {
     if (sym_type != GMS_DT_ALIAS) {
       sym_list["records"] = R_NilValue;
@@ -207,30 +208,39 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
     CharacterVector elem_text(nr_recs); // for elem_text
     int rec_nr {-1};
     std::array<char, GMS_SSSIZE> Msg {};
+    int idx;
     while (PGX.gdxDataReadRaw(gdx_uel_index, gdx_values, dummy)) {
+      bool out_of_bounds {false};
       rec_nr++;
+      for (int d = 0; d < dim; d++) {
+        if (gdx_uel_index[d] < 1 || gdx_uel_index[d] > uel_count) {
+          out_of_bounds = true;
+          indx_matrix(rec_nr, d) = 0;
+        }
+        else {
+          idx = GET_DOM_MAP(d, gdx_uel_index[d]);
+          indx_matrix(rec_nr, d) = idx + 1;
+          //store domain labels
+          //dom_uel_used is true if idx positioned UEL for domain d,
+          // is used in the symbol
+          dom_uel_used[d][idx] = true; // set used to true
+        }
+      }
+
+      if (out_of_bounds)
+        num_out_of_bounds++;
+
       if (sym_type == GMS_DT_SET || sym_type == GMS_DT_PAR || sym_type == GMS_DT_ALIAS) {
         if (sym_type == GMS_DT_SET || sym_type == GMS_DT_ALIAS) {
           elem_text(rec_nr) = PGX.gdxGetElemText(static_cast<int>(gdx_values[GMS_VAL_LEVEL]), Msg.data(), dummy) ? Msg.data() : "";
         } else
           record_values(rec_nr, 0) = n_acronyms > 0 ?gt_map_acronyms(acronyms, gdx_values[GMS_VAL_LEVEL]) : gdx_values[GMS_VAL_LEVEL];
-
-        for (int d = 0; d < dim; d++)
-          indx_matrix(rec_nr, d) = GET_DOM_MAP(d, gdx_uel_index[d]) + 1;
       }
       else if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
         for (int i = 0; i < 5; i++)
           record_values(rec_nr, i) = n_acronyms > 0 ?gt_map_acronyms(acronyms, gdx_values[i]) : gdx_values[i];
 
-        for (int d = 0; d < dim; d++)
-          indx_matrix(rec_nr, d) = GET_DOM_MAP(d, gdx_uel_index[d]) + 1;
       }
-
-      //store domain labels
-      //dom_uel_used is true if idx positioned UEL for domain d,
-      // is used in the symbol
-      for (int d = 0; d < dim; d++)
-        dom_uel_used[d][GET_DOM_MAP(d, gdx_uel_index[d])] = true; // set used to true
     }
 
     // now map the numerical indx_matrix to string using from_codes
@@ -258,19 +268,30 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
           if (dom_uel_used[d][idx] < 0) continue; // if not used, continue
 
           if (!PGX.gdxUMUelGet(k, Msg.data(), dummy))
-            stop("gt_read_symbol:gdxUMUelGet GDX error(gdxUMUelGet)");
-
+            stop("gt_read_symbol:gdxUMUelGet GDX error(gdxUMUelGet). Symbol name = "s + sym_id);
           used_uels.emplace_back(Msg.data());
         }
       }
 
       // shift domain indices
-      for (int k = 0; k < nr_recs; k++)
-        indx_matrix(k, d) = dom_uel_used[d][indx_matrix(k, d) - 1] + 1;
-
+      for (int k = 0; k < nr_recs; k++) {
+        if (indx_matrix(k, d) > 0)
+          indx_matrix(k, d) = dom_uel_used[d][indx_matrix(k, d) - 1] + 1;
+      }
       // create a factor v
       IntegerVector v = indx_matrix(_, d);
+
+      // remap 0 to NA. This is preferred over setting NA in the first place because
+      // is_na() check could be expensive
+      if (num_out_of_bounds) {
+        for (int i = 0; i < v.length(); i++) {
+          if (v[i] == 0)
+            v[i] = NA_INTEGER;
+        }
+      }
+
       CharacterVector ch = wrap(used_uels);
+
       v.attr("class") = "factor";
       v.attr("levels") = ch;
 
@@ -313,7 +334,10 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
   }
 
   if (!PGX.gdxDataReadDone())
-    stop("gt_read_symbol:gdxDataReadDone GDX error (gdxDataReadDone)");
+    stop("gt_read_symbol:gdxDataReadDone GDX error (gdxDataReadDone). Symbol name = "s + sym_id);
+
+  if (num_out_of_bounds)
+    warning("gt_read_symbol: Symbol '"s + sym_id + "' has "s + std::to_string(num_out_of_bounds) + " uels without a label.");
   return;
 
 }

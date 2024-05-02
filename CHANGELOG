@@ -1,6 +1,7 @@
 GAMS Transfer R
 ==================
 - Bug fix in corner case equation types from GDX files
+- Fixed reading GDX files with records that use UELs without a string representation. These will result in <NA> in the domain column.
 
 GAMS Transfer R v3.0.2
 ==================
