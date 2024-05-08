@@ -1,10 +1,11 @@
 CXX = clang++
 CXX_STD = CXX17
-PKG_CPPFLAGS = -I./gdx/src -I.
+PKG_CPPFLAGS = -I./gdx/src -Igdx/src/rtl -I.
 PKG_CXXFLAGS = -DNDEBUG
 PKG_LIBS = -ldl -lpthread -lz
-SOURCES=@SUBDIR_SOURCES@
-OBJECTS=$(SOURCES:.cpp=.o)
+SOURCES_CPP=@SUBDIR_SOURCES_CPP@
+SOURCES_C=@SUBDIR_SOURCES_C@
+OBJECTS=$(SOURCES_C:.c=.o) $(SOURCES_CPP:.cpp=.o)
 
 all: $(SHLIB)
 
