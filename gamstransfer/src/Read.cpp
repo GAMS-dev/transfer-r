@@ -209,8 +209,11 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
     int rec_nr {-1};
     std::array<char, GMS_SSSIZE> Msg {};
     int idx;
-    while (PGX.gdxDataReadRaw(gdx_uel_index, gdx_values, dummy)) {
+    for (int j=0; j < nr_recs; j++) {
       bool out_of_bounds {false};
+      if (!PGX.gdxDataReadRaw(gdx_uel_index, gdx_values, dummy))
+        stop("gt_read_symbol:gdxDataReadRaw GDX error (gdxDataReadRaw). Symbol name = "s + sym_id);
+
       rec_nr++;
       for (int d = 0; d < dim; d++) {
         if (gdx_uel_index[d] < 1 || gdx_uel_index[d] > uel_count) {
