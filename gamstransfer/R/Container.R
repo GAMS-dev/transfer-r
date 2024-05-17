@@ -1354,35 +1354,42 @@ Container <- R6::R6Class (
           if (m$class == "Parameter") {
             Parameter$new(
               self, m$name, domain,
+              records = m$records,
               domainForwarding=FALSE,
-              description = m$description)
+              description = m$description,
+              from_gdx=TRUE)
           }
           else if (m$class == "Set") {
               Set$new(
               self, m$name, domain, m$isSingleton,
-              records = NULL,
+              records = m$records,
               domainForwarding=FALSE,
-              m$description)
+              m$description,
+              from_gdx=TRUE)
           }
           else if (m$class == "Variable") {
               type = m$type
               if (tolower(type) == "unknown") type = "free"
               Variable$new(
               self, m$name, type, domain,
+              records = m$records,
               domainForwarding = FALSE,
-              description = m$description)
+              description = m$description, 
+              from_gdx=TRUE)
           }
           else if (m$class == "Equation") {
               type = m$type
               Equation$new(
               self, m$name, type, domain,
+              records = m$records,
               domainForwarding = FALSE,
-              description = m$description)
+              description = m$description,
+              from_gdx=TRUE)
           }
           else if (m$class == "Alias" || m$class == "UniverseAlias") {
               if (m$aliasWith == "*") {
                 # universe alias
-                UniverseAlias$new(self, m$name)
+                UniverseAlias$new(self, m$name, from_gdx=TRUE)
               }
               else {
                 if (!any(symbolsToRead == m$aliasWith)) {
@@ -1394,22 +1401,22 @@ Container <- R6::R6Class (
                 }
                 else {
                   Alias$new(
-                  self, m$name, self[m$aliasWith])
+                  self, m$name, self[m$aliasWith], from_gdx=TRUE)
                 }
               }
           }
       }
 
-      if (records == TRUE) {
-        for (s in readlist) {
-          if (is.null(s$records) || inherits(self[s$name], 
-          ".BaseAlias")) {
-            next
-          }
+      # if (records == TRUE) {
+      #   for (s in readlist) {
+      #     if (is.null(s$records) || inherits(self[s$name],
+      #     ".BaseAlias")) {
+      #       next
+      #     }
 
-          self[s$name]$records = s$records;
-        }
-      }
+      #     self[s$name]$records = s$records;
+      #   }
+      # }
     },
 
     asList = function(symbols=NULL) {

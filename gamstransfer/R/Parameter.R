@@ -44,13 +44,22 @@ Parameter <- R6::R6Class(
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
                           domainForwarding = FALSE,
-                          description="") {
+                          description="", ...) {
+
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
 
       super$initialize(container, name,
-                      domain, description, domainForwarding)
+                      domain, description, domainForwarding, from_gdx=from_gdx)
 
       if (!is.null(records)) {
-        self$setRecords(records)
+        if (from_gdx) {
+          private$.records = records
+        }
+        else {
+          self$setRecords(records)
+        }
       }
     },
 

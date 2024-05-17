@@ -45,15 +45,29 @@ Variable <- R6::R6Class(
                           type = "free",
                           domain = NULL, records = NULL,
                           domainForwarding = FALSE,
-                          description="") {
+                          description="", ...) {
 
-      self$type = type
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
+
+      if (from_gdx) {
+        private$.type = type
+      }
+      else {
+        self$type = type
+      }
 
       super$initialize(container, name,
-                      domain, description, domainForwarding)
+                      domain, description, domainForwarding, from_gdx=from_gdx)
 
       if (!is.null(records)) {
-        self$setRecords(records)
+        if (from_gdx) {
+          private$.records = records
+        }
+        else {
+          self$setRecords(records)
+        }
       }
     },
 

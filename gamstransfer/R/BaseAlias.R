@@ -29,10 +29,19 @@
     .isUniverseAlias = NULL,
     .requiresStateCheck = NULL,
 
-    initialize = function(container=NULL, name=NULL) {
+    initialize = function(container=NULL, name=NULL, ...) {
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+
       self$.requiresStateCheck = TRUE
-      self$container = container
-      self$name = name
+      if (from_gdx) {
+        private$.ref_container = container
+        private$.name = name
+      }
+      else {
+        self$container = container
+        self$name = name
+      }
       container[name] = self
     }
   ),
