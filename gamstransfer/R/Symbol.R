@@ -50,6 +50,10 @@
       private$.domain = domain
       private$.description = description
       private$.domain_forwarding = domainForwarding
+      if (container$.lc_data$has(name)) {
+        stop(paste0("A symbol with the name ", name, 
+          " already exists in the container\n"))
+      }
       container[name] = self
     }
     else {
