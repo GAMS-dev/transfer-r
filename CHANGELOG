@@ -5,6 +5,7 @@ GAMS Transfer R
 - Improved error check for GDX API calls when reading a GDX file
 - Performance improvements when reading a GDX file containing many symbols into a container
 - New GDX API version 7.11.3
+- bug fix: Symbol `shape` fixed from a method to a field. Users can access `<Symbol_name>$shape`
 
 GAMS Transfer R v3.0.2
 ==================
