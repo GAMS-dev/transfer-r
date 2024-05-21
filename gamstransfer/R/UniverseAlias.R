@@ -39,8 +39,12 @@ UniverseAlias <- R6::R6Class(
   inherit = .BaseAlias,
   public = list(
 
-    initialize = function(container=NULL, name=NULL) {
-      super$initialize(container, name)
+    initialize = function(container=NULL, name=NULL, ...) {
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
+
+      super$initialize(container, name, from_gdx=from_gdx)
       private$.aliasWith = "*"
       lockBinding("aliasWith", self)
       self$.isUniverseAlias = TRUE

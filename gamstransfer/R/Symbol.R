@@ -37,19 +37,36 @@
   initialize = function(container, name,
                         domain,
                         description,
-                        domainForwarding) {
+                        domainForwarding, ...) {
+
+    args = list(...)
+    from_gdx = args[["from_gdx"]]
 
     self$.requiresStateCheck = TRUE
 
-    self$container = container # also sets the check flag
+    if (from_gdx) {
+      private$.ref_container = container
+      private$.name = name
+      private$.domain = domain
+      private$.description = description
+      private$.domain_forwarding = domainForwarding
+      if (container$.lc_data$has(name)) {
+        stop(paste0("A symbol with the name ", name, 
+          " already exists in the container\n"))
+      }
+      container[name] = self
+    }
+    else {
+      self$container = container # also sets the check flag
 
-    self$name <- name
+      self$name <- name
 
-    self$domain = domain
+      self$domain = domain
 
-    self$description = description
-    self$domainForwarding = domainForwarding
-    container[name] = self
+      self$description = description
+      self$domainForwarding = domainForwarding
+      container[name] = self
+    }
 
   },
 

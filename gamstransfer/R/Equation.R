@@ -48,16 +48,31 @@ Equation <- R6::R6Class(
                           domain=NULL,
                           records = NULL,
                           domainForwarding=FALSE,
-                          description="") {
+                          description="", ...) {
 
-      self$type = type
-      # call from outside
-      type = .EquationTypes[[type]]
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
+
+      if (from_gdx) {
+        private$.type = type
+      }
+      else {
+        # call from outside
+        type = .EquationTypes[[type]]
+        self$type = type
+      }
 
       super$initialize(container, name,
-                      domain, description, domainForwarding)
+                      domain, description, domainForwarding, from_gdx=from_gdx)
+
       if (!is.null(records)) {
-        self$setRecords(records)
+        if (from_gdx) {
+          private$.records = records
+        }
+        else {
+          self$setRecords(records)
+        }
       }
     },
 
