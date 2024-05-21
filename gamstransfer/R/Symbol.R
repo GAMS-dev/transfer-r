@@ -756,33 +756,6 @@
 
   },
 
-  shape = function() {
-    if (self$domainType == "regular") {
-      shapelist = c()
-      for (d in self$domain) {
-        shapelist = append(shapelist, nrow(d$records))
-      }
-      return(shapelist)
-    }
-
-    if (!is.null(self$records)) {
-      if (self$dimension == 0) {
-        return(c())
-      }
-
-      if (self$domainType == "none" || self$domainType == "relaxed") {
-        shapelist = c()
-        for (i in (1:self$dimension)) {
-          shapelist = append(shapelist, length(unique(self$records[, i])))
-        }
-        return(shapelist)
-      }
-    }
-    else {
-      return(NULL)
-    }
-  },
-
   toDense = function(column = "level") {
     if (!is.character(column)) {
       stop("Argument 'column' must be type str\n")
@@ -882,7 +855,7 @@
       })
     }
 
-    a = array(0, dim = self$shape())
+    a = array(0, dim = self$shape)
     if (is.null(self$records[[column]])) {
       if (inherits(self, "Parameter")) {
         def_value = private$.getDefaultValues()
@@ -936,6 +909,32 @@
   ),
 
   active = list(
+    shape = function() {
+      if (self$domainType == "regular") {
+        shapelist = c()
+        for (d in self$domain) {
+          shapelist = append(shapelist, nrow(d$records))
+        }
+        return(shapelist)
+      }
+
+      if (!is.null(self$records)) {
+        if (self$dimension == 0) {
+          return(c())
+        }
+
+        if (self$domainType == "none" || self$domainType == "relaxed") {
+          shapelist = c()
+          for (i in (1:self$dimension)) {
+            shapelist = append(shapelist, length(unique(self$records[, i])))
+          }
+          return(shapelist)
+        }
+      }
+      else {
+        return(NULL)
+      }
+    },
 
     records = function(records_input) {
       if (missing(records_input)) {

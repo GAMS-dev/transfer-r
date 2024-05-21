@@ -90,10 +90,10 @@ Parameter <- R6::R6Class(
         }
 
         if (self$dimension >= 1) {
-          if (!all(dim(records) == self$shape())) {
+          if (!all(dim(records) == self$shape)) {
             stop(paste0("User passed array/matrix/numeric with shape ", 
             toString(dim(records)), " but anticipated shape was ", 
-            toString(self$shape()), " based on domain set information -- ",
+            toString(self$shape), " based on domain set information -- ",
             "must reconcile before array-to-records conversion is possible.\n"))
           }
         }

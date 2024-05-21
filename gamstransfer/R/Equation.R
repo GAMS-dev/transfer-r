@@ -145,10 +145,10 @@ Equation <- R6::R6Class(
         if (self$dimension >= 2) {
           for (i in names(records)) {
             recs = records[[i]]
-            if (!all(dim(recs) == self$shape())) {
+            if (!all(dim(recs) == self$shape)) {
               stop(paste0("User passed array/matrix with shape ", 
               toString(dim(recs)), " but anticipated shape was ", 
-              toString(self$shape()), 
+              toString(self$shape), 
               " based on domain set information -- must reconcile ",
               "before array-to-records conversion is possible.\n"))
             }
