@@ -4,6 +4,7 @@ GAMS Transfer R
 - Fixed reading GDX files with records that use UELs without a string representation. These will result in <NA> in the domain column
 - Improved error check for GDX API calls when reading a GDX file
 - Performance improvements when reading a GDX file containing many symbols into a container
+- New GDX API version 7.11.3
 
 GAMS Transfer R v3.0.2
 ==================
