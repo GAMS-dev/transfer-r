@@ -1,10 +1,11 @@
 CXX = clang++
 CXX_STD = CXX17
-PKG_CPPFLAGS = -I./gdx/src -I.
+PKG_CPPFLAGS = -I./gdx/src -Igdx/src/rtl -I.
 PKG_CXXFLAGS = -DNDEBUG
 PKG_LIBS = -ldl -lpthread -lz
-SOURCES=./gdx/src/gdlib/gmsstrm.cpp ./gdx/src/gdlib/utils.cpp ./gdx/src/gxfile.cpp ./Read.cpp ./Write.cpp ./Utilities.cpp ./RcppExports.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
+SOURCES_CPP=    gdx/src/rtl/p3io.cpp     gdx/src/rtl/p3utils.cpp     gdx/src/rtl/sysutils_p3.cpp     gdx/src/rtl/p3platform.cpp     gdx/src/rtl/math_p3.cpp     gdx/src/gdlib/gmsstrm.cpp     gdx/src/gdlib/utils.cpp     gdx/src/gdlib/strutilx.cpp     gdx/src/gxfile.cpp     Read.cpp     Write.cpp     Utilities.cpp     RcppExports.cpp
+SOURCES_C=gdx/src/rtl/dtoaLoc.c
+OBJECTS=$(SOURCES_C:.c=.o) $(SOURCES_CPP:.cpp=.o)
 
 all: $(SHLIB)
 
