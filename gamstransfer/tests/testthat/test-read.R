@@ -1942,8 +1942,8 @@ k = Set$new(m, "k", records=paste0("i",1:9))
 h = Parameter$new(m, "h", c(i, j, k), records = arr0)
 hp = Parameter$new(m, "hp", c(i, j, k), records = h$toDense())
 
-expect_equal(h$shape(), c(5,6,9))
-expect_equal(hp$shape(), c(5,6,9))
+expect_equal(h$shape, c(5,6,9))
+expect_equal(hp$shape, c(5,6,9))
 expect_equal(dim(h$toDense()), c(5, 6, 9))
 expect_equal(dim(hp$toDense()), c(5, 6, 9))
 
@@ -1955,8 +1955,8 @@ v = Variable$new(m, "v", "free", c(i, j, k), records=arr0)
 vp = Variable$new(m, "vp", "free", c(i, j, k), records=v$toDense())
 
 
-expect_equal(v$shape(), c(5,6, 9))
-expect_equal(vp$shape(), c(5,6, 9))
+expect_equal(v$shape, c(5,6, 9))
+expect_equal(vp$shape, c(5,6, 9))
 expect_equal(dim(v$toDense()), c(5,6, 9))
 expect_equal(dim(vp$toDense()), c(5,6, 9))
 expect_equal(v$records, vp$records)
@@ -1966,8 +1966,8 @@ expect_equal(arr0, vp$toDense())
 e = Equation$new(m, "e", "eq", c(i, j, k), records = arr0)
 ep = Equation$new(m, "ep", "eq", c(i, j, k), records = e$toDense())
 
-expect_equal(e$shape(), c(5,6, 9))
-expect_equal(ep$shape(), c(5,6, 9))
+expect_equal(e$shape, c(5,6, 9))
+expect_equal(ep$shape, c(5,6, 9))
 expect_equal(dim(e$toDense()), c(5,6, 9))
 expect_equal(dim(ep$toDense()), c(5,6, 9))
 expect_equal(e$records, ep$records)
@@ -1980,8 +1980,8 @@ expect_equal(arr0, ep$toDense())
 test_that("test_num_72", {
   m = Container$new(testthat::test_path("testdata", "test72.gdx"))
 
-  expect_equal(m["dim0"]$shape(), dim(m["dim0"]$toDense()))
-  expect_equal(m["dim1"]$shape(), dim(m["dim1"]$toDense()))
+  expect_equal(m["dim0"]$shape, dim(m["dim0"]$toDense()))
+  expect_equal(m["dim1"]$shape, dim(m["dim1"]$toDense()))
 
   # test supercall read
   rl = readGDX(testthat::test_path("testdata", "test72.gdx"))

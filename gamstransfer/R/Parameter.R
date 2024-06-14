@@ -44,13 +44,22 @@ Parameter <- R6::R6Class(
     initialize = function(container=NULL, name=NULL,
                           domain=NULL,records = NULL,
                           domainForwarding = FALSE,
-                          description="") {
+                          description="", ...) {
+
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
 
       super$initialize(container, name,
-                      domain, description, domainForwarding)
+                      domain, description, domainForwarding, from_gdx=from_gdx)
 
       if (!is.null(records)) {
-        self$setRecords(records)
+        if (from_gdx) {
+          private$.records = records
+        }
+        else {
+          self$setRecords(records)
+        }
       }
     },
 
@@ -81,10 +90,10 @@ Parameter <- R6::R6Class(
         }
 
         if (self$dimension >= 1) {
-          if (!all(dim(records) == self$shape())) {
+          if (!all(dim(records) == self$shape)) {
             stop(paste0("User passed array/matrix/numeric with shape ", 
             toString(dim(records)), " but anticipated shape was ", 
-            toString(self$shape()), " based on domain set information -- ",
+            toString(self$shape), " based on domain set information -- ",
             "must reconcile before array-to-records conversion is possible.\n"))
           }
         }

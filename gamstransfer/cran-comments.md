@@ -2,6 +2,7 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a patch release to fix the issues pointed out by valgrind checks for the first CRAN submission of this package.
-* This package does not use any webservices or additional software.
-  Users do not need any other software to effectively utilize this package.
+* checking installed package size ... NOTE
+  installed size is  9.2Mb
+  sub-directories of 1Mb or more:
+    libs   8.6Mb

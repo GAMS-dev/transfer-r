@@ -164,7 +164,7 @@ build_r_windows:
 
 test_r_linux:
     stage: test
-    tags: [linux]
+    tags: [puma]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:

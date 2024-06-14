@@ -48,16 +48,31 @@ Equation <- R6::R6Class(
                           domain=NULL,
                           records = NULL,
                           domainForwarding=FALSE,
-                          description="") {
+                          description="", ...) {
 
-      self$type = type
-      # call from outside
-      type = .EquationTypes[[type]]
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
+
+      if (from_gdx) {
+        private$.type = type
+      }
+      else {
+        # call from outside
+        type = .EquationTypes[[type]]
+        self$type = type
+      }
 
       super$initialize(container, name,
-                      domain, description, domainForwarding)
+                      domain, description, domainForwarding, from_gdx=from_gdx)
+
       if (!is.null(records)) {
-        self$setRecords(records)
+        if (from_gdx) {
+          private$.records = records
+        }
+        else {
+          self$setRecords(records)
+        }
       }
     },
 
@@ -130,10 +145,10 @@ Equation <- R6::R6Class(
         if (self$dimension >= 2) {
           for (i in names(records)) {
             recs = records[[i]]
-            if (!all(dim(recs) == self$shape())) {
+            if (!all(dim(recs) == self$shape)) {
               stop(paste0("User passed array/matrix with shape ", 
               toString(dim(recs)), " but anticipated shape was ", 
-              toString(self$shape()), 
+              toString(self$shape), 
               " based on domain set information -- must reconcile ",
               "before array-to-records conversion is possible.\n"))
             }

@@ -615,7 +615,8 @@ PACKAGE_URL=''
 ac_unique_file=""DESCRIPTION""
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-SUBDIR_SOURCES
+SUBDIR_SOURCES_C
+SUBDIR_SOURCES_CPP
 OBJEXT
 EXEEXT
 ac_ct_CC
@@ -3221,7 +3222,23 @@ fi
 
 
 # Dynamically generate list of sources from subdirectories via shell
-SUBDIR_SOURCES="gdx/src/gdlib/gmsstrm.cpp gdx/src/gdlib/utils.cpp gdx/src/gxfile.cpp Read.cpp Write.cpp Utilities.cpp RcppExports.cpp"
+SUBDIR_SOURCES_CPP="\
+    gdx/src/rtl/p3io.cpp \
+    gdx/src/rtl/p3utils.cpp \
+    gdx/src/rtl/sysutils_p3.cpp \
+    gdx/src/rtl/p3platform.cpp \
+    gdx/src/rtl/math_p3.cpp \
+    gdx/src/gdlib/gmsstrm.cpp \
+    gdx/src/gdlib/utils.cpp \
+    gdx/src/gdlib/strutilx.cpp \
+    gdx/src/gxfile.cpp \
+    Read.cpp \
+    Write.cpp \
+    Utilities.cpp \
+    RcppExports.cpp"
+
+SUBDIR_SOURCES_C="gdx/src/rtl/dtoaLoc.c"
+
 
 
 ac_config_files="$ac_config_files src/Makevars"
@@ -4376,5 +4393,7 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
+
+
 
 

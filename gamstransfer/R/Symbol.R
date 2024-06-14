@@ -37,19 +37,36 @@
   initialize = function(container, name,
                         domain,
                         description,
-                        domainForwarding) {
+                        domainForwarding, ...) {
+
+    args = list(...)
+    from_gdx = args[["from_gdx"]]
 
     self$.requiresStateCheck = TRUE
 
-    self$container = container # also sets the check flag
+    if (from_gdx) {
+      private$.ref_container = container
+      private$.name = name
+      private$.domain = domain
+      private$.description = description
+      private$.domain_forwarding = domainForwarding
+      if (container$.lc_data$has(name)) {
+        stop(paste0("A symbol with the name ", name, 
+          " already exists in the container\n"))
+      }
+      container[name] = self
+    }
+    else {
+      self$container = container # also sets the check flag
 
-    self$name <- name
+      self$name <- name
 
-    self$domain = domain
+      self$domain = domain
 
-    self$description = description
-    self$domainForwarding = domainForwarding
-    container[name] = self
+      self$description = description
+      self$domainForwarding = domainForwarding
+      container[name] = self
+    }
 
   },
 
@@ -739,33 +756,6 @@
 
   },
 
-  shape = function() {
-    if (self$domainType == "regular") {
-      shapelist = c()
-      for (d in self$domain) {
-        shapelist = append(shapelist, nrow(d$records))
-      }
-      return(shapelist)
-    }
-
-    if (!is.null(self$records)) {
-      if (self$dimension == 0) {
-        return(c())
-      }
-
-      if (self$domainType == "none" || self$domainType == "relaxed") {
-        shapelist = c()
-        for (i in (1:self$dimension)) {
-          shapelist = append(shapelist, length(unique(self$records[, i])))
-        }
-        return(shapelist)
-      }
-    }
-    else {
-      return(NULL)
-    }
-  },
-
   toDense = function(column = "level") {
     if (!is.character(column)) {
       stop("Argument 'column' must be type str\n")
@@ -865,7 +855,7 @@
       })
     }
 
-    a = array(0, dim = self$shape())
+    a = array(0, dim = self$shape)
     if (is.null(self$records[[column]])) {
       if (inherits(self, "Parameter")) {
         def_value = private$.getDefaultValues()
@@ -919,6 +909,32 @@
   ),
 
   active = list(
+    shape = function() {
+      if (self$domainType == "regular") {
+        shapelist = c()
+        for (d in self$domain) {
+          shapelist = append(shapelist, nrow(d$records))
+        }
+        return(shapelist)
+      }
+
+      if (!is.null(self$records)) {
+        if (self$dimension == 0) {
+          return(c())
+        }
+
+        if (self$domainType == "none" || self$domainType == "relaxed") {
+          shapelist = c()
+          for (i in (1:self$dimension)) {
+            shapelist = append(shapelist, length(unique(self$records[, i])))
+          }
+          return(shapelist)
+        }
+      }
+      else {
+        return(NULL)
+      }
+    },
 
     records = function(records_input) {
       if (missing(records_input)) {

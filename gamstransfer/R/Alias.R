@@ -42,9 +42,18 @@ Alias <- R6::R6Class(
   inherit = .BaseAlias,
   public = list(
     initialize = function(container=NULL, name=NULL, 
-                          aliasFor=NULL) {
-      super$initialize(container, name)
-      self$aliasWith = aliasFor
+                          aliasFor=NULL, ...) {
+      args = list(...)
+      from_gdx = args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx=FALSE
+
+      super$initialize(container, name, from_gdx=from_gdx)
+      if (from_gdx) {
+        private$.aliasWith = aliasFor
+      }
+      else {
+        self$aliasWith = aliasFor
+      }
       self$.isUniverseAlias = FALSE
     },
 
