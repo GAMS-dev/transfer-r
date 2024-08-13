@@ -1,0 +1,4 @@
+﻿ Argument , Type , Description , Required , Default 
+ ``container`` , ``Container`` ,"A reference to the :doc:`Container <../Container>` object that the symbol is being added to", Yes , - 
+ ``name`` , ``string`` , Name of symbol , Yes , - 
+ ``aliasWith`` , ``Set`` object , set object to create an alias for , Yes , - 
