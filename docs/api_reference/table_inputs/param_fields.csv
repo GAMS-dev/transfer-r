@@ -1,0 +1,16 @@
+﻿ Field , Description , Type 
+ ``container`` ,"reference to the :doc:`Container <../Container>` that the symbol belongs to", ``Container`` 
+ ``defaultValues`` , default values for the symbol , ``numeric`` 
+ ``description`` , description of symbol , ``character`` 
+ ``dimension`` ,"dimension of symbol, setting dimension is a shorthand notation to set ``domain`` to a list of size n containing""*""","``numeric`` , ``integer``"
+ ``domain`` ,"list of domains given either as a string (``""*""`` for universe set) or as a reference to the Set/Alias object", ``list`` 
+ ``domainForwarding`` ,"Flag or a vector of flags that forces parameter elements to be recursively included in corresponding parent sets (i.e., :doc:`implicit set definition <../../user_guide/additional_features/implicit_set_growth>` )", ``logical`` 
+ ``domainLabels`` , column headings for the ``records`` data frame , ``list`` of ``string`` 
+ ``domainNames`` , string version of domain names , ``list`` of ``string`` 
+ ``domainType`` ,"``none``, ``relaxed`` or ``regular`` depending on state of domain links", ``string`` 
+ ``isScalar `` , TRUE if ``self$dimension = 0`` , ``logical`` 
+ ``name`` , name of symbol , ``string`` 
+ ``numberRecords`` ,"number of symbol records (i.e., returns ``nrow(self$records)`` if not ``NULL``)", ``integer`` 
+ ``records`` , the main symbol records , ``data frame`` 
+ ``shape`` , a vector describing the array dimensions if ``records`` were converted with ``$toDense()`` , ``vector`` 
+ ``summary`` , output a ``list`` of only the metadata , ``list`` 

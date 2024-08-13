@@ -1,0 +1,44 @@
+Method,Description,Arguments/Defaults,Returns
+``addAlias``,add an ``Alias``,"``name`` (``string``), ``aliasWith`` (``Set``, ``Alias``)",``Alias`` object
+``addUniverseAlias``,add a ``UniverseAlias``,``name`` (``string``),``UniverseAlias`` object
+``addEquation``,add an ``Equation``,"``name`` (``string``), ``type`` (``string``) , ``domain=NULL`` (``string``, ``list``) , ``records=NULL`` (``data frame``, ``vector``, ``NULL``) , ``domainForwarding=FALSE`` (``logical``) , ``description=""""`` (``string``)",``Equation`` object
+``addParameter``,add a ``Parameter``,"``name`` (``string``) , ``domain=NULL`` (``string``, ``list``) , ``records=NULL`` (``data frame``, ``array``, ``matrix``) , ``domainForwarding=FALSE`` (``logical``) , ``description=""""`` (``string``)",``Parameter`` object
+``addSet``,add a ``Set``,"``name`` (``string``) , ``domain=""*""`` (``string``,``list``) , ``isSingleton=FALSE`` (``logical``) , ``records=NULL`` (``data frame``, ``array``, ``matrix``) , ``domainForwarding=FALSE`` (``logical``) , ``description=""""`` (``string``)",``Set`` object
+``addVariable``,add a ``Variable``,"``name`` (``string``) , ``type=""free""`` (``string``) , ``domain=NULL`` (``string``, ``list``) , ``records=NULL`` (``data frame``, ``array``, ``matrix``) , ``domainForwarding=FALSE`` (``logical``) , ``description=""""`` (``string``)",``Variable`` object
+``copy``,copies ``symbols`` to the ``destination`` container. ``overwrite=TRUE`` overwrites the symbols with the same name in ``destination``. Symbol domains are ``relaxed`` if ``destination`` Container does not contain equivalent domain sets,"``destination`` (Container), ``symbols=NULL (character)``, ``overwrite=FALSE`` (logical)",``NULL``
+``countDomainViolations``,returns a named list containing number of domain violations symbols with non-zero domain violations,"``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols",``list``
+``countDuplicateRecords``,returns a named list containing number of duplicate records for symbols with non-zero duplicate records,"``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols",``list``
+``describeAliases``,create a summary table with descriptive statistics for ``Aliases``,"``symbols=NULL`` (``string``) - if ``NULL``, assumes all Aliases",``data frame``
+``describeEquations``,create a summary table with descriptive statistics for ``Equations``,"``symbols=NULL`` (``string``) - if ``NULL``, assumes all equations",``data frame``
+``describeParameters``,create a summary table with descriptive statistics for ``Parameters``,"``symbols=NULL`` (``string``) - if ``NULL``, assumes all parameters",``data frame``
+``describeSets``,create a summary table with descriptive statistics for ``Sets``,"``symbols=NULL`` (``string``) - if ``NULL``, assumes all sets",``data frame``
+``describeVariables``,create a summary table with descriptive statistics for ``Variables``,"``symbols=NULL`` (``string``) - if ``NULL``, assumes all variables",``data frame``
+``dropDomainViolations``,drops domain violations for symbols in the Container,"``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols",-
+``dropDuplicateRecords``,drops duplicate records for symbols in the Container,"``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols, ``keep=first/last``",-
+``equals``,Check if two Container objects are equal,"``other`` (``Container``), ``verbose=FALSE``",logical
+``getAliases``,returns a list of object references for ``Aliases`` that are ``isValid``,``isValid=NULL`` (``logical``),``list``
+``getDomainViolations``,gets domain violations for symbols in the Container,"``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols",list of ``DomainViolation``
+``getEquations``,returns a list of object references for ``Equations`` that are ``isValid``,``isValid=NULL`` (``logical``),``list``
+``getParameters``,returns a list of object references for ``Parameters`` that are ``isValid``,``isValid=NULL`` (``logical``),``list``
+``getSets``,returns a list of object references for ``Sets`` that are ``isValid``,``isValid=NULL`` (``logical``),``list``
+``getSymbolNames``,returns the original symbol names for a vector ``names`` of any case,``names`` (``character``),``character``
+``getSymbols``,returns a list of object references for ``symbols``,``symbols`` (``character``) - if ``NULL`` assumes all symbols,``list``
+``getVariables``,returns a list of object references for ``Variables`` that are ``isValid``,``isValid=NULL`` (``logical``),``list``
+``getUELs``,returns the UELs used in the Container,"``symbols=NULL`` (character), ``ignoreUnused = FALSE``",``character vector``
+``hasDomainViolations``,"returns TRUE if any symbol in the container has domain violations, FALSE otherwise","``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols",``logical``
+``hasDuplicateRecords``,"returns TRUE if any symbol in the container has duplicate records, FALSE otherwise","``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols",``logical``
+``hasSymbols``,checks if symbol names for a vector ``names`` exists in the ``container``,``names`` (``character``),``logical``
+``isValid``,``TRUE`` if all symbols in the Container are valid,"``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols, ``verbose=FALSE`` (``logical``) , ``force=FALSE`` (``logical``)",``logical``
+``listAliases``,"list all aliases (``isValid=NULL``), list all valid aliases (``isValid=TRUE``), list all invalid aliases (``isValid=FALSE``) in the container",``isValid=NULL`` (``logical``),``vector``
+``listEquations``,"list all equations (``isValid=NULL``), list all valid equations (``isValid=TRUE``), list all invalid equations (``isValid=FALSE``) in the container","``isValid=NULL`` (``logical``) , ``types=NULL`` (``character`` of eqaution types) - if ``NULL``, assumes all types",``vector``
+``listParameters``,"list all parameters (``isValid=NULL``), list all valid parameters (``isValid=TRUE``), list all invalid parameters (``isValid=FALSE``) in the container",``isValid=NULL`` (``logical``),``vector``
+``listSets``,"list all sets (``isValid=NULL``), list all valid sets (``isValid=TRUE``), list all invalid sets (``isValid=FALSE``) in the container",``isValid=NULL`` (``logical``),``vector``
+``listSymbols``,"list all symbols (``isValid=NULL``), list all valid symbols (``isValid=TRUE``), list all invalid symbols (``isValid=FALSE``) in the container",``isValid=NULL`` (``logical``),``vector``
+``listVariables``,"list all variables (``isValid=NULL``), list all valid variables (``isValid=TRUE``), list all invalid variables (``isValid=FALSE``) in the container","``isValid=NULL`` (``logical``) , ``types=NULL`` (``character`` of variable types) - if ``NULL``, assumes all types",``vector``
+``read``,"main method to read ``loadFrom``, can be provided with a list of ``symbols`` to read in subsets, ``records`` controls if symbol records are loaded or just metadata","``loadFrom`` (``string``, ``Container``) , ``symbols=NULL`` (``string``) , ``records=TRUE`` (``logical``)",``NULL``
+``removeSymbols``,"symbols to remove from the Container, also sets the symbols' ``container`` to NULL; removes symbol links from the Container; Aliases are also removed if the parent set is removed",``symbols`` (``string``) - if ``NULL`` assumes all symbols,``NULL``
+``removeUELs``,removes ``uels`` from all symbols the Container,"``uels=NULL`` (character), ``symbols=NULL`` (character). If ``Symbols`` is ``NULL`` UELs are removed for all symbols.",``NULL``
+``renameSymbol``,rename a symbol ``oldName`` in the ``Container``,"``oldName`` (``string``), ``newName`` (``string``)",``NULL``
+``renameUELs``,renames ``uels`` in the Container,"``uels`` (named character), ``symbols=NULL`` (character), ``allowMerge=FALSE`` (logical). If ``allowMerge = TRUE``, the underlying integer mapping of a factor is allowed to change to offer additional data flexibility. If ``Symbols`` is NULL UELs are renamed for all symbols.",``NULL``
+``reorderSymbols``,reorder symbols in order to avoid domain violations,-,``NULL``
+``write``,main bulk write method to a ``writeTo`` target,"``writeTo`` (``string``) ,``symbols=NULL`` (``character``) - if ``NULL``, assumes all symbols , ``compress=FALSE`` (``logical``) , ``uelPriority=NULL`` (``string``) , ``mode=""mapped""`` (``character, string or mapped``)",``NULL``

@@ -1,0 +1,13 @@
+﻿ Field , Description , Type 
+ ``aliasWith`` ,"always ``""*""``", ``string`` 
+ ``description`` , always ``Aliased with *`` , ``string`` 
+ ``dimension`` , always ``1`` , ``integer`` 
+ ``domainLabels`` ,"always ``""uni""``", ``character vector``
+ ``domainNames`` ,"always ``""*""``", ``character vector``
+ ``domainType`` , always ``none`` , ``string`` 
+ ``isSingleton`` , always ``FALSE`` , ``logical`` 
+ ``name`` , name of symbol , ``string`` 
+ ``numberRecords`` ,"number of symbol records (i.e., returns ``nrow(self$records)`` if not ``NULL``)", ``integer`` 
+ ``records`` , the main symbol records , ``data frame`` 
+ ``container`` ,"reference to the :doc:`Container <../Container>` that the symbol belongs to", ``Container`` 
+ ``summary`` , output a ``list`` of only the metadata , ``list`` 

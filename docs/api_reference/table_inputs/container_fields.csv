@@ -1,0 +1,4 @@
+ Field , Description , Type 
+,,
+ ``data`` , main `dict` that is used to store all symbol data , ``dict`` (collections package) 
+ ``summary`` , output a `list` containing the container information , ``list`` 

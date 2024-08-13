@@ -1,0 +1,14 @@
+﻿ Field , Description , Type 
+ ``aliasWith`` , aliased object , ``Set`` 
+ ``description`` , description of symbol , ``string`` 
+ ``dimension`` ,"dimension of symbol, setting dimension is a shorthand notation to set ``domain`` to a list of size n containing""*""", ``integer`` 
+ ``domainForwarding`` ,"Flag or a vector of flags that forces Alias elements to be recursively included in corresponding parent sets (i.e., :doc:`implicit set definition <../../user_guide/additional_features/implicit_set_growth>`)", ``logical`` 
+ ``domainLabels`` , column headings for the ``records`` data frame , ``list`` of ``string``
+ ``domainNames`` , string version of domain names , ``list`` of ``string``
+ ``domainType`` ,"``none``, ``relaxed`` or ``regular`` depending on state of domain links", ``string`` 
+ ``isSingleton`` , ``logical`` if symbol is a singleton set , ``logical`` 
+ ``name`` , name of symbol , ``string`` 
+ ``numberRecords`` ,"number of symbol records (i.e., returns ``nrow(self$records)`` if not ``NULL``)", ``integer`` 
+ ``records`` , the main symbol records , ``data frame`` 
+ ``container`` ,"reference to the :doc:`Container <../Container>` that the symbol belongs to", ``Container`` 
+ ``summary`` , output a ``list`` of only the metadata , ``list`` 
