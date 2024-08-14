@@ -54,8 +54,6 @@ extensions = [
     "sphinx_design",
     "sphinx_copybutton",
     "sphinx.ext.napoleon",
-    "python_docs_theme",
-    'sphinx_rtd_theme'
 ]
 
 templates_path = ["_templates"]
