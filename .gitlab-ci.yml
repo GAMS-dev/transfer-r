@@ -1,6 +1,5 @@
 stages:
   - fetch-scripts
-  - install-gams
   - images
   - build
   - test
@@ -9,9 +8,9 @@ stages:
 
 include:
   - project: 'devel/ciscripts'
-    file: .install-jobs.yml
+    file: '.fetch-job.yml'
   - project: 'devel/ciscripts'
-    file: .shared-vars.yml
+    file: '.shared-vars.yml'
 
 variables:
   extends: .shared-variables
@@ -29,22 +28,6 @@ variables:
 fetch-ci-scripts:
   only: [merge_requests, main, tags]
 
-install-gamsdist-leg:
-  extends: .install-gams-leg
-  only: [merge_requests, main, tags]
-
-install-gamsdist-deg:
-  extends: .install-gams-deg
-  only: [merge_requests, main, tags]
-
-install-gamsdist-arm64:
-  extends: .install-gams-dac
-  only: [merge_requests, main, tags]
-
-install-gamsdist-wei:
-  extends: .install-gams-wei
-  only: [merge_requests, main, tags]
-
 #============================================================================================================
 
 image_linux:
@@ -56,8 +39,7 @@ image_linux:
     variables:
         DOCKER_TLS_CERTDIR: "/certs"
     before_script:
-        - mkdir -p $HOME/.docker
-        - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+        - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     script:
         - docker build -t linux/builder images/linux
         - docker tag linux/builder registry.gams.com/devel/gams-transfer-r/linux/builder:latest
@@ -87,10 +69,12 @@ image_windows:
 build_r_linux_binary:
     stage: build
     tags: [linux]
-    needs: [install-gamsdist-leg]
+    needs: [fetch-ci-scripts]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-leg]
         - R CMD INSTALL gamstransfer --build
         - mkdir binary
         - mv gamstransfer_*.tar.gz binary/gamstransfer_r_linux.tar.gz
@@ -103,25 +87,28 @@ build_r_linux_binary:
 build_r_source:
     stage: build
     tags: [linux]
-    needs: [install-gamsdist-leg]
+    needs: [fetch-ci-scripts]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-leg]
         - R CMD build gamstransfer
         - mkdir source
         - mv gamstransfer_*.tar.gz source/gamstransfer_r.tar.gz
     only: [merge_requests, main, tags]
     artifacts:
         name: gamstransfer_r
-        paths:
-            - source
+        paths: [source]
         expire_in: 1 day
 
 build_r_macos:
     stage: build
     tags: [macos]
-    needs: [install-gamsdist-deg]
+    needs: [fetch-ci-scripts]
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-deg]
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos.tgz
@@ -134,8 +121,10 @@ build_r_macos:
 build_r_macos_arm64:
     stage: build
     tags: [macos-arm64]
-    needs: [install-gamsdist-arm64]
+    needs: [fetch-ci-scripts]
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-dac]
         - mkdir -p $CI_PROJECT_DIR/myinstalldir
         - R CMD INSTALL gamstransfer --build -l $CI_PROJECT_DIR/myinstalldir
         - mv gamstransfer_*.tgz gamstransfer_r_macos_arm64.tgz
@@ -148,11 +137,14 @@ build_r_macos_arm64:
 build_r_windows:
     stage: build
     tags: [windows]
-    needs: [install-gamsdist-wei]
+    needs: [fetch-ci-scripts]
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
-        - C:\'Program Files'\R\R-4.3.2\bin\R.exe CMD INSTALL gamstransfer --configure-vars="LIB_DIR='C:'" --build
+        - $env:PYTHONPATH = (Get-Location).Path + ";" + $env:PYTHONPATH
+        - !reference [.get-gams-wei]
+        - !reference [.gams-folder-wei]
+        - C:\'Program Files'\R\R-4.4.1\bin\R.exe CMD INSTALL gamstransfer --configure-vars="LIB_DIR='C:'" --build
         - mv gamstransfer_*.zip gamstransfer_r_windows.zip
     only: [merge_requests, main, tags]
     artifacts:
@@ -164,10 +156,12 @@ build_r_windows:
 
 test_r_linux:
     stage: test
-    tags: [puma]
+    tags: [linux]
     image:
         name: registry.gams.com/devel/gams-transfer-r/linux/builder
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-leg]
         - PATH=/cache/gams-installs/`cat gams_folder_leg.txt`:$PATH
         - echo $PATH
         - cd source
@@ -176,49 +170,56 @@ test_r_linux:
         - rm gamstransfer.tar.gz && cd ..
         # test installation
         - Rscript -e "install.packages('source/gamstransfer_r.tar.gz')"
-    needs: [install-gamsdist-leg,build_r_linux_binary,build_r_source]
+    needs: [fetch-ci-scripts,build_r_linux_binary,build_r_source]
     only: [merge_requests, main, tags]
 
 test_r_macos:
     stage: test
     tags: [macos]
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-deg]
         - PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$PATH
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_deg.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD build ./gamstransfer
         - mv gamstransfer_*.tar.gz gamstransfer.tar.gz
         - R CMD check gamstransfer.tar.gz --no-manual
-    needs: [install-gamsdist-deg,build_r_macos,build_r_source]
+    needs: [fetch-ci-scripts,build_r_macos,build_r_source]
     only: [merge_requests, main, tags]
 
 test_r_macos_arm64:
     stage: test
     tags: [macos-arm64]
     script:
+        - !reference [.get-gams]
+        - !reference [.gams-folder-dac]
         - PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$PATH
         - DYLD_LIBRARY_PATH=$HOME/cache/gams-installs/`cat gams_folder_dac.txt`:$DYLD_LIBRARY_PATH
         - echo $PATH
         - R CMD build ./gamstransfer
         - mv gamstransfer_*.tar.gz gamstransfer.tar.gz
         - R CMD check gamstransfer.tar.gz --no-manual
-    needs: [install-gamsdist-arm64,build_r_macos_arm64,build_r_source]
+    needs: [fetch-ci-scripts,build_r_macos_arm64,build_r_source]
     only: [merge_requests, main, tags]
 
 test_r_windows:
     stage: test
     tags: [windows]
-    needs: [install-gamsdist-wei,build_r_windows,build_r_source]
+    needs: [fetch-ci-scripts,build_r_windows,build_r_source]
     image:
         name: registry.gams.com/devel/gams-transfer-r/windows/builder
     script:
+        - $env:PYTHONPATH = (Get-Location).Path + ";" + $env:PYTHONPATH
+        - !reference [.get-gams-wei]
+        - !reference [.gams-folder-wei]
         - $gmsdirname = Get-Content mygmsdir.tmp -Raw
         - $GAMS_PATH = "C:\Cache\gams-installs\$gmsdirname"
         - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
         - echo $env:PATH
         - mv gamstransfer_r_windows.zip gamstransfer.zip
-        - C:\'Program Files'\R\R-4.3.2\bin\Rscript.exe -e "install.packages('gamstransfer.zip', type='binary')"; $null
-        - C:\'Program Files'\R\R-4.3.2\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
+        - C:\'Program Files'\R\R-4.4.1\bin\Rscript.exe -e "install.packages('gamstransfer.zip', type='binary')"; $null
+        - C:\'Program Files'\R\R-4.4.1\bin\Rscript.exe -e "testthat::test_dir('gamstransfer/tests')"; $null
     only: [merge_requests, main, tags]
 
 #============================================================================================================
