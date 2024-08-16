@@ -25,84 +25,74 @@
 
 
 #' @title Alias Class
-#' @description A class for Alias objects. 
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' @description A class for Alias objects.
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
 #' for detailed documentation of this package.
 #'
 #' @examples
 #' # create a container
-#' m = Container$new()
+#' m <- Container$new()
 #' # add a set
-#' i = Set$new(m, "i")
+#' i <- Set$new(m, "i")
 #' # add an alias to the set "i"
-#' ii = Alias$new(m, "ii", i)
+#' ii <- Alias$new(m, "ii", i)
 #' @importFrom R6 R6Class
 Alias <- R6::R6Class(
   "Alias",
   inherit = .BaseAlias,
   public = list(
-    initialize = function(container=NULL, name=NULL, 
-                          aliasFor=NULL, ...) {
-      args = list(...)
-      from_gdx = args[["from_gdx"]]
-      if (is.null(from_gdx)) from_gdx=FALSE
+    initialize = function(container = NULL, name = NULL,
+                          aliasFor = NULL, ...) {
+      args <- list(...)
+      from_gdx <- args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx <- FALSE
 
-      super$initialize(container, name, from_gdx=from_gdx)
+      super$initialize(container, name, from_gdx = from_gdx)
       if (from_gdx) {
-        private$.aliasWith = aliasFor
+        private$.aliasWith <- aliasFor
+      } else {
+        self$aliasWith <- aliasFor
       }
-      else {
-        self$aliasWith = aliasFor
-      }
-      self$.isUniverseAlias = FALSE
+      self$.isUniverseAlias <- FALSE
     },
-
-    format = function(...) paste0("GAMS Transfer: R6 object of class Alias. 
+    format = function(...) paste0("GAMS Transfer: R6 object of class Alias.
     Use ", self$name, "$summary for details"),
-
-    getUELs = function(dimension =NULL, codes=NULL, ignoreUnused = FALSE) {
+    getUELs = function(dimension = NULL, codes = NULL, ignoreUnused = FALSE) {
       super$.testContainer()
       private$.testParentSet()
       self$aliasWith$getUELs(dimension, codes, ignoreUnused)
     },
-
-    setUELs = function(uels, dimension=NULL, rename=FALSE) {
+    setUELs = function(uels, dimension = NULL, rename = FALSE) {
       super$.testContainer()
       private$.testParentSet()
       self$aliasWith$setUELs(uels, dimension, rename)
     },
-
-    reorderUELs = function(uels=NULL, dimension=NULL) {
+    reorderUELs = function(uels = NULL, dimension = NULL) {
       super$.testContainer()
       private$.testParentSet()
       self$aliasWith$reorderUELs(uels, dimension)
     },
-
-    addUELs = function(uels, dimension=NULL) {
+    addUELs = function(uels, dimension = NULL) {
       super$.testContainer()
       private$.testParentSet()
       self$aliasWith$addUELs(uels, dimension)
     },
-
-    removeUELs = function(uels=NULL, dimension=NULL) {
+    removeUELs = function(uels = NULL, dimension = NULL) {
       super$.testContainer()
       private$.testParentSet()
       self$aliasWith$removeUELs(uels, dimension)
     },
-
-    renameUELs = function(uels, dimension=NULL, allowMerge=FALSE) {
+    renameUELs = function(uels, dimension = NULL, allowMerge = FALSE) {
       super$.testContainer()
       private$.testParentSet()
       self$aliasWith$renameUELs(uels, dimension, allowMerge)
     },
-
     getSparsity = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$container[self$aliasWith$name]$getSparsity())
     },
-
-    isValid = function(verbose=FALSE, force=FALSE) {
+    isValid = function(verbose = FALSE, force = FALSE) {
       if (!is.logical(verbose)) {
         stop("Argument 'verbose' must be logical\n")
       }
@@ -112,7 +102,7 @@ Alias <- R6::R6Class(
       }
 
       if (force == TRUE) {
-        self$.requiresStateCheck = TRUE
+        self$.requiresStateCheck <- TRUE
       }
 
       if (self$.requiresStateCheck == TRUE) {
@@ -128,70 +118,59 @@ Alias <- R6::R6Class(
             return(FALSE)
           }
         )
-      }
-      else {
+      } else {
         return(TRUE)
       }
     },
-
     getDomainViolations = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$aliasWith$getDomainViolations())
     },
-
     findDomainViolations = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$aliasWith$findDomainViolations())
     },
-
     hasDomainViolations = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$aliasWith$hasDomainViolations())
     },
-
     countDomainViolations = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$aliasWith$countDomainViolations())
     },
-
     dropDomainViolations = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$aliasWith$dropDomainViolations())
     },
-
     countDuplicateRecords = function() {
       super$.testContainer()
       private$.testParentSet()
 
       return(self$aliasWith$countDuplicateRecords())
     },
-
-    findDuplicateRecords = function(keep="first") {
+    findDuplicateRecords = function(keep = "first") {
       super$.testContainer()
       private$.testParentSet()
 
       return(self$aliasWith$findDuplicateRecords(keep))
     },
-
     hasDuplicateRecords = function() {
       super$.testContainer()
       private$.testParentSet()
 
       return(self$aliasWith$hasDuplicateRecords())
     },
-
-    dropDuplicateRecords = function(keep="first") {
+    dropDuplicateRecords = function(keep = "first") {
       super$.testContainer()
       private$.testParentSet()
 
       return(self$aliasWith$dropDuplicateRecords(keep))
     },
-
     setRecords = function(records) {
       super$.testContainer()
       private$.testParentSet()
@@ -199,24 +178,25 @@ Alias <- R6::R6Class(
     },
 
     # set/alias
-    equals = function(other, checkUELs=TRUE, 
-    checkElementText=TRUE, checkMetaData=TRUE,
-    verbose=FALSE) {
+    equals = function(
+        other, checkUELs = TRUE,
+        checkElementText = TRUE, checkMetaData = TRUE,
+        verbose = FALSE) {
       super$.testContainer()
       private$.testParentSet()
 
-      self$aliasWith$equals(other, checkUELs=checkUELs,
-      checkElementText=checkElementText,
-      checkMetaData=checkMetaData, verbose=verbose)
+      self$aliasWith$equals(other,
+        checkUELs = checkUELs,
+        checkElementText = checkElementText,
+        checkMetaData = checkMetaData, verbose = verbose
+      )
     },
-
     generateRecords = function(density = 1) {
       super$.testContainer()
       private$.testParentSet()
 
       self$aliasWith$generateRecords(density)
     },
-
     copy = function(destination = NULL, overwrite = FALSE) {
       super$.testContainer()
       private$.testParentSet()
@@ -227,15 +207,13 @@ Alias <- R6::R6Class(
       # copy alias
       private$.copy(destination, overwrite)
     },
-
     asList = function() {
       if (inherits(self$aliasWith, c("Set", "Alias"))) {
-        aliasWithName = self$aliasWith$name
+        aliasWithName <- self$aliasWith$name
+      } else {
+        aliasWithName <- selt$aliasWith
       }
-      else {
-        aliasWithName = selt$aliasWith
-      }
-      l = list(
+      l <- list(
         class = "Alias",
         name = self$name,
         aliasWith = aliasWithName
@@ -243,14 +221,11 @@ Alias <- R6::R6Class(
       return(l)
     }
   ),
-
   active = list(
-
     aliasWith = function(alias_with_input) {
       if (missing(alias_with_input)) {
         return(private$.aliasWith)
-      }
-      else {
+      } else {
         super$.testContainer()
         if ((inherits(alias_with_input, "UniverseAlias"))) {
           stop("GAMS 'aliasWith' cannot be a UniverseAlias. Create a new UniverseAlias symbol instead\n")
@@ -260,161 +235,144 @@ Alias <- R6::R6Class(
         }
 
         if (inherits(alias_with_input, "Alias")) {
-          parent = alias_with_input
+          parent <- alias_with_input
           while (!inherits(parent, "Set")) {
-            parent = parent$aliasWith
+            parent <- parent$aliasWith
           }
-          alias_with_input = parent
+          alias_with_input <- parent
         }
         if (is.null(private$.aliasWith)) {
-          private$.aliasWith = alias_with_input
-        }
-        else {
+          private$.aliasWith <- alias_with_input
+        } else {
           if (!identical(private$.aliasWith, alias_with_input)) {
-            self$.requiresStateCheck = TRUE
-            self$container$.requiresStateCheck = TRUE
-            private$.aliasWith = alias_with_input
+            self$.requiresStateCheck <- TRUE
+            self$container$.requiresStateCheck <- TRUE
+            private$.aliasWith <- alias_with_input
           }
         }
       }
     },
-
     isSingleton = function(is_singleton) {
       super$.testContainer()
       private$.testParentSet()
       if (missing(is_singleton)) {
-        container = self$container
-        sym = container[self$aliasWith$name]
+        container <- self$container
+        sym <- container[self$aliasWith$name]
         return(sym$isSingleton)
-      }
-      else {
-        container = self$container
-        sym = container[self$aliasWith$name]
-        sym$isSingleton = is_singleton
+      } else {
+        container <- self$container
+        sym <- container[self$aliasWith$name]
+        sym$isSingleton <- is_singleton
       }
     },
-
     description = function(description_input) {
       super$.testContainer()
       private$.testParentSet()
       if (missing(description_input)) {
-        container = self$container
-        aliaswithname = self$aliasWith$name
-        sym = container[aliaswithname]
+        container <- self$container
+        aliaswithname <- self$aliasWith$name
+        sym <- container[aliaswithname]
         return(sym$description)
-      }
-      else {
-        container = self$container
-        aliaswithname = self$aliasWith$name
-        sym = container[aliaswithname]
-        sym$description = description_input
+      } else {
+        container <- self$container
+        aliaswithname <- self$aliasWith$name
+        sym <- container[aliaswithname]
+        sym$description <- description_input
       }
     },
-
     dimension = function(dimension_input) {
       super$.testContainer()
       private$.testParentSet()
       if (missing(dimension_input)) {
         return(self$container[self$aliasWith$name]$dimension)
-      }
-      else {
-        container = self$container
-        sym = container[self$aliasWith$name]
-        sym$dimension = dimension_input
+      } else {
+        container <- self$container
+        sym <- container[self$aliasWith$name]
+        sym$dimension <- dimension_input
       }
     },
-
     records = function(records_input) {
       super$.testContainer()
       private$.testParentSet()
       if (missing(records_input)) {
         return(self$container[self$aliasWith$name]$records)
+      } else {
+        self$container[self$aliasWith$name]$records <- records_input
       }
-      else {
-        self$container[self$aliasWith$name]$records = records_input
-      }
-
     },
-
     domain = function(domain_input) {
       super$.testContainer()
       private$.testParentSet()
       if (missing(domain_input)) {
         return(self$container[self$aliasWith$name]$domain)
-      }
-      else {
-        container = self$container
-        sym = container[self$aliasWith$name]
-        sym$domain = domain_input
+      } else {
+        container <- self$container
+        sym <- container[self$aliasWith$name]
+        sym$domain <- domain_input
       }
     },
-
     numberRecords = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$container[self$aliasWith$name]$numberRecords)
     },
-
     domainType = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$container[self$aliasWith$name]$domainType)
     },
-
     domainNames = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$container[self$aliasWith$name]$domainNames)
     },
-
     domainLabels = function() {
       super$.testContainer()
       private$.testParentSet()
       return(self$container[self$aliasWith$name]$domainLabels)
     },
-
     summary = function() {
-    super$.testContainer()
-    private$.testParentSet()
-    if (inherits(self$aliasWith, c("Set", "Alias"))) {
-      aliasWithName = self$aliasWith$name
-    }
-    else {
-      aliasWithName = selt$aliasWith
-    }
-    return(list(
-      "name" = self$name,
-      "description" = self$description,
-      "aliasWith" = aliasWithName,
-      "isSingleton" = self$isSingleton,
-      "domain" = self$domainNames,
-      "domainType" = self$domainType,
-      "dimension" = self$dimension,
-      "numberRecords" = self$numberRecords
-    ))
+      super$.testContainer()
+      private$.testParentSet()
+      if (inherits(self$aliasWith, c("Set", "Alias"))) {
+        aliasWithName <- self$aliasWith$name
+      } else {
+        aliasWithName <- selt$aliasWith
+      }
+      return(list(
+        "name" = self$name,
+        "description" = self$description,
+        "aliasWith" = aliasWithName,
+        "isSingleton" = self$isSingleton,
+        "domain" = self$domainNames,
+        "domainType" = self$domainType,
+        "dimension" = self$dimension,
+        "numberRecords" = self$numberRecords
+      ))
     }
   ),
-
   private = list(
     symbolMaxLength = 63,
     .ref_container = NULL,
     .name = NULL,
     .aliasWith = NULL,
-
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         if (self$container[self$aliasWith$name]$isValid() == FALSE) {
-          stop(paste0("Alias is not valid because parent set ", self$aliasWith$name,
-          "is not valid\n"))
+          stop(paste0(
+            "Alias is not valid because parent set ", self$aliasWith$name,
+            "is not valid\n"
+          ))
         }
       }
     },
-
     .testParentSet = function() {
       if (!self$container$hasSymbols(self$aliasWith$name)) {
-        stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-        self$name, " is no longer in the container and cannot 
-        be referenced\n"))
+        stop(paste0(
+          "Parent set ", self$aliasWith$name, " of alias ",
+          self$name, " is no longer in the container and cannot
+        be referenced\n"
+        ))
       }
     }
   )

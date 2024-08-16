@@ -31,154 +31,153 @@
 #'
 #' @examples
 #' # create a container
-#' m = Container$new()
+#' m <- Container$new()
 #' # add a set
-#' i = Set$new(m, "i")
+#' i <- Set$new(m, "i")
 #' # access records
-#' i_recs = i$records
+#' i_recs <- i$records
 Set <- R6::R6Class(
   "Set",
   inherit = .Symbol,
   public = list(
-    initialize = function(container=NULL, name=NULL,
-                          domain="*", isSingleton=FALSE,
-                          records = NULL, 
+    initialize = function(container = NULL, name = NULL,
+                          domain = "*", isSingleton = FALSE,
+                          records = NULL,
                           domainForwarding = FALSE,
-                          description="", ...) {
-
-      args = list(...)
-      from_gdx = args[["from_gdx"]]
-      if (is.null(from_gdx)) from_gdx=FALSE
+                          description = "", ...) {
+      args <- list(...)
+      from_gdx <- args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx <- FALSE
 
       if (from_gdx) {
-        private$.is_singleton = isSingleton
-      }
-      else {
+        private$.is_singleton <- isSingleton
+      } else {
         self$isSingleton <- isSingleton
       }
 
       super$initialize(container, name,
-                      domain, description, domainForwarding, from_gdx=from_gdx)
+        domain, description, domainForwarding,
+        from_gdx = from_gdx
+      )
 
       if (!is.null(records)) {
         if (from_gdx) {
-          private$.records = records
-        }
-        else {
+          private$.records <- records
+        } else {
           self$setRecords(records)
         }
       }
 
       invisible(self)
     },
-
     setRecords = function(records) {
       # check if named list
-      no_label = FALSE # assume column labels exist
+      no_label <- FALSE # assume column labels exist
       if (is.null(names(records))) {
-        no_label = TRUE
+        no_label <- TRUE
       }
 
       # check if records is a dataframe and make if not
-      records = data.frame(records)
-      c = length(records)
+      records <- data.frame(records)
+      c <- length(records)
 
       if (c > self$dimension + 1 || c < self$dimension) {
-        stop(paste0("The argument 'records' is of length ",
-        c, " Expecting ", self$dimension + 1, "\n"))
+        stop(paste0(
+          "The argument 'records' is of length ",
+          c, " Expecting ", self$dimension + 1, "\n"
+        ))
       }
 
       if (no_label) {
-        columnNames = super$.get_default_domain_labels()
-      }
-      else {
-        columnNames = colnames(records)[1:self$dimension]
+        columnNames <- super$.get_default_domain_labels()
+      } else {
+        columnNames <- colnames(records)[1:self$dimension]
       }
 
       if (c == self$dimension + 1) {
-        columnNames = append(columnNames, "element_text")
+        columnNames <- append(columnNames, "element_text")
       }
 
-      records[, 1:self$dimension] = lapply(seq_along(self$domain), function(d) {
+      records[, 1:self$dimension] <- lapply(seq_along(self$domain), function(d) {
         if (is.factor(records[, d])) {
-          levels(records[, d]) = trimws(levels(records[, d]), which="right")
-        }
-        else {
-          records[, d] = factor(records[, d], levels = unique(records[, d]), ordered=TRUE)
-          levels(records[, d]) = trimws(levels(records[, d]), which="right")
+          levels(records[, d]) <- trimws(levels(records[, d]), which = "right")
+        } else {
+          records[, d] <- factor(records[, d], levels = unique(records[, d]), ordered = TRUE)
+          levels(records[, d]) <- trimws(levels(records[, d]), which = "right")
         }
         return(records[, d])
       })
 
-      records = data.frame(records)
+      records <- data.frame(records)
 
-      colnames(records) = columnNames
-      self$records = records
+      colnames(records) <- columnNames
+      self$records <- records
       return(invisible(NULL))
     },
 
     # set/alias
-    equals = function(other, checkUELs=TRUE, 
-    checkElementText=TRUE, checkMetaData=TRUE,
-    verbose=FALSE) {
+    equals = function(
+        other, checkUELs = TRUE,
+        checkElementText = TRUE, checkMetaData = TRUE,
+        verbose = FALSE) {
       if (!is.logical(checkElementText)) {
         stop("The argument `checkElementText` must be type logical")
       }
 
-      super$.check_equals_common_args(other, checkUELs,
-      checkMetaData, verbose)
+      super$.check_equals_common_args(
+        other, checkUELs,
+        checkMetaData, verbose
+      )
 
-      super$equals(other, checkUELs=checkUELs,
-      checkElementText=checkElementText, checkMetaData=checkMetaData,
-      verbose=verbose)
+      super$equals(other,
+        checkUELs = checkUELs,
+        checkElementText = checkElementText, checkMetaData = checkMetaData,
+        verbose = verbose
+      )
     },
-
     generateRecords = function(density = 1) {
-      recs = super$.generate_records_index(density)
+      recs <- super$.generate_records_index(density)
       if (nrow(recs) != 0) {
-        recs$element_text = ""
+        recs$element_text <- ""
       }
 
-      private$.records = recs
+      private$.records <- recs
     },
-
     copy = function(destination = NULL, overwrite = FALSE) {
-      newsym = private$.copy(destination, overwrite)
-      if (is.null(newsym)) return(invisible(NULL))
+      newsym <- private$.copy(destination, overwrite)
+      if (is.null(newsym)) {
+        return(invisible(NULL))
+      }
 
-      newsym$isSingleton = self$isSingleton
+      newsym$isSingleton <- self$isSingleton
       return(invisible(NULL))
     },
-
     asList = function() {
-      l = list(
-               class = "Set",
-               name= self$name,
-               description = self$description,
-               isSingleton = self$isSingleton,
-               domain = self$domainNames,
-               domainType = self$domainType,
-               dimension = self$dimension,
-               numberRecords = self$numberRecords,
-               records = self$records
+      l <- list(
+        class = "Set",
+        name = self$name,
+        description = self$description,
+        isSingleton = self$isSingleton,
+        domain = self$domainNames,
+        domainType = self$domainType,
+        dimension = self$dimension,
+        numberRecords = self$numberRecords,
+        records = self$records
       )
       return(l)
     }
   ),
-
   active = list(
     isSingleton = function(is_singleton_input) {
       if (missing(is_singleton_input)) {
         return(private$.is_singleton)
-      }
-      else {
+      } else {
         if (!is.logical(is_singleton_input)) {
           stop("Argument 'is_singleton' must be type logical\n")
         }
-        private$.is_singleton = is_singleton_input
+        private$.is_singleton <- is_singleton_input
       }
     },
-
     summary = function() {
       return(list(
         "name" = self$name,
@@ -194,4 +193,4 @@ Set <- R6::R6Class(
   private = list(
     .is_singleton = NULL
   )
-  )
+)
