@@ -27,30 +27,38 @@
 #' @description This list contains GAMS special values and
 #' helper functions to check if a given value is a GAMS
 #' special value.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
 #' for detailed documentation of this package.
 #'
 #' @examples
 #' # check the value of GAMS special value NA
-#' NA_val = SpecialValues[["NA"]]
+#' NA_val <- SpecialValues[["NA"]]
 #' # check the value of GAMS special value EPS
-#' EPS_val = SpecialValues[["EPS"]]
+#' EPS_val <- SpecialValues[["EPS"]]
 #' # check if a value is GAMS special value `NA`
-#' isNA_check = SpecialValues$isNA(0)
-SpecialValues = list(
+#' isNA_check <- SpecialValues$isNA(0)
+SpecialValues <- list(
   "NA" = NA, # cannot be anything else
   "EPS" = -0.0,
   "UNDEF" = NaN,
   "POSINF" = Inf,
   "NEGINF" = -Inf,
-  "isNA" = function(x) return(is.na(x) & !is.nan(x)),
+  "isNA" = function(x) {
+    return(is.na(x) & !is.nan(x))
+  },
   "isEps" = function(x) {
-    isna = is.na(x)
-    iseps_logical = ((x == 0) & (sign(1/x) == -1))
-    iseps_logical[isna] = FALSE
+    isna <- is.na(x)
+    iseps_logical <- ((x == 0) & (sign(1 / x) == -1))
+    iseps_logical[isna] <- FALSE
     return(iseps_logical)
-    },
-  "isUndef" = function(x) return(is.nan(x)),
-  "isPosInf" = function(x) return(is.infinite(x) & sign(x) == 1),
-  "isNegInf" = function(x) return(is.infinite(x) & sign(x) == -1)
-  )
+  },
+  "isUndef" = function(x) {
+    return(is.nan(x))
+  },
+  "isPosInf" = function(x) {
+    return(is.infinite(x) & sign(x) == 1)
+  },
+  "isNegInf" = function(x) {
+    return(is.infinite(x) & sign(x) == -1)
+  }
+)

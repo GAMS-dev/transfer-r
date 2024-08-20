@@ -19,9 +19,9 @@ Example Symbol reordering
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = paste0("i", 1:5))
-    j = Set$new(m, "j", i, records = paste0("i", 1:3))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:5))
+    j <- Set$new(m, "j", i, records = paste0("i", 1:3))
 
 .. code-block:: R
 
@@ -41,7 +41,7 @@ user has to manually set the domain again.
 .. code-block:: R
 
     # fix the domain reference in the set j
-    j$domain = i
+    j$domain <= i
 
 .. code-block:: R
 

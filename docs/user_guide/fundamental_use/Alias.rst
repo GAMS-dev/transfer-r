@@ -17,16 +17,16 @@ Example - Creating set records through an alias link
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i")
-    ip = Alias$new(m, "ip", i)
+    m <- Container$new()
+    i <- Set$new(m, "i")
+    ip <- Alias$new(m, "ip", i)
 
-    ip$description = "adding new descriptive set text"
-    ip$domain = c("*", "*")
+    ip$description <- "adding new descriptive set text"
+    ip$domain <- c("*", "*")
 
-    ij = list(paste0("i", 1:3), paste0("j", 1:3))
-    ip_recs = rev(expand.grid(rev(ij)))
-    colnames(ip_recs) = c("i", "j")
+    ij <- list(paste0("i", 1:3), paste0("j", 1:3))
+    ip_recs <- rev(expand.grid(rev(ij)))
+    colnames(ip_recs) <- c("i", "j")
     ip$setRecords(ip_recs)
 
 .. code-block:: R

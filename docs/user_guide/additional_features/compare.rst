@@ -17,9 +17,9 @@ A quick example shows the syntax of ``equals``:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i",1:5), description="set i")
-    j = Set$new(m, "j", records=paste0("i",1:5), description="set j")
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:5), description = "set i")
+    j <- Set$new(m, "j", records = paste0("i", 1:5), description = "set j")
 
 .. code-block:: R
 
@@ -51,10 +51,10 @@ The ``checkUELs`` argument will ensure that the symbol "universe" is the same
 
 .. code-block:: R
 
-    library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
-    ip = Set$new(m, "ip", records=c("i1","i3","i2"))
+library(gamstransfer)
+m <- Container$new()
+i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
+ip <- Set$new(m, "ip", records = c("i1", "i3", "i2"))
 
 .. code-block:: R
 
@@ -95,9 +95,11 @@ as the following example illustrates:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    a = Variable$new(m, "a", "free", records=data.frame(level=100))
-    ap = Variable$new(m, "ap", "free", records=data.frame(level=101))
+    m <- Container$new()
+    a <- Variable$new(m, "a", "free", records = data.frame(level = 100))
+    ap <- Variable$new(m, "ap", "free", records = data.frame(level = 101))
+
+.. code-block:: R
 
     > a$records
     level
@@ -124,12 +126,14 @@ to compare the symbols. Here is a brief example:
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > m = Container$new()
-    > i = Set$new(m, "i")
+    library(gamstransfer)
+    m <- Container$new()
+    i <- Set$new(m, "i")
 
-    > m1 = Container$new()
-    > i1 = Set$new(m1, "i")
+    m1 <- Container$new()
+    i1 <- Set$new(m1, "i")
+
+.. code-block:: R
 
     > m$equals(m1)
     [1] TRUE

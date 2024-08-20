@@ -14,8 +14,8 @@ Example \#1 - Create a 1D set from a vector
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("seattle", "san-diego"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego"))
 
     # NOTE: the above syntax is equivalent to -
     # i = Set$new(m, "i")
@@ -45,8 +45,8 @@ Example \#2 - Create a 2D set from a list
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    k = Set$new(m, "k", c("*", "*"), records=list("seattle", "san-diego"))
+    m <- Container$new()
+    k <- Set$new(m, "k", c("*", "*"), records = list("seattle", "san-diego"))
 
     # NOTE: the above syntax is equivalent to -
     # k = Set$new(m, "k", c("*", "*"))
@@ -75,17 +75,21 @@ Example \#3 - Create a 1D set from a data frame slice
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
+    m <- Container$new()
 
-    dist = data.frame(
-        from = c("seattle", "seattle", "seattle", 
-        "san-diego", "san-diego", "san-diego"),
-        to = c("new-york", "chicago", "topeka",
-        "new-york", "chicago", "topeka"),
-        thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
+    dist <- data.frame(
+    from = c(
+        "seattle", "seattle", "seattle",
+        "san-diego", "san-diego", "san-diego"
+    ),
+    to = c(
+        "new-york", "chicago", "topeka",
+        "new-york", "chicago", "topeka"
+    ),
+    thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
     )
 
-    l = Set$new(m, "l", records = unique(dist[["from"]]))
+    l <- Set$new(m, "l", records = unique(dist[["from"]]))
 
     # NOTE: the above syntax is equivalent to -
     # l = Set$new(m, "l")
@@ -121,15 +125,18 @@ Example \#4 - Add set element text
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", 
-    records = data.frame(city=c("seattle", "san-diego", "washington_dc"), 
-    text=c("home of sub pop records", "", "former gams hq")))
+    m <- Container$new()
+    i <- Set$new(m, "i",
+    records <- data.frame(
+        city = c("seattle", "san-diego", "washington_dc"),
+        text = c("home of sub pop records", "", "former gams hq")
+    )
+    )
 
     # NOTE: the above syntax is equivalent to -
     #
     # i = Set$new(m, "i")
-    # i_recs = data.frame(city=c("seattle", "san-diego", "washington_dc"), 
+    # i_recs = data.frame(city=c("seattle", "san-diego", "washington_dc"),
     # text=c("home of sub pop records", "", "former gams hq"))
     #
     # i$setRecords(i_recs)
@@ -170,18 +177,20 @@ Example \#5 - Directly set records (1D set)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", description = "supply")
+    m <- Container$new()
+    i <- Set$new(m, "i", description = "supply")
 
     # create a standard format data frame
-    df_i = data.frame(uni_1 = c("seattle", "san-diego"),
-    element_text = c("", ""))
+    df_i <- data.frame(
+    uni_1 <- c("seattle", "san-diego"),
+    element_text = c("", "")
+    )
 
     # need to create categorical column type, referencing elements already in df_i
-    df_i$uni_1 = factor(df_i$uni_1, ordered = TRUE)
+    df_i$uni_1 <- factor(df_i$uni_1, ordered = TRUE)
 
     # set the records directly
-    i$records = df_i
+    i$records <- df_i
 
 .. code-block:: R
 
@@ -214,18 +223,18 @@ Example \#6 - Directly set records (1D subset)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("seattle", "san-diego"), description="supply")
-    j = Set$new(m, "j", i, description="supply")
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego"), description = "supply")
+    j <- Set$new(m, "j", i, description = "supply")
 
     # create a standard format data frame
-    df_j = data.frame(i_1 = c("seattle"), "element_text" = c(""))
+    df_j <- data.frame(i_1 = c("seattle"), "element_text" = c(""))
 
     # create the categorical column type
-    df_j$i_1 = factor(df_j$i_1, levels = i$records[, 1], ordered = TRUE)
+    df_j$i_1 <- factor(df_j$i_1, levels = i$records[, 1], ordered = TRUE)
 
     # set the records
-    j$records = df_j
+    j$records <- df_j
 
 .. code-block:: R
 

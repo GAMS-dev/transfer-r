@@ -14,8 +14,8 @@ Example \#1 - Create a GAMS scalar
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    pi = Parameter$new(m, "pi", records = 3.14159)
+    m <- Container$new()
+    pi <- Parameter$new(m, "pi", records = 3.14159)
 
     # NOTE: the above syntax is equivalent to -
     # pi = Parameter$new(m, "pi")
@@ -49,18 +49,22 @@ Example \#2 - Create a 2D parameter (defined over a set) from a data frame slice
 .. code-block:: R
 
     library(gamstransfer)
-    dist = data.frame(
-        from = c("seattle", "seattle", "seattle", 
-        "san-diego", "san-diego", "san-diego"),
-        to = c("new-york", "chicago", "topeka",
-        "new-york", "chicago", "topeka"),
-        thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
+    dist <- data.frame(
+    from = c(
+        "seattle", "seattle", "seattle",
+        "san-diego", "san-diego", "san-diego"
+    ),
+    to = c(
+        "new-york", "chicago", "topeka",
+        "new-york", "chicago", "topeka"
+    ),
+    thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
     )
 
-    m = Container$new()
-    i = Set$new(m, "i", "*", records = unique(dist$from))
-    j = Set$new(m, "j", "*", records = unique(dist$to))
-    a = Parameter$new(m, "a", c(i, j), records = dist)
+    m <- Container$new()
+    i <- Set$new(m, "i", "*", records = unique(dist$from))
+    j <- Set$new(m, "j", "*", records = unique(dist$to))
+    a <- Parameter$new(m, "a", c(i, j), records = dist)
 
 .. code-block:: R
 
@@ -69,8 +73,12 @@ Example \#2 - Create a 2D parameter (defined over a set) from a data frame slice
     [1,]  2.5  1.7  1.8
     [2,]  2.5  1.8  1.4
 
+.. code-block:: R
+
     # use a$toDense() to create a new (and identicial) parameter a2
-    a2 = Parameter$new(m, "a2", c(i, j), records = a$toDense())
+    a2 <- Parameter$new(m, "a2", c(i, j), records = a$toDense())
+
+.. code-block:: R
 
     > a2$records
             i        j value
@@ -87,17 +95,18 @@ Example \#3 - Create a 2D parameter from an array using setRecords
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i_", 1:5))
-    j = Set$new(m, "j", records=paste0("j_", 1:5))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i_", 1:5))
+    j <- Set$new(m, "j", records = paste0("j_", 1:5))
 
-    # create the parameter with linked domains (these will control the 
+    # create the parameter with linked domains (these will control the
     # $shape of the symbol)
-    a = Parameter$new(m, "a", c(i, j))
+    a <- Parameter$new(m, "a", c(i, j))
 
     # here we use the $shape field to easily generate a dense random array
-    a$setRecords(array(runif(prod(a$shape), min = 1, max = 10), 
-    dim = a$shape ))
+    a$setRecords(array(runif(prod(a$shape), min = 1, max = 10),
+    dim = a$shape
+    ))
 
 .. code-block:: R
 
@@ -125,23 +134,25 @@ Example \#4 - Correctly set records (directly)
 .. code-block:: R
 
     library(gamstransfer)
-    df = data.frame(h_1 = paste0("h", 1:8760), m_2 = paste0("m", 1:60), 
-    s_3 = paste0("s", 1:60))
-    df$value = runif(nrow(df), min = 0, max = 100)
+    df <- data.frame(
+    h_1 = paste0("h", 1:8760), m_2 = paste0("m", 1:60),
+    s_3 = paste0("s", 1:60)
+    )
+    df$value <- runif(nrow(df), min = 0, max = 100)
 
-    m = Container$new()
-    hrs = Set$new(m, "h", records = unique(df$h_1))
-    mins = Set$new(m, "m", records = unique(df$m_2))
-    secs = Set$new(m, "s", records = unique(df$s_3))
+    m <- Container$new()
+    hrs <- Set$new(m, "h", records = unique(df$h_1))
+    mins <- Set$new(m, "m", records = unique(df$m_2))
+    secs <- Set$new(m, "s", records = unique(df$s_3))
 
-    df$h_1 = factor(df$h_1, ordered = TRUE)
-    df$m_2 = factor(df$m_2, ordered = TRUE)
-    df$s_3 = factor(df$s_3, ordered = TRUE)
+    df$h_1 <- factor(df$h_1, ordered = TRUE)
+    df$m_2 <- factor(df$m_2, ordered = TRUE)
+    df$s_3 <- factor(df$s_3, ordered = TRUE)
 
-    a = Parameter$new(m, "a", c(hrs, mins, secs))
+    a <- Parameter$new(m, "a", c(hrs, mins, secs))
 
     # set records
-    a$records = df
+    a$records <- df
 
 .. code-block:: R
 
@@ -171,23 +182,25 @@ Example \#5 - Incorrectly set records (directly)
 .. code-block:: R
 
     library(gamstransfer)
-    df = data.frame(h_1 = paste0("h", 1:8760), m_2 = paste0("m", 1:60), 
-    s_3 = paste0("s", 1:60))
-    df$value = runif(nrow(df), min = 0, max = 100)
+    df <- data.frame(
+    h_1 = paste0("h", 1:8760), m_2 = paste0("m", 1:60),
+    s_3 = paste0("s", 1:60)
+    )
+    df$value <- runif(nrow(df), min = 0, max = 100)
 
-    m = Container$new()
-    hrs = Set$new(m, "h", records = unique(df$h_1))
-    mins = Set$new(m, "m", records = unique(df$m_2))
-    secs = Set$new(m, "s", records = unique(df$s_3))
+    m <- Container$new()
+    hrs <- Set$new(m, "h", records = unique(df$h_1))
+    mins <- Set$new(m, "m", records = unique(df$m_2))
+    secs <- Set$new(m, "s", records = unique(df$s_3))
 
-    df$h_1 = factor(df$h_1)
-    df$m_2 = factor(df$m_2)
-    df$s_3 = factor(df$s_3)
+    df$h_1 <- factor(df$h_1)
+    df$m_2 <- factor(df$m_2)
+    df$s_3 <- factor(df$s_3)
 
-    a = Parameter$new(m, "a", c(hrs, mins, secs))
+    a <- Parameter$new(m, "a", c(hrs, mins, secs))
 
     # set records
-    a$records = df
+    a$records <- df
 
 .. code-block:: R
 

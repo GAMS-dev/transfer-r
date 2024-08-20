@@ -38,10 +38,10 @@ Some examples:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("seattle", "san-diego"))
-    j = Set$new(m, "j", c(i, "*"), records=data.frame(i=c("seattle", "san-diego"), uni=c("new-york", "st-louis")))
-    k = Set$new(m, "k", i, isSingleton=TRUE, records=c("seattle"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego"))
+    j <- Set$new(m, "j", c(i, "*"), records = data.frame(i = c("seattle", "san-diego"), uni = c("new-york", "st-louis")))
+    k <- Set$new(m, "k", i, isSingleton = TRUE, records = c("seattle"))
 
 .. code-block:: R
 
@@ -91,21 +91,24 @@ Some examples:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("seattle", "san-diego"))
-    a = Parameter$new(
-    m, "a", "*", records=data.frame(c("seattle", "san-diego"), c(50, 100))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego"))
+    a <- Parameter$new(
+    m, "a", "*",
+    records = data.frame(c("seattle", "san-diego"), c(50, 100))
     )
 
-    b = Parameter$new(
-        m,
-        "b",
-        c(i, "*"),
-        records= data.frame(i=c("seattle", "san-diego"), 
-        uni=c("new-york", "st-louis"), c(32.2, 123))
+    b <- Parameter$new(
+    m,
+    "b",
+    c(i, "*"),
+    records = data.frame(
+        i = c("seattle", "san-diego"),
+        uni = c("new-york", "st-louis"), c(32.2, 123)
+    )
     )
 
-    c = Parameter$new(m, "c", records=90)
+    c <- Parameter$new(m, "c", records = 90)
 
 .. code-block:: R
 
@@ -163,17 +166,17 @@ Some examples:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("seattle", "san-diego"))
-    a = Variable$new(
-        m,
-        "a",
-        "free",
-        domain= i,
-        records=data.frame(
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego"))
+    a <- Variable$new(
+    m,
+    "a",
+    "free",
+    domain = i,
+    records = data.frame(
         city = c("seattle", "san-diego"),
         level = c(50, 100)
-        )
+    )
     )
 
 .. code-block:: R

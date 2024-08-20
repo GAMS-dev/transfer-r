@@ -20,19 +20,23 @@ care to pass the set objects as the domain for parameter ``c``.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i")
-    j = Set$new(m, "j")
+    m <- Container$new()
+    i <- Set$new(m, "i")
+    j <- Set$new(m, "j")
 
-    dist = data.frame(
-        from = c("seattle", "seattle", "seattle", 
-        "san-diego", "san-diego", "san-diego"),
-        to = c("new-york", "chicago", "topeka",
-        "new-york", "chicago", "topeka"),
-        thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
+    dist <- data.frame(
+    from = c(
+        "seattle", "seattle", "seattle",
+        "san-diego", "san-diego", "san-diego"
+    ),
+    to = c(
+        "new-york", "chicago", "topeka",
+        "new-york", "chicago", "topeka"
+    ),
+    thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
     )
 
-    c = Parameter$new(m, "c", c(i, j), records = dist, domainForwarding = TRUE)
+    c <- Parameter$new(m, "c", c(i, j), records = dist, domainForwarding = TRUE)
 
 .. code-block:: R
 
@@ -66,19 +70,23 @@ The domain records are forwarded only to the domain set ``i`` but not to the dom
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i")
-    j = Set$new(m, "j")
+    m <- Container$new()
+    i <- Set$new(m, "i")
+    j <- Set$new(m, "j")
 
-    dist = data.frame(
-        from = c("seattle", "seattle", "seattle", 
-        "san-diego", "san-diego", "san-diego"),
-        to = c("new-york", "chicago", "topeka",
-        "new-york", "chicago", "topeka"),
-        thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
+    dist <- data.frame(
+    from = c(
+        "seattle", "seattle", "seattle",
+        "san-diego", "san-diego", "san-diego"
+    ),
+    to = c(
+        "new-york", "chicago", "topeka",
+        "new-york", "chicago", "topeka"
+    ),
+    thousand_miles = c(2.5, 1.7, 1.8, 2.5, 1.8, 1.4)
     )
 
-    c = Parameter$new(m, "c", c(i, j), records = dist, domainForwarding = c(TRUE, FALSE))
+    c <- Parameter$new(m, "c", c(i, j), records = dist, domainForwarding = c(TRUE, FALSE))
 
 .. code-block:: R
 
@@ -108,10 +116,10 @@ then the records from ``k`` are propagated through (back to ``i``).
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i")
-    j = Set$new(m, "j", i, records = c("z"), domainForwarding = TRUE)
-    k = Set$new(m, "k", j, records = c("a", "b", "c"), domainForwarding = TRUE)
+    m <- Container$new()
+    i <- Set$new(m, "i")
+    j <- Set$new(m, "j", i, records = c("z"), domainForwarding = TRUE)
+    k <- Set$new(m, "k", j, records = c("a", "b", "c"), domainForwarding = TRUE)
 
 .. code-block:: R
 

@@ -14,8 +14,8 @@ Example \#1 - Create a GAMS scalar equation
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    pi = Equation$new(m, "pi", type="eq", records = data.frame(level = 3.14159))
+    m <- Container$new()
+    pi <- Equation$new(m, "pi", type = "eq", records = data.frame(level = 3.14159))
 
     # NOTE: the above syntax is equivalent to -
     # pi = Equation$new(m, "pi", type="eq")
@@ -36,9 +36,11 @@ Example \#2 - Create a 2D positive equation, specifying no numerical data
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    e = Equation$new(m, "e", "eq", c("*", "*"), records = 
-    data.frame(from=c("seattle", "chicago"), to=c("san-diego", c("madison"))))
+    m <- Container$new()
+    e <- Equation$new(m, "e", "eq", c("*", "*"),
+    records =
+        data.frame(from = c("seattle", "chicago"), to = c("san-diego", c("madison")))
+    )
 
 .. code-block:: R
 
@@ -53,18 +55,18 @@ Example \#3 - Create a 2D equation (defined over a set) from a matrix
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", "*", records = paste0("i", 1:5))
-    j = Set$new(m, "j", "*", records = paste0("j", 1:5))
+    m <- Container$new()
+    i <- Set$new(m, "i", "*", records = paste0("i", 1:5))
+    j <- Set$new(m, "j", "*", records = paste0("j", 1:5))
 
     # creating records for parameter a
-    ij = list(i_1 = paste0("i", 1:5), j_2 = paste0("j", 1:5))
-    df = rev(expand.grid(rev(ij)))
-    df$value = 1:25
-    a = Parameter$new(m, "a", c(i, j), records = df)
+    ij <- list(i_1 = paste0("i", 1:5), j_2 = paste0("j", 1:5))
+    df <- rev(expand.grid(rev(ij)))
+    df$value <- 1:25
+    a <- Parameter$new(m, "a", c(i, j), records = df)
 
     # create a free variable and set the level and marginal attributes from matrices
-    e = Equation$new(m, "e", "nonbinding", domain = c(i, j), records = list(level = a$toDense(), marginal = a$toDense()))
+    e <- Equation$new(m, "e", "nonbinding", domain = c(i, j), records = list(level = a$toDense(), marginal = a$toDense()))
 
 .. code-block:: R
 
@@ -123,27 +125,29 @@ Example \#4 - Correctly set records (directly)
 .. code-block:: R
 
     library(gamstransfer)
-    df = data.frame(h_1 = paste0("h", 1:8760), m_2 = paste0("m", 1:60), 
-    s_3 = paste0("s", 1:60))
-    df$level = runif(nrow(df), min = 0, max = 100)
-    df$marginal = 0.0
-    df$lower = SpecialValues$NEGINF
-    df$upper = SpecialValues$POSINF
-    df$scale = 1.0
+    df <- data.frame(
+    h_1 = paste0("h", 1:8760), m_2 = paste0("m", 1:60),
+    s_3 = paste0("s", 1:60)
+    )
+    df$level <- runif(nrow(df), min = 0, max = 100)
+    df$marginal <- 0.0
+    df$lower <- SpecialValues$NEGINF
+    df$upper <- SpecialValues$POSINF
+    df$scale <- 1.0
 
-    m = Container$new()
-    hrs = Set$new(m, "h", records = unique(df$h_1))
-    mins = Set$new(m, "m", records = unique(df$m_2))
-    secs = Set$new(m, "s", records = unique(df$s_3))
+    m <- Container$new()
+    hrs <- Set$new(m, "h", records = unique(df$h_1))
+    mins <- Set$new(m, "m", records = unique(df$m_2))
+    secs <- Set$new(m, "s", records = unique(df$s_3))
 
-    df$h_1 = factor(df$h_1, ordered = TRUE)
-    df$m_2 = factor(df$m_2, ordered = TRUE)
-    df$s_3 = factor(df$s_3, ordered = TRUE)
+    df$h_1 <- factor(df$h_1, ordered = TRUE)
+    df$m_2 <- factor(df$m_2, ordered = TRUE)
+    df$s_3 <- factor(df$s_3, ordered = TRUE)
 
-    a = Equation$new(m, "a", "eq", domain = c(hrs, mins, secs))
+    a <- Equation$new(m, "a", "eq", domain = c(hrs, mins, secs))
 
     # set records
-    a$records = df
+    a$records <- df
 
 .. code-block:: R
 

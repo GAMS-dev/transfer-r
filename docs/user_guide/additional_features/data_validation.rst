@@ -25,9 +25,9 @@ Example (valid data)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("seattle", "san-diego", "washington_dc"))
-    j = Set$new(m, "j", i, records = c("san-diego", "washington_dc"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego", "washington_dc"))
+    j <- Set$new(m, "j", i, records = c("san-diego", "washington_dc"))
 
 .. code-block:: R
 
@@ -48,11 +48,11 @@ in the records for set ``j``.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("seattle", "san-diego", "washington_dc"))
-    j = Set$new(m, "j", i)
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego", "washington_dc"))
+    j <- Set$new(m, "j", i)
 
-    j$records = data.frame(cities=c("grayslake", "washington_dc"))
+    j$records <- data.frame(cities = c("grayslake", "washington_dc"))
 
 .. code-block:: R
 

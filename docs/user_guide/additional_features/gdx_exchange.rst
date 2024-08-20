@@ -33,7 +33,7 @@ Example (reading full data into a Container using the constructor)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new("trnsport.gdx")
+    m <- Container$new("trnsport.gdx")
 
 
 .. code-block:: R
@@ -69,7 +69,7 @@ Example (reading full data into a Container with ``read`` method)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
+    m <- Container$new()
     m$read("trnsport.gdx")
 
 .. code-block:: R
@@ -84,7 +84,7 @@ as shown in the following example:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
+    m <- Container$new()
     m$read("trnsport.gdx", "x")
 
 .. code-block:: R
@@ -109,7 +109,7 @@ argument ``records=FALSE``.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
+    m <- Container$new()
     m$read("trnsport.gdx", "x", records = FALSE)
 
 .. code-block:: R
@@ -194,9 +194,9 @@ Example (change the order of the UEL)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("a", "b", "c"))
-    m$write("foo.gdx", uelPriority=c("a", "c"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("a", "b", "c"))
+    m$write("foo.gdx", uelPriority = c("a", "c"))
 
 The original UEL order for this GDX file would have been 
 ``c("a", "b", "c")``, but since this example reorders the UELs with 
