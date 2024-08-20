@@ -16,8 +16,8 @@ Example (1D data w/o domain linking (i.e., a relaxed domain))
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    a = Parameter$new(m, "a", "i", records = data.frame(uni=c("a","c"), element_text=c(1,3)))
+    m <- Container$new()
+    a <- Parameter$new(m, "a", "i", records = data.frame(uni = c("a", "c"), element_text = c(1, 3)))
 
 .. code-block:: R
 
@@ -33,9 +33,9 @@ dense matrix, as the following example shows:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("a", "b", "c", "d"))
-    a = Parameter$new(m, "a", i, records = data.frame(c("a","c"), c(1,3)))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("a", "b", "c", "d"))
+    a <- Parameter$new(m, "a", i, records = data.frame(c("a", "c"), c(1, 3)))
 
 .. code-block:: R
 
@@ -48,10 +48,12 @@ Example (2D data w/ domain linking)
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("a", "b", "c", "d"))
-    a = Parameter$new(m, "a", c(i, i), records = 
-    data.frame(i=c("a","c"), i=c("a","c"), c(1,3)))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("a", "b", "c", "d"))
+    a <- Parameter$new(m, "a", c(i, i),
+    records =
+        data.frame(i = c("a", "c"), i = c("a", "c"), c(1, 3))
+    )
 
 .. code-block:: R
 

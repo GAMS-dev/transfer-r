@@ -15,10 +15,10 @@ and the records entry "grayslake" is not present in ``i``.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("seattle", "san-diego", "washington_dc"))
-    j = Set$new(m, "j", i)
-    records = data.frame(cities=c("grayslake", "washington_dc"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("seattle", "san-diego", "washington_dc"))
+    j <- Set$new(m, "j", i)
+    records <- data.frame(cities = c("grayslake", "washington_dc"))
     j$setRecords(records)
 
 Trying to write this container to a GDX file will fail. To ask for domain 
@@ -28,7 +28,7 @@ list can then be used to resolve the domain violations.
 
 .. code-block:: R
 
-    > dv = j$getDomainViolations()
+    > dv <- j$getDomainViolations()
     > dv
     [[1]]
     GAMS Transfer: DomainViolation with properties:

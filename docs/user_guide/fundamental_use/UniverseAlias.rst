@@ -27,10 +27,10 @@ defining the symbol name. We can see this behavior in the following example:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records = c("i1", "i2"))
-    h = UniverseAlias$new(m, "h")
-    j = Set$new(m, "j", records = c("j1","j2"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2"))
+    h <- UniverseAlias$new(m, "h")
+    j <- Set$new(m, "j", records = c("j1", "j2"))
 
 .. code-block:: R
 

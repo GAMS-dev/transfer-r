@@ -24,12 +24,14 @@ Some examples are shown below.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    x = Parameter$new(
-    m, "x", c("*"), 
-    records = data.frame(uni=paste0("i", 1:6), c(1, SpecialValues[["POSINF"]], 
-    SpecialValues[["NEGINF"]], SpecialValues[["EPS"]], SpecialValues[["NA"]], 
-    SpecialValues[["UNDEF"]])), 
+    m <- Container$new()
+    x <- Parameter$new(
+    m, "x", c("*"),
+    records = data.frame(uni = paste0("i", 1:6), c(
+        1, SpecialValues[["POSINF"]],
+        SpecialValues[["NEGINF"]], SpecialValues[["EPS"]], SpecialValues[["NA"]],
+        SpecialValues[["UNDEF"]]
+    )),
     description = "special values"
     )
 

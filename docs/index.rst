@@ -70,8 +70,8 @@ There are two different ways to create a GAMS set and add it to a :doc:`Containe
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    p = Parameter$new(m, "p")
+    m <- Container$new()
+    p <- Parameter$new(m, "p")
 
 2. Use the :ref:`Container methods <Container Methods>` "addSet", "addParameter", 
 "addVariable", "addEquation", "addAlias" (which internally calls the symbol constructor)
@@ -79,8 +79,8 @@ There are two different ways to create a GAMS set and add it to a :doc:`Containe
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    p = m$addParameter("p")
+    m <- Container$new()
+    p <- m$addParameter$new("p")
 
 .. _add_symbol_records:
 

@@ -17,40 +17,61 @@ Example (reading data from Container)
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > c = Container$new("trnsport.gdx")
+    library(gamstransfer)
+    c <- Container$new("trnsport.gdx")
+
+.. code-block:: R
+
     > c$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    > m = Container$new(c)
+.. code-block:: R
+
+    m <- Container$new(c)
+
+.. code-block:: R
+
     > m$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    > m = Container$new()
-    > m$read(c)
+.. code-block:: R
+
+    m <- Container$new()
+    m$read(c)
+
+.. code-block:: R
+
     > m$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    > m = Container$new()
-    > m$read(c, symbols=c("d","f"))
+.. code-block:: R
+
+    m <- Container$new()
+    m$read(c, symbols=c("d","f"))
+
+.. code-block:: R
+
     > m$listSymbols()
-    [1] "d" "f"
+        [1] "d" "f"
 
 Example (reading data when symbol with the same name already exists)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > c = Container$new()
-    > i = Set$new(c, "i")
-    > p = Parameter$new(m, "p")
+    library(gamstransfer)
+    c <- Container$new()
+    i <- Set$new(c, "i")
+    p <- Parameter$new(m, "p")
 
-    > m = Container$new()
-    > i = Set$new(m, "i")
+    m <- Container$new()
+    i <- Set$new(m, "i")
+
+.. code-block:: R
+
     > m$read(c, symbols="i")
     Error in private$.containerRead(loadFrom, symbols, records) :
     Attempting to add symbol i, however, one already exists in the Container. Symbol replacement is only possible if the symbol is first removed from theContainer with the removeSymbols() method.
@@ -70,15 +91,22 @@ Example (copy symbol from one container to another)
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > c = Container$new("trnsport.gdx")
+    library(gamstransfer)
+    c = Container$new("trnsport.gdx")
+
+.. code-block:: R
+
     > c$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    > m = Container$new()
+.. code-block:: R
 
-    > c["f"]$copy(m)
+    m <- Container$new()
+
+    c["f"]$copy(m)
+
+.. code-block:: R
 
     > m$listSymbols()
     [1] "f"
@@ -92,15 +120,22 @@ Example (copy symbol to another container without domain symbols)
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > c = Container$new("trnsport.gdx")
+    library(gamstransfer)
+    c <- Container$new("trnsport.gdx")
+
+.. code-block:: R
+
     > c$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    m = Container$new()
+.. code-block:: R
 
-    > c["d"]$copy(m)
+    m <- Container$new()
+    c["d"]$copy(m)
+
+.. code-block:: R
+
     > m$listSymbols()
     [1] "d"
 
@@ -115,16 +150,24 @@ Example (copy symbol to another container with overwrite)
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > c = Container$new()
-    > i = Set$new(c, "i", records=c("i1","i2"))
+    library(gamstransfer)
+    c <- Container$new()
+    i <- Set$new(c, "i", records=c("i1","i2"))
+
+.. code-block:: R
+
     > i$records
         uni
     1    i1
     2    i2
 
-    > m = Container$new()
-    > i = Set$new(m, "i", records= c("i3","i4"))
+.. code-block:: R
+
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i3", "i4"))
+
+.. code-block:: R
+
     > i$records
         uni
     1    i3
@@ -149,24 +192,42 @@ A bulk operation is also possible via Container ``copy`` method as shown in the 
 
 .. code-block:: R
 
-    > library(gamstransfer)
-    > c = Container$new("trnsport.gdx")
+    library(gamstransfer)
+    c <- Container$new("trnsport.gdx")
+
+.. code-block:: R
+
     > c$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    > m = Container$new()
-    > c$copy(m) # copy all symbols
+.. code-block:: R
+
+    m <- Container$new()
+    c$copy(m) # copy all symbols
+
+.. code-block:: R
+
     > c$listSymbols()
     [1] "i"      "j"      "a"      "b"      "d"      "f"      "c"      "x"
     [9] "z"      "cost"   "supply" "demand"
 
-    > m = Container$new()
-    > c$copy(m, symbols=c("a","b","d")) # copy a subset of symbols
+.. code-block:: R
+
+    m <- Container$new()
+    c$copy(m, symbols = c("a", "b", "d")) # copy a subset of symbols
+
+.. code-block:: R
+
     > m$listSymbols()
     [1] "a" "b" "d"
 
-    > c$copy(m, symbols="a", overwrite = TRUE) # copy symbols with overwrite
+.. code-block:: R
+
+    c$copy(m, symbols="a", overwrite = TRUE) # copy symbols with overwrite
+
+.. code-block:: R
+
     > m$listSymbols()
     [1] "a" "b" "d"
 

@@ -58,8 +58,8 @@ Example \#1
 
 .. code-block:: R
 
-    library(gamstransfer)
-    m = Container$new("trnsport.gdx")
+  library(gamstransfer)
+  m <- Container$new("trnsport.gdx")
 
 .. code-block:: R
 
@@ -73,13 +73,13 @@ Example \#2 -- with aliases
 
 .. code-block:: R
 
-    library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:10))
-    j = Set$new(m, "j", records=paste0("j", 1:10))
+  library(gamstransfer)
+  m <- Container$new()
+  i <- Set$new(m, "i", records = paste0("i", 1:10))
+  j <- Set$new(m, "j", records = paste0("j", 1:10))
 
-    ip = Alias$new(m, "ip", i)
-    jp = Alias$new(m, "jp", j)
+  ip <- Alias$new(m, "ip", i)
+  jp <- Alias$new(m, "jp", j)
 
 
 .. code-block:: R
@@ -150,7 +150,7 @@ The following table includes a short description of the column headings in the r
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new("trnsport.gdx")
+    m <- Container$new("trnsport.gdx")
 
 .. code-block:: R
 
@@ -224,7 +224,7 @@ The following table includes a short description of the column headings in the r
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new("trnsport.gdx")
+    m <- Container$new("trnsport.gdx")
 
 .. code-block:: R
 
@@ -293,7 +293,7 @@ The following table includes a short description of the column headings in the r
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new("trnsport.gdx")
+    m <- Container$new("trnsport.gdx")
 
 .. code-block:: R
 

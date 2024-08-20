@@ -31,8 +31,8 @@ two dimensional set:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    j = Set$new(m, "j", c("*", "*"), records = data.frame(i=c("i1","i2"), j=c("j1","j2")))
+    m <- Container$new()
+    j <- Set$new(m, "j", c("*", "*"), records = data.frame(i = c("i1", "i2"), j = c("j1", "j2")))
 
 .. code-block:: R
 
@@ -120,11 +120,11 @@ getUELs Examples
 
 .. code-block:: R
 
-    library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
-    j = Set$new(m, "j", records=c("j1","j2","j3"))
-    a = Parameter$new(m, "a", c(i, j), records=data.frame(paste0("i",1:4), paste0("j",1:4), 1:4))
+library(gamstransfer)
+m <- Container$new()
+i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
+j <- Set$new(m, "j", records = c("j1", "j2", "j3"))
+a <- Parameter$new(m, "a", c(i, j), records = data.frame(paste0("i", 1:4), paste0("j", 1:4), 1:4))
 
 .. code-block:: R
 
@@ -145,10 +145,10 @@ addUELs Examples
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
-    j = Set$new(m, "j", records=c("j1","j2","j3"))
-    a = Parameter$new(m, "a", c(i, j), records=data.frame(paste0("i",1:3), paste0("j",1:3), 1:3))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
+    j <- Set$new(m, "j", records = c("j1", "j2", "j3"))
+    a <- Parameter$new(m, "a", c(i, j), records = data.frame(paste0("i", 1:3), paste0("j", 1:3), 1:3))
 
     i$addUELs("ham")
     a$addUELs("and", 1)
@@ -176,10 +176,10 @@ removeUELs Examples
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
-    j = Set$new(m, "j", records=c("j1","j2","j3"))
-    a = Parameter$new(m, "a", c(i, j), records=data.frame(paste0("i",1:3), paste0("j",1:3), 1:3))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
+    j <- Set$new(m, "j", records = c("j1", "j2", "j3"))
+    a <- Parameter$new(m, "a", c(i, j), records = data.frame(paste0("i", 1:3), paste0("j", 1:3), 1:3))
 
     i$addUELs("ham")
     a$addUELs("and", 1)
@@ -212,10 +212,10 @@ The domain label will be transformed into an NA as seen in this example:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
-    j = Set$new(m, "j", records=c("j1","j2","j3"))
-    a = Parameter$new(m, "a", c(i, j), records=data.frame(i=paste0("i",1:3), j=paste0("j",1:3), 1:3))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
+    j <- Set$new(m, "j", records = c("j1", "j2", "j3"))
+    a <- Parameter$new(m, "a", c(i, j), records = data.frame(i = paste0("i", 1:3), j = paste0("j", 1:3), 1:3))
 
     m$removeUELs("i1")
 
@@ -251,15 +251,21 @@ For example:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    a = Parameter$new(m, "a", c("*","*"), 
-    records = data.frame(from=c("WI","IL","WI"), 
-    to=c("IL", "IN", "IN"), quantity=c(10, 12.5, 8.7)), 
-    description = "shipment quantities")
+    m <- Container$new()
+    a <- Parameter$new(m, "a", c("*", "*"),
+    records = data.frame(
+        from = c("WI", "IL", "WI"),
+        to = c("IL", "IN", "IN"), quantity = c(10, 12.5, 8.7)
+    ),
+    description = "shipment quantities"
+    )
 
-    b = Parameter$new(m, "b", c("*"), 
-    records = data.frame(state=c("wisconsin","illinois","indiana"), 
-    c(1.2, 1.7, 1.2)), description = "multipliers")
+    b <- Parameter$new(m, "b", c("*"),
+    records = data.frame(
+        state = c("wisconsin", "illinois", "indiana"),
+        c(1.2, 1.7, 1.2)
+    ), description = "multipliers"
+    )
 
 results in the following records:
 
@@ -286,8 +292,10 @@ code labeling scheme (without losing any of the original UEL ordering).
 
 .. code-block:: R
 
-    m$renameUELs(c("WI"="Wi", "IL"="Il", "IN"="In", 
-    "wisconsin"="Wi", "illinois"="Il","indiana"="In"))
+    m$renameUELs(c(
+    "WI" = "Wi", "IL" = "Il", "IN" = "In",
+    "wisconsin" = "Wi", "illinois" = "Il", "indiana" = "In"
+    ))
 
 This results in the following records and the universe set:
 
@@ -319,8 +327,8 @@ add/remove any UELs. For example:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
 
 .. code-block:: R
 
@@ -334,7 +342,7 @@ But perhaps we want to reorder the UELs ``i1``, ``i2``, ``i3`` to ``i3``, ``i2``
 
 .. code-block:: R
 
-    i$reorderUELs(c("i3","i2","i1"))
+    i$reorderUELs(c("i3", "i2", "i1"))
 
 .. code-block:: R
 
@@ -363,9 +371,9 @@ based on the records order as illustrated in the following example.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
-    i$setUELs(c("i2","i3","i1"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
+    i$setUELs(c("i2", "i3", "i1"))
 
 .. code-block:: R
 
@@ -403,8 +411,8 @@ create new UELs, rename UELs, and reorder UELs all in one method. For example:
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
 
 A user could accomplish a UEL reorder operation with ``setUELs``:
 
@@ -472,8 +480,8 @@ It is possible to lose these labels if they are not included
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=c("i1","i2","i3"))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = c("i1", "i2", "i3"))
     i$setUELs(c("j1", "i2", "j3", "ham", "cheese"))
 
 .. code-block:: R

@@ -25,14 +25,14 @@ convenience method.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Set$new(m, "a", c(i, j, k, l))
+    a <- Set$new(m, "a", c(i, j, k, l))
 
     # generate the records
     a$generateRecords()
@@ -68,14 +68,14 @@ It is also possible to generate a sparse set (randomly selected rows are removed
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Set$new(m, "a", c(i, j, k, l))
+    a <- Set$new(m, "a", c(i, j, k, l))
 
     # generate the records
     a$generateRecords(density = 0.05)
@@ -109,14 +109,14 @@ Example \#3 Create a large 4D set with 1 sparse dimension
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Set$new(m, "a", c(i, j, k, l))
+    a <- Set$new(m, "a", c(i, j, k, l))
 
     # generate the records
     a$generateRecords(density = c(1, 0.05, 1, 1))
@@ -159,14 +159,14 @@ convenience method.
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Parameter$new(m, "a", c(i, j, k, l))
+    a <- Parameter$new(m, "a", c(i, j, k, l))
 
     # generate the records
     a$generateRecords()
@@ -205,18 +205,18 @@ Example \#2 - Create a large (sparse) 4D parameter with normally distributed val
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Parameter$new(m, "a", c(i, j, k, l))
+    a <- Parameter$new(m, "a", c(i, j, k, l))
 
     # create a custom function to pass to ``generateRecords``
-    value_dist = function(size) {
-    return(rnorm(n=size, mean = 10, sd = 2.3))
+    value_dist <- function(size) {
+    return(rnorm(n = size, mean = 10, sd = 2.3))
     }
     # generate the records
     a$generateRecords(density = 0.05, func = value_dist)
@@ -262,15 +262,15 @@ Example \#3 - Create a large 4D parameter with a random number seed
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Parameter$new(m, "a", c(i, j, k, l))
-    a2 = Parameter$new(m, "a2", c(i, j, k, l))
+    a <- Parameter$new(m, "a", c(i, j, k, l))
+    a2 <- Parameter$new(m, "a2", c(i, j, k, l))
 
     # generate the records
     a$generateRecords(density = 0.05, seed = 123)
@@ -306,26 +306,34 @@ Example \#1 Create a large (sparse) 4D variable and Equation
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    av = Variable$new(m, "av", "free", c(i, j, k, l))
-    ae = Equation$new(m, "ae", "eq", c(i, j, k, l))
+    av <- Variable$new(m, "av", "free", c(i, j, k, l))
+    ae <- Equation$new(m, "ae", "eq", c(i, j, k, l))
 
     # user can pass the function in-line as follows
-    av$generateRecords(density=0.05, 
-    func=list(level= function(size) rnorm(n=size, mean=10, sd=2.3),
-    marginal = function(size) rnorm(n=size, mean=0.5, sd=0.1)))
+    av$generateRecords(
+    density = 0.05,
+    func = list(
+        level = function(size) rnorm(n = size, mean = 10, sd = 2.3),
+        marginal = function(size) rnorm(n = size, mean = 0.5, sd = 0.1)
+    )
+    )
 
     # functions can also be defined first and then passed
-    uniform_distr = function(size) return(runif(size))
-    normal_distr = function(size) return(rnorm(n=size))
+    uniform_distr <- function(size) {
+    return(runif(size))
+    }
+    normal_distr <- function(size) {
+    return(rnorm(n = size))
+    }
 
-    ae$generateRecords(density=0.05, func=list(level=uniform_distr, marginal=normal_distr))
+    ae$generateRecords(density = 0.05, func = list(level = uniform_distr, marginal = normal_distr))
 
 .. code-block:: R
 
@@ -377,17 +385,17 @@ Example \#1 Create a large (dense) 4D set from an Alias
 .. code-block:: R
 
     library(gamstransfer)
-    m = Container$new()
-    i = Set$new(m, "i", records=paste0("i", 1:50))
-    j = Set$new(m, "j", records=paste0("j", 1:50))
-    k = Set$new(m, "k", records=paste0("k", 1:50))
-    l = Set$new(m, "l", records=paste0("l", 1:50))
+    m <- Container$new()
+    i <- Set$new(m, "i", records = paste0("i", 1:50))
+    j <- Set$new(m, "j", records = paste0("j", 1:50))
+    k <- Set$new(m, "k", records = paste0("k", 1:50))
+    l <- Set$new(m, "l", records = paste0("l", 1:50))
 
     # create and define the symbol ``a`` with ``regular`` domains
-    a = Set$new(m, "a", c(i, j, k, l))
+    a <- Set$new(m, "a", c(i, j, k, l))
 
     # create an Alias ap for the set a
-    ap = Alias$new(m, "ap", a)
+    ap <- Alias$new(m, "ap", a)
 
     # generate the records
     ap$generateRecords()
