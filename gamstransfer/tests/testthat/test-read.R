@@ -4686,27 +4686,24 @@ test_that("test_num_139", {
 })
 
 # getUELs for NULL records
-test_that("test_num_139", {
-  m <- Container$new()
-  i <- Set$new(m, "i")
-  j <- Set$new(m, "j")
-  d <- Parameter$new(m, "p",
-    domain = c(i, j),
-    records = data.frame(
-      i = c("i1", "i2", "i3"),
-      j = c("j1", "j2", "j3"), val = 1:3
-    )
-  )
-  dv <- d$getDomainViolations()
-  expect_equal(length(dv), 2)
-})
+test_that("test_num_140", {
+m = Container$new()
+i = Set$new(m, "i")
+j = Set$new(m, "j")
+d = Parameter$new(m, "p", domain=c(i, j), 
+      records=data.frame(i=c("i1","i2","i3"), 
+      j=c("j1","j2","j3"), val=1:3))
+dv = d$getDomainViolations()
+expect_equal(length(dv), 2)
+}
+)
 
 # getUELs order
-test_that("test_num_140", {
-  m <- Container$new(testthat::test_path("testdata", "universe_order.gdx"))
-  expect_equal(m["p"]$getUELs(), c("i2", "i5", "i9", "i1", "i3"))
-  expect_equal(m["p"]$getUELs(1), c("i2", "i5", "i9"))
-  expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
+test_that("test_num_141", {
+m = Container$new(testthat::test_path("testdata", "universe_order.gdx"))
+expect_equal(m["p"]$getUELs(), c("i2","i5","i9","i1","i3"))
+expect_equal(m["p"]$getUELs(1), c("i2","i5","i9"))
+expect_equal(m["p"]$getUELs(2), c("i1", "i2", "i3"))
 
   # test supercall read
   rl <- readGDX(testthat::test_path("testdata", "universe_order.gdx"))
@@ -4716,12 +4713,81 @@ test_that("test_num_140", {
 })
 
 # acronyms
-test_that("test_num_141", {
-  f <- function() {
+test_that("test_num_142", {
+  f = function() {
     return(Container$new(testthat::test_path("testdata", "acronym_test.gdx")))
   }
-  expect_warning(m <- f())
-  expect_equal(m["shutdown"]$records[["value"]], replicate(5, as.numeric(NA)))
-  expect_equal(m["v"]$records[["level"]], c(1, NA, NA, NA, 2))
-  expect_equal(m["e"]$records[["marginal"]], c(1, NA, NA, NA, 2))
-})
+expect_warning(m <- f())
+expect_equal(m["shutdown"]$records[["value"]], replicate(5, as.numeric(NA)))
+expect_equal(m["v"]$records[["level"]], c(1, NA, NA, NA, 2))
+expect_equal(m["e"]$records[["marginal"]], c(1, NA, NA, NA, 2))
+
+}
+)
+
+# duplicate columns in records
+test_that("test_num_143", {
+m = Container$new()
+i = Set$new(m, "i", records = c("i1","i2","i3"))
+
+p = Parameter$new(m, "p", c(i, i))
+i2 = Set$new(m, "i2", c(i, i))
+
+df_p = data.frame(i= c("i1","i2"), i_1 = c("i2","i3"), val = c(0, 1))
+df_s = data.frame(i= c("i1","i2"), i_1 = c("i2","i3"), txt = c("a", "b"))
+
+colnames(df_p) = c("i", "i", "value")
+colnames(df_s) = c("i", "i", "txt")
+
+p$setRecords(df_p)
+i2$setRecords(df_s)
+expect_equal(colnames(p$records), c("i_1", "i_2", "value"))
+expect_equal(colnames(i2$records), c("i_1", "i_2", "element_text"))
+
+# colnames(df_p) = c("i", "value", "value")
+# colnames(df_s) = c("i", "element_text", "txt")
+
+# p$setRecords(df_p)
+# i2$setRecords(df_s)
+
+# expect_equal(colnames(p$records), c("i_1", "i_2", "value"))
+# expect_equal(colnames(i2$records), c("i_1", "i_2", "element_text"))
+
+# v = Variable$new(m, "v", domain = c(i, i, i, i, i))
+# df = data.frame(i1=c("i1", "i2"),i2=c("i1", "i2"),i3=c("i1", "i2"),i4=c("i1", "i2"),i5=c("i1", "i2"), level=c(10, 20))
+# v$setRecords(df)
+# expect_equal(colnames(v$records), colnames(df))
+
+# df = data.frame(level=c("i1", "i2"),marginal=c("i1", "i2"),lower=c("i1", "i2"),upper=c("i1", "i2"),scale=c("i1", "i2"), blah=c(10, 20))
+# v$setRecords(df)
+# expect_equal(colnames(v$records), c("level_1", "marginal_2", "lower_3", "upper_4", "scale_5", "level"))
+
+# e = Equation$new(m, "e", type="eq", domain = c(i, i, i, i, i))
+# df = data.frame(i1=c("i1", "i2"),i2=c("i1", "i2"),i3=c("i1", "i2"),i4=c("i1", "i2"),i5=c("i1", "i2"), level=c(10, 20))
+# e$setRecords(df)
+# expect_equal(colnames(e$records), colnames(df))
+
+# df = data.frame(level=c("i1", "i2"),marginal=c("i1", "i2"),lower=c("i1", "i2"),upper=c("i1", "i2"),scale=c("i1", "i2"), blah=c(10, 20))
+# e$setRecords(df)
+# expect_equal(colnames(e$records), c("level_1", "marginal_2", "lower_3", "upper_4", "scale_5", "level"))
+
+# domain sets with keyword names
+m = Container$new()
+value = Set$new(m, "value", records = c("l1","l2","l3"))
+p = Parameter$new(m, "p", domain = value, records = c(1,2,3))
+expect_equal(colnames(p$records), c("value_1", "value"))
+}
+)
+
+# read gdx files with keywords as domains
+test_that("test_num_144", {
+m = Container$new()
+level = Set$new(m, "level", records = c("foo","bar"))
+
+foo = Variable$new(m, "foo", domain = level, records = c(1, 1))
+m$write("foo.gdx")
+c = Container$new("foo.gdx")
+expect_equal(colnames(c["foo"]$records), c("level_1", "level", "marginal", "lower", "upper", "scale"))
+}
+)
+
