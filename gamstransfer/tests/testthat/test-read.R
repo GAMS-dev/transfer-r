@@ -4744,33 +4744,6 @@ i2$setRecords(df_s)
 expect_equal(colnames(p$records), c("i_1", "i_2", "value"))
 expect_equal(colnames(i2$records), c("i_1", "i_2", "element_text"))
 
-# colnames(df_p) = c("i", "value", "value")
-# colnames(df_s) = c("i", "element_text", "txt")
-
-# p$setRecords(df_p)
-# i2$setRecords(df_s)
-
-# expect_equal(colnames(p$records), c("i_1", "i_2", "value"))
-# expect_equal(colnames(i2$records), c("i_1", "i_2", "element_text"))
-
-# v = Variable$new(m, "v", domain = c(i, i, i, i, i))
-# df = data.frame(i1=c("i1", "i2"),i2=c("i1", "i2"),i3=c("i1", "i2"),i4=c("i1", "i2"),i5=c("i1", "i2"), level=c(10, 20))
-# v$setRecords(df)
-# expect_equal(colnames(v$records), colnames(df))
-
-# df = data.frame(level=c("i1", "i2"),marginal=c("i1", "i2"),lower=c("i1", "i2"),upper=c("i1", "i2"),scale=c("i1", "i2"), blah=c(10, 20))
-# v$setRecords(df)
-# expect_equal(colnames(v$records), c("level_1", "marginal_2", "lower_3", "upper_4", "scale_5", "level"))
-
-# e = Equation$new(m, "e", type="eq", domain = c(i, i, i, i, i))
-# df = data.frame(i1=c("i1", "i2"),i2=c("i1", "i2"),i3=c("i1", "i2"),i4=c("i1", "i2"),i5=c("i1", "i2"), level=c(10, 20))
-# e$setRecords(df)
-# expect_equal(colnames(e$records), colnames(df))
-
-# df = data.frame(level=c("i1", "i2"),marginal=c("i1", "i2"),lower=c("i1", "i2"),upper=c("i1", "i2"),scale=c("i1", "i2"), blah=c(10, 20))
-# e$setRecords(df)
-# expect_equal(colnames(e$records), c("level_1", "marginal_2", "lower_3", "upper_4", "scale_5", "level"))
-
 # domain sets with keyword names
 m = Container$new()
 value = Set$new(m, "value", records = c("l1","l2","l3"))
