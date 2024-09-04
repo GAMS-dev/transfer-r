@@ -302,8 +302,18 @@ void gt_read_symbol(gdx::TGXFileObj & PGX, int sym_nr, bool read_records,
       std::set<std::string> unique_domain(domain.begin(), domain.end());
       std::string d_col_name;
       bool is_duplicated = (unique_domain.size() != domain.size());
+      bool attr_as_dom {false};
+      std::vector<std::string> var_eq_attr{"level", "maginal", "lower", "upper", "scale"};
+      if (sym_type == GMS_DT_VAR || sym_type == GMS_DT_EQU) {
+        attr_as_dom = (std::find(var_eq_attr.begin(), var_eq_attr.end(), domain.at(d)) != var_eq_attr.end()) ? true : false;
+      }
+      else if (sym_type == GMS_DT_PAR) {
+        attr_as_dom = !domain.at(d).compare("value") ? true : false;
+      }
+      else if (sym_type == GMS_DT_SET)
+        attr_as_dom = !domain.at(d).compare("element_text") ? true : false;
 
-      if (is_duplicated) {
+      if (is_duplicated || attr_as_dom) {
         d_col_name = !domain.at(d).compare("*") ? "uni_" + std::to_string(d + 1) : domain.at(d) + "_" + std::to_string(d + 1);
       }
       else
