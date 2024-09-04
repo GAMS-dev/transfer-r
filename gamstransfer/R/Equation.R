@@ -240,13 +240,15 @@ Equation <- R6::R6Class(
           columnNames <- usr_colnames[1:self$dimension]
         }
         if (any(duplicated(columnNames))) {
-          columnNames <- super$.get_default_domain_labels()
+          columnNames = super$.get_default_domain_labels()
+          colnames(records)[1:self$dimension] <- columnNames
+          usr_colnames <- colnames(records)
         }
-
-        if (self$dimension + 1 > length(usr_colnames)) {
-          usr_attr <- NULL
-        } else {
-          usr_attr <- usr_colnames[(self$dimension + 1):length(usr_colnames)]
+        if (self$dimension +  1 > length(usr_colnames)) {
+          usr_attr = NULL
+        }
+        else {
+          usr_attr=  usr_colnames[(self$dimension + 1):length(usr_colnames)]
         }
 
         usr_attr <- usr_colnames[(self$dimension + 1):length(usr_colnames)]

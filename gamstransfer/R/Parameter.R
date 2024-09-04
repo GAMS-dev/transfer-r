@@ -152,10 +152,17 @@ Parameter <- R6::R6Class(
         }
         self$records <- df
         self$.linkDomainCategories()
-      } else {
-        no_label <- FALSE # assume column labels exist
+      }
+      else {
+        no_label = FALSE # assume column labels exist
+        duplicate_label <- FALSE
         if (is.null(names(records))) {
           no_label <- TRUE
+        }
+        else {
+          if (any(duplicated(names(records)))) {
+            duplicate_label <- TRUE
+          }
         }
         # check if records is a dataframe and make if not
         records <- data.frame(records)
@@ -176,9 +183,14 @@ Parameter <- R6::R6Class(
           columnNames <- super$.get_default_domain_labels()
         } else {
           if (self$dimension == 0) {
-            columnNames <- c()
-          } else {
-            columnNames <- colnames(records)[1:self$dimension]
+            columnNames = c()
+          }
+          else {
+            columnNames = colnames(records)[1:self$dimension]
+
+            if (duplicate_label) {
+              columnNames = super$.get_default_domain_labels()
+            }
           }
         }
 
