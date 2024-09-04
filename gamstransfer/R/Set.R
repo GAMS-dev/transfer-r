@@ -72,17 +72,11 @@ Set <- R6::R6Class(
     },
     setRecords = function(records) {
       # check if named list
-<<<<<<< HEAD
-      no_label <- FALSE # assume column labels exist
-      if (is.null(names(records))) {
-        no_label <- TRUE
-=======
       no_label = FALSE # assume column labels exist
       columnNames <- names(records)
       duplicate_labels = FALSE
       if (is.null(columnNames)) {
         no_label = TRUE
->>>>>>> ffe570d (bug fix for list input without column names)
       }
       else {
           if (any(duplicated(columnNames))) {
