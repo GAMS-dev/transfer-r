@@ -1346,11 +1346,20 @@
         return(c())
       }
 
-      domain_label_input <- self$domainNames
-      domain_label_input[domain_label_input == "*"] <- "uni"
-      dup_labels <- duplicated(domain_label_input)
-      if (any(dup_labels)) {
-        domain_label_input <- paste0(domain_label_input, "_", 1:self$dimension)
+      domain_label_input = self$domainNames
+      domain_label_input[domain_label_input == "*"] = "uni"
+      dup_labels = duplicated(domain_label_input)
+      if (inherits(self, "Parameter")) {
+        attr_as_dom = any(domain_label_input == "value")
+      }
+      else if (inherits(self, "Set")) {
+        attr_as_dom = any(domain_label_input == "element_text")
+      }
+      else {
+        attr_as_dom = (length(intersect(domain_label_input, private$.attr())) > 0)
+      }
+      if (any(dup_labels) || attr_as_dom) {
+        domain_label_input = paste0(domain_label_input, "_", 1:self$dimension)
       }
       return(domain_label_input)
     },

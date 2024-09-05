@@ -72,9 +72,16 @@ Set <- R6::R6Class(
     },
     setRecords = function(records) {
       # check if named list
-      no_label <- FALSE # assume column labels exist
-      if (is.null(names(records))) {
-        no_label <- TRUE
+      no_label = FALSE # assume column labels exist
+      columnNames <- names(records)
+      duplicate_labels = FALSE
+      if (is.null(columnNames)) {
+        no_label = TRUE
+      }
+      else {
+          if (any(duplicated(columnNames))) {
+            duplicate_labels = TRUE
+          }
       }
 
       # check if records is a dataframe and make if not
@@ -89,9 +96,13 @@ Set <- R6::R6Class(
       }
 
       if (no_label) {
-        columnNames <- super$.get_default_domain_labels()
-      } else {
-        columnNames <- colnames(records)[1:self$dimension]
+        columnNames = super$.get_default_domain_labels()
+      }
+      else {
+        columnNames = colnames(records)[1:self$dimension]
+        if (duplicate_labels) {
+          columnNames <- super$.get_default_domain_labels()
+        }
       }
 
       if (c == self$dimension + 1) {

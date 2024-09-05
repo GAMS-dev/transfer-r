@@ -1,6 +1,7 @@
 GAMS Transfer R
 ==================
 - New GDX API version 7.11.6
+- Bug fix: fixed errors when reading symbols with duplicate column names
 
 GAMS Transfer R v3.0.3
 ==================
