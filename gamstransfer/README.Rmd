@@ -137,7 +137,7 @@ the development version from GitHub" section in this file.
 
 ## Documentation
 You can view the detailed documentation for `gamstransfer`
-[here](https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html).
+[here](https://transfer-r.readthedocs.io/en/latest/).
 
 ## Feedback
 We would love to get feedback on `gamstransfer`. Please direct your questions
