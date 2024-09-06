@@ -14,7 +14,7 @@ containing the symbol names to be read}
 
 \item{records}{optional logical argument - TRUE (default) to read
 the symbol records, FALSE to only read the meta data.
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+Please visit https://transfer-r.readthedocs.io/en/latest/
 for detailed documentation of this package.}
 }
 \description{
@@ -22,5 +22,5 @@ read a GDX file to a list without creating symbol
 or container objects
 }
 \examples{
-read_list = readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
+read_list <- readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
 }
