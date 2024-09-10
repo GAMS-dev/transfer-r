@@ -141,7 +141,7 @@ Note that installing from source requires `zlib`. Please refer to
 ## Documentation
 
 You can view the detailed documentation for `gamstransfer`
-[here](https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html).
+[here](https://transfer-r.readthedocs.io/en/latest/).
 
 ## Feedback
 

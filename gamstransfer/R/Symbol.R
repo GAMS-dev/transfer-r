@@ -27,7 +27,7 @@
 #' @description An abstract symbol class from
 #' which the classes Set, Parameter, Variable,
 #' and Equation are inherited.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 .Symbol <- R6::R6Class(
   ".Symbol",

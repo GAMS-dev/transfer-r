@@ -31,7 +31,7 @@
 #' containing the symbol names to be read
 #' @param records optional logical argument - TRUE (default) to read
 #' the symbol records, FALSE to only read the meta data.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples
@@ -83,7 +83,7 @@ readGDX <- function(loadFrom, symbols = NULL, records = TRUE) {
 #' @param uelPriority Specify the priority UELs
 #' @param mode optional string argument to specify the write
 #' mode ("string", "mapped").
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples

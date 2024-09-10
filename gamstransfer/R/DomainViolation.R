@@ -26,7 +26,7 @@
 #' @title DomainViolation Class
 #' @description Contains information about the domain violation
 #' for a symbol.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples

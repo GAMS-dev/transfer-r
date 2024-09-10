@@ -35,7 +35,7 @@
 #' implicit set definitions, it enables structural manipulations of the
 #' data (matrix generation), and it allows the user to perform different
 #' read/write operations.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @field data is a named list containing all symbol data

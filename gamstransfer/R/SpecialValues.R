@@ -27,7 +27,7 @@
 #' @description This list contains GAMS special values and
 #' helper functions to check if a given value is a GAMS
 #' special value.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples

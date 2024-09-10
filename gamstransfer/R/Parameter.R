@@ -27,7 +27,7 @@
 #' @description A class for Parameter objects. This class inherits from an abstract
 #' Symbol class.The documentation for methods common to all symbols can be accessed
 #' via help(.Symbol).
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples
