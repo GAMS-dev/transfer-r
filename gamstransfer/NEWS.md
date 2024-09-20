@@ -1,6 +1,6 @@
 # gamstransfer 3.0.4
 
-* New GDX API version 7.11.6
+* New GDX API version 7.11.7
 * Bug fix: fixed errors when reading symbols with duplicate column names
 * Package documentation is now moved to https://transfer-r.readthedocs.io/en/latest/
 
