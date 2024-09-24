@@ -12,8 +12,10 @@ RUN	echo 'Installing chocolatey windows package manager' ; \
 
 RUN choco install R ; \
     choco install rtools ; \
+    choco install python ; \
+    Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1 ; \
     refreshenv ; \
-    [System.Environment]::SetEnvironmentVariable('PATH', [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';C:\Program Files\R\R-4.3.2\bin;C:\rtools43\usr\bin;C:\rtools43\mingw64\bin', 'Machine')
+    [System.Environment]::SetEnvironmentVariable('PATH', [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';C:\Program Files\R\R-4.4.1\bin;C:\rtools44\usr\bin;C:\rtools44\mingw64\bin', 'Machine')
 
 # install dependencies
 RUN Rscript -e \"install.packages('R6', repos='http://cran.us.r-project.org')\" ; \

@@ -14,15 +14,15 @@ SpecialValues
 This list contains GAMS special values and
 helper functions to check if a given value is a GAMS
 special value.
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+Please visit https://transfer-r.readthedocs.io/en/latest/
 for detailed documentation of this package.
 }
 \examples{
 # check the value of GAMS special value NA
-NA_val = SpecialValues[["NA"]]
+NA_val <- SpecialValues[["NA"]]
 # check the value of GAMS special value EPS
-EPS_val = SpecialValues[["EPS"]]
+EPS_val <- SpecialValues[["EPS"]]
 # check if a value is GAMS special value `NA`
-isNA_check = SpecialValues$isNA(0)
+isNA_check <- SpecialValues$isNA(0)
 }
 \keyword{datasets}

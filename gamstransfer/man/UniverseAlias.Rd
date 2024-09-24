@@ -5,7 +5,7 @@
 \title{UniverseAlias Class}
 \description{
 A class for Alias objects that are aliased to the Universe set.
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+Please visit https://transfer-r.readthedocs.io/en/latest/
 for detailed documentation of this package.
 
 #' @examples

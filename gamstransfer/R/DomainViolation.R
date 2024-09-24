@@ -26,45 +26,47 @@
 #' @title DomainViolation Class
 #' @description Contains information about the domain violation
 #' for a symbol.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples
-#' m = Container$new()
-#' i = Set$new(m, "i", records=paste0("i", 1:5))
-#' p = Parameter$new(m, "p", i, records=data.frame(i=c("i1","i3","i6"), value=c(1,5,7)))
-#' dv = p$getDomainViolations()[[1]]
-#' sym_dv = dv$symbol
-#' dim_dv = dv$dimension
-#' domain_dv = dv$domain
-#' violation_dv = dv$violations
+#' m <- Container$new()
+#' i <- Set$new(m, "i", records = paste0("i", 1:5))
+#' p <- Parameter$new(m, "p", i, records = data.frame(i = c("i1", "i3", "i6"), value = c(1, 5, 7)))
+#' dv <- p$getDomainViolations()[[1]]
+#' sym_dv <- dv$symbol
+#' dim_dv <- dv$dimension
+#' domain_dv <- dv$domain
+#' violation_dv <- dv$violations
 #' @field symbol symbol name
 #' @field dimension dimension in which domain violation is present
 #' @field domain domain name
 #' @field violations vector of violations
-DomainViolation <- R6::R6Class (
+DomainViolation <- R6::R6Class(
   "DomainViolation",
   public = list(
-    symbol=NULL,
+    symbol = NULL,
     dimension = NULL,
-    domain= NULL,
+    domain = NULL,
     violations = NULL,
-    initialize = function(symbol, dimension, domain,violations) {
-      self$symbol = symbol
-      self$dimension = dimension
-      self$domain = domain
-      self$violations = violations
+    initialize = function(symbol, dimension, domain, violations) {
+      self$symbol <- symbol
+      self$dimension <- dimension
+      self$domain <- domain
+      self$violations <- violations
       lockBinding("symbol", self)
       lockBinding("dimension", self)
       lockBinding("domain", self)
       lockBinding("violations", self)
     },
     format = function(...) {
-      paste0("GAMS Transfer: DomainViolation with properties: \n", 
-      "Symbol: ", self$symbol$name, "\n",
-      "dimension: ", self$dimension, "\n",
-      "domain: ", self$domain$name, "\n",
-      "violations: ", toString(self$violations))
+      paste0(
+        "GAMS Transfer: DomainViolation with properties: \n",
+        "Symbol: ", self$symbol$name, "\n",
+        "dimension: ", self$dimension, "\n",
+        "domain: ", self$domain$name, "\n",
+        "violations: ", toString(self$violations)
+      )
     }
   )
 )

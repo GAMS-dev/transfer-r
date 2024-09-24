@@ -25,7 +25,7 @@
 
 #' @title UniverseAlias Class
 #' @description A class for Alias objects that are aliased to the Universe set.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' #' @examples
@@ -38,35 +38,29 @@ UniverseAlias <- R6::R6Class(
   "UniverseAlias",
   inherit = .BaseAlias,
   public = list(
+    initialize = function(container = NULL, name = NULL, ...) {
+      args <- list(...)
+      from_gdx <- args[["from_gdx"]]
+      if (is.null(from_gdx)) from_gdx <- FALSE
 
-    initialize = function(container=NULL, name=NULL, ...) {
-      args = list(...)
-      from_gdx = args[["from_gdx"]]
-      if (is.null(from_gdx)) from_gdx=FALSE
-
-      super$initialize(container, name, from_gdx=from_gdx)
-      private$.aliasWith = "*"
+      super$initialize(container, name, from_gdx = from_gdx)
+      private$.aliasWith <- "*"
       lockBinding("aliasWith", self)
-      self$.isUniverseAlias = TRUE
+      self$.isUniverseAlias <- TRUE
     },
-
-    format = function(...) paste0("GAMS Transfer: R6 object of class UniverseAlias. 
+    format = function(...) paste0("GAMS Transfer: R6 object of class UniverseAlias.
     Use ", self$name, "$summary for details"),
-
     getUELs = function(ignoreUnused = FALSE) {
       if (self$isValid()) {
         return(self$container$getUELs(ignoreUnused = ignoreUnused))
-      }
-      else {
+      } else {
         return(NULL)
       }
     },
-
     getSparsity = function() {
       return(0)
     },
-
-    isValid = function(verbose=FALSE, force=FALSE) {
+    isValid = function(verbose = FALSE, force = FALSE) {
       if (!is.logical(verbose)) {
         stop("Argument 'verbose' must be logical\n")
       }
@@ -76,7 +70,7 @@ UniverseAlias <- R6::R6Class(
       }
 
       if (force == TRUE) {
-        self$.requiresStateCheck = TRUE
+        self$.requiresStateCheck <- TRUE
       }
 
       if (self$.requiresStateCheck == TRUE) {
@@ -92,19 +86,20 @@ UniverseAlias <- R6::R6Class(
             return(FALSE)
           }
         )
-      }
-      else {
+      } else {
         return(TRUE)
       }
     },
-
-    equals = function(other,checkMetaData=TRUE,
-    verbose=FALSE) {
+    equals = function(
+        other, checkMetaData = TRUE,
+        verbose = FALSE) {
       # mandatory checks
       if (!self$isValid()) {
-        stop(paste0("Cannot compare objects because ", s$name, 
-        " is not valid. Use ", s$name, 
-        "$isValid(verbose=TRUE) to get more details\n"))
+        stop(paste0(
+          "Cannot compare objects because ", s$name,
+          " is not valid. Use ", s$name,
+          "$isValid(verbose=TRUE) to get more details\n"
+        ))
       }
 
       if (!inherits(other, c(".Symbol", ".BaseAlias"))) {
@@ -112,12 +107,14 @@ UniverseAlias <- R6::R6Class(
       }
 
       if (!other$isValid()) {
-        stop(paste0("Cannot compare objects because ", other$name, 
-        " is invalid. Use ", other$name, "$isValid(verbose=TRUE) to debug.\n"))
+        stop(paste0(
+          "Cannot compare objects because ", other$name,
+          " is invalid. Use ", other$name, "$isValid(verbose=TRUE) to debug.\n"
+        ))
       }
 
       if (inherits(other, "Alias")) {
-        other = other$aliasWith
+        other <- other$aliasWith
       }
 
       if (!is.logical(checkMetaData)) {
@@ -128,8 +125,10 @@ UniverseAlias <- R6::R6Class(
         {
           if (checkMetaData) {
             if (self$name != other$name) {
-              stop("Symbol names do not match ", 
-              self$name, " != ", other$name, "\n" )
+              stop(
+                "Symbol names do not match ",
+                self$name, " != ", other$name, "\n"
+              )
             }
           }
           return(TRUE)
@@ -142,16 +141,13 @@ UniverseAlias <- R6::R6Class(
         }
       )
     },
-
     copy = function(destination = NULL, overwrite = FALSE) {
-
       # copy alias
       private$.copy(destination, overwrite)
       return(invisible(NULL))
     },
-
     asList = function() {
-      l = list(
+      l <- list(
         class = "Alias",
         name = self$name,
         aliasWith = "*"
@@ -159,82 +155,73 @@ UniverseAlias <- R6::R6Class(
       return(l)
     }
   ),
-
   active = list(
-
     aliasWith = function(alias_with_input) {
       if (missing(alias_with_input)) {
         return(private$.aliasWith)
       }
     },
-
     isSingleton = function(is_singleton) {
       return(FALSE)
     },
-
     description = function(description_input) {
       return("Aliased with *")
     },
-
     dimension = function(dimension_input) {
       return(1)
     },
-
     records = function(records_input) {
-      if (!self$isValid()) return(NULL)
-      df = data.frame(self$container$getUELs())
-      colnames(df) = "uni"
+      if (!self$isValid()) {
+        return(NULL)
+      }
+      df <- data.frame(self$container$getUELs())
+      colnames(df) <- "uni"
       return(df)
     },
-
     domain = function(domain_input) {
       return("*")
     },
-
     numberRecords = function() {
-      if (!self$isValid()) return(NA)
+      if (!self$isValid()) {
+        return(NA)
+      }
 
       return(nrow(self$records))
     },
-
     domainType = function() {
       return("none")
     },
-
     domainNames = function() {
       return("*")
     },
-
     domainLabels = function() {
       return("uni")
     },
-
     summary = function() {
-    return(list(
-      "name" = self$name,
-      "description" = self$description,
-      "aliasWith" = self$aliasWith
-    ))
+      return(list(
+        "name" = self$name,
+        "description" = self$description,
+        "aliasWith" = self$aliasWith
+      ))
     }
   ),
-
   private = list(
     symbolMaxLength = 63,
     .ref_container = NULL,
     .name = NULL,
     .aliasWith = NULL,
-
     check = function() {
       if (self$.requiresStateCheck == TRUE) {
         super$.testContainer()
       }
     },
-
     .testParentSet = function() {
       if (!self$container$hasSymbols(self$aliasWith$name)) {
-        stop(paste0("Parent set ", self$aliasWith$name, " of alias ", 
-        self$name, " is no longer in the container and cannot ",
-        "be referenced\n"))
+        stop(paste0(
+          "Parent set ", self$aliasWith$name, " of alias ",
+          self$name, " is no longer in the container and cannot ",
+          "be referenced\n"
+        ))
       }
     }
   )

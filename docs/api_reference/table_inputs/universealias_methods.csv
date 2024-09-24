@@ -1,0 +1,6 @@
+﻿ Method , Description , Arguments/Defaults , Returns 
+ ``equals`` , Check if two Symbol objects are equal ,"``other`` (``Symbol``), ``checkMetaData=TRUE``, ``verbose=FALSE``", logical 
+ ``copy`` , copies the symbol to the ``destination`` container. ``overwrite=TRUE`` overwrites the symbol with the same name in ``destination``.,"``destination`` (Container), ``overwrite=FALSE``", ``NULL`` 
+ ``getSparsity`` , always ``0`` , - , ``numeric`` 
+ ``getUELs`` ,"returns the UELs from the Container. Returns only UELs in the data if ``ignoreUnused=TRUE``, otherwise returns all UELs", ``ignoreUnused=FALSE`` , ``character vector`` 
+ ``isValid`` ,"checks if the symbol is in a valid format, throw exceptions if ``verbose=TRUE``, recheck a symbol if ``force=TRUE``","``verbose=FALSE``, ``force=FALSE`` ", ``logical`` 

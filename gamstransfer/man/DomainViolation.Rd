@@ -6,7 +6,7 @@
 \description{
 Contains information about the domain violation
 for a symbol.
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+Please visit https://transfer-r.readthedocs.io/en/latest/
 for detailed documentation of this package.
 }
 \section{Fields}{
@@ -22,12 +22,12 @@ for detailed documentation of this package.
 }}
 
 \examples{
-m = Container$new()
-i = Set$new(m, "i", records=paste0("i", 1:5))
-p = Parameter$new(m, "p", i, records=data.frame(i=c("i1","i3","i6"), value=c(1,5,7)))
-dv = p$getDomainViolations()[[1]]
-sym_dv = dv$symbol
-dim_dv = dv$dimension
-domain_dv = dv$domain
-violation_dv = dv$violations
+m <- Container$new()
+i <- Set$new(m, "i", records = paste0("i", 1:5))
+p <- Parameter$new(m, "p", i, records = data.frame(i = c("i1", "i3", "i6"), value = c(1, 5, 7)))
+dv <- p$getDomainViolations()[[1]]
+sym_dv <- dv$symbol
+dim_dv <- dv$dimension
+domain_dv <- dv$domain
+violation_dv <- dv$violations
 }

@@ -1,0 +1,8 @@
+﻿ Argument , Type , Description , Required , Default 
+ ``container`` , ``Container`` ,"A reference to the :doc:`Container <../Container>` object that the symbol is being added to", Yes , - 
+ ``name`` , ``string`` , Name of symbol , Yes , - 
+ ``type`` , ``string`` ,"Type of equation being created [``eq`` (or ``E``/``e``), ``geq`` (or ``G``/``g``), ``leq`` (or ``L``/``l``), ``nonbinding`` (or ``N``/``n``), ``external`` (or ``X``/``x``)]", No , ``free`` 
+ ``domain`` ,"``list``, ``vector``","List, vector of domains given either as a string (``""*""`` for :doc:`universe set <../../user_guide/additional_features/universe_set>` ) or as a reference to a Set object, an empty domain list will create a scalar equation", No , NULL 
+ ``records`` , many , Symbol records , No , NULL 
+ ``domainForwarding`` , ``logical`` ,"Flag or a vector of flags that forces equation elements to be recursively included in corresponding parent sets (i.e., :doc:`implicit set definition <../../user_guide/additional_features/implicit_set_growth>` )", No , FALSE 
+ ``description`` , ``string`` , Description of symbol , No ,""""""

@@ -28,7 +28,7 @@ compressed GDX file}
 
 \item{mode}{optional string argument to specify the write
 mode ("string", "mapped").
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+Please visit https://transfer-r.readthedocs.io/en/latest/
 for detailed documentation of this package.}
 }
 \description{
@@ -36,6 +36,6 @@ write a GDX file from a list containing symbol data
 and metadata
 }
 \examples{
-writeGDX(list(), tempfile(fileext=".gdx"))
+writeGDX(list(), tempfile(fileext = ".gdx"))
 
 }

@@ -31,44 +31,44 @@
 #' containing the symbol names to be read
 #' @param records optional logical argument - TRUE (default) to read
 #' the symbol records, FALSE to only read the meta data.
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples
-#' read_list = readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
-
-readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
-    # check if records is logical
-    if (!is.logical(records) && length(records) != 1) {
+#' read_list <- readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
+readGDX <- function(loadFrom, symbols = NULL, records = TRUE) {
+  # check if records is logical
+  if (!is.logical(records) && length(records) != 1) {
     stop("records must be type logical\n")
-    }
+  }
 
-    # is.character will also check vector of strings
-    if (!(is.character(symbols)) && !(is.null(symbols))) {
+  # is.character will also check vector of strings
+  if (!(is.character(symbols)) && !(is.null(symbols))) {
     stop("argument symbols must be of the type character or NULL\n")
-    }
+  }
 
-    if (is.character(loadFrom)) {
-        namesplit = strsplit(loadFrom, "\\.")
-        ext = utils::tail(unlist(namesplit), 1)
-        if (ext != "gdx") {
-            stop("check filename extension, must be .gdx\n")
-        }
-        loadFrom = R.utils::getAbsolutePath(path.expand(loadFrom))
-        if (!file.exists(loadFrom)) {
-            stop(paste0("File ", loadFrom, " doesn't exist\n"))
-        }
-        # read call here
-        readlist = .CPP_readSuper(symbols, loadFrom,
-            records)
-        sym_names = unlist(lapply(readlist, "[[", 2), use.names = FALSE)
-        names(readlist) = sym_names
+  if (is.character(loadFrom)) {
+    namesplit <- strsplit(loadFrom, "\\.")
+    ext <- utils::tail(unlist(namesplit), 1)
+    if (ext != "gdx") {
+      stop("check filename extension, must be .gdx\n")
     }
-    else {
-        stop(paste0("Argument `loadFrom` must be type character\n"))
+    loadFrom <- R.utils::getAbsolutePath(path.expand(loadFrom))
+    if (!file.exists(loadFrom)) {
+      stop(paste0("File ", loadFrom, " doesn't exist\n"))
     }
+    # read call here
+    readlist <- .CPP_readSuper(
+      symbols, loadFrom,
+      records
+    )
+    sym_names <- unlist(lapply(readlist, "[[", 2), use.names = FALSE)
+    names(readlist) <- sym_names
+  } else {
+    stop(paste0("Argument `loadFrom` must be type character\n"))
+  }
 
-    return(readlist)
+  return(readlist)
 }
 
 #' @title writeGDX
@@ -83,87 +83,88 @@ readGDX = function(loadFrom, symbols=NULL, records=TRUE) {
 #' @param uelPriority Specify the priority UELs
 #' @param mode optional string argument to specify the write
 #' mode ("string", "mapped").
-#' Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html
+#' Please visit https://transfer-r.readthedocs.io/en/latest/
 #' for detailed documentation of this package.
 #'
 #' @examples
-#' writeGDX(list(), tempfile(fileext=".gdx"))
+#' writeGDX(list(), tempfile(fileext = ".gdx"))
 #'
-writeGDX = function(writeList, writeTo, symbols=NULL,
+writeGDX <- function(
+    writeList, writeTo, symbols = NULL,
     compress = FALSE, uelPriority = NULL, mode = NULL) {
-    if (!is.logical(compress)) {
-    stop(paste0("'compress' must be of type logical; ",
-    "default False (no compression)\n"))
-    }
+  if (!is.logical(compress)) {
+    stop(paste0(
+      "'compress' must be of type logical; ",
+      "default False (no compression)\n"
+    ))
+  }
 
-    if (!is.character(writeTo)) {
+  if (!is.character(writeTo)) {
     stop("The argument writeTo must be of type character\n")
-    }
-    else {
-    namesplit = strsplit(writeTo, "\\.")
-    ext = utils::tail(unlist(namesplit), 1)
+  } else {
+    namesplit <- strsplit(writeTo, "\\.")
+    ext <- utils::tail(unlist(namesplit), 1)
     if (ext != "gdx") {
-        stop("check filename extension, must be .gdx\n")
+      stop("check filename extension, must be .gdx\n")
     }
 
-    writeTo = R.utils::getAbsolutePath(path.expand(writeTo))
-    }
+    writeTo <- R.utils::getAbsolutePath(path.expand(writeTo))
+  }
 
-    if (!(is.character(uelPriority) || is.null(uelPriority))) {
+  if (!(is.character(uelPriority) || is.null(uelPriority))) {
     stop("'uelPriority' must be type character or NULL\n")
-    }
+  }
 
-    if (is.null(mode)) {
-    mode = "mapped"
-    }
-    if (!(is.character(mode) && length(mode) == 1)) {
-    stop("Argument `mode` must be type character 
+  if (is.null(mode)) {
+    mode <- "mapped"
+  }
+  if (!(is.character(mode) && length(mode) == 1)) {
+    stop("Argument `mode` must be type character
     of length 1\n")
-    }
+  }
 
-    if (!any(c("string", "mapped") == mode)) {
+  if (!any(c("string", "mapped") == mode)) {
     stop("Argument `mode` must be one of the following: 'string', 'mapped'\n")
+  }
+
+  if (mode == "string") {
+    mode_int <- 1
+  } else {
+    mode_int <- 2
+  }
+
+  isempty <- (length(writeList) == 0)
+  enable <- NA
+
+  if (!isempty) {
+    allSymbols <- unlist(lapply(writeList, "[[", 2), use.names = FALSE)
+    if (is.null(symbols)) {
+      symbols <- allSymbols
+      enable <- replicate(length(symbols), TRUE)
+    } else {
+      enable <- replicate(length(writeList), FALSE)
+
+      allSymbolsList <- as.list(1:length(writeList))
+      names(allSymbolsList) <- allSymbols
+
+      allSymDict <- collections::dict(allSymbolsList)
+
+      idx <- unlist(lapply(symbols, function(s) {
+        allSymDict$get(s)
+      }), use.names = FALSE)
+      enable[idx] <- TRUE
     }
 
-    if (mode == "string") {
-    mode_int = 1
-    }
-    else {
-    mode_int = 2
-    }
+    # assuming validity
+    # assuming valid order
 
-    isempty = (length(writeList) == 0)
-    enable = NA
+    # if (private$isValidSymbolOrder() == FALSE) {
+    #   self$reorderSymbols()
+    # }
+  }
 
-    if (!isempty) {
-        allSymbols = unlist(lapply(writeList, "[[", 2), use.names = FALSE)
-        if (is.null(symbols)) {
-          symbols = allSymbols
-          enable = replicate(length(symbols), TRUE)
-        }
-        else {
-          enable = replicate(length(writeList), FALSE)
-
-          allSymbolsList = as.list(1:length(writeList))
-          names(allSymbolsList) = allSymbols
-
-          allSymDict = collections::dict(allSymbolsList)
-
-          idx=unlist(lapply(symbols, function(s) {
-            allSymDict$get(s)
-          }), use.names = FALSE)
-          enable[idx] = TRUE
-        }
-
-        # assuming validity
-        # assuming valid order
-
-        # if (private$isValidSymbolOrder() == FALSE) {
-        #   self$reorderSymbols()
-        # }
-      }
-
-      .CPP_gdxWriteSuper(writeList, enable,
-      writeTo, uelPriority, compress, mode_int)
-
+  .CPP_gdxWriteSuper(
+    writeList, enable,
+    writeTo, uelPriority, compress, mode_int
+  )
 }

@@ -4,17 +4,17 @@
 \alias{Container}
 \title{Container Class}
 \arguments{
-\item{loadFrom}{optional argument to point to the GDX file being 
+\item{loadFrom}{optional argument to point to the GDX file being
 read into the Container}
 }
 \description{
-The main object class within GAMS Transfer is called 
-Container. The Container is the vessel that allows symbols to be 
-linked together (through their domain definitions), it enables 
-implicit set definitions, it enables structural manipulations of the 
-data (matrix generation), and it allows the user to perform different 
+The main object class within GAMS Transfer is called
+Container. The Container is the vessel that allows symbols to be
+linked together (through their domain definitions), it enables
+implicit set definitions, it enables structural manipulations of the
+data (matrix generation), and it allows the user to perform different
 read/write operations.
-Please visit https://www.gams.com/latest/docs/API_R_GAMSTRANSFER.html 
+Please visit https://transfer-r.readthedocs.io/en/latest/
 for detailed documentation of this package.
 
 Create a new container simply by initializing an object.
@@ -26,11 +26,11 @@ Create a new container simply by initializing an object.
 }}
 
 \examples{
-m = Container$new()
-i = m$addSet("i")
-j = m$addSet("j")
-all_symbols = m$listSymbols()
-set_description = m$describeSets()
+m <- Container$new()
+i <- m$addSet("i")
+j <- m$addSet("j")
+all_symbols <- m$listSymbols()
+set_description <- m$describeSets()
 # create a container and read the file trnsport.gdx
 m = Container$new(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
 # access symbol named "x" from the container

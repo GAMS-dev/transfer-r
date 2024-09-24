@@ -1,0 +1,22 @@
+﻿ Method , Description , Arguments/Defaults , Returns 
+ ``addUELs`` , adds UELs to the symbol ,"``uels`` (character), ``dimension=NULL``", ``NULL`` 
+ ``copy`` , copies the ``Alias`` and the parent ``Set`` to the ``destination`` container. ``overwrite=TRUE`` overwrites the symbol with the same name in ``destination``. Symbol domains are ``relaxed`` if ``destination`` Container does not contain equivalent domain sets,"``destination`` (Container), ``overwrite=FALSE``", ``NULL`` 
+ ``countDomainViolations`` , returns the number of domain violations for the symbol , - , ``numeric`` 
+ ``countDuplicateRecords`` , returns the number of duplicate records for the symbol , - , ``numeric`` 
+ ``dropDomainViolations`` , drops domain violations for the symbol , - , - 
+ ``dropDuplicateRecords`` ,"drops duplicate records for the Symbol. ``keep =""first""`` (drops all duplicates while keeping the first instance as unique), ``keep=""last""`` (drops all duplicates while keeping the last instance as unique), or ``keep=FALSE`` (drops all duplicates)","``keep =""first""``", - 
+ ``equals`` , Check if two Symbol objects are equal ,"``other`` (``Symbol``), ``checkUELs=TRUE``, ``checkElementText=TRUE``, ``checkMetaData=TRUE``, ``verbose=FALSE``", logical 
+ ``findDomainViolations`` , get a view of records data frame that contain any domain violations , - , ``data.frame`` 
+ ``findDuplicateRecords`` ,"get a view of records data frame that contain duplicate records. ``keep ='first'`` (finds all duplicates while keeping the first instance as unique), ``keep=""last""`` (finds all duplicates while keeping the last instance as unique), or ``keep=FALSE`` (finds all duplicates)", ``keep='first'`` , ``data.frame`` 
+ ``generateRecords`` ,"convenience method to set standard ``data.frame`` formatted records. Will generate records with the Cartesian product of all domain sets. The ``density`` argument can take any value on the interval ``[0,1]``.  If ``density`` is < 1, then randomly selected records will be removed. ``density`` will accept a ``numeric`` of length 1 or ``dimension``. This allows users to specify a density per symbol dimension (when vector) or the density of ``records`` dataframe. Random number state can be set with ``seed`` argument.  ", ``density=1.0`` (``numeric``) ``seed=NULL`` (``integer``) , ``NULL`` 
+ ``getDomainViolations`` , gets domain violations for the symbol , - , list of ``DomainViolation`` 
+ ``getSparsity`` , get the sparsity of the symbol w.r.t the size of full cartesian product of the domain sets , - , ``numeric`` 
+ ``getUELs`` , returns the UELs used in the Symbol ,"``dimension = NULL``, ``codes = NULL``, ``ignoreUnused=FALSE``", ``character vector`` 
+ ``hasDomainViolations`` ,"returns TRUE if the symbol contains domain violations, FALSE otherwise", - , ``logical`` 
+ ``hasDuplicateRecords`` ,"returns TRUE if the symbol contains duplicate records, FALSE otherwise", - , ``logical`` 
+ ``isValid`` ,"checks if the symbol is in a valid format, throw exceptions if ``verbose=TRUE``, recheck a symbol if ``force=TRUE``", ``verbose=FALSE`` ``force=FALSE`` , ``logical`` 
+ ``removeUELs`` , removes UELs from the symbol ,"``uels=NULL`` (character), ``dimension=NULL``", ``NULL`` 
+ ``renameUELs`` , renames UELs in the symbol ,"``uels`` (character of same length as current UELs or named character vector), ``dimension=NULL`` , ``allowMerge=FALSE`` (logical). If ``allowMerge = TRUE``, the underlying integer mapping of a factor is allowed to change to offer additional data flexibility", ``NULL`` 
+ ``reorderUELs`` ,"reorders UELs in the parent set that appear in the parent set ``dimensions``. If ``uels`` is ``NULL``, the UELs are reordered based on symbol records, unused UELs are moved to the end. If ``dimensions`` is ``NULL`` then reorder UELs in all dimensions of the symbol","``uels=NULL`` (``NULL`` or character of same length as current UELs or named character vector), ``dimension=NULL`` (numeric)", ``NULL`` 
+ ``setRecords`` , main convenience method to set standard ``data frame`` formatted records ,"``records`` (string vector, list, data frame)", ``NULL`` 
+ ``setUELs`` , sets UELs for the Symbol ,"``uels`` (character), ``dimension`` , ``rename=FALSE``", ``NULL`` 

@@ -2,7 +2,7 @@
 FROM r-base
 
 
-RUN apt-get update && apt-get -y install curl zip build-essential && apt-get -y clean
+RUN apt-get update && apt-get -y install curl zip build-essential python3 python3-pip && apt-get -y clean
 
 RUN R -e "install.packages('R6',dependencies=TRUE)"
 RUN R -e "install.packages('Rcpp',dependencies=TRUE)"
