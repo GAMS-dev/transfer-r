@@ -23,7 +23,7 @@
 
 #include "gclgms.h"
 using namespace Rcpp;
-#include "gdx.h"
+#include "gdx.hpp"
 
 class gt_gdx
 {
