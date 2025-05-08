@@ -2,6 +2,10 @@
    :maxdepth: 1
    :caption: Release Notes:
 
+v3.0.5
+=======================
+- New GDX API version 7.11.16
+
 v3.0.4
 =======================
 - New GDX API version 7.11.7
