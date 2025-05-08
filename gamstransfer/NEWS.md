@@ -1,3 +1,7 @@
+# gamstransfer 3.0.5
+
+* New GDX API version 7.11.16
+
 # gamstransfer 3.0.4
 
 * New GDX API version 7.11.7
