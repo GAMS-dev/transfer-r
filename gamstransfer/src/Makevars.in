@@ -1,6 +1,6 @@
 CXX = clang++
 CXX_STD = CXX17
-PKG_CPPFLAGS = -I./gdx/src -I./gdx/generated -I./gdx/src/gdlib -I./gdx/src/global -I./gdx/src/rtl  -I.
+PKG_CPPFLAGS = -I./gdx/src -I./gdx/generated -I./gdx/src/gdlib -I./gdx/src/global -I./gdx/src/rtl -I.
 PKG_CXXFLAGS = -DNDEBUG
 PKG_LIBS = -ldl -lpthread -lz
 SOURCES_CPP=@SUBDIR_SOURCES_CPP@
