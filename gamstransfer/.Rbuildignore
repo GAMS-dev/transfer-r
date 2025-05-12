@@ -34,3 +34,6 @@
 ^src/gdx/src/tests$
 ^src/gdx/src/yaml2cwrap\.py$
 ^src/gdx/src/yaml2doxy\.py$
+^src/gdx/\.pre-commit-config\.yaml$
+^src/gdx/\.secrets\.baseline$
+^src/gdx/src/tools$
