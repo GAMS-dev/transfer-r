@@ -610,15 +610,7 @@ Container <- R6::R6Class(
       }
 
       if (is.character(loadFrom)) {
-        namesplit <- strsplit(loadFrom, "\\.")
-        ext <- utils::tail(unlist(namesplit), 1)
-        if (ext != "gdx") {
-          stop("check filename extension, must be .gdx\n")
-        }
         loadFrom <- R.utils::getAbsolutePath(path.expand(loadFrom))
-        if (!file.exists(loadFrom)) {
-          stop(paste0("File ", loadFrom, " doesn't exist\n"))
-        }
         private$.gdxRead(loadFrom, symbols, records)
       } else if (inherits(loadFrom, "Container")) {
         private$.containerRead(loadFrom, symbols, records)
