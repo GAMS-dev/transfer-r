@@ -992,12 +992,6 @@ Container <- R6::R6Class(
       if (!is.character(writeTo)) {
         stop("The argument writeTo must be of type character\n")
       } else {
-        namesplit <- strsplit(writeTo, "\\.")
-        ext <- utils::tail(unlist(namesplit), 1)
-        if (ext != "gdx") {
-          stop("check filename extension, must be .gdx\n")
-        }
-
         writeTo <- R.utils::getAbsolutePath(path.expand(writeTo))
       }
 

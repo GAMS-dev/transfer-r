@@ -153,17 +153,14 @@ void gt_register_uels(gdx::TGXFileObj & gdx, const CharacterVector & arr, int* u
 }
 
 void gt_open_write(gdx::TGXFileObj & gdx, const std::string & filename, bool compress) {
-  int rc, err_nr;
-  if (!compress) {
-    rc = gdx.gdxOpenWrite(filename.c_str(), "GAMS Transfer", err_nr);
-    if (!rc)
-      stop("gt_open_write:gdxOpenWrite Error opening the file %s with error code %i", filename, err_nr);
-  }
-  else {
-    rc = gdx.gdxOpenWriteEx(filename.c_str(), "GAMS Transfer", 1, err_nr);
-    if (!rc)
-      stop("gt_open_write:gdxOpenWriteEx Error opening the file %s with error code %i", filename, err_nr);
-  }
+  int err_nr;
+    gdx.gdxOpenWriteEx(filename.c_str(), "GAMS Transfer", compress, err_nr);
+
+    std::string msg;
+    if (err_nr) {
+      gdx.gdxErrorStr(err_nr, msg.data());
+      stop("gt_open_write:gdxOpenWriteEx "s + msg.data() + ".");
+    }
 }
 
 void gt_register_priority_uels(gdx::TGXFileObj & gdx, const CharacterVector & uel_priority) {
