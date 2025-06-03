@@ -4764,3 +4764,19 @@ expect_equal(colnames(c["foo"]$records), c("level_1", "level", "marginal", "lowe
 }
 )
 
+
+# improved file check for read and write
+test_that("test_num_145", {
+m = Container$new()
+m$write("foo_145") # should be accepted without .gdx extension
+c = Container$new("foo_145") # should not throw a warning
+
+m$write("foo_1.gdx")
+c = Container$new("foo_1") # should automatically read foo_1.gdx
+
+m$write("foo_txt.txt") # should be accepted even with .txt extension
+
+c = Container$new()
+expect_error(c$read("nonexistentfile.gdx"))
+}
+)
