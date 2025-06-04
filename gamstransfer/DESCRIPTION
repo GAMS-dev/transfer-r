@@ -2,7 +2,7 @@ Package: gamstransfer
 Type: Package
 Title: A Data Interface Between 'GAMS' and R
 Version: 3.0.6
-Date: 2025-06-03
+Date: 2025-06-04
 Authors@R: c(
     person("Atharv", "Bhosekar", email = "abhosekar@gams.com",
         role = c("aut", "cre")),
