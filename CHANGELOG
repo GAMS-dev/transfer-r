@@ -1,4 +1,4 @@
-GAMS Transfer R 3.0.6
+GAMS Transfer R v3.0.6
 =======================
 - Removed pre-check for .gdx extension. Now rely on GDX API to validate files, allowing case-insensitive and extension-independent handling
 - When reading, if a file without extension is not found, extension .gdx is tried before throwing an error
