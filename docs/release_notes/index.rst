@@ -2,6 +2,12 @@
    :maxdepth: 1
    :caption: Release Notes:
 
+v3.0.6
+=======================
+- Removed pre-check for .gdx extension. Now rely on GDX API to validate files, allowing case-insensitive and extension-independent handling
+- When reading, if a file without extension is not found, extension .gdx is tried before throwing an error
+- New GDX API version 7.11.17
+
 v3.0.5
 =======================
 - New GDX API version 7.11.16
