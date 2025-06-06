@@ -365,8 +365,12 @@ List CPP_readSuper(Nullable<CharacterVector> symNames_, CharacterVector gdxName,
 
   int err_nr;
   gdxobj.gdx.gdxOpenRead(gdx_name.c_str(), err_nr);
-  if (err_nr)
-    stop("CPP_readSuper:gdxOpenRead GDX error with error code %i", err_nr);
+
+  std::string msg;
+  if (err_nr) {
+    gdxobj.gdx.gdxErrorStr(err_nr, msg.data());
+    stop("CPP_readSuper:gdxOpenRead "s + msg.data() + ".");
+  }
 
   std::array<char, GMS_SSSIZE> Msg {}, Producer {};
   gdxobj.gdx.gdxFileVersion(Msg.data(), Producer.data());
