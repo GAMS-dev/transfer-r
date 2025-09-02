@@ -1,4 +1,4 @@
-# gamstransfer 3.0.6
+# gamstransfer 3.0.7
 
 * Do not raise an error anymore when a Singleton Set is used as a domain for another symbol
 

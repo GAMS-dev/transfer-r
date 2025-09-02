@@ -2,6 +2,10 @@
    :maxdepth: 1
    :caption: Release Notes:
 
+v3.0.7
+=======================
+- Do not raise an error anymore when a Singleton Set is used as a domain for another symbol
+
 v3.0.6
 =======================
 - Removed pre-check for .gdx extension. Now rely on GDX API to validate files, allowing case-insensitive and extension-independent handling
