@@ -82,7 +82,7 @@ The ``$isValid()`` method checks:
 - If the symbol belongs to a :doc:`Container <../../api_reference/Container>`
 - If all domain set symbols exist in the Container
 - If all domain set symbols objects are valid
-- If all domain sets are one dimensional and not singleton sets
+- If all domain sets are one dimensional
 - If records are a data frame (or ``NULL``)
 - If the records ``domainLabels`` are unique
 - The shape of the records is congruent with the dimensionality of the symbol

@@ -1,5 +1,9 @@
 # gamstransfer 3.0.6
 
+* Do not raise an error anymore when a Singleton Set is used as a domain for another symbol
+
+# gamstransfer 3.0.6
+
 * Removed pre-check for .gdx extension. Now rely on GDX API to validate files, allowing case-insensitive and extension-independent handling
 * When reading, if a file without extension is not found, extension .gdx is tried before throwing an error
 * New GDX API version 7.11.17

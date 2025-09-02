@@ -1667,7 +1667,7 @@ Container <- R6::R6Class(
           stop(
             "Container contains invalid symbols; ",
             "invalid symbols can be found with the $listSymbols() ",
-            "method. Debug invalid symbol(s) by running .",
+            "method. Debug invalid symbol(s) by running $",
             "isValid(verbose=TRUE, force=TRUE) method on the symbol object.\n"
           )
         }
