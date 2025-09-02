@@ -4780,3 +4780,12 @@ c = Container$new()
 expect_error(c$read("nonexistentfile.gdx"))
 }
 )
+
+# singleton set as domain should be valid
+test_that("test_num_145", {
+m = Container$new()
+i = Set$new(m, "i", isSingleton=TRUE)
+isub = Set$new(m, "isub", i)
+expect_true(isub$isValid())
+}
+)
