@@ -1855,13 +1855,6 @@
                 i$dimension, ".\n"
               ))
             }
-
-            if (i$isSingleton) {
-              stop(paste0(
-                "Singleton sets cannot be used as domain sets. ",
-                "The domain symbol ", i$name, " is a singleton set.\n"
-              ))
-            }
           }
         }
         # if records exist, check consistency
