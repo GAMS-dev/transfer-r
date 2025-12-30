@@ -3,10 +3,10 @@ AC_CHECK_LIB([z], [compress], , AC_MSG_ERROR([zlib not found]))
 AC_CHECK_LIB([z], [uncompress], , AC_MSG_ERROR([zlib not found]))
 
 # Define the zlib source files
-zlib_units="zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c \
-            zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c \
-            zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c \
-            zlib/trees.c zlib/uncompr.c zlib/zutil.c"
+zlib_units="gdx/zlib/adler32.c gdx/zlib/compress.c gdx/zlib/crc32.c gdx/zlib/deflate.c \
+            gdx/zlib/gzclose.c gdx/zlib/gzlib.c gdx/zlib/gzread.c gdx/zlib/gzwrite.c \
+            gdx/zlib/infback.c gdx/zlib/inffast.c gdx/zlib/inflate.c gdx/zlib/inftrees.c \
+            gdx/zlib/trees.c gdx/zlib/uncompr.c gdx/zlib/zutil.c"
 
 # Dynamically generate list of sources from subdirectories via shell
 SUBDIR_SOURCES_CPP="\
@@ -25,7 +25,7 @@ SUBDIR_SOURCES_CPP="\
     Utilities.cpp \
     RcppExports.cpp"
 
-SUBDIR_SOURCES_C="gdx/src/rtl/dtoaLoc.c $zlib_units"
+SUBDIR_SOURCES_C="$zlib_units gdx/src/rtl/dtoaLoc.c "
 
 AC_SUBST(SUBDIR_SOURCES_CPP)
 AC_SUBST(SUBDIR_SOURCES_C)
