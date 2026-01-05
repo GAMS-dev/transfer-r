@@ -13,7 +13,7 @@ print(gdx_ignore)
 # process src/gdx/zlib
 
 # get all files and directories in src/gdx/zlib
-gdx_zlib_all = list.files("src/gdx/zlib", full.names=TRUE)
+gdx_zlib_all = list.files("src/gdx/zlib", full.names=TRUE, all.files=TRUE)
 
 # get all c, h, o files
 gdx_zlib_c_h = list.files("src/gdx/zlib", 

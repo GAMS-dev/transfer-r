@@ -1,3 +1,7 @@
+^LICENSE\.md$
+[.]o$
+^README\.Rmd$
+^cran-comments\.md$
 ^src/gdx/zlib/amiga$
 ^src/gdx/zlib/BUILD\.bazel$
 ^src/gdx/zlib/ChangeLog$
@@ -63,3 +67,9 @@
 ^src/gdx/requirements\.txt$
 ^src/gdx/skip\.list$
 ^src/gdx/targets\.cmake$
+^src/gdx/zlib/\.$
+^src/gdx/zlib/\.\.$
+^src/gdx/zlib/\.cmake-format\.yaml$
+^src/gdx/zlib/\.git$
+^src/gdx/zlib/\.github$
+^src/gdx/zlib/\.gitignore$
