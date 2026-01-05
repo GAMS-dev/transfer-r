@@ -8,8 +8,8 @@ gdx_ignore = gdx_ignore[gdx_ignore != src_dirs]
 
 # remove src/gdx/zlib from ignored files
 zlib_dirs = c("src/gdx/zlib")
-zlib_ignore = gdx_ignore[gdx_ignore != zlib_dirs]
-
+gdx_ignore = gdx_ignore[gdx_ignore != zlib_dirs]
+print(gdx_ignore)
 # process src/gdx/zlib
 
 # get all files and directories in src/gdx/zlib
@@ -32,20 +32,20 @@ gdx_src_cpp_h = list.files("src/gdx/src",
 pattern="(*\\.cpp$)|(*\\.h)|(*\\.o)", full.names=TRUE)
 
 # ignore list = all src/gdx/src/ - gdx_src_cpp_h
-gdx_ignore = setdiff(gdx_src_all, gdx_src_cpp_h)
+gdx_src_ignore = setdiff(gdx_src_all, gdx_src_cpp_h)
 
 # exclude gdlib, rtl and global from ignore list
 src_subdirs = c("src/gdx/src/gdlib", "src/gdx/src/global", "src/gdx/src/rtl")
-gdx_ignore = setdiff(gdx_ignore, src_subdirs)
+gdx_src_ignore = setdiff(gdx_src_ignore, src_subdirs)
 
 
 # append ignore lists from the zlib, src/gdx and src/gdx/src
-ignore_list = c(zlib_ignore, gdx_ignore)
+ignore_list = c(zlib_ignore, gdx_src_ignore, gdx_ignore)
 
 # keep license file
 zlib_license = "src/gdx/zlib/LICENSE"
 gdx_license = "src/gdx/LICENSE"
-print(ignore_list)
+
 ignore_list = setdiff(ignore_list, gdx_license)
 ignore_list = setdiff(ignore_list, zlib_license)
 print(ignore_list)
