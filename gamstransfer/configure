@@ -3221,11 +3221,18 @@ else $as_nop
 fi
 
 
+# Define the zlib source files
+zlib_units="gdx/zlib/adler32.c gdx/zlib/compress.c gdx/zlib/crc32.c gdx/zlib/deflate.c \
+            gdx/zlib/gzclose.c gdx/zlib/gzlib.c gdx/zlib/gzread.c gdx/zlib/gzwrite.c \
+            gdx/zlib/infback.c gdx/zlib/inffast.c gdx/zlib/inflate.c gdx/zlib/inftrees.c \
+            gdx/zlib/trees.c gdx/zlib/uncompr.c gdx/zlib/zutil.c"
+
 # Dynamically generate list of sources from subdirectories via shell
 SUBDIR_SOURCES_CPP="\
     gdx/src/rtl/p3io.cpp \
     gdx/src/rtl/p3utils.cpp \
     gdx/src/rtl/sysutils_p3.cpp \
+    gdx/src/rtl/system_p3.cpp \
     gdx/src/rtl/p3platform.cpp \
     gdx/src/rtl/math_p3.cpp \
     gdx/src/gdlib/gmsstrm.cpp \
@@ -3237,7 +3244,7 @@ SUBDIR_SOURCES_CPP="\
     Utilities.cpp \
     RcppExports.cpp"
 
-SUBDIR_SOURCES_C="gdx/src/rtl/dtoaLoc.c"
+SUBDIR_SOURCES_C="$zlib_units gdx/src/rtl/dtoaLoc.c "
 
 
 
@@ -4393,7 +4400,5 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
-
 
 

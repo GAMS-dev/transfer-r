@@ -2,6 +2,10 @@
    :maxdepth: 1
    :caption: Release Notes:
 
+v3.0.8
+=======================
+- New GDX API version 7.11.18
+
 v3.0.7
 =======================
 - Do not raise an error anymore when a Singleton Set is used as a domain for another symbol

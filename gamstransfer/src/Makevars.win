@@ -1,10 +1,10 @@
 CXX = clang++
 CXX_STD = CXX17
-PKG_CPPFLAGS = -I./gdx/src -I./gdx/generated -I./gdx/src/gdlib -I./gdx/src/global -I./gdx/src/rtl -I.
+PKG_CPPFLAGS = -I./gdx/src -I./gdx/generated -I./gdx/src/gdlib -I./gdx/src/global -I./gdx/src/rtl -I./gdx/zlib -I.
 PKG_CXXFLAGS = -DNDEBUG
 PKG_LIBS = -ldl -lpthread -lz
-SOURCES_CPP=    gdx/src/rtl/p3io.cpp     gdx/src/rtl/p3utils.cpp     gdx/src/rtl/sysutils_p3.cpp     gdx/src/rtl/p3platform.cpp     gdx/src/rtl/math_p3.cpp     gdx/src/gdlib/gmsstrm.cpp     gdx/src/gdlib/utils.cpp     gdx/src/gdlib/strutilx.cpp     gdx/src/gxfile.cpp     Read.cpp     Write.cpp     Utilities.cpp     RcppExports.cpp
-SOURCES_C=gdx/src/rtl/dtoaLoc.c
+SOURCES_CPP=    gdx/src/rtl/p3io.cpp     gdx/src/rtl/p3utils.cpp     gdx/src/rtl/sysutils_p3.cpp     gdx/src/rtl/system_p3.cpp     gdx/src/rtl/p3platform.cpp     gdx/src/rtl/math_p3.cpp     gdx/src/gdlib/gmsstrm.cpp     gdx/src/gdlib/utils.cpp     gdx/src/gdlib/strutilx.cpp     gdx/src/gxfile.cpp     Read.cpp     Write.cpp     Utilities.cpp     RcppExports.cpp
+SOURCES_C=    gdx/src/rtl/dtoaLoc.c gdx/zlib/adler32.c gdx/zlib/compress.c gdx/zlib/crc32.c gdx/zlib/deflate.c gdx/zlib/gzclose.c gdx/zlib/gzlib.c gdx/zlib/gzread.c gdx/zlib/gzwrite.c gdx/zlib/infback.c gdx/zlib/inffast.c gdx/zlib/inflate.c gdx/zlib/inftrees.c gdx/zlib/trees.c gdx/zlib/uncompr.c gdx/zlib/zutil.c
 OBJECTS=$(SOURCES_C:.c=.o) $(SOURCES_CPP:.cpp=.o)
 
 all: $(SHLIB)
