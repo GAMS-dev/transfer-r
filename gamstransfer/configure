@@ -3233,7 +3233,6 @@ SUBDIR_SOURCES_CPP="\
     gdx/src/rtl/p3utils.cpp \
     gdx/src/rtl/sysutils_p3.cpp \
     gdx/src/rtl/system_p3.cpp \
-    gdx/src/rtl/p3platform.cpp \
     gdx/src/rtl/math_p3.cpp \
     gdx/src/gdlib/gmsstrm.cpp \
     gdx/src/gdlib/utils.cpp \
