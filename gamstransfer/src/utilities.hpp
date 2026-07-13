@@ -28,11 +28,9 @@ using namespace Rcpp;
 class gt_gdx
 {
   public:
-    std::string msg;
-    gdx::TGXFileObj gdx {msg};
+    gdx::TGXFileObj gdx;
     gt_gdx() {
-      if( !msg.empty() )
-        stop( "CPP_readSuper:Could not load GDX library." );
+
     }
 };
 
