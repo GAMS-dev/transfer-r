@@ -3,6 +3,9 @@
 \name{Container}
 \alias{Container}
 \title{Container Class}
+\usage{
+Container(loadFrom = NULL)
+}
 \arguments{
 \item{loadFrom}{optional argument to point to the GDX file being
 read into the Container}
