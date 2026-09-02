@@ -38,7 +38,7 @@
 #' read_list <- readGDX(system.file("extdata", "trnsport.gdx", package = "gamstransfer"))
 readGDX <- function(loadFrom, symbols = NULL, records = TRUE) {
   # check if records is logical
-  if (!is.logical(records) && length(records) != 1) {
+  if (!(is.logical(records) && length(records) == 1)) {
     stop("records must be type logical\n")
   }
 
