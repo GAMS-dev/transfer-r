@@ -250,7 +250,7 @@ Container <- R6::R6Class(
       }
 
       for (t in types) {
-        if (is.null(.EquationTypes[[tolower(t)]])) {
+        if (!any(.EquationTypes == tolower(t))) {
           stop(paste0("User input unrecognized equation type: ", t, " \n"))
         }
       }
