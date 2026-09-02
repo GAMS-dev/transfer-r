@@ -29,7 +29,6 @@
 #' @importFrom collections dict
 #' @import R.utils
 #' @title Container Class
-#' @usage Container$new(loadFrom = NULL)
 #' @description The main object class within GAMS Transfer is called
 #' Container. The Container is the vessel that allows symbols to be
 #' linked together (through their domain definitions), it enables
