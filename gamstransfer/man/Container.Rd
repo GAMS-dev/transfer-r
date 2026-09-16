@@ -4,7 +4,7 @@
 \alias{Container}
 \title{Container Class}
 \usage{
-Container$new(loadFrom = NULL)
+Container(loadFrom = NULL)
 }
 \arguments{
 \item{loadFrom}{optional argument to point to the GDX file being
