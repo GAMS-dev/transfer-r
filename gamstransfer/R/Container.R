@@ -29,6 +29,7 @@
 #' @importFrom collections dict
 #' @import R.utils
 #' @title Container Class
+#' @usage Container(loadFrom = NULL)
 #' @description The main object class within GAMS Transfer is called
 #' Container. The Container is the vessel that allows symbols to be
 #' linked together (through their domain definitions), it enables
@@ -249,7 +250,7 @@ Container <- R6::R6Class(
       }
 
       for (t in types) {
-        if (is.null(.EquationTypes[[tolower(t)]])) {
+        if (!any(.EquationTypes == tolower(t))) {
           stop(paste0("User input unrecognized equation type: ", t, " \n"))
         }
       }
